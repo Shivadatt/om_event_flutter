@@ -5,11 +5,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "isActive",
+          "fieldPath": "is_active",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "sortOrder",
+          "fieldPath": "sort_order",
           "order": "ASCENDING"
         }
       ]
@@ -19,11 +19,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "isPublished",
+          "fieldPath": "is_published",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
+          "fieldPath": "created_at",
           "order": "DESCENDING"
         }
       ]

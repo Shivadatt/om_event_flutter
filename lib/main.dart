@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'core/config/app_routes.dart';
@@ -10,6 +11,15 @@ import 'presentation/bindings/initial_binding.dart';
 void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize SharedPreferences synchronously before UI builds to avoid startup crashes
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    Get.put<SharedPreferences>(prefs, permanent: true);
+  } catch (e) {
+    // ignore: avoid_print
+    print("SharedPreferences initialization failed: ${e.toString()}");
+  }
 
   // Initialize Firebase using the real project credentials
   try {
@@ -23,8 +33,11 @@ void main() async {
         appId: "1:443981257323:android:a99b824ca6d4a10b64af2e",
       ),
     );
+    // ignore: avoid_print
+    print("Firebase initialized successfully");
   } catch (e) {
-    debugPrint("Firebase initialization failed: ${e.toString()}");
+    // ignore: avoid_print
+    print("Firebase initialization failed: ${e.toString()}");
   }
 
   runApp(const OmEventsApp());

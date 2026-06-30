@@ -25,7 +25,7 @@ service cloud.firestore {
     }
 
     // Experiences (Decoration Items): Read is public, write requires administrative staff
-    match /experiences/{experienceId} {
+    match /items/{itemId} {
       allow read: if true;
       allow write: if isAdminOrStaff();
     }

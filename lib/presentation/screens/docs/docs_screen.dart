@@ -83,7 +83,7 @@ class DocsScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: cardColor,
-                          border: Border.all(color: goldColor.withOpacity(0.3)),
+                          border: Border.all(color: goldColor.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(

@@ -117,9 +117,7 @@ class SeederScreen extends StatelessWidget {
                 // Action Buttons
                 if (!controller.isMigrating.value)
                   ElevatedButton(
-                    onPressed: controller.isCompleted.value
-                        ? null
-                        : () => controller.runMigration(),
+                    onPressed: () => controller.runMigration(force: true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFC9A77E),
                       disabledBackgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
@@ -127,12 +125,12 @@ class SeederScreen extends StatelessWidget {
                     ),
                     child: Text(
                       controller.isCompleted.value
-                          ? "MIGRATION LOCKED"
+                          ? "FORCE RE-SEED DATABASE"
                           : (controller.errorMessage.isNotEmpty ? "RETRY SEEDING" : "START SEEDER"),
                       style: AppTheme.sansBody(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: controller.isCompleted.value ? Colors.grey : Colors.black87,
+                        color: Colors.black87,
                       ),
                     ),
                   ),

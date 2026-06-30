@@ -22,6 +22,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
       color: '#e58b9d',
       imageUrl: 'https://raw.githubusercontent.com/omevents/assets/main/categories/birthday.jpg',
       sortOrder: 0,
+      isActive: true,
     ),
     Category(
       id: 'wedding',
@@ -32,6 +33,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
       color: '#c79b61',
       imageUrl: 'https://raw.githubusercontent.com/omevents/assets/main/categories/wedding.jpg',
       sortOrder: 1,
+      isActive: true,
     ),
     Category(
       id: 'baby',
@@ -42,6 +44,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
       color: '#75a9a6',
       imageUrl: 'https://raw.githubusercontent.com/omevents/assets/main/categories/baby.jpg',
       sortOrder: 2,
+      isActive: true,
     ),
     Category(
       id: 'corporate',
@@ -52,6 +55,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
       color: '#7c86bd',
       imageUrl: 'https://raw.githubusercontent.com/omevents/assets/main/categories/corporate.jpg',
       sortOrder: 3,
+      isActive: true,
     ),
     Category(
       id: 'proposal',
@@ -62,6 +66,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
       color: '#c96f64',
       imageUrl: 'https://raw.githubusercontent.com/omevents/assets/main/categories/proposal.jpg',
       sortOrder: 4,
+      isActive: true,
     ),
     Category(
       id: 'entries',
@@ -72,6 +77,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
       color: '#a483c0',
       imageUrl: 'https://raw.githubusercontent.com/omevents/assets/main/categories/entries.jpg',
       sortOrder: 5,
+      isActive: true,
     ),
   ];
 
@@ -303,5 +309,105 @@ class CatalogRepositoryImpl implements CatalogRepository {
     } catch (_) {
       return _fallbackReviews;
     }
+  }
+
+  @override
+  Future<void> createCategory(Category category) async {
+    final model = CategoryModel(
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      icon: category.icon,
+      color: category.color,
+      imageUrl: category.imageUrl,
+      sortOrder: category.sortOrder,
+      itemCount: category.itemCount,
+      isActive: category.isActive,
+    );
+    await remoteSource.createCategory(model.toJson());
+  }
+
+  @override
+  Future<void> updateCategory(Category category) async {
+    final model = CategoryModel(
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      icon: category.icon,
+      color: category.color,
+      imageUrl: category.imageUrl,
+      sortOrder: category.sortOrder,
+      itemCount: category.itemCount,
+      isActive: category.isActive,
+    );
+    await remoteSource.updateCategory(category.slug, model.toJson());
+  }
+
+  @override
+  Future<void> deleteCategory(String slug) async {
+    await remoteSource.deleteCategory(slug);
+  }
+
+  @override
+  Future<void> createExperience(Experience experience) async {
+    final model = ExperienceModel(
+      id: experience.id,
+      categoryId: experience.categoryId,
+      categoryName: experience.categoryName,
+      categorySlug: experience.categorySlug,
+      name: experience.name,
+      slug: experience.slug,
+      description: experience.description,
+      price: experience.price,
+      offerPrice: experience.offerPrice,
+      durationHours: experience.durationHours,
+      popularity: experience.popularity,
+      rating: experience.rating,
+      reviewCount: experience.reviewCount,
+      availability: experience.availability,
+      tags: experience.tags,
+      colors: experience.colors,
+      themes: experience.themes,
+      imageUrl: experience.imageUrl,
+      videoUrl: experience.videoUrl,
+      isFeatured: experience.isFeatured,
+      isActive: experience.isActive,
+    );
+    await remoteSource.createExperience(model.toJson());
+  }
+
+  @override
+  Future<void> updateExperience(Experience experience) async {
+    final model = ExperienceModel(
+      id: experience.id,
+      categoryId: experience.categoryId,
+      categoryName: experience.categoryName,
+      categorySlug: experience.categorySlug,
+      name: experience.name,
+      slug: experience.slug,
+      description: experience.description,
+      price: experience.price,
+      offerPrice: experience.offerPrice,
+      durationHours: experience.durationHours,
+      popularity: experience.popularity,
+      rating: experience.rating,
+      reviewCount: experience.reviewCount,
+      availability: experience.availability,
+      tags: experience.tags,
+      colors: experience.colors,
+      themes: experience.themes,
+      imageUrl: experience.imageUrl,
+      videoUrl: experience.videoUrl,
+      isFeatured: experience.isFeatured,
+      isActive: experience.isActive,
+    );
+    await remoteSource.updateExperience(experience.slug, model.toJson());
+  }
+
+  @override
+  Future<void> deleteExperience(String slug) async {
+    await remoteSource.deleteExperience(slug);
   }
 }

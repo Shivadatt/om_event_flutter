@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "443981257323",
+    "firebase_url": "https://om-event-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "om-event",
     "storage_bucket": "om-event.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.om.event"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "443981257323-u5kcr8uep26urtj4olbsv8lgfnq7v31n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.om.event",
+            "certificate_hash": "1051368ef712a4225a31c50a6ecfb4d2c3261881"
+          }
+        },
+        {
+          "client_id": "443981257323-sqflr9nlhvbicbahfhul52gta9m9a9tn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDFpKAUXwIDnoQBrt5Id-xJjn-h5WVv1pc"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "443981257323-sqflr9nlhvbicbahfhul52gta9m9a9tn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

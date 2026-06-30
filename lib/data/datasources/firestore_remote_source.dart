@@ -34,7 +34,7 @@ class FirestoreRemoteSource {
     Query<Map<String, dynamic>> query = _firestore.collection('items').where('is_active', isEqualTo: true);
 
     if (categorySlug != null && categorySlug.isNotEmpty) {
-      query = query.where('category_slug', isEqualTo: categorySlug);
+      query = query.where('category_id', isEqualTo: categorySlug);
     }
     if (featuredOnly == true) {
       query = query.where('is_featured', isEqualTo: true);
@@ -192,6 +192,55 @@ class FirestoreRemoteSource {
         'updated_at': FieldValue.serverTimestamp(),
       });
     }
+  }
+
+  // Admin CRUD for Categories
+  Future<void> createCategory(Map<String, dynamic> json) async {
+    await _firestore.collection('categories').doc(json['slug'] as String).set(json);
+  }
+  Future<void> updateCategory(String slug, Map<String, dynamic> json) async {
+    await _firestore.collection('categories').doc(slug).update(json);
+  }
+  Future<void> deleteCategory(String slug) async {
+    await _firestore.collection('categories').doc(slug).delete();
+  }
+
+  // Admin CRUD for Experiences (Items)
+  Future<void> createExperience(Map<String, dynamic> json) async {
+    await _firestore.collection('items').doc(json['slug'] as String).set(json);
+  }
+  Future<void> updateExperience(String slug, Map<String, dynamic> json) async {
+    await _firestore.collection('items').doc(slug).update(json);
+  }
+  Future<void> deleteExperience(String slug) async {
+    await _firestore.collection('items').doc(slug).delete();
+  }
+
+  // Admin CRUD for Customers
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchCustomers() async {
+    final snap = await _firestore.collection('customers').orderBy('created_at', descending: true).get();
+    return snap.docs;
+  }
+  Future<void> deleteCustomer(String phone) async {
+    await _firestore.collection('customers').doc(phone).delete();
+  }
+  Future<void> updateCustomerDetails(String phone, Map<String, dynamic> json) async {
+    await _firestore.collection('customers').doc(phone).update(json);
+  }
+
+  // Admin CRUD for User Profiles
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchUsers() async {
+    final snap = await _firestore.collection('users').get();
+    return snap.docs;
+  }
+  Future<void> createUserProfile(String uid, Map<String, dynamic> json) async {
+    await _firestore.collection('users').doc(uid).set(json);
+  }
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> json) async {
+    await _firestore.collection('users').doc(uid).update(json);
+  }
+  Future<void> deleteUserProfile(String uid) async {
+    await _firestore.collection('users').doc(uid).delete();
   }
 
   // Seeding Logic

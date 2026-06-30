@@ -30,7 +30,7 @@ class ExperienceModel extends Experience {
       id: documentId,
       categoryId: json['category_id'] ?? json['categoryId'] ?? '',
       categoryName: json['category_name'] ?? json['categoryName'] ?? '',
-      categorySlug: json['category_slug'] ?? json['categorySlug'] ?? '',
+      categorySlug: json['category_slug'] ?? json['categorySlug'] ?? json['category_id'] ?? json['categoryId'] ?? '',
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',

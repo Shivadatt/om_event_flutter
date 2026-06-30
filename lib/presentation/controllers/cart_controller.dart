@@ -155,22 +155,26 @@ class CartController extends GetxController {
   }
 
   // Pricing calculations
-  double get subtotal => rxCartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+  double _roundToTwoDecimals(double val) {
+    return (val * 100).roundToDouble() / 100.0;
+  }
 
-  double get volumeDiscount => subtotal >= 50000 ? (subtotal * 0.05) : 0.0;
+  double get subtotal => _roundToTwoDecimals(rxCartItems.fold(0.0, (sum, item) => sum + item.totalPrice));
+
+  double get volumeDiscount => _roundToTwoDecimals(subtotal >= 50000 ? (subtotal * 0.05) : 0.0);
 
   double get deliveryCharge => rxCartItems.isNotEmpty ? AppConstants.deliveryCharge : 0.0;
 
   double get travelCharge => AppConstants.travelCharge;
 
-  double get taxableAmount => subtotal - volumeDiscount + deliveryCharge + travelCharge;
+  double get taxableAmount => _roundToTwoDecimals(subtotal - volumeDiscount + deliveryCharge + travelCharge);
 
-  double get gstAmount => taxableAmount * (AppConstants.gstPercent / 100.0);
+  double get gstAmount => _roundToTwoDecimals(taxableAmount * (AppConstants.gstPercent / 100.0));
 
   // WAIVER promotional discount: waives delivery fee + GST
   double get clientWaiverDiscount {
     if (AppConstants.enableClientFeeWaiver) {
-      return deliveryCharge + gstAmount;
+      return _roundToTwoDecimals(deliveryCharge + gstAmount);
     }
     return 0.0;
   }
@@ -178,9 +182,9 @@ class CartController extends GetxController {
   double get grandTotal {
     if (AppConstants.enableClientFeeWaiver) {
       // Waives delivery and GST: GrandTotal = Subtotal - Discount
-      return subtotal - volumeDiscount;
+      return _roundToTwoDecimals(subtotal - volumeDiscount);
     } else {
-      return taxableAmount + gstAmount;
+      return _roundToTwoDecimals(taxableAmount + gstAmount);
     }
   }
 }

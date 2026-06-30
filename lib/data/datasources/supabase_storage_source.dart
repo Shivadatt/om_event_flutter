@@ -8,7 +8,7 @@ class SupabaseStorageSource {
   SupabaseStorageSource({
     required this.projectUrl,
     required this.apiKey,
-    this.bucketName = 'om-event-media',
+    this.bucketName = 'gallery',
   });
 
   Future<String> uploadFile(String filePath, List<int> fileBytes, String contentType, {String? bucket}) async {

@@ -29,12 +29,12 @@ class CustomerModel {
       email: json['email'] ?? '',
       address: json['address'] ?? '',
       city: json['city'] ?? '',
-      mapLocation: json['mapLocation'] ?? '',
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+      mapLocation: json['map_location'] ?? json['mapLocation'] ?? '',
+      createdAt: (json['created_at'] ?? json['createdAt']) != null
+          ? DateTime.parse((json['created_at'] ?? json['createdAt']))
           : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
+      updatedAt: (json['updated_at'] ?? json['updatedAt']) != null
+          ? DateTime.parse((json['updated_at'] ?? json['updatedAt']))
           : DateTime.now(),
     );
   }
@@ -46,9 +46,9 @@ class CustomerModel {
       'email': email,
       'address': address,
       'city': city,
-      'mapLocation': mapLocation,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'map_location': mapLocation,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 }

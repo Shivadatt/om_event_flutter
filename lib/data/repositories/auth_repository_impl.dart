@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/local_storage_source.dart';
+import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
@@ -32,12 +33,12 @@ class AuthRepositoryImpl implements AuthRepository {
           'name': user.displayName ?? user.email?.split('@').first ?? 'Staff User',
           'email': user.email,
           'role': 'staff',
-          'isActive': true,
-          'createdAt': FieldValue.serverTimestamp(),
+          'is_active': true,
+          'created_at': FieldValue.serverTimestamp(),
         });
       } else {
         final data = userDoc.data()!;
-        final isActive = data['isActive'] as bool? ?? true;
+        final isActive = (data['is_active'] ?? data['isActive']) as bool? ?? true;
         if (!isActive) {
           await _firebaseAuth.signOut();
           throw const AuthenticationFailure("This staff account is deactivated.");
@@ -96,5 +97,26 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<bool> isLoggedIn() async {
     return _firebaseAuth.currentUser != null;
+  }
+
+  @override
+  Future<List<UserModel>> getUsers() async {
+    final snap = await _firestore.collection('users').get();
+    return snap.docs.map((doc) => UserModel.fromJson(doc.data(), doc.id)).toList();
+  }
+
+  @override
+  Future<void> createUser(UserModel user) async {
+    await _firestore.collection('users').doc(user.id).set(user.toJson());
+  }
+
+  @override
+  Future<void> updateUser(UserModel user) async {
+    await _firestore.collection('users').doc(user.id).update(user.toJson());
+  }
+
+  @override
+  Future<void> deleteUser(String uid) async {
+    await _firestore.collection('users').doc(uid).delete();
   }
 }

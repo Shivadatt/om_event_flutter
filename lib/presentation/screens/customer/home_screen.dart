@@ -2,6 +2,7 @@ import 'dart:async' as dart_async;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
@@ -13,6 +14,8 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_input.dart';
 import '../../../core/widgets/loading_indicator.dart';
+import '../../../domain/entities/category.dart';
+import '../../../domain/entities/experience.dart';
 import '../../controllers/cart_controller.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../controllers/quotation_controller.dart';
@@ -71,16 +74,14 @@ class HomeScreen extends GetView<CatalogController> {
           ),
           // Responsive AppBar
           SliverAppBar(
-
-
             floating: true,
             pinned: true,
             toolbarHeight: 76,
-            backgroundColor: isDark ? const Color(0xFF141A18) : const Color(0xFF1E2B27),
+            backgroundColor: isDark ? const Color(0xFF101C18) : const Color(0xFFFAF8F5),
             leading: isDesktop
                 ? null
                 : IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.white),
+                    icon: Icon(Icons.menu, color: isDark ? Colors.white : const Color(0xFF17201E)),
                     onPressed: () => scaffoldKey.currentState?.openDrawer(),
                   ),
             title: Row(
@@ -90,12 +91,12 @@ class HomeScreen extends GetView<CatalogController> {
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1),
+                    border: Border.all(color: isDark ? Colors.white : const Color(0xFF17201E), width: 1),
                   ),
                   child: Center(
                     child: Text(
                       "OE",
-                      style: AppTheme.serifHeader(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold),
+                      style: AppTheme.serifHeader(fontSize: 13, color: isDark ? Colors.white : const Color(0xFF17201E), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -106,69 +107,76 @@ class HomeScreen extends GetView<CatalogController> {
                   children: [
                     Text(
                       "OM EVENTS",
-                      style: AppTheme.serifHeader(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2),
+                      style: AppTheme.serifHeader(fontSize: 14, color: isDark ? Colors.white : const Color(0xFF17201E), fontWeight: FontWeight.bold, letterSpacing: 2),
                     ),
                     Text(
                       "MAKE IT MEMORABLE",
-                      style: AppTheme.sansBody(fontSize: 6, color: Colors.white70, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      style: AppTheme.sansBody(fontSize: 6, color: isDark ? Colors.white70 : const Color(0xFF1E2B27), fontWeight: FontWeight.bold, letterSpacing: 1),
                     ),
                   ],
                 ),
                 if (isDesktop) ...[
                   const Spacer(),
-                  _navLink("COLLECTIONS", () => scrollToSection(categoriesKey)),
-                  _navLink("EXPERIENCES", () => scrollToSection(catalogKey)),
-                  _navLink("STORIES", () => scrollToSection(storiesKey)),
-                  _navLink("CONTACT", () => scrollToSection(contactKey)),
-                  _navLink("DEVELOPER API", () => Get.toNamed(AppRoutes.docs)),
+                  _navLink(context, "Collections", () => scrollToSection(categoriesKey)),
+                  _navLink(context, "Experiences", () => scrollToSection(catalogKey)),
+                  _navLink(context, "Stories", () => scrollToSection(storiesKey)),
+                  _navLink(context, "Contact", () => scrollToSection(contactKey)),
+                  _navLink(context, "Developer API", () => Get.toNamed(AppRoutes.docs)),
                 ],
               ],
             ),
             actions: [
-              IconButton(
-                icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined, color: Colors.white),
-                onPressed: () {
-                  Get.changeThemeMode(Get.isDarkMode ? ThemeMode.light : ThemeMode.dark);
-                },
-              ),
+              const SizedBox(width: 8),
               Obx(() {
                 final count = cartController.rxCartItems.length;
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.shopping_bag_outlined, color: Colors.white),
-                      onPressed: () => scaffoldKey.currentState?.openEndDrawer(),
-                    ),
-                    if (count > 0)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => scaffoldKey.currentState?.openEndDrawer(),
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.15)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "Selection",
+                            style: AppTheme.sansBody(
+                              fontSize: 12,
+                              color: isDark ? Colors.white : const Color(0xFF17201E),
+                              fontWeight: FontWeight.normal,
+                              letterSpacing: 1,
+                            ),
                           ),
-                          constraints: const BoxConstraints(
-                            minWidth: 14,
-                            minHeight: 14,
-                          ),
-                          child: Center(
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white : const Color(0xFF1E2B27),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
                             child: Text(
                               '$count',
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 8,
+                              style: AppTheme.sansBody(
+                                fontSize: 10,
+                                color: isDark ? const Color(0xFF1B2925) : Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                  ],
+                    ),
+                  ),
                 );
               }),
+              const SizedBox(width: 14),
               if (isDesktop)
                 TextButton(
                   onPressed: () => Get.toNamed(AppRoutes.login),
@@ -179,10 +187,10 @@ class HomeScreen extends GetView<CatalogController> {
                 )
               else
                 IconButton(
-                  icon: const Icon(Icons.admin_panel_settings_outlined, color: Colors.white),
+                  icon: Icon(Icons.admin_panel_settings_outlined, color: isDark ? Colors.white : const Color(0xFF17201E)),
                   onPressed: () => Get.toNamed(AppRoutes.login),
                 ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
             ],
           ),
 
@@ -194,7 +202,11 @@ class HomeScreen extends GetView<CatalogController> {
                 _HeroSection(scaffoldKey: scaffoldKey, isDesktop: isDesktop),
                 const _MarqueeRibbon(),
                 _BenefitsSection(isDesktop: isDesktop),
-                _CategoriesSection(controller: controller, categoriesKey: categoriesKey),
+                _CategoriesSection(
+                  controller: controller,
+                  categoriesKey: categoriesKey,
+                  catalogKey: catalogKey,
+                ),
                 _ExperiencesCatalogSection(
                   controller: controller,
                   cartController: cartController,
@@ -202,7 +214,11 @@ class HomeScreen extends GetView<CatalogController> {
                   isDesktop: isDesktop,
                   isTablet: isTablet,
                 ),
-                _VideoStoriesSection(storiesKey: storiesKey, isDesktop: isDesktop),
+                _VideoStoriesSection(
+                  storiesKey: storiesKey,
+                  isDesktop: isDesktop,
+                  catalogKey: catalogKey,
+                ),
                 _ProcessSection(isDesktop: isDesktop),
                 _AnimatedStatsBand(isDesktop: isDesktop),
 
@@ -237,7 +253,8 @@ class HomeScreen extends GetView<CatalogController> {
     );
   }
 
-  Widget _navLink(String label, VoidCallback onTap) {
+  Widget _navLink(BuildContext context, String label, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: InkWell(
@@ -246,7 +263,7 @@ class HomeScreen extends GetView<CatalogController> {
           label,
           style: AppTheme.sansBody(
             fontSize: 10,
-            color: Colors.white70,
+            color: isDark ? Colors.white70 : const Color(0xFF17201E),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
           ),
@@ -257,6 +274,57 @@ class HomeScreen extends GetView<CatalogController> {
 }
 
 // 1. HERO SECTION
+
+class _HeroBackgroundPainter extends CustomPainter {
+  final bool isDark;
+  const _HeroBackgroundPainter({required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // A. Base linear gradient
+    final bgPaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset.zero,
+        Offset(size.width, size.height),
+        isDark
+            ? [const Color(0xFF101C18), const Color(0xFF273A34), const Color(0xFF755F49)]
+            : [const Color(0xFFFAF8F5), const Color(0xFFEBE6DD)],
+        [0.0, 0.52, 1.0],
+      );
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
+
+    if (isDark) {
+      // B. orb-one (amber glowing circle top right)
+      final orb1Paint = Paint()
+        ..color = const Color(0xFFC3925D).withValues(alpha: 0.22)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
+      canvas.drawCircle(Offset(size.width + 100, 240), 240, orb1Paint);
+
+      // C. orb-two (border-only circle center bottom)
+      final orb2Paint = Paint()
+        ..color = const Color(0xFFD0AE84).withValues(alpha: 0.22)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+      canvas.drawCircle(Offset(size.width * 0.35, size.height + 30), 150, orb2Paint);
+    }
+
+    // D. Dot Grid Overlay (24px spacing)
+    final dotPaint = Paint()
+      ..color = isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04)
+      ..style = PaintingStyle.fill;
+
+    const double spacing = 24.0;
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 0.8, dotPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _HeroSection extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final bool isDesktop;
@@ -268,53 +336,52 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final heroDecoration = BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: isDark
-            ? [const Color(0xFF0F1815), const Color(0xFF192521), const Color(0xFF382E25)]
-            : [const Color(0xFF1D2A26), const Color(0xFF2F413B), const Color(0xFF635242)],
-      ),
-    );
-
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      decoration: heroDecoration,
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 64 : 24,
-        vertical: isDesktop ? 100 : 60,
-      ),
-      child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: isDesktop
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 11,
-                      child: _HeroContent(scaffoldKey: scaffoldKey),
-                    ),
-                    const SizedBox(width: 64),
-                    const Expanded(
-                      flex: 9,
-                      child: HeroStageArch(),
-                    ),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _HeroContent(scaffoldKey: scaffoldKey),
-                    const SizedBox(height: 48),
-                    const HeroStageArch(),
-                  ],
-                ),
-        ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _HeroBackgroundPainter(isDark: isDark),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 64 : 24,
+              vertical: isDesktop ? 100 : 60,
+            ),
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: isDesktop
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            flex: 11,
+                            child: _HeroContent(scaffoldKey: scaffoldKey),
+                          ),
+                          const SizedBox(width: 64),
+                          const Expanded(
+                            flex: 9,
+                            child: HeroStageArch(),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _HeroContent(scaffoldKey: scaffoldKey),
+                          const SizedBox(height: 48),
+                          const HeroStageArch(),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -327,91 +394,107 @@ class _HeroContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final width = MediaQuery.of(context).size.width;
     final goldColor = isDark ? AppTheme.darkGold : AppTheme.lightGold;
     final goldSecondary = isDark ? AppTheme.darkGoldSecondary : AppTheme.lightGoldSecondary;
+
+    final double titleSize = width >= 700 ? (width * 0.065).clamp(60.0, 108.0) : 48.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Bespoke event design • Ahmedabad",
-          style: AppTheme.sansBody(fontSize: 10, color: goldColor, fontWeight: FontWeight.bold, letterSpacing: 2),
+          "BESPOKE EVENT DESIGN • AHMEDABAD",
+          style: AppTheme.sansBody(
+            fontSize: 10,
+            color: goldColor,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 3,
+          ),
         ),
         const SizedBox(height: 18),
         RichText(
           text: TextSpan(
-            style: AppTheme.serifHeader(fontSize: 48, color: Colors.white, height: 1.1),
+            style: GoogleFonts.italiana(
+              fontSize: titleSize,
+              color: isDark ? Colors.white : const Color(0xFF17201E),
+              height: 0.92,
+            ),
             children: [
               const TextSpan(text: "Celebrations,\n"),
               TextSpan(
                 text: "thoughtfully",
-                style: AppTheme.serifHeader(
-                  fontSize: 48,
+                style: GoogleFonts.italiana(
+                  fontStyle: FontStyle.italic,
                   color: goldSecondary,
-                  fontWeight: FontWeight.w300,
                 ),
               ),
               const TextSpan(text: " composed."),
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 30),
         Text(
           "From the first sketch to the final flower, create an experience that feels unmistakably yours—with transparent prices from the start.",
-          style: AppTheme.sansBody(fontSize: 15, color: Colors.white70, height: 1.6),
+          style: AppTheme.sansBody(
+            fontSize: 17,
+            color: isDark ? Colors.white70 : const Color(0xFF2F413B),
+            height: 1.8,
+          ),
         ),
         const SizedBox(height: 36),
-        Row(
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            Container(
-              width: 160,
-              child: CustomButton(
-                text: "Design your event ↗",
-                onPressed: () {
-                  // Click to drawer
-                  scaffoldKey.currentState?.openEndDrawer();
-                },
-              ),
+            CustomButton(
+              text: "Design your event ↗",
+              onPressed: () {
+                scaffoldKey.currentState?.openEndDrawer();
+              },
             ),
-            const SizedBox(width: 16),
-            Container(
-              width: 160,
-              child: CustomButton(
-                text: "Plan with an expert",
-                isPrimary: false,
-                onPressed: () => _openLeadDialog(context),
-              ),
+            CustomButton(
+              text: "Plan with an expert",
+              isPrimary: false,
+              onPressed: () => _openLeadDialog(context),
             ),
           ],
         ),
-        const SizedBox(height: 48),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _trustLabel("4.9 ★ Google Rating"),
-              _divider(),
-              _trustLabel("650+ Celebrations"),
-              _divider(),
-              _trustLabel("8 Years of Wonder"),
-            ],
-          ),
+        const SizedBox(height: 38),
+        Row(
+          children: [
+            _trustLabel("4.9 ★ Google Rating", isDark),
+            _divider(isDark),
+            _trustLabel("650+ Celebrations", isDark),
+            _divider(isDark),
+            _trustLabel("8 Years of Wonder", isDark),
+          ],
         )
       ],
     );
   }
 
-  Widget _trustLabel(String text) {
+  Widget _trustLabel(String text, bool isDark) {
     return Text(
       text.toUpperCase(),
-      style: AppTheme.sansBody(fontSize: 9, color: Colors.white54, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+      style: AppTheme.sansBody(
+        fontSize: 10,
+        color: isDark ? Colors.white54 : const Color(0x9917201E),
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.4,
+      ),
     );
   }
 
-  Widget _divider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 14),
-      child: Text("•", style: TextStyle(color: Colors.white30)),
+  Widget _divider(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Text(
+        "•",
+        style: TextStyle(
+          color: isDark ? Colors.white30 : const Color(0x3D17201E),
+        ),
+      ),
     );
   }
 }
@@ -424,23 +507,21 @@ class HeroStageArch extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      height: 400,
+      height: 500,
       decoration: BoxDecoration(
         border: Border.all(
-          color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
+          color: isDark ? Colors.white.withValues(alpha: 0.18) : Colors.black.withValues(alpha: 0.10),
           width: 1,
         ),
       ),
       child: ClipRRect(
         child: Stack(
           children: [
-            // Vector painting of the double arch and balloons
             const Positioned.fill(
               child: CustomPaint(
                 painter: StageArchPainter(),
               ),
             ),
-            // Featured Story Center Copy
             Positioned(
               left: 0,
               right: 0,
@@ -453,7 +534,7 @@ class HeroStageArch extends StatelessWidget {
                     "FEATURED STORY",
                     style: AppTheme.sansBody(
                       fontSize: 8,
-                      color: Colors.white.withOpacity(0.65),
+                      color: Colors.white.withValues(alpha: 0.65),
                       fontWeight: FontWeight.bold,
                       letterSpacing: 3,
                     ),
@@ -461,7 +542,7 @@ class HeroStageArch extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     "Ivory Vow",
-                    style: AppTheme.serifHeader(
+                    style: GoogleFonts.italiana(
                       fontSize: 45,
                       color: Colors.white,
                       fontWeight: FontWeight.normal,
@@ -472,7 +553,7 @@ class HeroStageArch extends StatelessWidget {
                     "AHMEDABAD · 2026",
                     style: AppTheme.sansBody(
                       fontSize: 8,
-                      color: Colors.white.withOpacity(0.65),
+                      color: Colors.white.withValues(alpha: 0.65),
                       fontWeight: FontWeight.bold,
                       letterSpacing: 3,
                     ),
@@ -480,15 +561,14 @@ class HeroStageArch extends StatelessWidget {
                 ],
               ),
             ),
-            // Floating Badge: "HANDCRAFTED. Every detail, yours."
             Positioned(
-              left: 24,
-              bottom: 24,
+              right: 0,
+              top: 45,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.48),
-                  border: Border.all(color: Colors.white.withOpacity(0.18), width: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+                width: 170,
+                decoration: const BoxDecoration(
+                  color: Color(0xEBF4F0E8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,16 +578,18 @@ class HeroStageArch extends StatelessWidget {
                       style: AppTheme.sansBody(
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFFC39463),
-                        letterSpacing: 1.5,
+                        color: const Color(0xFF8C623B),
+                        letterSpacing: 2,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       "Every detail, yours.",
-                      style: AppTheme.serifHeader(
-                        fontSize: 14,
-                        color: Colors.white,
+                      style: GoogleFonts.italiana(
+                        fontSize: 17,
+                        color: const Color(0xFF1B2723),
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
                       ),
                     ),
                   ],
@@ -526,57 +608,102 @@ class StageArchPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Background gradient from dark green to brown
+    // 1. Background linear gradient
     final bgPaint = Paint()
       ..shader = ui.Gradient.linear(
         Offset.zero,
         Offset(size.width, size.height),
-        [const Color(0xFF131E1B), const Color(0xFF483A2E)],
+        [
+          Colors.white.withValues(alpha: 0.09),
+          Colors.black.withValues(alpha: 0.14),
+        ],
       );
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    // Arch 1
-    final archPaint1 = Paint()
-      ..color = const Color(0xFFD3AD7B).withOpacity(0.24)
+    // 2. Warm gold glow overlay at (50% w, 32% h)
+    final glowCenter = Offset(size.width * 0.5, size.height * 0.32);
+    final glowPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        glowCenter,
+        size.width * 0.37,
+        [
+          const Color(0x7BF3D6AB), // rgba(243,214,171,.48)
+          Colors.transparent,
+        ],
+      );
+    canvas.drawCircle(glowCenter, size.width * 0.37, glowPaint);
+
+    // 3. Black gradient from bottom
+    final bottomPaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(size.width * 0.5, size.height),
+        Offset(size.width * 0.5, size.height * 0.45),
+        [
+          const Color(0xCC080D0B), // rgba(8,13,11,.8)
+          Colors.transparent,
+        ],
+      );
+    canvas.drawRect(Rect.fromLTWH(0, size.height * 0.45, size.width, size.height * 0.55), bottomPaint);
+
+    // 4. Draw Arches
+    final archPaintOuter = Paint()
+      ..color = const Color(0xB2EDCB9B)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
-    final path1 = Path()
-      ..moveTo(size.width * 0.18, size.height)
-      ..lineTo(size.width * 0.18, size.height * 0.28)
-      ..quadraticBezierTo(size.width * 0.5, size.height * 0.04, size.width * 0.82, size.height * 0.28)
-      ..lineTo(size.width * 0.82, size.height);
-    canvas.drawPath(path1, archPaint1);
 
-    // Arch 2 (inner offset arch)
-    final archPaint2 = Paint()
-      ..color = const Color(0xFFD3AD7B).withOpacity(0.55)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
-    final path2 = Path()
-      ..moveTo(size.width * 0.28, size.height)
-      ..lineTo(size.width * 0.28, size.height * 0.38)
-      ..quadraticBezierTo(size.width * 0.5, size.height * 0.16, size.width * 0.72, size.height * 0.38)
-      ..lineTo(size.width * 0.72, size.height);
-    canvas.drawPath(path2, archPaint2);
+    final outerW = size.width * 0.76;
+    final outerH = size.height * 0.70;
+    final outerL = size.width * 0.12;
+    final outerRRect = RRect.fromRectAndCorners(
+      Rect.fromLTWH(outerL, size.height - outerH, outerW, outerH + 20),
+      topLeft: Radius.circular(outerW / 2),
+      topRight: Radius.circular(outerW / 2),
+    );
+    canvas.drawRRect(outerRRect, archPaintOuter);
 
-    // Decorative Balloon circles
-    final balloonPaint = Paint()
-      ..color = const Color(0xFFD3AD7B).withOpacity(0.75)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(size.width * 0.28, size.height * 0.38), 24, balloonPaint);
-    canvas.drawCircle(Offset(size.width * 0.25, size.height * 0.42), 18, balloonPaint);
-    canvas.drawCircle(Offset(size.width * 0.32, size.height * 0.36), 20, balloonPaint);
+    final innerW = size.width * 0.58;
+    final innerH = size.height * 0.58;
+    final innerL = size.width * 0.21;
+    final innerRRect = RRect.fromRectAndCorners(
+      Rect.fromLTWH(innerL, size.height - innerH, innerW, innerH + 20),
+      topLeft: Radius.circular(innerW / 2),
+      topRight: Radius.circular(innerW / 2),
+    );
+    canvas.drawRRect(innerRRect, archPaintOuter);
 
-    canvas.drawCircle(Offset(size.width * 0.72, size.height * 0.38), 24, balloonPaint);
-    canvas.drawCircle(Offset(size.width * 0.75, size.height * 0.42), 18, balloonPaint);
-    canvas.drawCircle(Offset(size.width * 0.68, size.height * 0.36), 20, balloonPaint);
+    // 5. Draw Bulbs
+    void drawBulb(Offset center) {
+      // Glow underlay
+      final bulbGlow = Paint()
+        ..color = const Color(0x33E7D4B8)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawCircle(center, 40.0, bulbGlow);
 
-    final balloonPaint2 = Paint()
-      ..color = const Color(0xFFF4F0E8).withOpacity(0.5)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.16), 26, balloonPaint2);
-    canvas.drawCircle(Offset(size.width * 0.46, size.height * 0.18), 20, balloonPaint2);
-    canvas.drawCircle(Offset(size.width * 0.54, size.height * 0.18), 20, balloonPaint2);
+      final radialGlow = Paint()
+        ..shader = ui.Gradient.radial(
+          center,
+          35.0,
+          [
+            const Color(0xFFE7D4B8),
+            const Color(0xFFC2A279),
+            Colors.transparent,
+          ],
+          [
+            0.20,
+            0.40,
+            0.42,
+          ],
+        );
+      canvas.drawCircle(center, 35.0, radialGlow);
+    }
+
+    // Outer arch bulbs
+    drawBulb(Offset(outerL, size.height - outerH + outerH * 0.30));
+    drawBulb(Offset(outerL + outerW, size.height - outerH + outerH * 0.14));
+
+    // Inner arch bulbs
+    drawBulb(Offset(innerL, size.height - innerH + innerH * 0.30));
+    drawBulb(Offset(innerL + innerW, size.height - innerH + innerH * 0.14));
   }
 
   @override
@@ -599,9 +726,9 @@ class _MarqueeRibbonState extends State<_MarqueeRibbon> {
     "Weddings",
     "Birthdays",
     "Baby Showers",
-    "Surprises",
+    "Proposals",
+    "Brand Launches",
     "Grand Entries",
-    "Launches",
   ];
 
   @override
@@ -638,13 +765,16 @@ class _MarqueeRibbonState extends State<_MarqueeRibbon> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF101C18) : const Color(0xFFFAF8F5);
+    final borderColor = isDark ? const Color(0xFF1D2A26) : const Color(0xFFE5DFD5);
 
     return Container(
-      height: 52,
-      color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
+      height: 54,
       decoration: BoxDecoration(
-        border: Border.symmetric(
-          horizontal: BorderSide(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
+        color: backgroundColor,
+        border: Border(
+          bottom: BorderSide(color: borderColor, width: 1),
+          top: BorderSide(color: borderColor, width: 1),
         ),
       ),
       child: Center(
@@ -655,14 +785,24 @@ class _MarqueeRibbonState extends State<_MarqueeRibbon> {
           itemBuilder: (context, index) {
             final item = _marqueeItems[index % _marqueeItems.length];
             return Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(width: 24),
                 Text(
-                  "  ${item.toUpperCase()}  ",
-                  style: AppTheme.serifHeader(fontSize: 12, color: Colors.grey.shade600, letterSpacing: 2),
+                  item.toUpperCase(),
+                  style: GoogleFonts.italiana(
+                    fontSize: 20,
+                    color: isDark ? const Color(0xFFFAF8F5) : const Color(0xFF17201E),
+                    letterSpacing: 3,
+                  ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text("✦", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                const SizedBox(width: 24),
+                const Text(
+                  "✦",
+                  style: TextStyle(
+                    color: Color(0xFFD6B080),
+                    fontSize: 14,
+                  ),
                 ),
               ],
             );
@@ -674,50 +814,57 @@ class _MarqueeRibbonState extends State<_MarqueeRibbon> {
 }
 
 // 3. BENEFITS
-class _BenefitsSection extends StatelessWidget {
+class _BenefitsSection extends StatefulWidget {
   final bool isDesktop;
   const _BenefitsSection({required this.isDesktop});
+
+  @override
+  State<_BenefitsSection> createState() => _BenefitsSectionState();
+}
+
+class _BenefitsSectionState extends State<_BenefitsSection> {
+  final List<Map<String, String>> cardsData = [
+    {
+      'icon': '◇',
+      'title': 'Personal design',
+      'desc': 'A concept shaped around your story, venue and budget—not a fixed package.',
+    },
+    {
+      'icon': '₹',
+      'title': 'Clear live pricing',
+      'desc': 'Build your selection and see every charge before you send an enquiry.',
+    },
+    {
+      'icon': '⌁',
+      'title': 'One accountable team',
+      'desc': 'Design, production, installation and teardown stay under one roof.',
+    },
+    {
+      'icon': '✓',
+      'title': 'Venue-ready planning',
+      'desc': 'Timelines, access, power and installation details checked well in advance.',
+    },
+    {
+      'icon': '✦',
+      'title': 'Premium execution',
+      'desc': 'Purposeful materials, careful finishing and a crew that respects the space.',
+    },
+    {
+      'icon': '◌',
+      'title': 'Calm on event day',
+      'desc': 'A dedicated coordinator keeps the moving parts invisible to you.',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final int crossAxisCount = width >= 1000 ? 3 : (width >= 700 ? 2 : 1);
-
-    final List<Map<String, String>> cardsData = [
-      {
-        'icon': '◇',
-        'title': 'Personal Design',
-        'desc': 'A concept shaped around your story, venue and budget—not a fixed package.',
-      },
-      {
-        'icon': '₹',
-        'title': 'Clear Live Pricing',
-        'desc': 'Build your selection and see every charge before you send an enquiry.',
-      },
-      {
-        'icon': '⌁',
-        'title': 'One Accountable Team',
-        'desc': 'Design, production, installation and teardown stay under one roof.',
-      },
-      {
-        'icon': '✓',
-        'title': 'Venue-ready planning',
-        'desc': 'Timelines, access, power and installation details checked well in advance.',
-      },
-      {
-        'icon': '✦',
-        'title': 'Premium execution',
-        'desc': 'Purposeful materials, careful finishing and a crew that respects the space.',
-      },
-      {
-        'icon': '◌',
-        'title': 'Calm on event day',
-        'desc': 'A dedicated coordinator keeps the moving parts invisible to you.',
-      },
-    ];
+    final double hPad = width >= 1000 ? 110.0 : 24.0;
+    final double titleSize = widget.isDesktop ? (width * 0.044).clamp(42.0, 67.0) : 36.0;
 
     List<Widget> cards = cardsData.map((data) {
-      return _benefitCard(context, data['icon']!, data['title']!, data['desc']!);
+      return _BenefitCard(icon: data['icon']!, title: data['title']!, description: data['desc']!);
     }).toList();
 
     Widget gridWidget;
@@ -728,20 +875,20 @@ class _BenefitsSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: cards[0]),
-              const SizedBox(width: 24),
+              const SizedBox(width: 16),
               Expanded(child: cards[1]),
-              const SizedBox(width: 24),
+              const SizedBox(width: 16),
               Expanded(child: cards[2]),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: cards[3]),
-              const SizedBox(width: 24),
+              const SizedBox(width: 16),
               Expanded(child: cards[4]),
-              const SizedBox(width: 24),
+              const SizedBox(width: 16),
               Expanded(child: cards[5]),
             ],
           ),
@@ -750,61 +897,100 @@ class _BenefitsSection extends StatelessWidget {
     } else if (crossAxisCount == 2) {
       gridWidget = Column(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: cards[0]),
-              const SizedBox(width: 24),
-              Expanded(child: cards[1]),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: cards[2]),
-              const SizedBox(width: 24),
-              Expanded(child: cards[3]),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: cards[4]),
-              const SizedBox(width: 24),
-              Expanded(child: cards[5]),
-            ],
-          ),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: cards[0]),
+            const SizedBox(width: 16),
+            Expanded(child: cards[1]),
+          ]),
+          const SizedBox(height: 16),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: cards[2]),
+            const SizedBox(width: 16),
+            Expanded(child: cards[3]),
+          ]),
+          const SizedBox(height: 16),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: cards[4]),
+            const SizedBox(width: 16),
+            Expanded(child: cards[5]),
+          ]),
         ],
       );
     } else {
       gridWidget = Column(
-        children: cards,
+        children: cards.expand((c) => [c, const SizedBox(height: 16)]).toList()..removeLast(),
       );
     }
 
-    return Padding(
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF1A2420),
       padding: EdgeInsets.symmetric(
-        horizontal: width >= 1000 ? 64 : 24,
-        vertical: 80,
+        horizontal: hPad,
+        vertical: widget.isDesktop ? 105 : 80,
       ),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: 1280),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Eyebrow
               Text(
-                "Why Celebrate With Us",
-                style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2),
+                "WHY CELEBRATE WITH US",
+                style: AppTheme.sansBody(
+                  fontSize: 10,
+                  color: const Color(0xFFD6B080),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2.5,
+                ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                "Everything your event needs. One accountable team.",
-                style: AppTheme.serifHeader(fontSize: 32, height: 1.1),
+              const SizedBox(height: 20),
+              // Large 2-line heading
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: GoogleFonts.italiana(
+                    fontSize: titleSize,
+                    color: const Color(0xFFF2EEE6),
+                    height: 1.0,
+                  ),
+                  children: const [
+                    TextSpan(text: "Everything your event needs.\n"),
+                    TextSpan(
+                      text: "One thoughtful team.",
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Color(0xFFD3AD7B),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 20),
+              // Subtext with "More" in gold
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: AppTheme.sansBody(
+                    fontSize: 14,
+                    color: const Color(0xFF6D746F),
+                    height: 1.7,
+                  ),
+                  children: [
+                    const TextSpan(text: "Less chasing vendors. "),
+                    TextSpan(
+                      text: "More",
+                      style: AppTheme.sansBody(
+                        fontSize: 14,
+                        color: const Color(0xFFD3AD7B),
+                      ),
+                    ),
+                    const TextSpan(text: " time being present."),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 48),
               gridWidget,
             ],
           ),
@@ -812,65 +998,734 @@ class _BenefitsSection extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _benefitCard(BuildContext context, String icon, String title, String description) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-        border: Border.all(color: isDark ? AppTheme.darkLine : AppTheme.lightLine, width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: isDark ? AppTheme.darkGold : AppTheme.lightGold, width: 1),
-            ),
-            child: Center(
-              child: Text(
-                icon,
-                style: AppTheme.serifHeader(fontSize: 18, color: isDark ? AppTheme.darkGold : AppTheme.lightGold),
+class _BenefitCard extends StatefulWidget {
+  final String icon;
+  final String title;
+  final String description;
+
+  const _BenefitCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  State<_BenefitCard> createState() => _BenefitCardState();
+}
+
+class _BenefitCardState extends State<_BenefitCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, _isHovered ? -5 : 0, 0),
+        margin: const EdgeInsets.only(bottom: 0),
+        padding: const EdgeInsets.all(30),
+        constraints: const BoxConstraints(minHeight: 190),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E2C27),
+          border: Border.all(
+            color: _isHovered
+                ? const Color(0xFFAA7C4B) // gold on hover
+                : const Color(0xFF243028),
+            width: 1,
+          ),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    blurRadius: 45,
+                    offset: const Offset(0, 18),
+                  )
+                ]
+              : [],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Gold circle icon
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFAA7C4B),
+                  width: 1,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  widget.icon,
+                  style: GoogleFonts.italiana(
+                    fontSize: 20,
+                    color: const Color(0xFFAA7C4B),
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTheme.serifHeader(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  description,
-                  style: AppTheme.sansBody(fontSize: 13, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted, height: 1.5),
-                ),
-              ],
+            const SizedBox(height: 20),
+            // Title
+            Text(
+              widget.title,
+              style: GoogleFonts.italiana(
+                fontSize: 22,
+                color: const Color(0xFFF2EEE6),
+                height: 1.2,
+              ),
             ),
-          )
-        ],
+            const SizedBox(height: 7),
+            // Description
+            Text(
+              widget.description,
+              style: AppTheme.sansBody(
+                fontSize: 12,
+                color: const Color(0xFF6D746F),
+                height: 1.65,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ──────────────────────────────────────────────────────────
+// EXPERIENCE DETAIL DIALOG  (matches Django website's modal)
+// ──────────────────────────────────────────────────────────
+void _showExperienceDetailDialog(BuildContext context, Experience item) {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.70),
+    builder: (_) => _ExperienceDetailDialog(item: item),
+  );
+}
 
+class _ExperienceDetailDialog extends StatefulWidget {
+  final Experience item;
+  const _ExperienceDetailDialog({required this.item});
+
+  @override
+  State<_ExperienceDetailDialog> createState() => _ExperienceDetailDialogState();
+}
+
+class _ExperienceDetailDialogState extends State<_ExperienceDetailDialog> {
+  final _notesController = TextEditingController();
+  String _selectedColor = '';
+  String _selectedTheme = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item.colors.isNotEmpty) _selectedColor = widget.item.colors.first;
+    if (widget.item.themes.isNotEmpty) _selectedTheme = widget.item.themes.first;
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildImage(String url, String title, String categorySlug, String categoryName) {
+    if (url.isEmpty) {
+      return ItemVisualPlaceholder(title: title, categorySlug: categorySlug, categoryName: categoryName);
+    }
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            ItemVisualPlaceholder(title: title, categorySlug: categorySlug, categoryName: categoryName),
+      );
+    }
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) =>
+          ItemVisualPlaceholder(title: title, categorySlug: categorySlug, categoryName: categoryName),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cartController = Get.find<CartController>();
+    final item = widget.item;
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    final isDesktop = width >= 800;
+
+    // Dialog max width and max height
+    final dialogWidth = (width * 0.9).clamp(320.0, 940.0);
+    final dialogMaxHeight = height * 0.92;
+
+    // Price info
+    final hasDiscount = item.offerPrice != null && item.price > item.effectivePrice;
+    final discountPct = hasDiscount
+        ? ((1 - item.effectivePrice / item.price) * 100).round()
+        : 0;
+    final savedAmount = item.price - item.effectivePrice;
+
+    Widget rightPanel = SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 32 : 20,
+        vertical: 28,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Category eyebrow
+          Text(
+            "${item.categoryName.toUpperCase()} · CUSTOMIZABLE",
+            style: AppTheme.sansBody(
+              fontSize: 9,
+              color: const Color(0xFFAA7C4B),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          // Title
+          Text(
+            item.name,
+            style: GoogleFonts.italiana(
+              fontSize: isDesktop ? 42 : 30,
+              color: const Color(0xFF17201E),
+              height: 1.05,
+            ),
+          ),
+          const SizedBox(height: 14),
+          // Description
+          Text(
+            item.description,
+            style: AppTheme.sansBody(
+              fontSize: 13,
+              color: const Color(0xFF6D746F),
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Price block
+          if (hasDiscount) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  AppFormatters.formatCurrency(item.price),
+                  style: AppTheme.sansBody(
+                    fontSize: 14,
+                    color: const Color(0xFF6D746F),
+                  ).copyWith(decoration: TextDecoration.lineThrough),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "$discountPct% OFF",
+                  style: AppTheme.sansBody(
+                    fontSize: 12,
+                    color: const Color(0xFFAA7C4B),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            AppFormatters.formatCurrency(item.effectivePrice),
+            style: GoogleFonts.italiana(
+              fontSize: 34,
+              color: const Color(0xFF17201E),
+              height: 1,
+            ),
+          ),
+          if (hasDiscount) ...[
+            const SizedBox(height: 4),
+            Text(
+              "You Save ${AppFormatters.formatCurrency(savedAmount)}",
+              style: AppTheme.sansBody(
+                fontSize: 12,
+                color: const Color(0xFF3A7A5A),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Text(
+            "Starting Price",
+            style: AppTheme.sansBody(
+              fontSize: 11,
+              color: const Color(0xFF17201E),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 24),
+          // COLOR STORY dropdown
+          if (item.colors.isNotEmpty) ...[
+            Text(
+              "COLOR STORY",
+              style: AppTheme.sansBody(
+                fontSize: 9,
+                color: const Color(0xFF17201E),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.3,
+              ),
+            ),
+            const SizedBox(height: 6),
+            _ModalDropdown(
+              value: _selectedColor,
+              items: item.colors,
+              onChanged: (v) => setState(() => _selectedColor = v),
+            ),
+            const SizedBox(height: 16),
+          ],
+          // DESIGN MOOD dropdown
+          if (item.themes.isNotEmpty) ...[
+            Text(
+              "DESIGN MOOD",
+              style: AppTheme.sansBody(
+                fontSize: 9,
+                color: const Color(0xFF17201E),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.3,
+              ),
+            ),
+            const SizedBox(height: 6),
+            _ModalDropdown(
+              value: _selectedTheme,
+              items: item.themes,
+              onChanged: (v) => setState(() => _selectedTheme = v),
+            ),
+            const SizedBox(height: 16),
+          ],
+          // YOUR NOTE text area
+          Text(
+            "YOUR NOTE",
+            style: AppTheme.sansBody(
+              fontSize: 9,
+              color: const Color(0xFF17201E),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFF17201E).withValues(alpha: 0.2)),
+            ),
+            child: TextField(
+              controller: _notesController,
+              maxLines: 3,
+              style: AppTheme.sansBody(fontSize: 13, color: const Color(0xFF17201E)),
+              decoration: InputDecoration(
+                hintText: "Names, venue details or a specific idea…",
+                hintStyle: AppTheme.sansBody(fontSize: 12, color: const Color(0xFF6D746F)),
+                contentPadding: const EdgeInsets.all(12),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Inclusions
+          Wrap(
+            spacing: 14,
+            runSpacing: 6,
+            children: [
+              _InclusionChip("Styling & installation"),
+              _InclusionChip("Teardown"),
+              _InclusionChip("Dedicated coordinator"),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // ADD TO MY SELECTION button
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                cartController.addToCart(
+                  item,
+                  color: _selectedColor,
+                  theme: _selectedTheme,
+                  notes: _notesController.text,
+                );
+                Navigator.of(context).pop();
+                Get.snackbar(
+                  "Added to Canvas",
+                  "${item.name} added to your selection.",
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              },
+              icon: const Icon(Icons.add, size: 16, color: Colors.white),
+              label: Text(
+                "ADD TO MY SELECTION",
+                style: AppTheme.sansBody(
+                  fontSize: 11,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFAA7C4B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: ((width - dialogWidth) / 2).clamp(8.0, double.infinity),
+        vertical: (height - dialogMaxHeight) / 2,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: dialogMaxHeight,
+        ),
+        child: Material(
+          color: const Color(0xFFFBF9F4),
+          borderRadius: BorderRadius.zero,
+          child: Stack(
+            children: [
+              // Content: image left + right panel
+              isDesktop
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Left: image
+                        SizedBox(
+                          width: dialogWidth * 0.47,
+                          child: _buildImage(
+                            item.imageUrl,
+                            item.name,
+                            item.categorySlug,
+                            item.categoryName,
+                          ),
+                        ),
+                        // Right: scrollable detail panel
+                        Expanded(child: rightPanel),
+                      ],
+                    )
+                  : rightPanel,
+              // Close button (top-right)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBF9F4),
+                      border: Border.all(
+                        color: const Color(0xFF17201E).withValues(alpha: 0.2),
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close, size: 16, color: Color(0xFF17201E)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModalDropdown extends StatelessWidget {
+  final String value;
+  final List<String> items;
+  final void Function(String) onChanged;
+
+  const _ModalDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFF17201E).withValues(alpha: 0.2)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: value,
+          style: AppTheme.sansBody(fontSize: 13, color: const Color(0xFF17201E)),
+          iconEnabledColor: const Color(0xFF17201E),
+          items: items
+              .map((s) => DropdownMenuItem(
+                    value: s,
+                    child: Text(s),
+                  ))
+              .toList(),
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _InclusionChip extends StatelessWidget {
+  final String label;
+  const _InclusionChip(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.check, size: 12, color: Color(0xFFAA7C4B)),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: AppTheme.sansBody(
+            fontSize: 11,
+            color: const Color(0xFF6D746F),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
 // 4. CATEGORIES
+
+
+class _ConcentricCirclesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final paint1 = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    final paint2 = Paint()
+      ..color = Colors.white.withValues(alpha: 0.025)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 24;
+
+    final paint3 = Paint()
+      ..color = Colors.white.withValues(alpha: 0.018)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 50;
+
+    canvas.drawCircle(center, 120.0 + 25.0, paint3);
+    canvas.drawCircle(center, 120.0 + 12.0, paint2);
+    canvas.drawCircle(center, 120.0, paint1);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _CategoryCard extends StatefulWidget {
+  final Category category;
+  final VoidCallback onTap;
+
+  const _CategoryCard({
+    required this.category,
+    required this.onTap,
+  });
+
+  @override
+  State<_CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<_CategoryCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    Color catColor;
+    try {
+      catColor = Color(int.parse(widget.category.color.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      catColor = const Color(0xFFC79B61);
+    }
+    const cardBackground = Color(0xFF1C2724);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+          transform: Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    )
+                  ]
+                : [],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Stack(
+              children: [
+                // 1. Gradient Background
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          catColor,
+                          cardBackground,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 2. Decorative Concentric Circles in Top-Right
+                Positioned(
+                  right: -60,
+                  top: -70,
+                  child: CustomPaint(
+                    size: const Size(240, 240),
+                    painter: _ConcentricCirclesPainter(),
+                  ),
+                ),
+
+                // 3. Card Content
+                Padding(
+                  padding: const EdgeInsets.all(28.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Top Row: Icon
+                      Text(
+                        widget.category.icon,
+                        style: const TextStyle(fontSize: 34),
+                      ),
+
+                      // Bottom Column: Text info
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${widget.category.itemCount} SIGNATURE EXPERIENCES",
+                            style: AppTheme.sansBody(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white.withValues(alpha: 0.65),
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            widget.category.name,
+                            style: GoogleFonts.italiana(
+                              fontSize: 30,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.category.description,
+                            style: AppTheme.sansBody(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.7),
+                              height: 1.6,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 4. Arrow Button in Bottom-Right
+                Positioned(
+                  right: 24,
+                  bottom: 24,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isHovered ? Colors.white : Colors.transparent,
+                      border: Border.all(
+                        color: _isHovered
+                            ? Colors.transparent
+                            : Colors.white.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: AnimatedRotation(
+                      turns: _isHovered ? 0.125 : 0.0, // Rotate by 45 degrees
+                      duration: const Duration(milliseconds: 250),
+                      child: Text(
+                        "↗",
+                        style: AppTheme.sansBody(
+                          fontSize: 18,
+                          color: _isHovered ? const Color(0xFF17201E) : Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CategoriesSection extends StatelessWidget {
   final CatalogController controller;
   final GlobalKey categoriesKey;
+  final GlobalKey catalogKey;
 
   const _CategoriesSection({
     required this.controller,
     required this.categoriesKey,
+    required this.catalogKey,
   });
 
   @override
@@ -879,73 +1734,136 @@ class _CategoriesSection extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final paddingHorizontal = width >= 1000 ? 64.0 : 24.0;
 
-    return Padding(
+    // Spacing clamp
+    final double sectionPaddingVertical = (width * 0.08).clamp(85.0, 155.0);
+    final double titleSize = width >= 700 ? (width * 0.05).clamp(46.0, 78.0) : 42.0;
+    final bool isWide = width >= 800;
+
+    final headingWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "BEGIN WITH A FEELING",
+          style: AppTheme.sansBody(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: const Color(0xFFAA7C4B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        RichText(
+          text: TextSpan(
+            style: GoogleFonts.italiana(
+              fontSize: titleSize,
+              fontWeight: FontWeight.normal,
+              color: isDark ? Colors.white : const Color(0xFF17201E),
+              height: 0.98,
+            ),
+            children: [
+              const TextSpan(text: "What are we\n"),
+              TextSpan(
+                text: "celebrating?",
+                style: GoogleFonts.italiana(
+                  fontStyle: FontStyle.italic,
+                  color: const Color(0xFFAA7C4B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final descWidget = Container(
+      constraints: const BoxConstraints(maxWidth: 400),
+      child: Text(
+        "Choose a chapter and make it personal. Every collection is a starting point, never a fixed package.",
+        style: AppTheme.sansBody(
+          fontSize: 14,
+          color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+          height: 1.8,
+        ),
+      ),
+    );
+
+    final headerRow = isWide
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              headingWidget,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5.0),
+                child: descWidget,
+              ),
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              headingWidget,
+              const SizedBox(height: 22),
+              descWidget,
+            ],
+          );
+
+    return Container(
       key: categoriesKey,
-      padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: 40),
+      width: double.infinity,
+      color: isDark ? const Color(0xFF0B100E) : const Color(0xFFFAF8F5),
+      padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: sectionPaddingVertical),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Begin with a feeling",
-                style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "What are we celebrating?",
-                style: AppTheme.serifHeader(fontSize: 32),
-              ),
-              const SizedBox(height: 24),
+              headerRow,
+              const SizedBox(height: 62),
               Obx(() {
                 if (controller.isLoadingCategories.value) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFFAA7C4B)));
                 }
 
-                return Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: controller.rxCategories.map((cat) {
-                    final isSelected = controller.selectedCategorySlug.value == cat.slug;
-                    return GestureDetector(
-                      onTap: () => controller.selectCategory(cat.slug),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? (isDark ? AppTheme.darkGold : AppTheme.lightGold)
-                              : (isDark ? AppTheme.darkPaper : AppTheme.lightPaper),
-                          border: Border.all(
-                            color: isSelected
-                                ? Colors.transparent
-                                : (isDark ? AppTheme.darkLine : AppTheme.lightLine),
-                          ),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(cat.icon, style: const TextStyle(fontSize: 16)),
-                            const SizedBox(width: 8),
-                            Text(
-                              cat.name.replaceFirst(" Celebrations", "").toUpperCase(),
-                              style: AppTheme.sansBody(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected
-                                    ? Colors.white
-                                    : (isDark ? AppTheme.darkInk : AppTheme.lightInk),
-                                letterSpacing: 1.1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                if (controller.rxCategories.isEmpty) {
+                  return const SizedBox();
+                }
+
+                final gridCount = width >= 1000 ? 3 : (width >= 600 ? 2 : 1);
+                final double cardHeight = width >= 600 ? 275 : 230;
+                final double gridWidth = width - (paddingHorizontal * 2);
+                final double cardWidth = (gridWidth.clamp(0.0, 1200.0) - (gridCount - 1) * 16) / gridCount;
+                final double childAspectRatio = cardWidth / cardHeight;
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: gridCount,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: childAspectRatio,
+                  ),
+                  itemCount: controller.rxCategories.length,
+                  itemBuilder: (context, index) {
+                    final cat = controller.rxCategories[index];
+                    return _CategoryCard(
+                      category: cat,
+                      onTap: () {
+                        controller.selectCategory(cat.slug);
+                        if (catalogKey.currentContext != null) {
+                          Scrollable.ensureVisible(
+                            catalogKey.currentContext!,
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      },
                     );
-                  }).toList(),
+                  },
                 );
-              })
+              }),
             ],
           ),
         ),
@@ -955,20 +1873,24 @@ class _CategoriesSection extends StatelessWidget {
 }
 
 // 5. EXPERIENCES CATALOG
-class _ExperiencesCatalogSection extends StatelessWidget {
-  final CatalogController controller;
-  final CartController cartController;
-  final GlobalKey catalogKey;
-  final bool isDesktop;
-  final bool isTablet;
 
-  const _ExperiencesCatalogSection({
-    required this.controller,
-    required this.cartController,
-    required this.catalogKey,
-    required this.isDesktop,
-    required this.isTablet,
+class _ExperienceCard extends StatefulWidget {
+  final Experience item;
+  final VoidCallback onQuickAdd;
+  final VoidCallback onTap;
+
+  const _ExperienceCard({
+    required this.item,
+    required this.onQuickAdd,
+    required this.onTap,
   });
+
+  @override
+  State<_ExperienceCard> createState() => _ExperienceCardState();
+}
+
+class _ExperienceCardState extends State<_ExperienceCard> {
+  bool _isHovered = false;
 
   Widget _buildImage(String url, String title, String categorySlug, String categoryName) {
     if (url.isEmpty) {
@@ -991,55 +1913,477 @@ class _ExperiencesCatalogSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1.12,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: AnimatedScale(
+                        scale: _isHovered ? 1.04 : 1.0,
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeOut,
+                        child: _buildImage(
+                          widget.item.imageUrl,
+                          widget.item.name,
+                          widget.item.categorySlug,
+                          widget.item.categoryName,
+                        ),
+                      ),
+                    ),
+                    if (widget.item.isFeatured)
+                      Positioned(
+                        left: 14,
+                        top: 14,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                          color: const Color(0xEBFAF5EE),
+                          child: Text(
+                            "MOST LOVED",
+                            style: AppTheme.sansBody(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF28322E),
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      right: 14,
+                      bottom: 14,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: widget.onQuickAdd,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _isHovered ? const Color(0xFFC79B61) : const Color(0xE6192320),
+                            ),
+                            alignment: Alignment.center,
+                            child: AnimatedRotation(
+                              turns: _isHovered ? 0.25 : 0.0,
+                              duration: const Duration(milliseconds: 250),
+                              child: const Text(
+                                "+",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${widget.item.categoryName.toUpperCase()} · ${widget.item.durationHours.toStringAsFixed(0)} HRS",
+                    style: AppTheme.sansBody(
+                      fontSize: 9,
+                      color: const Color(0xFFAA7C4B),
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    widget.item.name,
+                    style: GoogleFonts.italiana(
+                      fontSize: 25,
+                      fontWeight: FontWeight.normal,
+                      color: isDark ? Colors.white : const Color(0xFF17201E),
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 38,
+                    child: Text(
+                      widget.item.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.sansBody(
+                        fontSize: 12,
+                        color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 13),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            AppFormatters.formatCurrency(widget.item.effectivePrice),
+                            style: AppTheme.sansBody(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF17201E),
+                            ),
+                          ),
+                          if (widget.item.offerPrice != null && widget.item.offerPrice! < widget.item.price) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              AppFormatters.formatCurrency(widget.item.price),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(width: 6),
+                          Text(
+                            "starting price",
+                            style: AppTheme.sansBody(
+                              fontSize: 11,
+                              color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 12, color: Color(0xFFC79B61)),
+                          const SizedBox(width: 3),
+                          Text(
+                            "${widget.item.rating} (${widget.item.reviewCount})",
+                            style: AppTheme.sansBody(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExperiencesCatalogSection extends StatelessWidget {
+  final CatalogController controller;
+  final CartController cartController;
+  final GlobalKey catalogKey;
+  final bool isDesktop;
+  final bool isTablet;
+
+  const _ExperiencesCatalogSection({
+    required this.controller,
+    required this.cartController,
+    required this.catalogKey,
+    required this.isDesktop,
+    required this.isTablet,
+  });
+
+  Widget _buildChip({
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+          decoration: BoxDecoration(
+            color: isActive
+                ? (isDark ? Colors.white : const Color(0xFF1E2B27))
+                : Colors.transparent,
+            border: Border.all(
+              color: isActive
+                  ? Colors.transparent
+                  : (isDark ? Colors.white24 : Colors.black12),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Text(
+            label,
+            style: AppTheme.sansBody(
+              fontSize: 11,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive
+                  ? (isDark ? const Color(0xFF17201E) : Colors.white)
+                  : (isDark ? Colors.white70 : Colors.black87),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final width = MediaQuery.of(context).size.width;
     final paddingHorizontal = isDesktop ? 64.0 : 24.0;
-    final gridCount = isDesktop ? 3 : (isTablet ? 2 : 1);
+
+    final double sectionPaddingVertical = (width * 0.08).clamp(85.0, 155.0);
+    final double titleSize = width >= 700 ? (width * 0.05).clamp(46.0, 78.0) : 42.0;
+    final bool isWide = width >= 800;
+
+    final headingWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "CURATED EXPERIENCES",
+          style: AppTheme.sansBody(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: const Color(0xFFAA7C4B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        RichText(
+          text: TextSpan(
+            style: GoogleFonts.italiana(
+              fontSize: titleSize,
+              fontWeight: FontWeight.normal,
+              color: isDark ? Colors.white : const Color(0xFF17201E),
+              height: 0.98,
+            ),
+            children: [
+              const TextSpan(text: "Designed to leave\n"),
+              const TextSpan(text: "a "),
+              TextSpan(
+                text: "beautiful echo.",
+                style: GoogleFonts.italiana(
+                  fontStyle: FontStyle.italic,
+                  color: const Color(0xFFAA7C4B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final descWidget = Container(
+      constraints: const BoxConstraints(maxWidth: 400),
+      child: Text(
+        "Explore signature concepts, see an honest starting price, then tune every color, material and detail.",
+        style: AppTheme.sansBody(
+          fontSize: 14,
+          color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+          height: 1.8,
+        ),
+      ),
+    );
+
+    final headerRow = isWide
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              headingWidget,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5.0),
+                child: descWidget,
+              ),
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              headingWidget,
+              const SizedBox(height: 22),
+              descWidget,
+            ],
+          );
+
+    final searchWidget = Container(
+      height: 46,
+      width: isWide ? 280 : double.infinity,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.white24 : Colors.black12,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search,
+            size: 18,
+            color: isDark ? Colors.white54 : Colors.black45,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              onChanged: (val) => controller.updateSearchQuery(val),
+              style: AppTheme.sansBody(
+                fontSize: 13,
+                color: isDark ? Colors.white : const Color(0xFF17201E),
+              ),
+              decoration: const InputDecoration(
+                hintText: "Search a mood, theme or event…",
+                hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final sortWidget = Container(
+      height: 46,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.white24 : Colors.black12,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Obx(() => DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: controller.sortBy.value,
+              dropdownColor: isDark ? const Color(0xFF1B2320) : Colors.white,
+              icon: Padding(
+                padding: const EdgeInsets.only(left: 6.0),
+                child: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 16,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'popular', child: Text("Most loved")),
+                DropdownMenuItem(value: 'latest', child: Text("Latest")),
+                DropdownMenuItem(value: 'price_low', child: Text("Price: low to high")),
+                DropdownMenuItem(value: 'price_high', child: Text("Price: high to low")),
+              ],
+              onChanged: (val) {
+                if (val != null) controller.updateSort(val);
+              },
+              style: AppTheme.sansBody(
+                fontSize: 12,
+                color: isDark ? Colors.white : const Color(0xFF17201E),
+              ),
+            ),
+          )),
+    );
+
+    final chipsWidget = SizedBox(
+      height: 46,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            Obx(() {
+              final isActive = controller.selectedCategorySlug.value.isEmpty;
+              return _buildChip(
+                label: "All",
+                isActive: isActive,
+                onTap: () => controller.selectCategory(''),
+                isDark: isDark,
+              );
+            }),
+            const SizedBox(width: 7),
+            Obx(() => Row(
+                  children: controller.rxCategories.map((cat) {
+                    final isActive = controller.selectedCategorySlug.value == cat.slug;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 7.0),
+                      child: _buildChip(
+                        label: cat.name.replaceFirst(" Celebrations", ""),
+                        isActive: isActive,
+                        onTap: () => controller.selectCategory(cat.slug),
+                        isDark: isDark,
+                      ),
+                    );
+                  }).toList(),
+                )),
+          ],
+        ),
+      ),
+    );
+
+    final toolbar = isWide
+        ? Row(
+            children: [
+              searchWidget,
+              const SizedBox(width: 14),
+              Expanded(child: chipsWidget),
+              const SizedBox(width: 14),
+              sortWidget,
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              searchWidget,
+              const SizedBox(height: 14),
+              chipsWidget,
+              const SizedBox(height: 14),
+              Align(alignment: Alignment.centerLeft, child: sortWidget),
+            ],
+          );
 
     return Container(
       key: catalogKey,
       color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-      padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: 80),
+      padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: sectionPaddingVertical),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Search & Filter Toolbar
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      onChanged: (val) => controller.updateSearchQuery(val),
-                      style: AppTheme.sansBody(fontSize: 13),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.search, size: 18),
-                        hintText: "Search a mood, theme or event...",
-                        hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                        border: UnderlineInputBorder(
-                          borderSide: BorderSide(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Obx(() => DropdownButton<String>(
-                        value: controller.sortBy.value,
-                        items: const [
-                          DropdownMenuItem(value: 'popular', child: Text("Popularity")),
-                          DropdownMenuItem(value: 'latest', child: Text("Newest")),
-                          DropdownMenuItem(value: 'price_low', child: Text("Price: Low-High")),
-                          DropdownMenuItem(value: 'price_high', child: Text("Price: High-Low")),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) controller.updateSort(val);
-                        },
-                        style: AppTheme.sansBody(fontSize: 12, color: isDark ? AppTheme.darkInk : AppTheme.lightInk),
-                      )),
-                ],
-              ),
-              const SizedBox(height: 48),
-
-              // Catalog Grid
+              headerRow,
+              const SizedBox(height: 62),
+              toolbar,
+              const SizedBox(height: 34),
               Obx(() {
                 if (controller.isLoadingExperiences.value) {
                   return const Center(child: LoadingIndicator(message: "Refreshing experiences canvas..."));
@@ -1050,135 +2394,41 @@ class _ExperiencesCatalogSection extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 60),
                     child: Center(
                       child: Text(
-                        "No signature experiences match your search.",
+                        "No experiences match that search. Try a broader mood.",
                         style: AppTheme.sansBody(fontSize: 14, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted),
                       ),
                     ),
                   );
                 }
 
+                final gridCount = isDesktop ? 3 : (isTablet ? 2 : 1);
+                final double gridWidth = width - (paddingHorizontal * 2);
+                final double cardWidth = (gridWidth.clamp(0.0, 1200.0) - (gridCount - 1) * 18) / gridCount;
+                final double childAspectRatio = cardWidth / ((cardWidth / 1.12) + 170);
+
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: gridCount,
-                    crossAxisSpacing: 32,
-                    mainAxisSpacing: 48,
-                    childAspectRatio: isDesktop ? 0.72 : (isTablet ? 0.78 : 0.85),
+                    crossAxisSpacing: 18,
+                    mainAxisSpacing: 32,
+                    childAspectRatio: childAspectRatio,
                   ),
                   itemCount: controller.rxExperiences.length,
                   itemBuilder: (context, index) {
                     final item = controller.rxExperiences[index];
-                    return GestureDetector(
-                      onTap: () => Get.toNamed('${AppRoutes.detail}/${item.slug}'),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Image Container with fallback and QuickAdd
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: _buildImage(item.imageUrl, item.name, item.categorySlug, item.categoryName),
-                                ),
-                                if (item.isFeatured)
-                                  Positioned(
-                                    left: 14,
-                                    top: 14,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                      color: (isDark ? AppTheme.darkPaper : AppTheme.lightPaper).withOpacity(0.92),
-                                      child: Text(
-                                        "MOST LOVED",
-                                        style: AppTheme.sansBody(fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 1),
-                                      ),
-                                    ),
-                                  ),
-                                Positioned(
-                                  right: 14,
-                                  bottom: 14,
-                                  child: FloatingActionButton(
-                                    mini: true,
-                                    heroTag: 'add-quick-${item.id}',
-                                    backgroundColor: isDark ? AppTheme.darkGold : AppTheme.lightGold,
-                                    foregroundColor: Colors.white,
-                                    onPressed: () {
-                                      cartController.addToCart(item);
-                                      Get.snackbar("Added to Canvas", "${item.name} added.");
-                                    },
-                                    child: const Icon(Icons.add, size: 20),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "${item.categoryName.toUpperCase()} · ${item.durationHours.toStringAsFixed(0)} HRS",
-                                style: AppTheme.sansBody(
-                                    fontSize: 9,
-                                    color: isDark ? AppTheme.darkGold : AppTheme.lightGold,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2),
-                              ),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star, size: 12, color: Colors.amber),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    "${item.rating} (${item.reviewCount})",
-                                    style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            item.name,
-                            style: AppTheme.serifHeader(fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            item.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTheme.sansBody(fontSize: 13, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted, height: 1.4),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Text(
-                                AppFormatters.formatCurrency(item.effectivePrice),
-                                style: AppTheme.sansBody(fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              if (item.offerPrice != null) ...[
-                                const SizedBox(width: 8),
-                                Text(
-                                  AppFormatters.formatCurrency(item.price),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(width: 6),
-                              Text(
-                                "starting price",
-                                style: AppTheme.sansBody(fontSize: 10, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted),
-                              )
-                            ],
-                          )
-                        ],
-                      ),
+                    return _ExperienceCard(
+                      item: item,
+                      onQuickAdd: () {
+                        cartController.addToCart(item);
+                        Get.snackbar("Added to Canvas", "${item.name} added.", snackPosition: SnackPosition.BOTTOM);
+                      },
+                      onTap: () => _showExperienceDetailDialog(context, item),
                     );
                   },
                 );
-              })
+              }),
             ],
           ),
         ),
@@ -1191,74 +2441,74 @@ class _ExperiencesCatalogSection extends StatelessWidget {
 class _VideoStoriesSection extends StatelessWidget {
   final GlobalKey storiesKey;
   final bool isDesktop;
+  final GlobalKey catalogKey;
 
   const _VideoStoriesSection({
     required this.storiesKey,
     required this.isDesktop,
+    required this.catalogKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    final paddingHorizontal = isDesktop ? 64.0 : 24.0;
-
-    return Padding(
+    return Container(
       key: storiesKey,
-      padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: 80),
+      width: double.infinity,
+      color: const Color(0xFF16201D),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 64.0 : 24.0,
+        vertical: isDesktop ? 100.0 : 60.0,
+      ),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Visual Stories",
-                style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2),
+              _VideoStoryRow(
+                isDesktop: isDesktop,
+                eyebrow: "Celebrate in style",
+                titlePart1: "A glimpse before",
+                titlePart2: "the big day.",
+                description:
+                    "From elegant balloon styling to personalized backdrops and thoughtful details, we create celebrations that feel joyful, memorable, and uniquely yours. Every setup is crafted to make your special day unforgettable.",
+                facts: const [
+                  "Theme & Planning",
+                  "Production & styling",
+                  "Celebrate & Capture Memories",
+                ],
+                videoAsset: "assets/videos/Birthday.mp4",
+                posterAsset: "assets/images/birthday.jpg",
+                onCtaPressed: () {
+                  Scrollable.ensureVisible(
+                    catalogKey.currentContext!,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
               ),
-              const SizedBox(height: 12),
-              Text(
-                "Capturing the moments.",
-                style: AppTheme.serifHeader(fontSize: 32, height: 1.1),
+              SizedBox(height: isDesktop ? 100 : 60),
+              _VideoStoryRow(
+                isDesktop: isDesktop,
+                eyebrow: "Experience the excitement",
+                titlePart1: "Balloon Blast",
+                titlePart2: "the perfect surprise.",
+                description:
+                    "A single pop transforms the atmosphere into a shower of colors, confetti, and unforgettable smiles. Designed to create the perfect reveal for birthdays, proposals, anniversaries, baby showers, and every celebration worth remembering.",
+                facts: const [
+                  "Suspense & Countdown",
+                  "Balloon Blast Moment",
+                  "Cheers & Celebration",
+                ],
+                videoAsset: "assets/videos/Balloonblast.mp4",
+                posterAsset: "assets/images/BaloonBlast.jpg",
+                onCtaPressed: () {
+                  Scrollable.ensureVisible(
+                    catalogKey.currentContext!,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
               ),
-              const SizedBox(height: 36),
-              isDesktop
-                  ? const Row(
-                      children: [
-                        Expanded(
-                          child: VideoStoryCard(
-                            posterAsset: "assets/images/birthday.jpg",
-                            videoAsset: "assets/videos/Birthday.mp4",
-                            tag: "Sample Films",
-                            title: "A glimpse before the big day",
-                          ),
-                        ),
-                        const SizedBox(width: 32),
-                        Expanded(
-                          child: VideoStoryCard(
-                            posterAsset: "assets/images/BaloonBlast.jpg",
-                            videoAsset: "assets/videos/Balloonblast.mp4",
-                            tag: "Intimate Surprises",
-                            title: "Balloon Blast the perfect surprise",
-                          ),
-                        ),
-                      ],
-                    )
-                  : const Column(
-                      children: [
-                        VideoStoryCard(
-                          posterAsset: "assets/images/birthday.jpg",
-                          videoAsset: "assets/videos/Birthday.mp4",
-                          tag: "Sample Films",
-                          title: "A glimpse before the big day",
-                        ),
-                        const SizedBox(height: 32),
-                        VideoStoryCard(
-                          posterAsset: "assets/images/BaloonBlast.jpg",
-                          videoAsset: "assets/videos/Balloonblast.mp4",
-                          tag: "Intimate Surprises",
-                          title: "Balloon Blast the perfect surprise",
-                        ),
-                      ],
-                    ),
             ],
           ),
         ),
@@ -1267,25 +2517,168 @@ class _VideoStoriesSection extends StatelessWidget {
   }
 }
 
-class VideoStoryCard extends StatefulWidget {
-  final String posterAsset;
+class _VideoStoryRow extends StatelessWidget {
+  final bool isDesktop;
+  final String eyebrow;
+  final String titlePart1;
+  final String titlePart2;
+  final String description;
+  final List<String> facts;
   final String videoAsset;
-  final String tag;
-  final String title;
+  final String posterAsset;
+  final VoidCallback onCtaPressed;
 
-  const VideoStoryCard({
-    super.key,
-    required this.posterAsset,
+  const _VideoStoryRow({
+    required this.isDesktop,
+    required this.eyebrow,
+    required this.titlePart1,
+    required this.titlePart2,
+    required this.description,
+    required this.facts,
     required this.videoAsset,
-    required this.tag,
-    required this.title,
+    required this.posterAsset,
+    required this.onCtaPressed,
   });
 
   @override
-  State<VideoStoryCard> createState() => _VideoStoryCardState();
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final double titleSize = isDesktop ? (width * 0.045).clamp(42.0, 76.0) : 34.0;
+
+    final copyWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow.toUpperCase(),
+          style: AppTheme.sansBody(
+            fontSize: 10,
+            color: const Color(0xFFD6B080), // gold-2
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 14),
+        RichText(
+          text: TextSpan(
+            style: GoogleFonts.italiana(
+              fontSize: titleSize,
+              color: Colors.white,
+              height: 0.98,
+            ),
+            children: [
+              TextSpan(text: "$titlePart1\n"),
+              TextSpan(
+                text: titlePart2,
+                style: GoogleFonts.italiana(
+                  fontStyle: FontStyle.italic,
+                  color: const Color(0xFFD6B080), // gold-2
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          description,
+          style: AppTheme.sansBody(
+            fontSize: 14,
+            color: const Color(0xFFF4F0E8).withValues(alpha: 0.65),
+            height: 1.65,
+          ),
+        ),
+        const SizedBox(height: 28),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(facts.length, (index) {
+            final numStr = "0${index + 1}";
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      numStr,
+                      style: AppTheme.sansBody(
+                        fontSize: 10,
+                        color: const Color(0xFFD6B080),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      facts[index].toUpperCase(),
+                      style: AppTheme.sansBody(
+                        fontSize: 10,
+                        color: const Color(0xFFF4F0E8),
+                        fontWeight: FontWeight.normal,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 32),
+        CustomButton(
+          text: "Build your celebration ↗",
+          isPrimary: false,
+          onPressed: onCtaPressed,
+        ),
+      ],
+    );
+
+    final videoWidget = _VideoStoryFrame(
+      videoAsset: videoAsset,
+      posterAsset: posterAsset,
+    );
+
+    if (isDesktop) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 8,
+            child: copyWidget,
+          ),
+          const SizedBox(width: 80),
+          Expanded(
+            flex: 12,
+            child: videoWidget,
+          ),
+        ],
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          copyWidget,
+          const SizedBox(height: 40),
+          videoWidget,
+        ],
+      );
+    }
+  }
 }
 
-class _VideoStoryCardState extends State<VideoStoryCard> {
+class _VideoStoryFrame extends StatefulWidget {
+  final String videoAsset;
+  final String posterAsset;
+
+  const _VideoStoryFrame({
+    required this.videoAsset,
+    required this.posterAsset,
+  });
+
+  @override
+  State<_VideoStoryFrame> createState() => _VideoStoryFrameState();
+}
+
+class _VideoStoryFrameState extends State<_VideoStoryFrame> {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
   bool _isPlaying = false;
@@ -1334,8 +2727,6 @@ class _VideoStoryCardState extends State<VideoStoryCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return MouseRegion(
       onEnter: (_) {
         setState(() => _isHovered = true);
@@ -1354,100 +2745,74 @@ class _VideoStoryCardState extends State<VideoStoryCard> {
       child: GestureDetector(
         onTap: _togglePlay,
         child: Container(
-          height: 480,
           decoration: BoxDecoration(
-            border: Border.all(
-              color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
-              width: 1,
-            ),
-          ),
-          child: Stack(
-            children: [
-              // Video / Poster
-              Positioned.fill(
-                child: ClipRect(
-                  child: _isInitialized && _isPlaying
-                      ? FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _controller!.value.size.width,
-                            height: _controller!.value.size.height,
-                            child: VideoPlayer(_controller!),
-                          ),
-                        )
-                      : Image.asset(
-                          widget.posterAsset,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-              ),
-              // Dark gradient overlay
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.1),
-                        Colors.black.withOpacity(0.72),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // Play/Pause indicator
-              Center(
-                child: AnimatedOpacity(
-                  opacity: _isHovered ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.2),
-                      border: Border.all(color: Colors.white, width: 1),
-                    ),
-                    child: Icon(
-                      _isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-              // Labels
-              Positioned(
-                left: 24,
-                bottom: 24,
-                right: 24,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.tag.toUpperCase(),
-                      style: const TextStyle(
-                        fontFamily: 'Arial',
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFC39463),
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontFamily: 'Georgia',
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 80,
+                offset: const Offset(0, 28),
               ),
             ],
+          ),
+          child: AspectRatio(
+            aspectRatio: 16 / 10,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ClipRect(
+                    child: _isInitialized && _isPlaying
+                        ? FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _controller!.value.size.width,
+                              height: _controller!.value.size.height,
+                              child: VideoPlayer(_controller!),
+                            ),
+                          )
+                        : Image.asset(
+                            widget.posterAsset,
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  top: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    color: const Color(0xC70F1815),
+                    child: Text(
+                      "SAMPLE EVENT FILM · HD",
+                      style: AppTheme.sansBody(
+                        fontSize: 8,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: AnimatedOpacity(
+                    opacity: _isHovered ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.2),
+                        border: Border.all(color: Colors.white, width: 1),
+                      ),
+                      child: Icon(
+                        _isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1709,7 +3074,7 @@ class _ContactSection extends StatelessWidget {
                         children: [
                           Text(
                             "Tell us the dream, the venue, and the number you want to stay near. We’ll shape the rest together.",
-                            style: AppTheme.sansBody(fontSize: 15, color: Colors.white.withOpacity(0.9), height: 1.6),
+                            style: AppTheme.sansBody(fontSize: 15, color: Colors.white.withValues(alpha: 0.9), height: 1.6),
                           ),
                           const SizedBox(height: 28),
                           CustomButton(
@@ -2010,27 +3375,27 @@ class _NavDrawer extends StatelessWidget {
             Text("OE", style: AppTheme.serifHeader(fontSize: 32, color: goldColor)),
             Text("OM EVENTS", style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2)),
             const Divider(height: 40),
-            _drawerTile("COLLECTIONS", () {
+            _drawerTile("Collections", () {
               Navigator.pop(context);
               Scrollable.ensureVisible(categoriesKey.currentContext!, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
             }),
-            _drawerTile("EXPERIENCES", () {
+            _drawerTile("Experiences", () {
               Navigator.pop(context);
               Scrollable.ensureVisible(catalogKey.currentContext!, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
             }),
-            _drawerTile("STORIES", () {
+            _drawerTile("Stories", () {
               Navigator.pop(context);
               Scrollable.ensureVisible(storiesKey.currentContext!, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
             }),
-            _drawerTile("CONTACT", () {
+            _drawerTile("Contact", () {
               Navigator.pop(context);
               Scrollable.ensureVisible(contactKey.currentContext!, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
             }),
-            _drawerTile("DEVELOPER API", () {
+            _drawerTile("Developer API", () {
               Navigator.pop(context);
               Get.toNamed(AppRoutes.docs);
             }),
-            _drawerTile("TEAM STUDIO", () {
+            _drawerTile("Team Studio", () {
               Navigator.pop(context);
               Get.toNamed(AppRoutes.login);
             }),
@@ -2664,7 +4029,7 @@ class _AnimatedStatTileState extends State<_AnimatedStatTile> with SingleTickerP
           decoration: BoxDecoration(
             border: Border(
               left: BorderSide(
-                color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.15),
+                color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.15),
                 width: 1,
               ),
             ),
@@ -2686,7 +4051,7 @@ class _AnimatedStatTileState extends State<_AnimatedStatTile> with SingleTickerP
                 widget.label.toUpperCase(),
                 style: AppTheme.sansBody(
                   fontSize: 9,
-                  color: creamColor.withOpacity(0.65),
+                  color: creamColor.withValues(alpha: 0.65),
 
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,

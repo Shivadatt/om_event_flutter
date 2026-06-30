@@ -13,4 +13,13 @@ abstract class CatalogRepository {
   });
   Future<Experience> getExperienceDetail(String slug);
   Future<List<Review>> getPublishedReviews();
+
+  // Admin CRUD Operations
+  Future<void> createCategory(Category category);
+  Future<void> updateCategory(Category category);
+  Future<void> deleteCategory(String slug);
+
+  Future<void> createExperience(Experience experience);
+  Future<void> updateExperience(Experience experience);
+  Future<void> deleteExperience(String slug);
 }

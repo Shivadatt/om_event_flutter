@@ -11,6 +11,7 @@ class CategoryModel extends Category {
     required super.imageUrl,
     required super.sortOrder,
     super.itemCount,
+    required super.isActive,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json, String documentId) {
@@ -24,6 +25,7 @@ class CategoryModel extends Category {
       imageUrl: json['image_url'] ?? json['imageUrl'] ?? '',
       sortOrder: json['sort_order'] ?? json['sortOrder'] ?? 0,
       itemCount: json['item_count'] ?? json['itemCount'] ?? 0,
+      isActive: json['is_active'] ?? json['isActive'] ?? true,
     );
   }
 
@@ -37,6 +39,7 @@ class CategoryModel extends Category {
       'image_url': imageUrl,
       'sort_order': sortOrder,
       'item_count': itemCount,
+      'is_active': isActive,
     };
   }
 }

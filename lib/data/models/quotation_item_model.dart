@@ -24,11 +24,11 @@ class QuotationItemModel {
   factory QuotationItemModel.fromJson(Map<String, dynamic> json, String id) {
     return QuotationItemModel(
       id: id,
-      quotationId: json['quotationId'] ?? '',
-      decorationItemId: json['decorationItemId'] ?? '',
+      quotationId: json['quotation_id'] ?? json['quotationId'] ?? '',
+      decorationItemId: json['decoration_item_id'] ?? json['decorationItemId'] ?? '',
       name: json['name'] ?? '',
       quantity: json['quantity'] as int? ?? 1,
-      unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0.0,
+      unitPrice: ((json['unit_price'] ?? json['unitPrice']) as num?)?.toDouble() ?? 0.0,
       color: json['color'] ?? '',
       theme: json['theme'] ?? '',
       notes: json['notes'] ?? '',
@@ -37,11 +37,11 @@ class QuotationItemModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'quotationId': quotationId,
-      'decorationItemId': decorationItemId,
+      'quotation_id': quotationId,
+      'decoration_item_id': decorationItemId,
       'name': name,
       'quantity': quantity,
-      'unitPrice': unitPrice,
+      'unit_price': unitPrice,
       'color': color,
       'theme': theme,
       'notes': notes,

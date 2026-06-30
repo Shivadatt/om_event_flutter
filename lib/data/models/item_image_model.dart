@@ -18,23 +18,23 @@ class ItemImageModel {
   factory ItemImageModel.fromJson(Map<String, dynamic> json, String id) {
     return ItemImageModel(
       id: id,
-      decorationItemId: json['decorationItemId'] ?? '',
+      decorationItemId: json['decoration_item_id'] ?? json['decorationItemId'] ?? '',
       url: json['url'] ?? '',
-      altText: json['altText'] ?? '',
-      sortOrder: json['sortOrder'] as int? ?? 0,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+      altText: json['alt_text'] ?? json['altText'] ?? '',
+      sortOrder: (json['sort_order'] ?? json['sortOrder']) as int? ?? 0,
+      createdAt: (json['created_at'] ?? json['createdAt']) != null
+          ? DateTime.parse((json['created_at'] ?? json['createdAt']))
           : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'decorationItemId': decorationItemId,
+      'decoration_item_id': decorationItemId,
       'url': url,
-      'altText': altText,
-      'sortOrder': sortOrder,
-      'createdAt': createdAt.toIso8601String(),
+      'alt_text': altText,
+      'sort_order': sortOrder,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

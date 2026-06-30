@@ -8,6 +8,7 @@ class Category {
   final String imageUrl;
   final int sortOrder;
   final int itemCount;
+  final bool isActive;
 
   const Category({
     required this.id,
@@ -19,5 +20,6 @@ class Category {
     required this.imageUrl,
     required this.sortOrder,
     this.itemCount = 0,
+    required this.isActive,
   });
 }

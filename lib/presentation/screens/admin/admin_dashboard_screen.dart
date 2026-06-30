@@ -53,6 +53,22 @@ class AdminDashboardScreen extends GetView<AdminController> {
               onTap: () => Get.back(),
             ),
             ListTile(
+              leading: const Icon(Icons.category_outlined),
+              title: const Text("Manage Categories"),
+              onTap: () {
+                Get.back();
+                Get.toNamed(AppRoutes.manageCategories);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.stars_outlined),
+              title: const Text("Manage Catalog"),
+              onTap: () {
+                Get.back();
+                Get.toNamed(AppRoutes.manageExperiences);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.contact_phone_outlined),
               title: const Text("Manage Leads"),
               onTap: () {
@@ -69,11 +85,19 @@ class AdminDashboardScreen extends GetView<AdminController> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.stars_outlined),
-              title: const Text("Experiences"),
+              leading: const Icon(Icons.people_outline),
+              title: const Text("Customer Directory"),
               onTap: () {
                 Get.back();
-                Get.toNamed(AppRoutes.manageExperiences);
+                Get.toNamed(AppRoutes.manageCustomers);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings_outlined),
+              title: const Text("User Management"),
+              onTap: () {
+                Get.back();
+                Get.toNamed(AppRoutes.manageUsers);
               },
             ),
             ListTile(
@@ -124,7 +148,7 @@ class AdminDashboardScreen extends GetView<AdminController> {
                       isDark,
                       isRevenue: true,
                     ),
-                    _metricCard("ACTIVE CATS", "6", "Event categories", isDark),
+                    Obx(() => _metricCard("ACTIVE CATS", controller.activeCategoriesCount.value.toString(), "Event categories", isDark)),
                   ],
                 ),
                 const SizedBox(height: 32),

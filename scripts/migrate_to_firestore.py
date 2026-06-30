@@ -114,7 +114,7 @@ def main():
             'createdAt': item['created_at']
         }
         
-        db.collection('decoration_items').document(item_id).set(item_data)
+        db.collection('items').document(item_id).set(item_data)
         print(f" Migrated Decoration: {item_data['name']} (ID: {item_id})")
 
     # 4. Migrate Customers (events_customer)

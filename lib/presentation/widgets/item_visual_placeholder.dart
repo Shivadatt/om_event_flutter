@@ -75,7 +75,7 @@ class ItemVisualPlaceholder extends StatelessWidget {
                       fontFamily: 'Arial',
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFFFFFAF2).withOpacity(0.72),
+                      color: const Color(0xFFFFFAF2).withValues(alpha: 0.72),
                       letterSpacing: 3,
                     ),
                   ),
@@ -118,7 +118,7 @@ class SvgBackgroundPainter extends CustomPainter {
     canvas.drawRect(const Rect.fromLTWH(0, 0, 1200, 850), bgPaint);
 
     // 2. Draw grain pattern (simulated via dots grid)
-    final grainPaint = Paint()..color = Colors.white.withOpacity(0.08);
+    final grainPaint = Paint()..color = Colors.white.withValues(alpha: 0.08);
     for (double x = 10; x < 1200; x += 80) {
       for (double y = 12; y < 850; y += 80) {
         canvas.drawCircle(Offset(x, y), 1.2, grainPaint);
@@ -135,7 +135,7 @@ class SvgBackgroundPainter extends CustomPainter {
       ..shader = ui.Gradient.radial(
         const Offset(950, 170),
         330,
-        [b.withOpacity(0.92), b.withOpacity(0.0)],
+        [b.withValues(alpha: 0.92), b.withValues(alpha: 0.0)],
       );
     canvas.drawCircle(const Offset(950, 170), 330, glowPaint);
 
@@ -150,7 +150,7 @@ class SvgBackgroundPainter extends CustomPainter {
       ..close();
 
     final wavePaint = Paint()
-      ..color = const Color(0xFF17221F).withOpacity(0.58)
+      ..color = const Color(0xFF17221F).withValues(alpha: 0.58)
       ..style = PaintingStyle.fill;
     canvas.drawPath(wavePath, wavePaint);
 
@@ -162,7 +162,7 @@ class SvgBackgroundPainter extends CustomPainter {
       ..lineTo(765, 650)
       ..close();
     final innerArchPaint = Paint()
-      ..color = const Color(0xFFF8F0E6).withOpacity(0.18)
+      ..color = const Color(0xFFF8F0E6).withValues(alpha: 0.18)
       ..style = PaintingStyle.fill;
     canvas.drawPath(innerArchPath, innerArchPaint);
 
@@ -173,14 +173,14 @@ class SvgBackgroundPainter extends CustomPainter {
       ..quadraticBezierTo(600, 145, 840, 330)
       ..lineTo(840, 650);
     final archPaint = Paint()
-      ..color = b.withOpacity(0.85)
+      ..color = b.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 22;
     canvas.drawPath(archPath, archPaint);
 
     // 7. Draw balloons of color 'b' (opacity 0.9)
     final balloonBPaint = Paint()
-      ..color = b.withOpacity(0.9)
+      ..color = b.withValues(alpha: 0.9)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(350, 345), 56, balloonBPaint);
     canvas.drawCircle(const Offset(414, 285), 42, balloonBPaint);
@@ -191,7 +191,7 @@ class SvgBackgroundPainter extends CustomPainter {
 
     // 8. Draw balloons of color 'a' (opacity 0.8)
     final balloonAPaint = Paint()
-      ..color = a.withOpacity(0.8)
+      ..color = a.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(323, 410), 38, balloonAPaint);
     canvas.drawCircle(const Offset(877, 410), 38, balloonAPaint);
@@ -200,7 +200,7 @@ class SvgBackgroundPainter extends CustomPainter {
 
     // 9. Draw poles: stroke 'b' stroke-width 4 opacity .8
     final polePaint = Paint()
-      ..color = b.withOpacity(0.8)
+      ..color = b.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4;
     canvas.drawLine(const Offset(174, 560), const Offset(174, 300), polePaint);

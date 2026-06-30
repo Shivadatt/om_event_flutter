@@ -21,13 +21,14 @@ class SeederService {
   /// Reports progress status and completion states.
   Future<void> runMigration({
     required Function(String status, double progress) onProgress,
+    bool force = false,
   }) async {
     try {
       onProgress("Checking migration status...", 0.05);
 
       // Check migration lock
       final appSettings = await _firestore.collection('settings').doc('app').get();
-      if (appSettings.exists && appSettings.data()?['migration_completed'] == true) {
+      if (!force && appSettings.exists && appSettings.data()?['migration_completed'] == true) {
         onProgress("Migration already completed. Skipping.", 1.0);
         return;
       }
@@ -52,15 +53,17 @@ class SeederService {
         onProgress("Clearing collection: $collection...", 0.1 + (collectionsToPrune.indexOf(collection) * 0.02));
       });
 
-      // Step 2: Upload Category media assets to Supabase Storage ('services')
+      // Step 2: Upload Category media assets to Supabase Storage ('gallery/images')
       onProgress("Uploading category media to Supabase...", 0.4);
       final List<Map<String, dynamic>> resolvedCategories = [];
       for (final cat in SqlSeedData.categories) {
         final Map<String, dynamic> updatedCat = Map.from(cat);
         final String? imagePath = cat['image_url'];
-        if (imagePath != null && (imagePath.startsWith('assets/') || imagePath.contains('/static/'))) {
+        if (imagePath != null && imagePath.startsWith('assets/')) {
+          final fileName = imagePath.split('/').last;
+          updatedCat['image_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'services');
+            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
             updatedCat['image_url'] = publicUrl;
           } catch (_) {}
         }
@@ -73,20 +76,24 @@ class SeederService {
       for (final item in SqlSeedData.decorationItems) {
         final Map<String, dynamic> updatedItem = Map.from(item);
 
-        // Main Image -> 'services'
+        // Main Image -> 'gallery/images'
         final String? imagePath = item['image_url'];
-        if (imagePath != null && (imagePath.startsWith('assets/') || imagePath.contains('/static/'))) {
+        if (imagePath != null && imagePath.startsWith('assets/')) {
+          final fileName = imagePath.split('/').last;
+          updatedItem['image_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'services');
+            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
             updatedItem['image_url'] = publicUrl;
           } catch (_) {}
         }
 
-        // Video Reel -> 'videos'
+        // Video Reel -> 'gallery/Video'
         final String? videoPath = item['video_url'];
-        if (videoPath != null && videoPath.isNotEmpty && (videoPath.startsWith('assets/') || videoPath.contains('/static/'))) {
+        if (videoPath != null && videoPath.isNotEmpty && videoPath.startsWith('assets/')) {
+          final fileName = videoPath.split('/').last;
+          updatedItem['video_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(videoPath, 'videos');
+            final publicUrl = await _uploadService.uploadAsset(videoPath, 'gallery', folder: 'Video');
             updatedItem['video_url'] = publicUrl;
           } catch (_) {}
         }
@@ -100,9 +107,11 @@ class SeederService {
       for (final img in SqlSeedData.itemImages) {
         final Map<String, dynamic> updatedImg = Map.from(img);
         final String? imagePath = img['url'];
-        if (imagePath != null && (imagePath.startsWith('assets/') || imagePath.contains('/static/'))) {
+        if (imagePath != null && imagePath.startsWith('assets/')) {
+          final fileName = imagePath.split('/').last;
+          updatedImg['url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery');
+            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
             updatedImg['url'] = publicUrl;
           } catch (_) {}
         }
@@ -115,9 +124,11 @@ class SeederService {
       for (final r in SqlSeedData.reviews) {
         final Map<String, dynamic> updatedReview = Map.from(r);
         final String? imagePath = r['image_url'];
-        if (imagePath != null && imagePath.isNotEmpty && (imagePath.startsWith('assets/') || imagePath.contains('/static/'))) {
+        if (imagePath != null && imagePath.isNotEmpty && imagePath.startsWith('assets/')) {
+          final fileName = imagePath.split('/').last;
+          updatedReview['image_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'reviews');
+            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
             updatedReview['image_url'] = publicUrl;
           } catch (_) {}
         }

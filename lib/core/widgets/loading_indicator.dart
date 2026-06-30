@@ -51,7 +51,7 @@ class LoadingIndicator extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
             child: Container(
-              color: (isDark ? AppTheme.darkCream : AppTheme.lightCream).withOpacity(0.58),
+              color: (isDark ? AppTheme.darkCream : AppTheme.lightCream).withValues(alpha: 0.58),
             ),
           ),
         ),

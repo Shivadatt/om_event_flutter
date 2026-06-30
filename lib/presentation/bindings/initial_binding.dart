@@ -9,12 +9,12 @@ import '../../data/datasources/seeder_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../controllers/seeder_controller.dart';
+import '../controllers/auth_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
-    // SharedPreferences
-    Get.putAsync<SharedPreferences>(() async => await SharedPreferences.getInstance(), permanent: true);
+    // SharedPreferences is registered synchronously in main.dart
 
     // Local Storage Source
     Get.lazyPut<LocalStorageSource>(
@@ -30,8 +30,8 @@ class InitialBinding extends Bindings {
     // Note: We use placeholder credentials which are replaced by .env values at runtime
     Get.lazyPut<SupabaseStorageSource>(
       () => SupabaseStorageSource(
-        projectUrl: 'https://placeholder-project.supabase.co',
-        apiKey: 'placeholder-anon-key',
+        projectUrl: 'https://kwegyvbgdaednljyhcgm.supabase.co',
+        apiKey: 'sb_publishable_bN91Or0DGzltjdDFB3b4zw_oosYJUa8',
       ),
       fenix: true,
     );
@@ -61,6 +61,12 @@ class InitialBinding extends Bindings {
         Get.find<FirebaseFirestore>(),
         Get.find<LocalStorageSource>(),
       ),
+      fenix: true,
+    );
+
+    // Auth Controller
+    Get.lazyPut<AuthController>(
+      () => AuthController(Get.find<AuthRepository>()),
       fenix: true,
     );
   }

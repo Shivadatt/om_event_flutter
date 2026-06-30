@@ -21,9 +21,9 @@ class UserModel {
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       role: json['role'] ?? 'staff',
-      isActive: json['isActive'] as bool? ?? true,
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
+      isActive: (json['is_active'] ?? json['isActive']) as bool? ?? true,
+      createdAt: (json['created_at'] ?? json['createdAt']) != null 
+          ? DateTime.parse((json['created_at'] ?? json['createdAt'])) 
           : DateTime.now(),
     );
   }
@@ -33,8 +33,8 @@ class UserModel {
       'name': name,
       'email': email,
       'role': role,
-      'isActive': isActive,
-      'createdAt': createdAt.toIso8601String(),
+      'is_active': isActive,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

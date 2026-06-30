@@ -29,55 +29,55 @@ class DecorationItemModel extends DecorationItem {
   factory DecorationItemModel.fromJson(Map<String, dynamic> json, String documentId) {
     return DecorationItemModel(
       id: documentId,
-      categoryId: json['categoryId'] ?? '',
-      categoryName: json['categoryName'] ?? '',
-      categorySlug: json['categorySlug'] ?? '',
+      categoryId: json['category_id'] ?? json['categoryId'] ?? '',
+      categoryName: json['category_name'] ?? json['categoryName'] ?? '',
+      categorySlug: json['category_slug'] ?? json['categorySlug'] ?? '',
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      offerPrice: (json['offerPrice'] as num?)?.toDouble(),
-      durationHours: (json['durationHours'] as num?)?.toDouble() ?? 3.0,
+      offerPrice: ((json['offer_price'] ?? json['offerPrice']) as num?)?.toDouble(),
+      durationHours: ((json['duration_hours'] ?? json['durationHours']) as num?)?.toDouble() ?? 3.0,
       popularity: json['popularity'] ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
-      reviewCount: json['reviewCount'] ?? 0,
+      reviewCount: json['review_count'] ?? json['reviewCount'] ?? 0,
       availability: json['availability'] ?? 'available',
       tags: List<String>.from(json['tags'] ?? []),
       colors: List<String>.from(json['colors'] ?? []),
       themes: List<String>.from(json['themes'] ?? []),
-      imageUrl: json['imageUrl'] ?? '',
-      videoUrl: json['videoUrl'] ?? '',
-      isFeatured: json['isFeatured'] ?? false,
-      isActive: json['isActive'] ?? true,
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
+      imageUrl: json['image_url'] ?? json['imageUrl'] ?? '',
+      videoUrl: json['video_url'] ?? json['videoUrl'] ?? '',
+      isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
+      isActive: json['is_active'] ?? json['isActive'] ?? true,
+      createdAt: (json['created_at'] ?? json['createdAt']) != null 
+          ? DateTime.parse((json['created_at'] ?? json['createdAt'])) 
           : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'categoryId': categoryId,
-      'categoryName': categoryName,
-      'categorySlug': categorySlug,
+      'category_id': categoryId,
+      'category_name': categoryName,
+      'category_slug': categorySlug,
       'name': name,
       'slug': slug,
       'description': description,
       'price': price,
-      'offerPrice': offerPrice,
-      'durationHours': durationHours,
+      'offer_price': offerPrice,
+      'duration_hours': durationHours,
       'popularity': popularity,
       'rating': rating,
-      'reviewCount': reviewCount,
+      'review_count': reviewCount,
       'availability': availability,
       'tags': tags,
       'colors': colors,
       'themes': themes,
-      'imageUrl': imageUrl,
-      'videoUrl': videoUrl,
-      'isFeatured': isFeatured,
-      'isActive': isActive,
-      'createdAt': createdAt.toIso8601String(),
+      'image_url': imageUrl,
+      'video_url': videoUrl,
+      'is_featured': isFeatured,
+      'is_active': isActive,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

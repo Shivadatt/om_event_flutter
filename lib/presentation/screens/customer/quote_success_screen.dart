@@ -28,7 +28,7 @@ class QuoteSuccessScreen extends StatelessWidget {
                 height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isDark ? AppTheme.darkGold.withOpacity(0.1) : AppTheme.lightGold.withOpacity(0.1),
+                  color: isDark ? AppTheme.darkGold.withValues(alpha: 0.1) : AppTheme.lightGold.withValues(alpha: 0.1),
                 ),
                 child: Icon(
                   Icons.check_circle_outline,

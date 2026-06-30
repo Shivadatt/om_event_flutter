@@ -11,7 +11,7 @@ class SeederController extends GetxController {
   final RxString errorMessage = ''.obs;
 
   /// Starts the Firebase and Supabase database seeding process.
-  Future<void> runMigration() async {
+  Future<void> runMigration({bool force = false}) async {
     if (isMigrating.value) return;
 
     isMigrating.value = true;
@@ -21,6 +21,7 @@ class SeederController extends GetxController {
 
     try {
       await _seederService.runMigration(
+        force: force,
         onProgress: (status, progress) {
           if (progress == -1.0) {
             errorMessage.value = status;

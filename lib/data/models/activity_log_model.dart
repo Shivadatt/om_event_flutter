@@ -20,25 +20,25 @@ class ActivityLogModel {
   factory ActivityLogModel.fromJson(Map<String, dynamic> json, String id) {
     return ActivityLogModel(
       id: id,
-      userId: json['userId'],
+      userId: json['user_id'] ?? json['userId'],
       action: json['action'] ?? '',
-      entityType: json['entityType'] ?? '',
-      entityId: json['entityId'] ?? '',
-      ipAddress: json['ipAddress'] ?? '',
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
+      entityType: json['entity_type'] ?? json['entityType'] ?? '',
+      entityId: json['entity_id'] ?? json['entityId'] ?? '',
+      ipAddress: json['ip_address'] ?? json['ipAddress'] ?? '',
+      createdAt: (json['created_at'] ?? json['createdAt']) != null 
+          ? DateTime.parse((json['created_at'] ?? json['createdAt'])) 
           : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      if (userId != null) 'userId': userId,
+      if (userId != null) 'user_id': userId,
       'action': action,
-      'entityType': entityType,
-      'entityId': entityId,
-      'ipAddress': ipAddress,
-      'createdAt': createdAt.toIso8601String(),
+      'entity_type': entityType,
+      'entity_id': entityId,
+      'ip_address': ipAddress,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

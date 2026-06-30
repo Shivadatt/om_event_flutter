@@ -9,6 +9,9 @@ import '../../presentation/screens/admin/admin_dashboard_screen.dart';
 import '../../presentation/screens/admin/manage_leads_screen.dart';
 import '../../presentation/screens/admin/manage_quotes_screen.dart';
 import '../../presentation/screens/admin/manage_experiences_screen.dart';
+import '../../presentation/screens/admin/manage_categories_screen.dart';
+import '../../presentation/screens/admin/manage_customers_screen.dart';
+import '../../presentation/screens/admin/manage_users_screen.dart';
 import '../../presentation/screens/docs/docs_screen.dart';
 import '../../presentation/bindings/catalog_binding.dart';
 import '../../presentation/bindings/admin_binding.dart';
@@ -24,6 +27,9 @@ class AppRoutes {
   static const String manageLeads = '/admin/leads';
   static const String manageQuotes = '/admin/quotes';
   static const String manageExperiences = '/admin/experiences';
+  static const String manageCategories = '/admin/categories';
+  static const String manageCustomers = '/admin/customers';
+  static const String manageUsers = '/admin/users';
   static const String docs = '/docs';
 
   static List<GetPage> get pages => [
@@ -71,6 +77,21 @@ class AppRoutes {
         GetPage(
           name: manageExperiences,
           page: () => const ManageExperiencesScreen(),
+          binding: AdminBinding(),
+        ),
+        GetPage(
+          name: manageCategories,
+          page: () => const ManageCategoriesScreen(),
+          binding: AdminBinding(),
+        ),
+        GetPage(
+          name: manageCustomers,
+          page: () => const ManageCustomersScreen(),
+          binding: AdminBinding(),
+        ),
+        GetPage(
+          name: manageUsers,
+          page: () => const ManageUsersScreen(),
           binding: AdminBinding(),
         ),
         GetPage(
