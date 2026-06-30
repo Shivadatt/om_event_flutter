@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "443981257323",
+    "project_id": "om-event",
+    "storage_bucket": "om-event.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443981257323:android:a99b824ca6d4a10b64af2e",
+        "android_client_info": {
+          "package_name": "com.om.event"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFpKAUXwIDnoQBrt5Id-xJjn-h5WVv1pc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

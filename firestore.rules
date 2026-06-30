@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check user roles in the users collection
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function to check if the user is an admin or staff member
+    function isAdminOrStaff() {
+      return isAuthenticated() && 
+        (getUserRole() == 'admin' || getUserRole() == 'staff');
+    }
+
+    // Categories: Read is public, write requires administrative staff
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    // Experiences (Decoration Items): Read is public, write requires administrative staff
+    match /experiences/{experienceId} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    // Reviews: Read is public, creation is public, updates require administrative staff
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdminOrStaff();
+    }
+
+    // Leads: Creation is public (anonymous inquiries), read/write requires staff access
+    match /leads/{leadId} {
+      allow create: if true;
+      allow read, update, delete: if isAdminOrStaff();
+    }
+
+    // Customers: Read/write requires staff access, creation is public
+    match /customers/{customerId} {
+      allow create: if true;
+      allow read, update, delete: if isAdminOrStaff();
+    }
+
+    // Quotations: Reading a specific quote is public via publicId (for client proposals)
+    // Writing new quotes is public, updating/deleting requires staff access
+    match /quotations/{quotationId} {
+      allow create: if true;
+      allow read: if true; // Allow client view of their proposal PDF link
+      allow update, delete: if isAdminOrStaff();
+    }
+
+    // Bookings & Payments: Access restricted entirely to logged-in admin/staff members
+    match /bookings/{bookingId} {
+      allow read, write: if isAdminOrStaff();
+    }
+    
+    match /payments/{paymentId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    // Users (Auth mappings): Users can read/write their own profiles; admins can manage all
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (request.auth.uid == userId || getUserRole() == 'admin');
+    }
+
+    // Activity Logs: Write is allowed for authenticated sessions; reading requires admin role
+    match /activity_logs/{logId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && getUserRole() == 'admin';
+    }
+  }
+}
