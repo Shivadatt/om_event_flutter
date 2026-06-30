@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: "admin@omevents.in");
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 32),
           CustomInput(
             label: "Email Address",
-            placeholder: "admin@omevents.in",
+            placeholder: "Enter Your Email",
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             validator: (val) {
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 24),
           Center(
             child: Text(
-              "Seed credentials: admin@omevents.in / ChangeMe123!",
+              "Seed: omeventsanddecorators@gmail.com / Admin@gmail.com",
               style: AppTheme.sansBody(
                 fontSize: 11,
                 color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,

@@ -9,6 +9,7 @@ import '../../domain/repositories/quotation_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/repositories/customer_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../data/datasources/supabase_storage_source.dart';
 import '../controllers/admin_controller.dart';
 
 class AdminBinding extends Bindings {
@@ -27,7 +28,7 @@ class AdminBinding extends Bindings {
     Get.lazyPut<QuotationRepository>(
       () => QuotationRepositoryImpl(
         firestoreSource: Get.find(),
-        supabaseSource: Get.find(),
+        supabaseSource: Get.isRegistered<SupabaseStorageSource>() ? Get.find<SupabaseStorageSource>() : null,
       ),
       fenix: true,
     );

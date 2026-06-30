@@ -3,6 +3,7 @@ import '../../domain/entities/lead.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/experience.dart';
+import '../../domain/entities/admin_role.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -10,6 +11,8 @@ import '../../domain/repositories/customer_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/models/customer_model.dart';
 import '../../data/models/user_model.dart';
+import '../../data/models/review_model.dart';
+import '../../data/repositories/admin_repository.dart';
 
 class AdminController extends GetxController {
   final LeadRepository leadRepository;
@@ -33,18 +36,24 @@ class AdminController extends GetxController {
   final rxExperiences = <Experience>[].obs;
   final rxCustomers = <CustomerModel>[].obs;
   final rxUsers = <UserModel>[].obs;
+  final rxReviews = <ReviewModel>[].obs;
 
   final isLoadingStats = false.obs;
   final isLoadingCategories = false.obs;
   final isLoadingExperiences = false.obs;
   final isLoadingCustomers = false.obs;
   final isLoadingUsers = false.obs;
+  final isLoadingReviews = false.obs;
 
   // Calculated Metrics
   final leadCount = 0.obs;
   final quoteCount = 0.obs;
   final pipelineRevenue = 0.0.obs;
   final activeCategoriesCount = 0.obs;
+  final totalReviewsCount = 0.obs;
+  final pendingReviewsCount = 0.obs;
+  final approvedReviewsCount = 0.obs;
+  final averageReviewsRating = 0.0.obs;
 
   @override
   void onInit() {
@@ -54,6 +63,8 @@ class AdminController extends GetxController {
     loadExperiences();
     loadCustomers();
     loadUsers();
+    loadAdminRoles();
+    loadReviews();
   }
 
   Future<void> loadDashboardStats() async {
@@ -252,6 +263,48 @@ class AdminController extends GetxController {
     }
   }
 
+  // RBAC Admin Roles State Management
+  final rxAdminRoles = <AdminRole>[].obs;
+  final isLoadingAdminRoles = false.obs;
+
+  Future<void> loadAdminRoles() async {
+    try {
+      isLoadingAdminRoles.value = true;
+      final list = await authRepository.getAdminRoles();
+      rxAdminRoles.assignAll(list);
+    } catch (e) {
+      Get.snackbar("RBAC Error", "Failed to load admin roles: ${e.toString()}");
+    } finally {
+      isLoadingAdminRoles.value = false;
+    }
+  }
+
+  Future<void> saveAdminRole(AdminRole role, {required bool isEdit}) async {
+    try {
+      isLoadingAdminRoles.value = true;
+      await authRepository.saveAdminRole(role, isEdit: isEdit);
+      await loadAdminRoles();
+      Get.snackbar("Role Saved", "Administrator permissions updated successfully.");
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    } finally {
+      isLoadingAdminRoles.value = false;
+    }
+  }
+
+  Future<void> deleteAdminRole(String uid) async {
+    try {
+      isLoadingAdminRoles.value = true;
+      await authRepository.deleteAdminRole(uid);
+      await loadAdminRoles();
+      Get.snackbar("Role Deleted", "Administrator removed successfully.");
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    } finally {
+      isLoadingAdminRoles.value = false;
+    }
+  }
+
   Future<void> updateLead(String leadId, String status) async {
     try {
       await leadRepository.updateLeadStatus(leadId, status);
@@ -269,6 +322,59 @@ class AdminController extends GetxController {
       Get.snackbar("Status Updated", "Quotation status updated successfully.");
     } catch (e) {
       Get.snackbar("Error", e.toString());
+    }
+  }
+
+  // Reviews CRUD Methods
+  Future<void> loadReviews() async {
+    try {
+      isLoadingReviews.value = true;
+      final adminRepo = Get.find<AdminRepository>();
+      final list = await adminRepo.getReviews();
+      rxReviews.assignAll(list);
+
+      // Recalculate review metrics
+      totalReviewsCount.value = list.length;
+      pendingReviewsCount.value = list.where((r) => !r.isPublished).length;
+      approvedReviewsCount.value = list.where((r) => r.isPublished).length;
+      if (list.isNotEmpty) {
+        final sum = list.fold(0, (prev, element) => prev + element.rating);
+        averageReviewsRating.value = sum / list.length;
+      } else {
+        averageReviewsRating.value = 5.0;
+      }
+    } catch (e) {
+      Get.snackbar("Reviews Error", e.toString());
+    } finally {
+      isLoadingReviews.value = false;
+    }
+  }
+
+  Future<void> saveReview(ReviewModel review, {required bool isEdit}) async {
+    try {
+      isLoadingReviews.value = true;
+      final adminRepo = Get.find<AdminRepository>();
+      await adminRepo.saveReview(review, isEdit: isEdit);
+      await loadReviews();
+      Get.snackbar("Review Saved", "Review configuration updated successfully.");
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    } finally {
+      isLoadingReviews.value = false;
+    }
+  }
+
+  Future<void> deleteReview(String id) async {
+    try {
+      isLoadingReviews.value = true;
+      final adminRepo = Get.find<AdminRepository>();
+      await adminRepo.deleteReview(id);
+      await loadReviews();
+      Get.snackbar("Review Deleted", "Review removed successfully.");
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    } finally {
+      isLoadingReviews.value = false;
     }
   }
 }

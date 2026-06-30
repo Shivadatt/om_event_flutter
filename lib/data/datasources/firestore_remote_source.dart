@@ -243,6 +243,21 @@ class FirestoreRemoteSource {
     await _firestore.collection('users').doc(uid).delete();
   }
 
+  // Admin Roles RBAC collection queries
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchAdminRoles() async {
+    final snap = await _firestore.collection('admin').get();
+    return snap.docs;
+  }
+  Future<DocumentSnapshot<Map<String, dynamic>>> fetchAdminRole(String uid) async {
+    return await _firestore.collection('admin').doc(uid).get();
+  }
+  Future<void> upsertAdminRole(String uid, Map<String, dynamic> json) async {
+    await _firestore.collection('admin').doc(uid).set(json);
+  }
+  Future<void> deleteAdminRole(String uid) async {
+    await _firestore.collection('admin').doc(uid).delete();
+  }
+
   // Seeding Logic
   Future<void> _seedDatabase() async {
     final batch = _firestore.batch();

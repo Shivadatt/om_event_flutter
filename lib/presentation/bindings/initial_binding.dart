@@ -7,6 +7,7 @@ import '../../data/datasources/supabase_storage_source.dart';
 import '../../data/datasources/supabase_upload_service.dart';
 import '../../data/datasources/seeder_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/admin_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../controllers/seeder_controller.dart';
 import '../controllers/auth_controller.dart';
@@ -51,6 +52,12 @@ class InitialBinding extends Bindings {
     // Seeder Controller
     Get.lazyPut<SeederController>(
       () => SeederController(),
+      fenix: true,
+    );
+
+    // Admin Repository
+    Get.lazyPut<AdminRepository>(
+      () => AdminRepository(Get.find<FirebaseFirestore>()),
       fenix: true,
     );
 

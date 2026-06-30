@@ -37,6 +37,7 @@ class SeederService {
       onProgress("Pruning existing collections...", 0.1);
       final collectionsToPrune = [
         'users',
+        'admin',
         'categories',
         'items',
         'item_images',
@@ -139,6 +140,57 @@ class SeederService {
       onProgress("Committing SQL data to Firestore collections...", 0.85);
 
       await _insertService.insertDocuments('users', SqlSeedData.users);
+      
+      // Bootstrap Super Admin in 'admin'
+      await _firestore.collection('admin').doc('super-admin-uid').set({
+        'uid': 'super-admin-uid',
+        'name': 'Super Admin',
+        'email': 'omeventsanddecorators@gmail.com',
+        'role_type': 'super_admin',
+        'is_active': true,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+        'created_by': 'system',
+        'permissions': {
+          'can_manage_categories': true,
+          'can_manage_items': true,
+          'can_manage_customers': true,
+          'can_manage_users': true,
+          'can_manage_reviews': true,
+          'can_manage_quotes': true,
+          'can_manage_leads': true,
+          'can_manage_settings': true,
+          'can_delete': true,
+          'can_create': true,
+          'can_edit': true,
+        }
+      });
+
+      // Bootstrap Demo Admin in 'admin'
+      await _firestore.collection('admin').doc('demo-admin-uid').set({
+        'uid': 'demo-admin-uid',
+        'name': 'Demo Admin',
+        'email': 'Admin@gmail.com',
+        'role_type': 'demo_admin',
+        'is_active': true,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+        'created_by': 'system',
+        'permissions': {
+          'can_manage_categories': true,
+          'can_manage_items': true,
+          'can_manage_customers': true,
+          'can_manage_users': false,
+          'can_manage_reviews': false,
+          'can_manage_quotes': true,
+          'can_manage_leads': true,
+          'can_manage_settings': false,
+          'can_delete': false,
+          'can_create': true,
+          'can_edit': true,
+        }
+      });
+
       await _insertService.insertDocuments('categories', resolvedCategories);
       await _insertService.insertDocuments('items', resolvedDecorationItems);
       await _insertService.insertDocuments('item_images', resolvedItemImages);

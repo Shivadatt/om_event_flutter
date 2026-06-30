@@ -1,6 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/config/app_routes.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/admin_role.dart';
+import '../../data/repositories/admin_repository.dart';
 
 class AuthController extends GetxController {
   final AuthRepository authRepository;
@@ -8,7 +12,11 @@ class AuthController extends GetxController {
 
   final rxIsLoggedIn = false.obs;
   final rxUserRole = ''.obs;
+  final rxAdminRole = Rxn<AdminRole>();
   final isLoading = false.obs;
+  final isProfileSaving = false.obs;
+  final isPhotoUploading = false.obs;
+  final isPasswordChanging = false.obs;
 
   @override
   void onInit() {
@@ -21,10 +29,22 @@ class AuthController extends GetxController {
     rxIsLoggedIn.value = loggedIn;
     if (loggedIn) {
       final role = await authRepository.getCurrentUserRole();
-      rxUserRole.value = role ?? 'staff';
+      rxUserRole.value = role ?? 'demo_admin';
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final adminData = await authRepository.getAdminRole(currentUser.uid);
+        rxAdminRole.value = adminData;
+      }
     } else {
       rxUserRole.value = '';
+      rxAdminRole.value = null;
     }
+  }
+
+  bool hasPermission(String permissionKey) {
+    final role = rxAdminRole.value;
+    if (role == null) return false;
+    return role.hasPermission(permissionKey);
   }
 
   Future<bool> login(String email, String password) async {
@@ -57,6 +77,118 @@ class AuthController extends GetxController {
       Get.snackbar("Error", e.toString());
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Full admin role update (used by admin management)
+  Future<void> updateAdminProfile(AdminRole profile) async {
+    try {
+      isLoading.value = true;
+      await authRepository.saveAdminRole(profile, isEdit: true);
+      await checkAuthStatus();
+    } catch (e) {
+      Get.snackbar("Error", "Failed to update profile: ${e.toString()}");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Partial profile fields update (name, phone, designation, bio, address)
+  Future<bool> updateProfileFields({
+    required String name,
+    required String phone,
+    required String designation,
+    required String bio,
+    required String address,
+  }) async {
+    final admin = rxAdminRole.value;
+    if (admin == null) return false;
+
+    try {
+      isProfileSaving.value = true;
+      final adminRepo = Get.find<AdminRepository>();
+      await adminRepo.updateAdminProfileFields(admin.uid, {
+        'name': name.trim(),
+        'display_name': name.trim(),
+        'phone': phone.trim(),
+        'designation': designation.trim(),
+        'bio': bio.trim(),
+        'address': address.trim(),
+      });
+      await checkAuthStatus();
+      return true;
+    } catch (e) {
+      Get.snackbar("Save Failed", "Could not save profile: ${e.toString()}",
+          backgroundColor: const Color(0xFF2D1515));
+      return false;
+    } finally {
+      isProfileSaving.value = false;
+    }
+  }
+
+  /// Update photo URL in Firestore after Supabase upload
+  Future<bool> updateProfilePhotoUrl(String photoUrl) async {
+    final admin = rxAdminRole.value;
+    if (admin == null) return false;
+
+    try {
+      isPhotoUploading.value = true;
+      final adminRepo = Get.find<AdminRepository>();
+      await adminRepo.updateAdminPhotoUrl(admin.uid, photoUrl);
+      await checkAuthStatus();
+      return true;
+    } catch (e) {
+      Get.snackbar("Upload Failed", "Could not update photo URL: ${e.toString()}",
+          backgroundColor: const Color(0xFF2D1515));
+      return false;
+    } finally {
+      isPhotoUploading.value = false;
+    }
+  }
+
+  /// Re-authenticate with current password then update to new password
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      Get.snackbar("Error", "No authenticated user found.");
+      return false;
+    }
+
+    try {
+      isPasswordChanging.value = true;
+
+      // Re-authenticate first
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Then update password
+      await user.updatePassword(newPassword);
+      Get.snackbar("Password Updated", "Your password was changed successfully.");
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        Get.snackbar("Incorrect Password", "The current password you entered is wrong.",
+            backgroundColor: const Color(0xFF2D1515));
+      } else if (e.code == 'weak-password') {
+        Get.snackbar("Weak Password", "Please choose a stronger password.",
+            backgroundColor: const Color(0xFF2D1515));
+      } else {
+        Get.snackbar("Password Error", e.message ?? "Failed to change password.",
+            backgroundColor: const Color(0xFF2D1515));
+      }
+      return false;
+    } catch (e) {
+      Get.snackbar("Error", "Unexpected error: ${e.toString()}",
+          backgroundColor: const Color(0xFF2D1515));
+      return false;
+    } finally {
+      isPasswordChanging.value = false;
     }
   }
 }
