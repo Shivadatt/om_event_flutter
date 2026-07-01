@@ -1,3 +1,5 @@
+import '../../core/utils/date_parser.dart';
+
 class ItemImageModel {
   final String id;
   final String decorationItemId;
@@ -23,10 +25,7 @@ class ItemImageModel {
       url: json['url'] ?? '',
       altText: json['alt_text'] ?? json['altText'] ?? '',
       sortOrder: (json['sort_order'] ?? json['sortOrder']) as int? ?? 0,
-      createdAt:
-          (json['created_at'] ?? json['createdAt']) != null
-              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-              : DateTime.now(),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
     );
   }
 

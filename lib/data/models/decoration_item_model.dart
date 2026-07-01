@@ -1,3 +1,4 @@
+import '../../core/utils/date_parser.dart';
 import '../../domain/entities/decoration_item.dart';
 
 class DecorationItemModel extends DecorationItem {
@@ -56,10 +57,7 @@ class DecorationItemModel extends DecorationItem {
       videoUrl: json['video_url'] ?? json['videoUrl'] ?? '',
       isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
       isActive: json['is_active'] ?? json['isActive'] ?? true,
-      createdAt:
-          (json['created_at'] ?? json['createdAt']) != null
-              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-              : DateTime.now(),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
     );
   }
 

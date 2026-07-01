@@ -1,3 +1,5 @@
+import '../../core/utils/date_parser.dart';
+
 class UserModel {
   final String id;
   final String name;
@@ -22,10 +24,7 @@ class UserModel {
       email: json['email'] ?? '',
       role: json['role'] ?? 'staff',
       isActive: (json['is_active'] ?? json['isActive']) as bool? ?? true,
-      createdAt:
-          (json['created_at'] ?? json['createdAt']) != null
-              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-              : DateTime.now(),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
     );
   }
 

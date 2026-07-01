@@ -13,6 +13,8 @@ mixin BookingControllerMixin on GetxController {
       isLoadingBookings.value = true;
       final adminRepo = Get.find<AdminRepository>();
       final list = await adminRepo.getBookings();
+      // Sort descending by creation date so new bookings are on top
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       rxBookings.assignAll(list);
     } catch (e) {
       Get.snackbar("Bookings Error", e.toString());

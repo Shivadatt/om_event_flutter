@@ -1,3 +1,5 @@
+import '../../core/utils/date_parser.dart';
+
 class PaymentModel {
   final String id;
   final String bookingId;
@@ -27,14 +29,8 @@ class PaymentModel {
       reference: json['reference'] ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] ?? 'pending',
-      paidAt:
-          (json['paid_at'] ?? json['paidAt']) != null
-              ? DateTime.parse(json['paid_at'] ?? json['paidAt'])
-              : null,
-      createdAt:
-          (json['created_at'] ?? json['createdAt']) != null
-              ? DateTime.parse(json['created_at'] ?? json['createdAt'])
-              : DateTime.now(),
+      paidAt: DateParser.parseNullable(json['paid_at'] ?? json['paidAt']),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
     );
   }
 

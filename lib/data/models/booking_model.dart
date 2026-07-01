@@ -1,3 +1,5 @@
+import '../../core/utils/date_parser.dart';
+
 class BookingModel {
   final String id;
   final String bookingNumber;
@@ -31,14 +33,8 @@ class BookingModel {
       paymentStatus:
           json['payment_status'] ?? json['paymentStatus'] ?? 'pending',
       status: json['status'] ?? 'pending',
-      createdAt:
-          (json['created_at'] ?? json['createdAt']) != null
-              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-              : DateTime.now(),
-      updatedAt:
-          (json['updated_at'] ?? json['updatedAt']) != null
-              ? DateTime.parse((json['updated_at'] ?? json['updatedAt']))
-              : DateTime.now(),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
+      updatedAt: DateParser.parse(json['updated_at'] ?? json['updatedAt']),
     );
   }
 

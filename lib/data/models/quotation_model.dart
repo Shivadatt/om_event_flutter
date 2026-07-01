@@ -1,3 +1,4 @@
+import '../../core/utils/date_parser.dart';
 import '../../domain/entities/quotation.dart';
 
 class QuotationItemModel extends QuotationItem {
@@ -65,19 +66,6 @@ class QuotationModel extends Quotation {
     required super.updatedAt,
   });
 
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    if (value is DateTime) return value;
-    // Handle Firestore Timestamp dynamically to prevent direct runtime type issues
-    try {
-      if (value.runtimeType.toString().contains('Timestamp')) {
-        return value.toDate();
-      }
-    } catch (_) {}
-    if (value is String) return DateTime.parse(value);
-    return DateTime.now();
-  }
-
   factory QuotationModel.fromJson(
     Map<String, dynamic> json,
     String documentId,
@@ -95,7 +83,7 @@ class QuotationModel extends Quotation {
       publicId: json['public_id'] ?? json['publicId'] ?? '',
       customerPhone: json['customer_phone'] ?? json['customerPhone'] ?? '',
       customerName: json['customer_name'] ?? json['customerName'] ?? '',
-      eventDate: _parseDateTime(json['event_date'] ?? json['eventDate']),
+      eventDate: DateParser.parse(json['event_date'] ?? json['eventDate']),
       eventTime: json['event_time'] ?? json['eventTime'] ?? '18:00',
       location: json['location'] ?? '',
       notes: json['notes'] ?? '',
@@ -119,8 +107,8 @@ class QuotationModel extends Quotation {
       pdfUrl: json['pdf_url'] ?? json['pdfUrl'] ?? '',
       status: json['status'] ?? 'draft',
       items: itemsList,
-      createdAt: _parseDateTime(json['created_at'] ?? json['createdAt']),
-      updatedAt: _parseDateTime(json['updated_at'] ?? json['updatedAt']),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
+      updatedAt: DateParser.parse(json['updated_at'] ?? json['updatedAt']),
     );
   }
 

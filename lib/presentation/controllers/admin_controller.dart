@@ -72,8 +72,12 @@ class AdminController extends GetxController
         quotationRepository.getQuotations(),
       ]);
 
-      final leadsList = results[0] as List<Lead>;
-      final quotesList = results[1] as List<Quotation>;
+      final leadsList = List<Lead>.from(results[0]);
+      final quotesList = List<Quotation>.from(results[1]);
+
+      // Sort descending by creation date so new records are on top
+      leadsList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      quotesList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       rxLeads.assignAll(leadsList);
       rxQuotes.assignAll(quotesList);

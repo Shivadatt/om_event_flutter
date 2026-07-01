@@ -1,3 +1,5 @@
+import '../../core/utils/date_parser.dart';
+
 class CustomerModel {
   final String id;
   final String name;
@@ -30,14 +32,8 @@ class CustomerModel {
       address: json['address'] ?? '',
       city: json['city'] ?? '',
       mapLocation: json['map_location'] ?? json['mapLocation'] ?? '',
-      createdAt:
-          (json['created_at'] ?? json['createdAt']) != null
-              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-              : DateTime.now(),
-      updatedAt:
-          (json['updated_at'] ?? json['updatedAt']) != null
-              ? DateTime.parse((json['updated_at'] ?? json['updatedAt']))
-              : DateTime.now(),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
+      updatedAt: DateParser.parse(json['updated_at'] ?? json['updatedAt']),
     );
   }
 

@@ -1,3 +1,5 @@
+import '../../core/utils/date_parser.dart';
+
 class ActivityLogModel {
   final String id;
   final String? userId;
@@ -25,10 +27,7 @@ class ActivityLogModel {
       entityType: json['entity_type'] ?? json['entityType'] ?? '',
       entityId: json['entity_id'] ?? json['entityId'] ?? '',
       ipAddress: json['ip_address'] ?? json['ipAddress'] ?? '',
-      createdAt:
-          (json['created_at'] ?? json['createdAt']) != null
-              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-              : DateTime.now(),
+      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
     );
   }
 
