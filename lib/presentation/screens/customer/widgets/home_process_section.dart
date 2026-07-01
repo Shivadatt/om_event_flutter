@@ -36,73 +36,73 @@ class ProcessSection extends StatelessWidget {
               const SizedBox(height: 36),
               isDesktop
                   ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _stepRow(
-                            context,
-                            "01",
-                            "Choose your canvas",
-                            "Browse our event collections and add the ideas that feel like you.",
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: _stepRow(
-                            context,
-                            "02",
-                            "Make it personal",
-                            "Tune colors, themes and quantities. Leave us the details—we love those.",
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: _stepRow(
-                            context,
-                            "03",
-                            "Know your number",
-                            "See every charge clearly and download a polished, itemized quotation.",
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: _stepRow(
-                            context,
-                            "04",
-                            "We bring the wonder",
-                            "Our crew handles production, styling and teardown. You stay in the moment.",
-                          ),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        _stepRow(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _stepRow(
                           context,
                           "01",
                           "Choose your canvas",
                           "Browse our event collections and add the ideas that feel like you.",
                         ),
-                        _stepRow(
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: _stepRow(
                           context,
                           "02",
                           "Make it personal",
                           "Tune colors, themes and quantities. Leave us the details—we love those.",
                         ),
-                        _stepRow(
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: _stepRow(
                           context,
                           "03",
                           "Know your number",
                           "See every charge clearly and download a polished, itemized quotation.",
                         ),
-                        _stepRow(
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: _stepRow(
                           context,
                           "04",
                           "We bring the wonder",
                           "Our crew handles production, styling and teardown. You stay in the moment.",
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  )
+                  : Column(
+                    children: [
+                      _stepRow(
+                        context,
+                        "01",
+                        "Choose your canvas",
+                        "Browse our event collections and add the ideas that feel like you.",
+                      ),
+                      _stepRow(
+                        context,
+                        "02",
+                        "Make it personal",
+                        "Tune colors, themes and quantities. Leave us the details—we love those.",
+                      ),
+                      _stepRow(
+                        context,
+                        "03",
+                        "Know your number",
+                        "See every charge clearly and download a polished, itemized quotation.",
+                      ),
+                      _stepRow(
+                        context,
+                        "04",
+                        "We bring the wonder",
+                        "Our crew handles production, styling and teardown. You stay in the moment.",
+                      ),
+                    ],
+                  ),
             ],
           ),
         ),

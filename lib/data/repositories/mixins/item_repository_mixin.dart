@@ -10,11 +10,11 @@ mixin ItemRepositoryMixin {
   static final List<Experience> _fallbackExperiences = [
     Experience(
       id: 'pastel-dream-birthday',
-      name: 'Pastel Dream Birthday',
+      name: 'Baby Shower/Srimant Sanskar',
       slug: 'pastel-dream-birthday',
-      categoryId: 'birthday',
-      categoryName: 'Birthday Celebrations',
-      categorySlug: 'birthday',
+      categoryId: 'baby',
+      categoryName: 'Baby Celebrations',
+      categorySlug: 'baby',
       description:
           'A layered pastel balloon wall, personalized neon, plinths and floral accents.',
       price: 18500.0,
@@ -35,7 +35,7 @@ mixin ItemRepositoryMixin {
     ),
     Experience(
       id: 'wild-one-safari',
-      name: 'Wild One Safari',
+      name: 'Balloon Blast',
       slug: 'wild-one-safari',
       categoryId: 'birthday',
       categoryName: 'Birthday Celebrations',
@@ -60,11 +60,11 @@ mixin ItemRepositoryMixin {
     ),
     Experience(
       id: 'ivory-vow-stage',
-      name: 'Ivory Vow Stage',
+      name: 'Chhathi Pujan',
       slug: 'ivory-vow-stage',
-      categoryId: 'wedding',
-      categoryName: 'Wedding & Engagement',
-      categorySlug: 'wedding',
+      categoryId: 'baby',
+      categoryName: 'Baby Celebrations',
+      categorySlug: 'baby',
       description:
           'An architectural ivory stage with warm lamps, layered florals and premium seating.',
       price: 78000.0,
@@ -114,11 +114,11 @@ mixin ItemRepositoryMixin {
     ),
     Experience(
       id: 'little-cloud-welcome',
-      name: 'Little Cloud Welcome',
+      name: 'vana rasam (Gujarati Wedding Ritual)',
       slug: 'little-cloud-welcome',
-      categoryId: 'baby',
-      categoryName: 'Baby Celebrations',
-      categorySlug: 'baby',
+      categoryId: 'wedding',
+      categoryName: 'Wedding & Engagement',
+      categorySlug: 'wedding',
       description:
           'Cloud forms, soft blue balloons, warm lighting and a customized baby name sign.',
       price: 22000.0,
@@ -143,24 +143,40 @@ mixin ItemRepositoryMixin {
   List<Experience> get fallbackExperiences => _fallbackExperiences;
 
   /// Retrieve decoration experiences with filters.
+  /// Experiences whose parent category is inactive are automatically excluded.
   Future<List<Experience>> getExperiences({
     String? categorySlug,
     String? searchQuery,
     String? themeFilter,
     bool? featuredOnly,
     String? sortBy,
+    bool? activeOnly,
   }) async {
     try {
+      // Fetch active category slugs first so we can cascade the is_active filter
+      // to experiences regardless of whether the experience itself is active.
+      final activeCategoryDocs = await remoteSource.fetchCategories();
+      final activeCategorySlugs = activeCategoryDocs
+          .map((doc) => doc.data()['slug'] as String? ?? '')
+          .where((slug) => slug.isNotEmpty)
+          .toSet();
+
       final docs = await remoteSource.fetchExperiences(
         categorySlug: categorySlug,
         searchQuery: searchQuery,
         themeFilter: themeFilter,
         featuredOnly: featuredOnly,
         sortBy: sortBy,
+        activeOnly: activeOnly,
       );
-      return docs
-          .map((doc) => ExperienceModel.fromJson(doc.data(), doc.id))
-          .toList();
+
+      final list = docs.map<Experience>((doc) => ExperienceModel.fromJson(doc.data(), doc.id));
+
+      if (activeOnly != false) {
+        return List<Experience>.from(list.where((e) => activeCategorySlugs.contains(e.categorySlug)));
+      } else {
+        return List<Experience>.from(list);
+      }
     } catch (_) {
       var list = List<Experience>.from(_fallbackExperiences);
 
@@ -269,5 +285,17 @@ mixin ItemRepositoryMixin {
   /// Remove an experience from catalog indexes.
   Future<void> deleteExperience(String slug) async {
     await remoteSource.deleteExperience(slug);
+  }
+
+  // ── Realtime Streams ─────────────────────────────────────────────────────
+
+  /// Realtime stream of all active experiences (unfiltered).
+  /// The CatalogController applies category cascade, search, and sort in-memory.
+  /// Emits a new list automatically whenever Firestore changes.
+  Stream<List<Experience>> streamAllActiveExperiences() {
+    return remoteSource.streamAllActiveItems().map(
+      (docs) => List<Experience>.from(docs.map<Experience>(
+          (doc) => ExperienceModel.fromJson(doc.data(), doc.id))),
+    );
   }
 }

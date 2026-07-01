@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:om_event/core/config/app_theme.dart';
+import 'package:om_event/core/services/app_config_service.dart';
 
 class FAQSection extends StatelessWidget {
   final bool isDesktop;
@@ -17,92 +19,90 @@ class FAQSection extends StatelessWidget {
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
-          child: isDesktop
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 7,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "A few good questions",
-                            style: AppTheme.sansBody(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
+          child: Obx(() {
+            final homepage = AppConfigService.to.rxHomepageSettings.value;
+            final faqs = homepage.faqs;
+            if (faqs.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            if (isDesktop) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 7,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "A few good questions",
+                          style: AppTheme.sansBody(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Before the confetti flies.",
-                            style: AppTheme.serifHeader(fontSize: 32),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          homepage.faqHeader.isNotEmpty
+                              ? homepage.faqHeader
+                              : "Before the confetti flies.",
+                          style: AppTheme.serifHeader(fontSize: 32),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 64),
-                    Expanded(
-                      flex: 13,
-                      child: Column(
-                        children: [
-                          _faqItem(
-                            "How far in advance should I book?",
-                            "Four to eight weeks is ideal for custom work. For larger weddings, reserve your date three to six months ahead. Short notice? Ask us—we keep a little room for spontaneous magic.",
-                          ),
-                          _faqItem(
-                            "Can I change the colors and materials?",
-                            "Absolutely. Every concept can be adapted to your palette, venue and story. Use the canvas builder to share your direction.",
-                          ),
-                          _faqItem(
-                            "What does the starting price include?",
-                            "The starting price includes the listed styling, setup and teardown. Your quotation separately displays GST and flat delivery charges.",
-                          ),
-                          _faqItem(
-                            "Do you visit the venue before the event?",
-                            "For complex installations and weddings, we schedule a site visit after the discovery call. It helps us verify dimensions, power access and load-in timing.",
-                          ),
-                        ],
-                      ),
+                  ),
+                  const SizedBox(width: 64),
+                  Expanded(
+                    flex: 13,
+                    child: Column(
+                      children:
+                          faqs.map((faq) {
+                            final map = Map<String, dynamic>.from(faq);
+                            return _faqItem(
+                              map['question'] ?? '',
+                              map['answer'] ?? '',
+                            );
+                          }).toList(),
                     ),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "A few good questions",
-                      style: AppTheme.sansBody(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
+                  ),
+                ],
+              );
+            } else {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "A few good questions",
+                    style: AppTheme.sansBody(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Before the confetti flies.",
-                      style: AppTheme.serifHeader(fontSize: 28),
-                    ),
-                    const SizedBox(height: 28),
-                    _faqItem(
-                      "How far in advance should I book?",
-                      "Four to eight weeks is ideal for custom work. For larger weddings, reserve your date three to six months ahead. Short notice? Ask us—we keep a little room for spontaneous magic.",
-                    ),
-                    _faqItem(
-                      "Can I change the colors and materials?",
-                      "Absolutely. Every concept can be adapted to your palette, venue and story. Use the canvas builder to share your direction.",
-                    ),
-                    _faqItem(
-                      "What does the starting price include?",
-                      "The starting price includes the listed styling, setup and teardown. Your quotation separately displays GST and flat delivery charges.",
-                    ),
-                    _faqItem(
-                      "Do you visit the venue before the event?",
-                      "For complex installations and weddings, we schedule a site visit after the discovery call. It helps us verify dimensions, power access and load-in timing.",
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    homepage.faqHeader.isNotEmpty
+                        ? homepage.faqHeader
+                        : "Before the confetti flies.",
+                    style: AppTheme.serifHeader(fontSize: 28),
+                  ),
+                  const SizedBox(height: 28),
+                  Column(
+                    children:
+                        faqs.map((faq) {
+                          final map = Map<String, dynamic>.from(faq);
+                          return _faqItem(
+                            map['question'] ?? '',
+                            map['answer'] ?? '',
+                          );
+                        }).toList(),
+                  ),
+                ],
+              );
+            }
+          }),
         ),
       ),
     );

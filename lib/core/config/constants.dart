@@ -1,21 +1,29 @@
+import 'package:om_event/core/services/app_config_service.dart';
 import '../constants/app_strings.dart';
 
 /// Legacy constants gateway — pricing and business configuration.
 /// Cache key access now routes through [AppStrings].
 class AppConstants {
   // ── Business ──────────────────────────────────────────────────────────────
-  static const String businessName = AppStrings.businessName;
-  static const String businessPhone = AppStrings.businessPhone;
-  static const String businessEmail = AppStrings.businessEmail;
-  static const String whatsappMessage = AppStrings.whatsappMessage;
+  static String get businessName =>
+      AppConfigService.to.rxBusinessProfile.value.name;
+  static String get businessPhone =>
+      AppConfigService.to.rxBusinessProfile.value.phone;
+  static String get businessEmail =>
+      AppConfigService.to.rxBusinessProfile.value.email;
+  static String get whatsappMessage =>
+      AppConfigService.to.rxBusinessProfile.value.whatsapp;
 
   // ── Pricing & Calculations ────────────────────────────────────────────────
-  static const double gstPercent = 18.0;
-  static const double deliveryCharge = 500.0;
-  static const double travelCharge = 0.0;
+  static double get gstPercent =>
+      AppConfigService.to.rxPricingSettings.value.gst;
+  static double get deliveryCharge =>
+      AppConfigService.to.rxPricingSettings.value.deliveryCharge;
+  static double get travelCharge =>
+      AppConfigService.to.rxPricingSettings.value.travelCharge;
 
   /// When true, client-side estimates waive GST and delivery charges.
-  static const bool enableClientFeeWaiver = true;
+  static bool get enableClientFeeWaiver => true;
 
   // ── Local Storage Cache Keys ──────────────────────────────────────────────
   static const String cartCacheKey = AppStrings.cartCacheKey;

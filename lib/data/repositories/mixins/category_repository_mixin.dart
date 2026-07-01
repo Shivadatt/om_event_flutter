@@ -16,7 +16,7 @@ mixin CategoryRepositoryMixin {
       icon: '🎈',
       color: '#e58b9d',
       imageUrl:
-          'https://raw.githubusercontent.com/omevents/assets/main/categories/birthday.jpg',
+          'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/birthday.jpg',
       sortOrder: 0,
       isActive: true,
     ),
@@ -28,7 +28,7 @@ mixin CategoryRepositoryMixin {
       icon: '💍',
       color: '#c79b61',
       imageUrl:
-          'https://raw.githubusercontent.com/omevents/assets/main/categories/wedding.jpg',
+          'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/wedding-stage.jpg',
       sortOrder: 1,
       isActive: true,
     ),
@@ -40,7 +40,7 @@ mixin CategoryRepositoryMixin {
       icon: '☁',
       color: '#75a9a6',
       imageUrl:
-          'https://raw.githubusercontent.com/omevents/assets/main/categories/baby.jpg',
+          'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/welcomebaby.jpg',
       sortOrder: 2,
       isActive: true,
     ),
@@ -52,7 +52,7 @@ mixin CategoryRepositoryMixin {
       icon: '✦',
       color: '#7c86bd',
       imageUrl:
-          'https://raw.githubusercontent.com/omevents/assets/main/categories/corporate.jpg',
+          'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/luxury-reception.jpg',
       sortOrder: 3,
       isActive: true,
     ),
@@ -64,7 +64,7 @@ mixin CategoryRepositoryMixin {
       icon: '♡',
       color: '#c96f64',
       imageUrl:
-          'https://raw.githubusercontent.com/omevents/assets/main/categories/proposal.jpg',
+          'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/Pyro.jpg',
       sortOrder: 4,
       isActive: true,
     ),
@@ -76,7 +76,7 @@ mixin CategoryRepositoryMixin {
       icon: '⚡',
       color: '#a483c0',
       imageUrl:
-          'https://raw.githubusercontent.com/omevents/assets/main/categories/entries.jpg',
+          'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/SmokeEntry.jpg',
       sortOrder: 5,
       isActive: true,
     ),
@@ -85,17 +85,38 @@ mixin CategoryRepositoryMixin {
   /// Get fallback categories.
   List<Category> get fallbackCategories => _fallbackCategories;
 
-  /// Retrieve all event decoration categories.
+  /// Retrieve all event decoration categories — active only.
+  /// Used by the Customer Website.
   Future<List<Category>> getCategories() async {
     try {
       await remoteSource.ensureSeeded();
       final docs = await remoteSource.fetchCategories();
-      return docs
-          .map((doc) => CategoryModel.fromJson(doc.data(), doc.id))
-          .toList();
+      return List<Category>.from(docs
+          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id)));
     } catch (_) {
       return _fallbackCategories;
     }
+  }
+
+  /// Retrieve ALL categories regardless of [is_active] status.
+  /// Used exclusively by the Admin Panel.
+  Future<List<Category>> getAllCategories() async {
+    try {
+      await remoteSource.ensureSeeded();
+      final docs = await remoteSource.fetchAllCategories();
+      return List<Category>.from(docs
+          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id)));
+    } catch (_) {
+      return _fallbackCategories;
+    }
+  }
+
+  /// Patch [is_active] on a single category document in Firestore.
+  Future<void> toggleCategoryStatus(
+    String slug, {
+    required bool isActive,
+  }) async {
+    await remoteSource.toggleCategoryStatus(slug, isActive: isActive);
   }
 
   /// Create a new category configuration.
@@ -135,5 +156,25 @@ mixin CategoryRepositoryMixin {
   /// Delete a category from catalog index.
   Future<void> deleteCategory(String slug) async {
     await remoteSource.deleteCategory(slug);
+  }
+
+  // ── Realtime Streams ─────────────────────────────────────────────────────
+
+  /// Realtime stream of active categories for the customer website.
+  /// Emits a new list automatically whenever Firestore changes.
+  Stream<List<Category>> streamCategories() {
+    return remoteSource.streamActiveCategories().map(
+      (docs) => List<Category>.from(
+          docs.map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))),
+    );
+  }
+
+  /// Realtime stream of ALL categories (active + inactive) for the Admin Panel.
+  /// Emits a new list automatically whenever Firestore changes.
+  Stream<List<Category>> streamAllCategories() {
+    return remoteSource.streamAllCategories().map(
+      (docs) => List<Category>.from(
+          docs.map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))),
+    );
   }
 }

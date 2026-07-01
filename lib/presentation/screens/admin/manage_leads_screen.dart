@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../controllers/admin_controller.dart';
+import 'widgets/admin_back_button.dart';
 
 class ManageLeadsScreen extends GetView<AdminController> {
   const ManageLeadsScreen({super.key});
@@ -13,6 +14,7 @@ class ManageLeadsScreen extends GetView<AdminController> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "MANAGE LEADS",
           style: AppTheme.sansBody(

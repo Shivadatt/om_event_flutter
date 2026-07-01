@@ -23,19 +23,117 @@ class FirestoreRemoteSource {
 
   // ── Categories ────────────────────────────────────────────────────────────
 
-  /// Fetch all active event decoration categories ordered by [sort_order].
+  /// Fetch all active event decoration categories.
+  /// Used by the Customer Website — inactive categories are excluded.
+  /// Sorted in-memory by [sort_order] to avoid requiring a composite Firestore index.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
   fetchCategories() async {
     final snap =
         await _firestore
             .collection(AppCollections.categories)
             .where('is_active', isEqualTo: true)
-            .orderBy('sort_order')
             .get();
-    return snap.docs;
+    final docs = snap.docs.toList();
+    docs.sort((a, b) {
+      final sa = (a.data()['sort_order'] ?? 999) as int;
+      final sb = (b.data()['sort_order'] ?? 999) as int;
+      return sa.compareTo(sb);
+    });
+    return docs;
+  }
+
+  /// Fetch ALL categories regardless of [is_active] status.
+  /// Used exclusively by the Admin Panel so inactive categories remain visible.
+  /// Sorted in-memory by [sort_order] to avoid requiring a composite Firestore index.
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  fetchAllCategories() async {
+    final snap =
+        await _firestore
+            .collection(AppCollections.categories)
+            .get();
+    final docs = snap.docs.toList();
+    docs.sort((a, b) {
+      final sa = (a.data()['sort_order'] ?? 999) as int;
+      final sb = (b.data()['sort_order'] ?? 999) as int;
+      return sa.compareTo(sb);
+    });
+    return docs;
+  }
+
+  /// Toggle the [is_active] flag on a single category document.
+  Future<void> toggleCategoryStatus(String slug, {required bool isActive}) async {
+    await _firestore
+        .collection(AppCollections.categories)
+        .doc(slug)
+        .update({'is_active': isActive});
+  }
+
+  // ── Realtime Streams ──────────────────────────────────────────────────────
+
+  /// Realtime stream of active categories, sorted in-memory by [sort_order].
+  /// Customer website subscribes to this — inactive categories are excluded.
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>> streamActiveCategories() {
+    return _firestore
+        .collection(AppCollections.categories)
+        .where('is_active', isEqualTo: true)
+        .snapshots()
+        .map((snap) {
+          final docs = snap.docs.toList();
+          docs.sort((a, b) {
+            final sa = (a.data()['sort_order'] ?? 999) as int;
+            final sb = (b.data()['sort_order'] ?? 999) as int;
+            return sa.compareTo(sb);
+          });
+          return docs;
+        });
+  }
+
+  /// Realtime stream of ALL categories (active + inactive) for the Admin Panel.
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>> streamAllCategories() {
+    return _firestore
+        .collection(AppCollections.categories)
+        .snapshots()
+        .map((snap) {
+          final docs = snap.docs.toList();
+          docs.sort((a, b) {
+            final sa = (a.data()['sort_order'] ?? 999) as int;
+            final sb = (b.data()['sort_order'] ?? 999) as int;
+            return sa.compareTo(sb);
+          });
+          return docs;
+        });
+  }
+
+  /// Realtime stream of ALL active decoration items (unfiltered).
+  /// Filtering by category, search, and sort is done in-memory by the controller.
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>> streamAllActiveItems() {
+    return _firestore
+        .collection(AppCollections.items)
+        .where('is_active', isEqualTo: true)
+        .snapshots()
+        .map((snap) => snap.docs);
+  }
+
+  /// Realtime stream of published customer reviews, sorted descending by creation date.
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>> streamPublishedReviews() {
+    return _firestore
+        .collection(AppCollections.reviews)
+        .where('is_published', isEqualTo: true)
+        .snapshots()
+        .map((snap) {
+          final docs = snap.docs.toList();
+          // Sort by created_at descending in-memory (no composite index needed)
+          docs.sort((a, b) {
+            final da = a.data()['created_at'] ?? '';
+            final db = b.data()['created_at'] ?? '';
+            return db.toString().compareTo(da.toString());
+          });
+          return docs.length > 12 ? docs.sublist(0, 12) : docs;
+        });
   }
 
   // ── Experiences ───────────────────────────────────────────────────────────
+
 
   /// Fetch active decoration items with optional filters and sorting.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchExperiences({
@@ -44,10 +142,13 @@ class FirestoreRemoteSource {
     String? themeFilter,
     bool? featuredOnly,
     String? sortBy,
+    bool? activeOnly,
   }) async {
-    Query<Map<String, dynamic>> query = _firestore
-        .collection(AppCollections.items)
-        .where('is_active', isEqualTo: true);
+    Query<Map<String, dynamic>> query = _firestore.collection(AppCollections.items);
+
+    if (activeOnly != false) {
+      query = query.where('is_active', isEqualTo: true);
+    }
 
     if (categorySlug != null && categorySlug.isNotEmpty) {
       query = query.where('category_id', isEqualTo: categorySlug);

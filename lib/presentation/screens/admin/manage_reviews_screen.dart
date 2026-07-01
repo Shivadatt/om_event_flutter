@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../data/models/review_model.dart';
+import 'widgets/admin_back_button.dart';
 
 class ManageReviewsScreen extends GetView<AdminController> {
   const ManageReviewsScreen({super.key});
@@ -12,6 +13,7 @@ class ManageReviewsScreen extends GetView<AdminController> {
     return Scaffold(
       backgroundColor: const Color(0xFF0B1714),
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "CUSTOMER REVIEWS",
           style: AppTheme.sansBody(

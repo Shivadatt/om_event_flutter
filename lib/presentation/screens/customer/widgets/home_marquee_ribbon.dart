@@ -32,7 +32,9 @@ class _MarqueeRibbonState extends State<MarqueeRibbon> {
   void _startScrolling() {
     if (!_scrollController.hasClients) return;
     const speed = 0.8;
-    _timer = dart_async.Timer.periodic(const Duration(milliseconds: 16), (timer) {
+    _timer = dart_async.Timer.periodic(const Duration(milliseconds: 16), (
+      timer,
+    ) {
       if (_scrollController.hasClients) {
         final max = _scrollController.position.maxScrollExtent;
         final current = _scrollController.offset;
@@ -85,7 +87,10 @@ class _MarqueeRibbonState extends State<MarqueeRibbon> {
                   item.toUpperCase(),
                   style: GoogleFonts.italiana(
                     fontSize: 20,
-                    color: isDark ? const Color(0xFFFAF8F5) : const Color(0xFF17201E),
+                    color:
+                        isDark
+                            ? const Color(0xFFFAF8F5)
+                            : const Color(0xFF17201E),
                     letterSpacing: 3,
                   ),
                 ),

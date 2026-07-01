@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../controllers/admin_controller.dart';
+import 'widgets/admin_back_button.dart';
 
 class ManageQuotesScreen extends GetView<AdminController> {
   const ManageQuotesScreen({super.key});
@@ -14,6 +15,7 @@ class ManageQuotesScreen extends GetView<AdminController> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "SAVED QUOTATIONS",
           style: AppTheme.sansBody(

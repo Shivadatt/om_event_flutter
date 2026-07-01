@@ -11,20 +11,23 @@ class ConcentricCirclesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final paint1 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+    final paint1 =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.18)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1;
 
-    final paint2 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.025)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 24;
+    final paint2 =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.025)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 24;
 
-    final paint3 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.018)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 50;
+    final paint3 =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.018)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 50;
 
     canvas.drawCircle(center, 120.0 + 25.0, paint3);
     canvas.drawCircle(center, 120.0 + 12.0, paint2);
@@ -69,18 +72,20 @@ class _CategoryCardState extends State<CategoryCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          transform: Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0),
+          transform:
+              Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(4),
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : [],
+            boxShadow:
+                _isHovered
+                    ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                    : [],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
@@ -164,9 +169,10 @@ class _CategoryCardState extends State<CategoryCard> {
                       shape: BoxShape.circle,
                       color: _isHovered ? Colors.white : Colors.transparent,
                       border: Border.all(
-                        color: _isHovered
-                            ? Colors.transparent
-                            : Colors.white.withValues(alpha: 0.35),
+                        color:
+                            _isHovered
+                                ? Colors.transparent
+                                : Colors.white.withValues(alpha: 0.35),
                       ),
                     ),
                     alignment: Alignment.center,
@@ -177,7 +183,10 @@ class _CategoryCardState extends State<CategoryCard> {
                         "↗",
                         style: AppTheme.sansBody(
                           fontSize: 18,
-                          color: _isHovered ? const Color(0xFF17201E) : Colors.white,
+                          color:
+                              _isHovered
+                                  ? const Color(0xFF17201E)
+                                  : Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -264,22 +273,23 @@ class CategoriesSection extends StatelessWidget {
       ),
     );
 
-    final headerRow = isWide
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              headingWidget,
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5.0),
-                child: descWidget,
-              ),
-            ],
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [headingWidget, const SizedBox(height: 22), descWidget],
-          );
+    final headerRow =
+        isWide
+            ? Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                headingWidget,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5.0),
+                  child: descWidget,
+                ),
+              ],
+            )
+            : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [headingWidget, const SizedBox(height: 22), descWidget],
+            );
 
     return Container(
       key: categoriesKey,

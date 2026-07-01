@@ -5,6 +5,7 @@ import '../../controllers/admin_controller.dart';
 import '../../controllers/auth_controller.dart';
 import 'widgets/add_admin_dialog.dart';
 import 'widgets/admin_role_card.dart';
+import 'widgets/admin_back_button.dart';
 
 /// Screen managing role access, status, and permissions for the administrator team.
 class ManageAdminRolesScreen extends GetView<AdminController> {
@@ -19,6 +20,7 @@ class ManageAdminRolesScreen extends GetView<AdminController> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "ADMIN MANAGEMENT",
           style: AppTheme.sansBody(

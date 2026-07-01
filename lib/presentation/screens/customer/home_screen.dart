@@ -57,14 +57,15 @@ class HomeScreen extends GetView<CatalogController> {
 
     return Scaffold(
       key: scaffoldKey,
-      drawer: isDesktop
-          ? null
-          : NavDrawer(
-              categoriesKey: categoriesKey,
-              catalogKey: catalogKey,
-              storiesKey: storiesKey,
-              contactKey: contactKey,
-            ),
+      drawer:
+          isDesktop
+              ? null
+              : NavDrawer(
+                categoriesKey: categoriesKey,
+                catalogKey: catalogKey,
+                storiesKey: storiesKey,
+                contactKey: contactKey,
+              ),
       endDrawer: CartDrawer(
         cartController: cartController,
         quoteController: quoteController,
@@ -78,15 +79,16 @@ class HomeScreen extends GetView<CatalogController> {
             toolbarHeight: 76,
             backgroundColor:
                 isDark ? const Color(0xFF101C18) : const Color(0xFFFAF8F5),
-            leading: isDesktop
-                ? null
-                : IconButton(
-                    icon: Icon(
-                      Icons.menu,
-                      color: isDark ? Colors.white : const Color(0xFF17201E),
+            leading:
+                isDesktop
+                    ? null
+                    : IconButton(
+                      icon: Icon(
+                        Icons.menu,
+                        color: isDark ? Colors.white : const Color(0xFF17201E),
+                      ),
+                      onPressed: () => scaffoldKey.currentState?.openDrawer(),
                     ),
-                    onPressed: () => scaffoldKey.currentState?.openDrawer(),
-                  ),
             title: Row(
               children: [
                 Container(
@@ -180,9 +182,10 @@ class HomeScreen extends GetView<CatalogController> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.25)
-                              : Colors.black.withValues(alpha: 0.15),
+                          color:
+                              isDark
+                                  ? Colors.white.withValues(alpha: 0.25)
+                                  : Colors.black.withValues(alpha: 0.15),
                         ),
                       ),
                       child: Row(
@@ -192,9 +195,10 @@ class HomeScreen extends GetView<CatalogController> {
                             "Selection",
                             style: AppTheme.sansBody(
                               fontSize: 12,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF17201E),
+                              color:
+                                  isDark
+                                      ? Colors.white
+                                      : const Color(0xFF17201E),
                               fontWeight: FontWeight.normal,
                               letterSpacing: 1,
                             ),
@@ -204,9 +208,10 @@ class HomeScreen extends GetView<CatalogController> {
                             width: 20,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF1E2B27),
+                              color:
+                                  isDark
+                                      ? Colors.white
+                                      : const Color(0xFF1E2B27),
                               shape: BoxShape.circle,
                             ),
                             alignment: Alignment.center,
@@ -214,9 +219,10 @@ class HomeScreen extends GetView<CatalogController> {
                               '$count',
                               style: AppTheme.sansBody(
                                 fontSize: 10,
-                                color: isDark
-                                    ? const Color(0xFF1B2925)
-                                    : Colors.white,
+                                color:
+                                    isDark
+                                        ? const Color(0xFF1B2925)
+                                        : Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

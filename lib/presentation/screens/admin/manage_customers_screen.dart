@@ -4,6 +4,7 @@ import '../../../core/config/app_theme.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../data/models/customer_model.dart';
 import '../../../core/utils/formatters.dart';
+import 'widgets/admin_back_button.dart';
 
 class ManageCustomersScreen extends GetView<AdminController> {
   const ManageCustomersScreen({super.key});
@@ -16,6 +17,7 @@ class ManageCustomersScreen extends GetView<AdminController> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "CUSTOMER DIRECTORY",
           style: AppTheme.sansBody(

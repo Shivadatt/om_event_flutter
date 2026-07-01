@@ -1,5 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:om_event/core/config/app_theme.dart';
+import 'package:om_event/core/services/app_config_service.dart';
+
+class _StatItem {
+  final double targetValue;
+  final String label;
+  final bool hasPlus;
+  final int decimals;
+
+  const _StatItem({
+    required this.targetValue,
+    required this.label,
+    this.hasPlus = true,
+    this.decimals = 0,
+  });
+}
 
 class AnimatedStatsBand extends StatelessWidget {
   final bool isDesktop;
@@ -13,121 +29,134 @@ class AnimatedStatsBand extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final paddingHorizontal = width >= 1000 ? 64.0 : 24.0;
 
-    if (width >= 700) {
-      return Container(
-        decoration: BoxDecoration(
-          color: forestColor,
-          border: Border(
-            top: BorderSide(
-              color: isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
-              width: 1,
-            ),
-            bottom: BorderSide(
-              color: isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
-              width: 1,
+    return Obx(() {
+      final stats = AppConfigService.to.rxStatisticsSettings.value;
+      final list = [
+        _StatItem(
+          targetValue: stats.completedEvents.toDouble(),
+          label: "Completed Events",
+          hasPlus: true,
+          decimals: 0,
+        ),
+        _StatItem(
+          targetValue: stats.happyClients.toDouble(),
+          label: "Happy Clients",
+          hasPlus: true,
+          decimals: 0,
+        ),
+        _StatItem(
+          targetValue: stats.cities.toDouble(),
+          label: "Cities",
+          hasPlus: true,
+          decimals: 0,
+        ),
+        _StatItem(
+          targetValue: stats.years.toDouble(),
+          label: "Years",
+          hasPlus: true,
+          decimals: 0,
+        ),
+      ];
+
+      if (width >= 700) {
+        return Container(
+          decoration: BoxDecoration(
+            color: forestColor,
+            border: Border(
+              top: BorderSide(
+                color:
+                    isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
+                width: 1,
+              ),
+              bottom: BorderSide(
+                color:
+                    isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
+                width: 1,
+              ),
             ),
           ),
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: paddingHorizontal,
-          vertical: 62,
-        ),
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Row(
-              children: const [
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 650,
-                    label: "celebrations styled",
-                    showLeftBorder: false,
-                  ),
-                ),
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 38,
-                    label: "creative specialists",
-                  ),
-                ),
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 4.9,
-                    label: "average rating",
-                    hasPlus: false,
-                    decimals: 1,
-                  ),
-                ),
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 12,
-                    label: "cities served",
-                  ),
-                ),
-              ],
+          padding: EdgeInsets.symmetric(
+            horizontal: paddingHorizontal,
+            vertical: 62,
+          ),
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Row(
+                children: List.generate(list.length, (index) {
+                  final s = list[index];
+                  return Expanded(
+                    child: _AnimatedStatTile(
+                      targetValue: s.targetValue,
+                      label: s.label,
+                      hasPlus: s.hasPlus,
+                      decimals: s.decimals,
+                      showLeftBorder: index > 0,
+                    ),
+                  );
+                }),
+              ),
             ),
           ),
-        ),
-      );
-    } else {
-      return Container(
-        decoration: BoxDecoration(
-          color: forestColor,
-          border: Border(
-            top: BorderSide(
-              color: isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
-              width: 1,
-            ),
-            bottom: BorderSide(
-              color: isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
-              width: 1,
+        );
+      } else {
+        // Mobile split Layout
+        final row1 = list.sublist(0, 2);
+        final row2 = list.sublist(2, 4);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: forestColor,
+            border: Border(
+              top: BorderSide(
+                color:
+                    isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
+                width: 1,
+              ),
+              bottom: BorderSide(
+                color:
+                    isDark ? const Color(0x1FFFFFFF) : const Color(0x1F000000),
+                width: 1,
+              ),
             ),
           ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-        child: Column(
-          children: [
-            Row(
-              children: const [
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 650,
-                    label: "celebrations styled",
-                    showLeftBorder: false,
-                  ),
-                ),
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 38,
-                    label: "creative specialists",
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            Row(
-              children: const [
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 4.9,
-                    label: "average rating",
-                    hasPlus: false,
-                    decimals: 1,
-                    showLeftBorder: false,
-                  ),
-                ),
-                Expanded(
-                  child: _AnimatedStatTile(
-                    targetValue: 12,
-                    label: "cities served",
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          child: Column(
+            children: [
+              Row(
+                children: List.generate(row1.length, (index) {
+                  final s = row1[index];
+                  return Expanded(
+                    child: _AnimatedStatTile(
+                      targetValue: s.targetValue,
+                      label: s.label,
+                      hasPlus: s.hasPlus,
+                      decimals: s.decimals,
+                      showLeftBorder: index > 0,
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: List.generate(row2.length, (index) {
+                  final s = row2[index];
+                  return Expanded(
+                    child: _AnimatedStatTile(
+                      targetValue: s.targetValue,
+                      label: s.label,
+                      hasPlus: s.hasPlus,
+                      decimals: s.decimals,
+                      showLeftBorder: index > 0,
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        );
+      }
+    });
   }
 }
 
@@ -143,7 +172,7 @@ class _AnimatedStatTile extends StatefulWidget {
     required this.label,
     this.hasPlus = true,
     this.decimals = 0,
-    this.showLeftBorder = true,
+    required this.showLeftBorder,
   });
 
   @override
@@ -170,6 +199,18 @@ class _AnimatedStatTileState extends State<_AnimatedStatTile>
   }
 
   @override
+  void didUpdateWidget(covariant _AnimatedStatTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.targetValue != widget.targetValue) {
+      _animation = Tween<double>(begin: 0, end: widget.targetValue).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+      );
+      _controller.reset();
+      _controller.forward();
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -178,61 +219,53 @@ class _AnimatedStatTileState extends State<_AnimatedStatTile>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final goldColor =
-        isDark ? const Color(0xFFE3C89F) : const Color(0xFF9C7A4E);
-    final labelColor =
-        isDark ? const Color(0xFFE8ECE9) : const Color(0xFF1A2823);
-    final double paddingLeft =
-        MediaQuery.of(context).size.width >= 700 ? 28 : 15;
-    final double fontSize = MediaQuery.of(context).size.width >= 700 ? 56 : 38;
+    final valueColor =
+        isDark ? const Color(0xFFFAF8F5) : const Color(0xFF17201E);
+    final borderColor =
+        isDark ? const Color(0xFF23322D) : const Color(0xFFE5DFD5);
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        String numStr = _animation.value.toStringAsFixed(widget.decimals);
-        if (widget.hasPlus) {
-          numStr += "+";
-        }
-        return Container(
-          padding: EdgeInsets.only(left: widget.showLeftBorder ? paddingLeft : 0),
-          decoration: BoxDecoration(
-            border: widget.showLeftBorder
-                ? Border(
-                    left: BorderSide(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.15)
-                          : Colors.black.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  )
+    return Container(
+      decoration: BoxDecoration(
+        border:
+            widget.showLeftBorder
+                ? Border(left: BorderSide(color: borderColor, width: 1))
                 : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                numStr,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              String displayVal = _animation.value.toStringAsFixed(
+                widget.decimals,
+              );
+              if (widget.hasPlus) displayVal += "+";
+              return Text(
+                displayVal,
                 style: AppTheme.serifHeader(
-                  fontSize: fontSize,
-                  color: goldColor,
-                  fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.of(context).size.width >= 600 ? 54 : 36,
+                  color: valueColor,
+                  fontWeight: FontWeight.normal,
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                widget.label.toUpperCase(),
-                style: AppTheme.sansBody(
-                  fontSize: 9,
-                  color: labelColor.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
+              );
+            },
           ),
-        );
-      },
+          const SizedBox(height: 12),
+          Text(
+            widget.label.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: AppTheme.sansBody(
+              fontSize: 9,
+              color: isDark ? const Color(0x99FAF8F5) : const Color(0x9917201E),
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
 import '../../controllers/seeder_controller.dart';
+import 'widgets/admin_back_button.dart';
 
 class SeederScreen extends StatelessWidget {
   const SeederScreen({super.key});
@@ -13,6 +14,7 @@ class SeederScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "FIREBASE MIGRATION SEEDER",
           style: AppTheme.sansBody(

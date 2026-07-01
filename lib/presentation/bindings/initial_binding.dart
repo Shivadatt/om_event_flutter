@@ -8,14 +8,27 @@ import '../../data/datasources/supabase_upload_service.dart';
 import '../../data/datasources/seeder_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/admin_repository.dart';
+import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/settings_repository.dart';
+import '../../core/services/app_config_service.dart';
 import '../controllers/seeder_controller.dart';
 import '../controllers/auth_controller.dart';
+
+import 'package:om_event/presentation/controllers/settings_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
     // SharedPreferences is registered synchronously in main.dart
+
+    // Settings Repository, AppConfigService & Controller
+    Get.lazyPut<SettingsRepository>(
+      () => SettingsRepositoryImpl(),
+      fenix: true,
+    );
+    Get.put<AppConfigService>(AppConfigService(), permanent: true);
+    Get.lazyPut<SettingsController>(() => SettingsController(), fenix: true);
 
     // Local Storage Source
     Get.lazyPut<LocalStorageSource>(

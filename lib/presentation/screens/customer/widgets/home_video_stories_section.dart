@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/utils/app_logger.dart';
 import 'package:om_event/core/widgets/custom_button.dart';
+import 'package:om_event/core/services/app_config_service.dart';
 
 class VideoStoriesSection extends StatelessWidget {
   final GlobalKey storiesKey;
@@ -30,61 +32,78 @@ class VideoStoriesSection extends StatelessWidget {
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
-            children: [
-              _VideoStoryRow(
-                isDesktop: isDesktop,
-                eyebrow: "Celebrate in style",
-                titlePart1: "A glimpse before",
-                titlePart2: "the big day.",
-                description:
-                    "From elegant balloon styling to personalized backdrops and thoughtful details, we create celebrations that feel joyful, memorable, and uniquely yours. Every setup is crafted to make your special day unforgettable.",
-                facts: const [
-                  "Theme & Planning",
-                  "Production & styling",
-                  "Celebrate & Capture Memories",
-                ],
-                videoAsset: "assets/videos/Birthday.mp4",
-                posterAsset: "assets/images/birthday.jpg",
-                onCtaPressed: () {
-                  final ctx = catalogKey.currentContext;
-                  if (ctx != null) {
-                    Scrollable.ensureVisible(
-                      ctx,
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                },
-              ),
-              SizedBox(height: isDesktop ? 100 : 60),
-              _VideoStoryRow(
-                isDesktop: isDesktop,
-                eyebrow: "Experience the excitement",
-                titlePart1: "Balloon Blast",
-                titlePart2: "the perfect surprise.",
-                description:
-                    "A single pop transforms the atmosphere into a shower of colors, confetti, and unforgettable smiles. Designed to create the perfect reveal for birthdays, proposals, anniversaries, baby showers, and every celebration worth remembering.",
-                facts: const [
-                  "Suspense & Countdown",
-                  "Balloon Blast Moment",
-                  "Cheers & Celebration",
-                ],
-                videoAsset: "assets/videos/Balloonblast.mp4",
-                posterAsset: "assets/images/BaloonBlast.jpg",
-                onCtaPressed: () {
-                  final ctx = catalogKey.currentContext;
-                  if (ctx != null) {
-                    Scrollable.ensureVisible(
-                      ctx,
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
+          child: Obx(() {
+            final videoSettings = AppConfigService.to.rxVideoSettings.value;
+            final videos = videoSettings.videosList;
+
+            final activeList =
+                videos.isNotEmpty
+                    ? videos
+                    : [
+                      {
+                        'eyebrow': "Celebrate in style",
+                        'titlePart1': "A glimpse before",
+                        'titlePart2': "the big day.",
+                        'description':
+                            "From elegant balloon styling to personalized backdrops and thoughtful details, we create celebrations that feel joyful, memorable, and uniquely yours. Every setup is crafted to make your special day unforgettable.",
+                        'facts': [
+                          "Theme & Planning",
+                          "Production & styling",
+                          "Celebrate & Capture Memories",
+                        ],
+                        'videoAsset': "assets/videos/Birthday.mp4",
+                        'posterAsset': "assets/images/birthday.jpg",
+                      },
+                      {
+                        'eyebrow': "Experience the excitement",
+                        'titlePart1': "Balloon Blast",
+                        'titlePart2': "the perfect surprise.",
+                        'description':
+                            "A single pop transforms the atmosphere into a shower of colors, confetti, and unforgettable smiles. Designed to create the perfect reveal for birthdays, proposals, anniversaries, baby showers, and every celebration worth remembering.",
+                        'facts': [
+                          "Suspense & Countdown",
+                          "Balloon Blast Moment",
+                          "Cheers & Celebration",
+                        ],
+                        'videoAsset': "assets/videos/Balloonblast.mp4",
+                        'posterAsset': "assets/images/BaloonBlast.jpg",
+                      },
+                    ];
+
+            return Column(
+              children: List.generate(activeList.length, (index) {
+                final map = Map<String, dynamic>.from(activeList[index]);
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom:
+                        index < activeList.length - 1
+                            ? (isDesktop ? 100 : 60)
+                            : 0,
+                  ),
+                  child: _VideoStoryRow(
+                    isDesktop: isDesktop,
+                    eyebrow: map['eyebrow'] ?? '',
+                    titlePart1: map['titlePart1'] ?? '',
+                    titlePart2: map['titlePart2'] ?? '',
+                    description: map['description'] ?? '',
+                    facts: List<String>.from(map['facts'] ?? []),
+                    videoAsset: map['videoAsset'] ?? '',
+                    posterAsset: map['posterAsset'] ?? '',
+                    onCtaPressed: () {
+                      final ctx = catalogKey.currentContext;
+                      if (ctx != null) {
+                        Scrollable.ensureVisible(
+                          ctx,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    },
+                  ),
+                );
+              }),
+            );
+          }),
         ),
       ),
     );
@@ -253,7 +272,13 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
   }
 
   Future<void> _initController() async {
-    _controller = VideoPlayerController.asset(widget.videoAsset);
+    if (widget.videoAsset.startsWith('http')) {
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoAsset),
+      );
+    } else {
+      _controller = VideoPlayerController.asset(widget.videoAsset);
+    }
     try {
       await _controller!.initialize();
       await _controller!.setLooping(true);
@@ -322,19 +347,25 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
               children: [
                 Positioned.fill(
                   child: ClipRect(
-                    child: _isInitialized && _isPlaying
-                        ? FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: _controller!.value.size.width,
-                              height: _controller!.value.size.height,
-                              child: VideoPlayer(_controller!),
-                            ),
-                          )
-                        : Image.asset(
-                            widget.posterAsset,
-                            fit: BoxFit.cover,
-                          ),
+                    child:
+                        _isInitialized && _isPlaying
+                            ? FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: _controller!.value.size.width,
+                                height: _controller!.value.size.height,
+                                child: VideoPlayer(_controller!),
+                              ),
+                            )
+                            : (widget.posterAsset.startsWith('http')
+                                ? Image.network(
+                                  widget.posterAsset,
+                                  fit: BoxFit.cover,
+                                )
+                                : Image.asset(
+                                  widget.posterAsset,
+                                  fit: BoxFit.cover,
+                                )),
                   ),
                 ),
                 Positioned(

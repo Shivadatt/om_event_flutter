@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/config/app_theme.dart';
+import '../../../core/utils/navigation_helper.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../domain/entities/admin_role.dart';
 import 'widgets/profile_edit_card.dart';
@@ -226,7 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Row(
         children: [
           InkWell(
-            onTap: () => Get.back(),
+            onTap: () => NavigationHelper.safeBack(context),
             borderRadius: BorderRadius.circular(10),
             child: Container(
               padding: const EdgeInsets.all(10),

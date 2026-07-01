@@ -1,9 +1,13 @@
+import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../domain/entities/experience.dart';
+import '../../../data/datasources/supabase_storage_source.dart';
+import 'widgets/admin_back_button.dart';
 
 class ManageExperiencesScreen extends GetView<AdminController> {
   const ManageExperiencesScreen({super.key});
@@ -14,6 +18,7 @@ class ManageExperiencesScreen extends GetView<AdminController> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "MANAGE CATALOG",
           style: AppTheme.sansBody(
@@ -376,13 +381,405 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                       labelText: "Themes (comma-separated)",
                     ),
                   ),
-                  TextField(
-                    controller: imgCtrl,
-                    decoration: const InputDecoration(labelText: "Image URL"),
-                  ),
-                  TextField(
-                    controller: vidCtrl,
-                    decoration: const InputDecoration(labelText: "Video URL"),
+                  StatefulBuilder(
+                    builder: (context, setUploadState) {
+                      bool isUploadingImage = false;
+                      bool isUploadingVideo = false;
+
+                      Future<void> uploadExperienceImage() async {
+                        try {
+                          final result = await FilePicker.pickFiles(
+                            type: FileType.image,
+                            allowMultiple: false,
+                            withData: true,
+                          );
+                          if (result == null || result.files.isEmpty) return;
+
+                          setUploadState(() {
+                            isUploadingImage = true;
+                          });
+
+                          final file = result.files.first;
+                          final fileName = file.name;
+
+                          List<int> fileBytes;
+                          if (file.bytes != null) {
+                            fileBytes = file.bytes!;
+                          } else if (file.path != null) {
+                            final dartFile = io.File(file.path!);
+                            fileBytes = await dartFile.readAsBytes();
+                          } else {
+                            throw Exception("Could not read file data.");
+                          }
+
+                          String contentType = 'image/jpeg';
+                          if (fileName.toLowerCase().endsWith('.png')) {
+                            contentType = 'image/png';
+                          }
+
+                          final storage = Get.find<SupabaseStorageSource>();
+                          final publicUrl = await storage.uploadFile(
+                            'images/$fileName',
+                            fileBytes,
+                            contentType,
+                            bucket: 'gallery',
+                          );
+
+                          setState(() {
+                            imgCtrl.text = publicUrl;
+                          });
+
+                          Get.snackbar(
+                            "Upload Successful",
+                            "Experience image uploaded to Supabase gallery.",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        } catch (e) {
+                          Get.snackbar(
+                            "Upload Failed",
+                            e.toString(),
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red.shade900,
+                            colorText: Colors.white,
+                          );
+                        } finally {
+                          setUploadState(() {
+                            isUploadingImage = false;
+                          });
+                        }
+                      }
+
+                      Future<void> uploadExperienceVideo() async {
+                        try {
+                          final result = await FilePicker.pickFiles(
+                            type: FileType.video,
+                            allowMultiple: false,
+                            withData: true,
+                          );
+                          if (result == null || result.files.isEmpty) return;
+
+                          setUploadState(() {
+                            isUploadingVideo = true;
+                          });
+
+                          final file = result.files.first;
+                          final fileName = file.name;
+
+                          List<int> fileBytes;
+                          if (file.bytes != null) {
+                            fileBytes = file.bytes!;
+                          } else if (file.path != null) {
+                            final dartFile = io.File(file.path!);
+                            fileBytes = await dartFile.readAsBytes();
+                          } else {
+                            throw Exception("Could not read file data.");
+                          }
+
+                          String contentType = 'video/mp4';
+                          if (fileName.toLowerCase().endsWith('.mov')) {
+                            contentType = 'video/quicktime';
+                          } else if (fileName.toLowerCase().endsWith('.avi')) {
+                            contentType = 'video/x-msvideo';
+                          }
+
+                          final storage = Get.find<SupabaseStorageSource>();
+                          final publicUrl = await storage.uploadFile(
+                            'Video/$fileName',
+                            fileBytes,
+                            contentType,
+                            bucket: 'gallery',
+                          );
+
+                          setState(() {
+                            vidCtrl.text = publicUrl;
+                          });
+
+                          Get.snackbar(
+                            "Upload Successful",
+                            "Experience video uploaded to Supabase gallery.",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        } catch (e) {
+                          Get.snackbar(
+                            "Upload Failed",
+                            e.toString(),
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red.shade900,
+                            colorText: Colors.white,
+                          );
+                        } finally {
+                          setUploadState(() {
+                            isUploadingVideo = false;
+                          });
+                        }
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 16),
+                          Text(
+                            "Experience Image Preview",
+                            style: AppTheme.sansBody(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: isUploadingImage ? null : uploadExperienceImage,
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                height: 160,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade900,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: Colors.grey.shade800,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: isUploadingImage
+                                      ? const Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Color(0xFFC79B61),
+                                              ),
+                                              SizedBox(height: 12),
+                                              Text(
+                                                "Uploading image to Supabase...",
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : imgCtrl.text.isNotEmpty
+                                          ? Stack(
+                                              fit: StackFit.expand,
+                                              children: [
+                                                imgCtrl.text.startsWith('assets/')
+                                                    ? Image.asset(
+                                                        imgCtrl.text,
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : Image.network(
+                                                        imgCtrl.text,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder:
+                                                            (_, __, ___) =>
+                                                                const Center(
+                                                                  child: Icon(
+                                                                    Icons
+                                                                        .broken_image_outlined,
+                                                                    color:
+                                                                        Colors
+                                                                            .grey,
+                                                                  ),
+                                                                ),
+                                                      ),
+                                                Container(
+                                                  color: Colors.black45,
+                                                ),
+                                                const Center(
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .cloud_upload_outlined,
+                                                        color: Colors.white,
+                                                        size: 32,
+                                                      ),
+                                                      SizedBox(height: 8),
+                                                      Text(
+                                                        "Click to Change Image",
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : const Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.cloud_upload_outlined,
+                                                    color: Colors.grey,
+                                                    size: 36,
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    "Click to Upload Experience Image",
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                  Text(
+                                                    "(Saves to Supabase gallery/images)",
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 10,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Experience Video Preview",
+                            style: AppTheme.sansBody(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: isUploadingVideo ? null : uploadExperienceVideo,
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade900,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: Colors.grey.shade800,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: isUploadingVideo
+                                      ? const Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Color(0xFFC79B61),
+                                              ),
+                                              SizedBox(height: 12),
+                                              Text(
+                                                "Uploading video to Supabase...",
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : vidCtrl.text.isNotEmpty
+                                          ? Stack(
+                                              fit: StackFit.expand,
+                                              children: [
+                                                Container(
+                                                  color: Colors.black54,
+                                                ),
+                                                Center(
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.video_library,
+                                                        color: Color(0xFFC79B61),
+                                                        size: 32,
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Text(
+                                                        vidCtrl.text.split('/').last,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      const Text(
+                                                        "Click to Change Video",
+                                                        style: TextStyle(
+                                                          color: Colors.grey,
+                                                          fontSize: 10,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : const Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.video_call_outlined,
+                                                    color: Colors.grey,
+                                                    size: 36,
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    "Click to Upload Experience Video",
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                  Text(
+                                                    "(Saves to Supabase gallery/Video)",
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 10,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    },
                   ),
                   SwitchListTile(
                     title: const Text("Is Active"),

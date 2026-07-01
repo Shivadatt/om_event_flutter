@@ -4,6 +4,7 @@ import '../../../core/config/app_theme.dart';
 import '../../controllers/admin_controller.dart';
 import 'widgets/booking_tab_widget.dart';
 import 'widgets/payment_tab_widget.dart';
+import 'widgets/admin_back_button.dart';
 
 class ManageBookingsScreen extends GetView<AdminController> {
   const ManageBookingsScreen({super.key});
@@ -16,6 +17,7 @@ class ManageBookingsScreen extends GetView<AdminController> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          leading: const AdminBackButton(),
           title: Text(
             "BOOKINGS & PAYMENTS",
             style: AppTheme.sansBody(

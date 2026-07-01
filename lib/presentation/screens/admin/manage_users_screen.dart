@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../data/models/user_model.dart';
+import 'widgets/admin_back_button.dart';
 
 class ManageUsersScreen extends GetView<AdminController> {
   const ManageUsersScreen({super.key});
@@ -13,6 +14,7 @@ class ManageUsersScreen extends GetView<AdminController> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AdminBackButton(),
         title: Text(
           "MANAGE USERS",
           style: AppTheme.sansBody(

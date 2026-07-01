@@ -14,15 +14,40 @@ class CategoryModel extends Category {
     required super.isActive,
   });
 
+  static String sanitizeImageUrl(String slug, String url) {
+    if (url.isEmpty) return '';
+
+    // Force Surprise & Proposal category to use Pyro.jpg
+    if (slug == 'proposal') {
+      return 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/Pyro.jpg';
+    }
+
+    if (url.startsWith('assets/images/')) {
+      final fileName = url.split('/').last;
+      return 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/$fileName';
+    }
+
+    if (url.startsWith('http')) {
+      if (url.contains('/gallery/images/')) {
+        return url.replaceAll('/gallery/images/', '/thumbnails/images/');
+      }
+      return url;
+    }
+
+    return url;
+  }
+
   factory CategoryModel.fromJson(Map<String, dynamic> json, String documentId) {
+    final slug = json['slug'] ?? documentId;
+    final rawUrl = json['image_url'] ?? json['imageUrl'] ?? '';
     return CategoryModel(
       id: documentId,
       name: json['name'] ?? '',
-      slug: json['slug'] ?? '',
+      slug: slug,
       description: json['description'] ?? '',
       icon: json['icon'] ?? '✦',
       color: json['color'] ?? '#c79b61',
-      imageUrl: json['image_url'] ?? json['imageUrl'] ?? '',
+      imageUrl: sanitizeImageUrl(slug, rawUrl),
       sortOrder: json['sort_order'] ?? json['sortOrder'] ?? 0,
       itemCount: json['item_count'] ?? json['itemCount'] ?? 0,
       isActive: json['is_active'] ?? json['isActive'] ?? true,

@@ -20,8 +20,7 @@ class ExperienceDetailDialog extends StatefulWidget {
   const ExperienceDetailDialog({super.key, required this.item});
 
   @override
-  State<ExperienceDetailDialog> createState() =>
-      _ExperienceDetailDialogState();
+  State<ExperienceDetailDialog> createState() => _ExperienceDetailDialogState();
 }
 
 class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
@@ -63,21 +62,23 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
       return Image.asset(
         url,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => ItemVisualPlaceholder(
-          title: title,
-          categorySlug: categorySlug,
-          categoryName: categoryName,
-        ),
+        errorBuilder:
+            (_, __, ___) => ItemVisualPlaceholder(
+              title: title,
+              categorySlug: categorySlug,
+              categoryName: categoryName,
+            ),
       );
     }
     return Image.network(
       url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => ItemVisualPlaceholder(
-        title: title,
-        categorySlug: categorySlug,
-        categoryName: categoryName,
-      ),
+      errorBuilder:
+          (_, __, ___) => ItemVisualPlaceholder(
+            title: title,
+            categorySlug: categorySlug,
+            categoryName: categoryName,
+          ),
     );
   }
 
@@ -95,7 +96,9 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
     final hasDiscount =
         item.offerPrice != null && item.price > item.effectivePrice;
     final discountPct =
-        hasDiscount ? ((1 - item.effectivePrice / item.price) * 100).round() : 0;
+        hasDiscount
+            ? ((1 - item.effectivePrice / item.price) * 100).round()
+            : 0;
     final savedAmount = item.price - item.effectivePrice;
 
     Widget rightPanel = SingleChildScrollView(
@@ -330,20 +333,20 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
             children: [
               isDesktop
                   ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          width: dialogWidth * 0.47,
-                          child: _buildImage(
-                            item.imageUrl,
-                            item.name,
-                            item.categorySlug,
-                            item.categoryName,
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: dialogWidth * 0.47,
+                        child: _buildImage(
+                          item.imageUrl,
+                          item.name,
+                          item.categorySlug,
+                          item.categoryName,
                         ),
-                        Expanded(child: rightPanel),
-                      ],
-                    )
+                      ),
+                      Expanded(child: rightPanel),
+                    ],
+                  )
                   : rightPanel,
               Positioned(
                 top: 12,
@@ -405,9 +408,10 @@ class _ModalDropdown extends StatelessWidget {
             color: const Color(0xFF17201E),
           ),
           iconEnabledColor: const Color(0xFF17201E),
-          items: items
-              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-              .toList(),
+          items:
+              items
+                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                  .toList(),
           onChanged: (v) {
             if (v != null) onChanged(v);
           },

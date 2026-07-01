@@ -12,7 +12,7 @@ mixin ExperienceControllerMixin on GetxController {
     try {
       isLoadingExperiences.value = true;
       final catalogRepository = Get.find<CatalogRepository>();
-      final list = await catalogRepository.getExperiences();
+      final list = await catalogRepository.getExperiences(activeOnly: false);
       rxExperiences.assignAll(list);
     } catch (e) {
       Get.snackbar("Experiences Error", e.toString());

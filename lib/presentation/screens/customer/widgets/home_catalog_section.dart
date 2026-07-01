@@ -46,21 +46,23 @@ class _ExperienceCardState extends State<ExperienceCard> {
       return Image.asset(
         url,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => ItemVisualPlaceholder(
-          title: title,
-          categorySlug: categorySlug,
-          categoryName: categoryName,
-        ),
+        errorBuilder:
+            (_, __, ___) => ItemVisualPlaceholder(
+              title: title,
+              categorySlug: categorySlug,
+              categoryName: categoryName,
+            ),
       );
     }
     return Image.network(
       url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => ItemVisualPlaceholder(
-        title: title,
-        categorySlug: categorySlug,
-        categoryName: categoryName,
-      ),
+      errorBuilder:
+          (_, __, ___) => ItemVisualPlaceholder(
+            title: title,
+            categorySlug: categorySlug,
+            categoryName: categoryName,
+          ),
     );
   }
 
@@ -130,9 +132,10 @@ class _ExperienceCardState extends State<ExperienceCard> {
                             height: 44,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: _isHovered
-                                  ? const Color(0xFFC79B61)
-                                  : const Color(0xE6192320),
+                              color:
+                                  _isHovered
+                                      ? const Color(0xFFC79B61)
+                                      : const Color(0xE6192320),
                             ),
                             alignment: Alignment.center,
                             child: AnimatedRotation(
@@ -190,7 +193,8 @@ class _ExperienceCardState extends State<ExperienceCard> {
                       overflow: TextOverflow.ellipsis,
                       style: AppTheme.sansBody(
                         fontSize: 12,
-                        color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                        color:
+                            isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
                         height: 1.6,
                       ),
                     ),
@@ -211,7 +215,10 @@ class _ExperienceCardState extends State<ExperienceCard> {
                             style: AppTheme.sansBody(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF17201E),
+                              color:
+                                  isDark
+                                      ? Colors.white
+                                      : const Color(0xFF17201E),
                             ),
                           ),
                           if (widget.item.offerPrice != null &&
@@ -221,7 +228,10 @@ class _ExperienceCardState extends State<ExperienceCard> {
                               AppFormatters.formatCurrency(widget.item.price),
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                                color:
+                                    isDark
+                                        ? AppTheme.darkMuted
+                                        : AppTheme.lightMuted,
                                 decoration: TextDecoration.lineThrough,
                               ),
                             ),
@@ -231,7 +241,10 @@ class _ExperienceCardState extends State<ExperienceCard> {
                             "starting price",
                             style: AppTheme.sansBody(
                               fontSize: 11,
-                              color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                              color:
+                                  isDark
+                                      ? AppTheme.darkMuted
+                                      : AppTheme.lightMuted,
                             ),
                           ),
                         ],
@@ -296,13 +309,15 @@ class ExperiencesCatalogSection extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
           decoration: BoxDecoration(
-            color: isActive
-                ? (isDark ? Colors.white : const Color(0xFF1E2B27))
-                : Colors.transparent,
+            color:
+                isActive
+                    ? (isDark ? Colors.white : const Color(0xFF1E2B27))
+                    : Colors.transparent,
             border: Border.all(
-              color: isActive
-                  ? Colors.transparent
-                  : (isDark ? Colors.white24 : Colors.black12),
+              color:
+                  isActive
+                      ? Colors.transparent
+                      : (isDark ? Colors.white24 : Colors.black12),
               width: 1,
             ),
             borderRadius: BorderRadius.circular(30),
@@ -312,9 +327,10 @@ class ExperiencesCatalogSection extends StatelessWidget {
             style: AppTheme.sansBody(
               fontSize: 11,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive
-                  ? (isDark ? const Color(0xFF17201E) : Colors.white)
-                  : (isDark ? Colors.white70 : Colors.black87),
+              color:
+                  isActive
+                      ? (isDark ? const Color(0xFF17201E) : Colors.white)
+                      : (isDark ? Colors.white70 : Colors.black87),
             ),
           ),
         ),
@@ -382,22 +398,23 @@ class ExperiencesCatalogSection extends StatelessWidget {
       ),
     );
 
-    final headerRow = isWide
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              headingWidget,
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5.0),
-                child: descWidget,
-              ),
-            ],
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [headingWidget, const SizedBox(height: 22), descWidget],
-          );
+    final headerRow =
+        isWide
+            ? Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                headingWidget,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5.0),
+                  child: descWidget,
+                ),
+              ],
+            )
+            : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [headingWidget, const SizedBox(height: 22), descWidget],
+            );
 
     final searchWidget = Container(
       height: 46,
@@ -504,19 +521,20 @@ class ExperiencesCatalogSection extends StatelessWidget {
             const SizedBox(width: 7),
             Obx(
               () => Row(
-                children: controller.rxCategories.map((cat) {
-                  final isActive =
-                      controller.selectedCategorySlug.value == cat.slug;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 7.0),
-                    child: _buildChip(
-                      label: cat.name.replaceFirst(" Celebrations", ""),
-                      isActive: isActive,
-                      onTap: () => controller.selectCategory(cat.slug),
-                      isDark: isDark,
-                    ),
-                  );
-                }).toList(),
+                children:
+                    controller.rxCategories.map((cat) {
+                      final isActive =
+                          controller.selectedCategorySlug.value == cat.slug;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 7.0),
+                        child: _buildChip(
+                          label: cat.name.replaceFirst(" Celebrations", ""),
+                          isActive: isActive,
+                          onTap: () => controller.selectCategory(cat.slug),
+                          isDark: isDark,
+                        ),
+                      );
+                    }).toList(),
               ),
             ),
           ],
@@ -524,26 +542,27 @@ class ExperiencesCatalogSection extends StatelessWidget {
       ),
     );
 
-    final toolbar = isWide
-        ? Row(
-            children: [
-              searchWidget,
-              const SizedBox(width: 14),
-              Expanded(child: chipsWidget),
-              const SizedBox(width: 14),
-              sortWidget,
-            ],
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              searchWidget,
-              const SizedBox(height: 14),
-              chipsWidget,
-              const SizedBox(height: 14),
-              Align(alignment: Alignment.centerLeft, child: sortWidget),
-            ],
-          );
+    final toolbar =
+        isWide
+            ? Row(
+              children: [
+                searchWidget,
+                const SizedBox(width: 14),
+                Expanded(child: chipsWidget),
+                const SizedBox(width: 14),
+                sortWidget,
+              ],
+            )
+            : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                searchWidget,
+                const SizedBox(height: 14),
+                chipsWidget,
+                const SizedBox(height: 14),
+                Align(alignment: Alignment.centerLeft, child: sortWidget),
+              ],
+            );
 
     return Container(
       key: catalogKey,
@@ -579,7 +598,8 @@ class ExperiencesCatalogSection extends StatelessWidget {
                         "No experiences match that search. Try a broader mood.",
                         style: AppTheme.sansBody(
                           fontSize: 14,
-                          color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                          color:
+                              isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
                         ),
                       ),
                     ),

@@ -55,7 +55,7 @@ class CategorySeed {
       'description': 'Thoughtful romantic settings with a cinematic reveal.',
       'icon': '♡',
       'color': '#c96f64',
-      'image_url': 'assets/images/proposal-candles.jpg',
+      'image_url': 'assets/images/Pyro.jpg',
       'sort_order': 4,
       'is_active': true,
     },

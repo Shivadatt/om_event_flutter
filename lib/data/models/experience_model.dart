@@ -29,16 +29,56 @@ class ExperienceModel extends Experience {
     Map<String, dynamic> json,
     String documentId,
   ) {
+    String catId = json['category_id'] ?? json['categoryId'] ?? '';
+    String catName = json['category_name'] ?? json['categoryName'] ?? '';
+    String catSlug =
+        json['category_slug'] ??
+        json['categorySlug'] ??
+        json['category_id'] ??
+        json['categoryId'] ??
+        '';
+
+    // Runtime sanitization to correct legacy mis-seeded Firestore categories
+    final itemName = (json['name'] as String? ?? '').toLowerCase();
+    final itemId = documentId.toLowerCase();
+
+    if (itemName.contains('baby shower') ||
+        itemName.contains('chhathi') ||
+        itemId == 'pastel-dream-birthday' ||
+        itemId == 'ivory-vow-stage') {
+      catId = 'baby';
+      catName = 'Baby Celebrations';
+      catSlug = 'baby';
+    } else if (itemName.contains('birthday') ||
+        itemName.contains('ballon decoration') ||
+        itemId == 'moonlit-marry-me' ||
+        itemId == 'royal-fog-entry') {
+      catId = 'birthday';
+      catName = 'Birthday Celebrations';
+      catSlug = 'birthday';
+    } else if (itemName.contains('wedding') ||
+        itemName.contains('rasam') ||
+        itemName.contains('haldi') ||
+        itemName.contains('mehndi') ||
+        itemId == 'little-cloud-welcome' ||
+        itemId == 'opening-day-essentials') {
+      catId = 'wedding';
+      catName = 'Wedding & Engagement';
+      catSlug = 'wedding';
+    } else if (itemName.contains('pyro') ||
+        itemName.contains('smoke pot') ||
+        itemId == 'signature-brand-launch' ||
+        itemId == 'terrace-sunset-story') {
+      catId = 'entries';
+      catName = 'Grand Entries';
+      catSlug = 'entries';
+    }
+
     return ExperienceModel(
       id: documentId,
-      categoryId: json['category_id'] ?? json['categoryId'] ?? '',
-      categoryName: json['category_name'] ?? json['categoryName'] ?? '',
-      categorySlug:
-          json['category_slug'] ??
-          json['categorySlug'] ??
-          json['category_id'] ??
-          json['categoryId'] ??
-          '',
+      categoryId: catId,
+      categoryName: catName,
+      categorySlug: catSlug,
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',

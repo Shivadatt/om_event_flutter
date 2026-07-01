@@ -4,9 +4,9 @@ class ItemsSeed {
   static const List<Map<String, dynamic>> decorationItems = [
     {
       'id': 'pastel-dream-birthday',
-      'category_id': 'birthday',
-      'category_name': 'Birthday Celebrations',
-      'category_slug': 'birthday',
+      'category_id': 'baby',
+      'category_name': 'Baby Celebrations',
+      'category_slug': 'baby',
       'name': 'Baby Shower/Srimant Sanskar',
       'slug': 'pastel-dream-birthday',
       'description':
@@ -54,9 +54,9 @@ class ItemsSeed {
     },
     {
       'id': 'ivory-vow-stage',
-      'category_id': 'wedding',
-      'category_name': 'Wedding & Engagement',
-      'category_slug': 'wedding',
+      'category_id': 'baby',
+      'category_name': 'Baby Celebrations',
+      'category_slug': 'baby',
       'name': 'Chhathi Pujan',
       'slug': 'ivory-vow-stage',
       'description':
@@ -104,9 +104,9 @@ class ItemsSeed {
     },
     {
       'id': 'little-cloud-welcome',
-      'category_id': 'baby',
-      'category_name': 'Baby Celebrations',
-      'category_slug': 'baby',
+      'category_id': 'wedding',
+      'category_name': 'Wedding & Engagement',
+      'category_slug': 'wedding',
       'name': 'vana rasam (Gujarati Wedding Ritual)',
       'slug': 'little-cloud-welcome',
       'description':
@@ -154,9 +154,9 @@ class ItemsSeed {
     },
     {
       'id': 'signature-brand-launch',
-      'category_id': 'corporate',
-      'category_name': 'Corporate Events',
-      'category_slug': 'corporate',
+      'category_id': 'entries',
+      'category_name': 'Grand Entries',
+      'category_slug': 'entries',
       'name': 'Pyro Entry And Fireworks',
       'slug': 'signature-brand-launch',
       'description':
@@ -179,9 +179,9 @@ class ItemsSeed {
     },
     {
       'id': 'opening-day-essentials',
-      'category_id': 'corporate',
-      'category_name': 'Corporate Events',
-      'category_slug': 'corporate',
+      'category_id': 'wedding',
+      'category_name': 'Wedding & Engagement',
+      'category_slug': 'wedding',
       'name': 'Haldi And Mehndi Decor Yellow And Green Garlands',
       'slug': 'opening-day-essentials',
       'description':
@@ -204,9 +204,9 @@ class ItemsSeed {
     },
     {
       'id': 'moonlit-marry-me',
-      'category_id': 'proposal',
-      'category_name': 'Surprise & Proposal',
-      'category_slug': 'proposal',
+      'category_id': 'birthday',
+      'category_name': 'Birthday Celebrations',
+      'category_slug': 'birthday',
       'name': 'Birthday Celebration',
       'slug': 'moonlit-marry-me',
       'description':
@@ -229,9 +229,9 @@ class ItemsSeed {
     },
     {
       'id': 'terrace-sunset-story',
-      'category_id': 'proposal',
-      'category_name': 'Surprise & Proposal',
-      'category_slug': 'proposal',
+      'category_id': 'entries',
+      'category_name': 'Grand Entries',
+      'category_slug': 'entries',
       'name': 'Smoke pot entry bride and groom',
       'slug': 'terrace-sunset-story',
       'description':
@@ -254,9 +254,9 @@ class ItemsSeed {
     },
     {
       'id': 'royal-fog-entry',
-      'category_id': 'entries',
-      'category_name': 'Grand Entries',
-      'category_slug': 'entries',
+      'category_id': 'birthday',
+      'category_name': 'Birthday Celebrations',
+      'category_slug': 'birthday',
       'name': 'Ballon Decoration ',
       'slug': 'royal-fog-entry',
       'description':
