@@ -13,10 +13,15 @@ class QuotationItemModel extends QuotationItem {
 
   factory QuotationItemModel.fromJson(Map<String, dynamic> json) {
     return QuotationItemModel(
-      experienceId: json['decoration_item_slug'] ?? json['experience_id'] ?? json['experienceId'] ?? '',
+      experienceId:
+          json['decoration_item_slug'] ??
+          json['experience_id'] ??
+          json['experienceId'] ??
+          '',
       name: json['name'] ?? '',
       quantity: json['quantity'] ?? 1,
-      unitPrice: (json['unit_price'] ?? json['unitPrice'] as num?)?.toDouble() ?? 0.0,
+      unitPrice:
+          (json['unit_price'] ?? json['unitPrice'] as num?)?.toDouble() ?? 0.0,
       color: json['color'] ?? '',
       theme: json['theme'] ?? '',
       notes: json['notes'] ?? '',
@@ -73,9 +78,17 @@ class QuotationModel extends Quotation {
     return DateTime.now();
   }
 
-  factory QuotationModel.fromJson(Map<String, dynamic> json, String documentId) {
+  factory QuotationModel.fromJson(
+    Map<String, dynamic> json,
+    String documentId,
+  ) {
     final rawItems = json['items'] as List? ?? [];
-    final itemsList = rawItems.map((e) => QuotationItemModel.fromJson(Map<String, dynamic>.from(e))).toList();
+    final itemsList =
+        rawItems
+            .map(
+              (e) => QuotationItemModel.fromJson(Map<String, dynamic>.from(e)),
+            )
+            .toList();
 
     return QuotationModel(
       id: documentId,
@@ -88,11 +101,21 @@ class QuotationModel extends Quotation {
       notes: json['notes'] ?? '',
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
       discount: (json['discount'] as num?)?.toDouble() ?? 0.0,
-      deliveryCharge: (json['delivery_charge'] ?? json['deliveryCharge'] as num?)?.toDouble() ?? 0.0,
-      travelCharge: (json['travel_charge'] ?? json['travelCharge'] as num?)?.toDouble() ?? 0.0,
-      gstPercent: (json['gst_percent'] ?? json['gstPercent'] as num?)?.toDouble() ?? 18.0,
-      gstAmount: (json['gst_amount'] ?? json['gstAmount'] as num?)?.toDouble() ?? 0.0,
-      grandTotal: (json['grand_total'] ?? json['grandTotal'] as num?)?.toDouble() ?? 0.0,
+      deliveryCharge:
+          (json['delivery_charge'] ?? json['deliveryCharge'] as num?)
+              ?.toDouble() ??
+          0.0,
+      travelCharge:
+          (json['travel_charge'] ?? json['travelCharge'] as num?)?.toDouble() ??
+          0.0,
+      gstPercent:
+          (json['gst_percent'] ?? json['gstPercent'] as num?)?.toDouble() ??
+          18.0,
+      gstAmount:
+          (json['gst_amount'] ?? json['gstAmount'] as num?)?.toDouble() ?? 0.0,
+      grandTotal:
+          (json['grand_total'] ?? json['grandTotal'] as num?)?.toDouble() ??
+          0.0,
       pdfUrl: json['pdf_url'] ?? json['pdfUrl'] ?? '',
       status: json['status'] ?? 'draft',
       items: itemsList,

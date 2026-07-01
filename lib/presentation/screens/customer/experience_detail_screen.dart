@@ -26,21 +26,40 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
     super.dispose();
   }
 
-  Widget _buildImage(String url, String title, String categorySlug, String categoryName) {
+  Widget _buildImage(
+    String url,
+    String title,
+    String categorySlug,
+    String categoryName,
+  ) {
     if (url.isEmpty) {
-      return ItemVisualPlaceholder(title: title, categorySlug: categorySlug, categoryName: categoryName);
+      return ItemVisualPlaceholder(
+        title: title,
+        categorySlug: categorySlug,
+        categoryName: categoryName,
+      );
     }
     if (url.startsWith('assets/')) {
       return Image.asset(
         url,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => ItemVisualPlaceholder(title: title, categorySlug: categorySlug, categoryName: categoryName),
+        errorBuilder:
+            (_, __, ___) => ItemVisualPlaceholder(
+              title: title,
+              categorySlug: categorySlug,
+              categoryName: categoryName,
+            ),
       );
     }
     return Image.network(
       url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => ItemVisualPlaceholder(title: title, categorySlug: categorySlug, categoryName: categoryName),
+      errorBuilder:
+          (_, __, ___) => ItemVisualPlaceholder(
+            title: title,
+            categorySlug: categorySlug,
+            categoryName: categoryName,
+          ),
     );
   }
 
@@ -105,7 +124,11 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
       const SizedBox(height: 20),
       Text(
         item.description,
-        style: AppTheme.sansBody(fontSize: 14, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted, height: 1.6),
+        style: AppTheme.sansBody(
+          fontSize: 14,
+          color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+          height: 1.6,
+        ),
       ),
       const SizedBox(height: 24),
       Row(
@@ -117,7 +140,10 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
           const SizedBox(width: 8),
           Text(
             "starting price",
-            style: AppTheme.sansBody(fontSize: 11, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted),
+            style: AppTheme.sansBody(
+              fontSize: 11,
+              color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+            ),
           ),
         ],
       ),
@@ -126,25 +152,38 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
       // Customizer Settings Dropdowns
       Text(
         "CUSTOMISE YOUR SETUP",
-        style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+        style: AppTheme.sansBody(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
+        ),
       ),
       const SizedBox(height: 18),
       if (item.colors.isNotEmpty) ...[
         Text(
           "COLOR STORY",
-          style: AppTheme.sansBody(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: AppTheme.sansBody(
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            border: Border.all(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
+            border: Border.all(
+              color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
+            ),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: _selectedColor,
-              items: item.colors.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+              items:
+                  item.colors
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
               onChanged: (val) {
                 if (val != null) setState(() => _selectedColor = val);
               },
@@ -156,19 +195,28 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
       if (item.themes.isNotEmpty) ...[
         Text(
           "DESIGN MOOD / THEME",
-          style: AppTheme.sansBody(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: AppTheme.sansBody(
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            border: Border.all(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
+            border: Border.all(
+              color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
+            ),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: _selectedTheme,
-              items: item.themes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              items:
+                  item.themes
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                      .toList(),
               onChanged: (val) {
                 if (val != null) setState(() => _selectedTheme = val);
               },
@@ -206,7 +254,11 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
                 const SizedBox(width: 4),
                 Text(
                   "Styling & Installation",
-                  style: AppTheme.sansBody(fontSize: 10, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted, fontWeight: FontWeight.bold),
+                  style: AppTheme.sansBody(
+                    fontSize: 10,
+                    color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -217,7 +269,11 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
                 const SizedBox(width: 4),
                 Text(
                   "Teardown",
-                  style: AppTheme.sansBody(fontSize: 10, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted, fontWeight: FontWeight.bold),
+                  style: AppTheme.sansBody(
+                    fontSize: 10,
+                    color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -228,7 +284,11 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
                 const SizedBox(width: 4),
                 Text(
                   "Dedicated Coordinator",
-                  style: AppTheme.sansBody(fontSize: 10, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted, fontWeight: FontWeight.bold),
+                  style: AppTheme.sansBody(
+                    fontSize: 10,
+                    color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -246,19 +306,26 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
             notes: _notesController.text,
           );
           Get.back();
-          Get.snackbar("Added to Canvas", "${item.name} added to your selection.");
+          Get.snackbar(
+            "Added to Canvas",
+            "${item.name} added to your selection.",
+          );
         },
       ),
       const SizedBox(height: 40),
     ];
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF141A18) : const Color(0xFFFBF9F4),
+      backgroundColor:
+          isDark ? const Color(0xFF141A18) : const Color(0xFFFBF9F4),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black,
+          ),
           onPressed: () => Get.back(),
         ),
       ),
@@ -267,51 +334,72 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
           child: Container(
             constraints: const BoxConstraints(maxWidth: 1200),
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: isDesktop
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Left Column: Image/Placeholder
-                      Expanded(
-                        flex: 10,
-                        child: Container(
-                          height: 520,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
-                          ),
-                          child: _buildImage(item.imageUrl, item.name, item.categorySlug, item.categoryName),
-                        ),
-                      ),
-                      const SizedBox(width: 48),
-                      // Right Column: Customizer fields
-                      Expanded(
-                        flex: 10,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: detailContent,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : SingleChildScrollView(
-                    child: Column(
+            child:
+                isDesktop
+                    ? Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          height: 320,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
+                        // Left Column: Image/Placeholder
+                        Expanded(
+                          flex: 10,
+                          child: Container(
+                            height: 520,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color:
+                                    isDark
+                                        ? AppTheme.darkLine
+                                        : AppTheme.lightLine,
+                              ),
+                            ),
+                            child: _buildImage(
+                              item.imageUrl,
+                              item.name,
+                              item.categorySlug,
+                              item.categoryName,
+                            ),
                           ),
-                          child: _buildImage(item.imageUrl, item.name, item.categorySlug, item.categoryName),
                         ),
-                        const SizedBox(height: 24),
-                        ...detailContent,
+                        const SizedBox(width: 48),
+                        // Right Column: Customizer fields
+                        Expanded(
+                          flex: 10,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: detailContent,
+                            ),
+                          ),
+                        ),
                       ],
+                    )
+                    : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 320,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color:
+                                    isDark
+                                        ? AppTheme.darkLine
+                                        : AppTheme.lightLine,
+                              ),
+                            ),
+                            child: _buildImage(
+                              item.imageUrl,
+                              item.name,
+                              item.categorySlug,
+                              item.categoryName,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ...detailContent,
+                        ],
+                      ),
                     ),
-                  ),
           ),
         ),
       ),

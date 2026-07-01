@@ -9,10 +9,7 @@ class QuotationRepositoryImpl implements QuotationRepository {
   final FirestoreRemoteSource firestoreSource;
   final SupabaseStorageSource? supabaseSource;
 
-  QuotationRepositoryImpl({
-    required this.firestoreSource,
-    this.supabaseSource,
-  });
+  QuotationRepositoryImpl({required this.firestoreSource, this.supabaseSource});
 
   @override
   Future<Quotation> createQuotation(Quotation quotation) async {
@@ -35,23 +32,26 @@ class QuotationRepositoryImpl implements QuotationRepository {
         grandTotal: quotation.grandTotal,
         pdfUrl: quotation.pdfUrl,
         status: quotation.status,
-        items: quotation.items
-            .map((e) => QuotationItemModel(
-                  experienceId: e.experienceId,
-                  name: e.name,
-                  quantity: e.quantity,
-                  unitPrice: e.unitPrice,
-                  color: e.color,
-                  theme: e.theme,
-                  notes: e.notes,
-                ))
-            .toList(),
+        items:
+            quotation.items
+                .map(
+                  (e) => QuotationItemModel(
+                    experienceId: e.experienceId,
+                    name: e.name,
+                    quantity: e.quantity,
+                    unitPrice: e.unitPrice,
+                    color: e.color,
+                    theme: e.theme,
+                    notes: e.notes,
+                  ),
+                )
+                .toList(),
         createdAt: quotation.createdAt,
         updatedAt: quotation.updatedAt,
       );
 
       await firestoreSource.submitQuotation(model.toJson(), quotation.id);
-      
+
       // Upsert customer record exactly like Python Django backend
       await firestoreSource.upsertCustomer(
         phone: quotation.customerPhone,
@@ -69,12 +69,20 @@ class QuotationRepositoryImpl implements QuotationRepository {
   Future<String> uploadQuotationPdf(String publicId, List<int> pdfBytes) async {
     try {
       if (supabaseSource == null) {
-        throw const ServerFailure("Supabase Storage integration is not configured.");
+        throw const ServerFailure(
+          "Supabase Storage integration is not configured.",
+        );
       }
       final filePath = 'quotes/$publicId.pdf';
-      return await supabaseSource!.uploadFile(filePath, pdfBytes, 'application/pdf');
+      return await supabaseSource!.uploadFile(
+        filePath,
+        pdfBytes,
+        'application/pdf',
+      );
     } catch (e) {
-      throw ServerFailure("Failed to upload quotation proposal PDF: ${e.toString()}");
+      throw ServerFailure(
+        "Failed to upload quotation proposal PDF: ${e.toString()}",
+      );
     }
   }
 
@@ -82,7 +90,9 @@ class QuotationRepositoryImpl implements QuotationRepository {
   Future<List<Quotation>> getQuotations() async {
     try {
       final docs = await firestoreSource.fetchQuotations();
-      return docs.map((doc) => QuotationModel.fromJson(doc.data(), doc.id)).toList();
+      return docs
+          .map((doc) => QuotationModel.fromJson(doc.data(), doc.id))
+          .toList();
     } catch (e) {
       throw ServerFailure("Failed to fetch quotations list: ${e.toString()}");
     }

@@ -22,9 +22,10 @@ class UserModel {
       email: json['email'] ?? '',
       role: json['role'] ?? 'staff',
       isActive: (json['is_active'] ?? json['isActive']) as bool? ?? true,
-      createdAt: (json['created_at'] ?? json['createdAt']) != null 
-          ? DateTime.parse((json['created_at'] ?? json['createdAt'])) 
-          : DateTime.now(),
+      createdAt:
+          (json['created_at'] ?? json['createdAt']) != null
+              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
+              : DateTime.now(),
     );
   }
 

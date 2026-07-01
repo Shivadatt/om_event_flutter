@@ -32,12 +32,18 @@ class DashboardLineChart extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: labels
-              .map((label) => Text(
-                    label,
-                    style: const TextStyle(fontSize: 10, color: Color(0xFFA4A9A7)),
-                  ))
-              .toList(),
+          children:
+              labels
+                  .map(
+                    (label) => Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFFA4A9A7),
+                      ),
+                    ),
+                  )
+                  .toList(),
         ),
       ],
     );
@@ -59,14 +65,14 @@ class _LineChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (dataPoints.isEmpty) return;
 
-    final paintLine = Paint()
-      ..color = lineColor
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    final paintLine =
+        Paint()
+          ..color = lineColor
+          ..strokeWidth = 3
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
 
-    final paintFill = Paint()
-      ..style = PaintingStyle.fill;
+    final paintFill = Paint()..style = PaintingStyle.fill;
 
     final maxVal = dataPoints.reduce(max);
     final minVal = dataPoints.reduce(min);
@@ -77,7 +83,10 @@ class _LineChartPainter extends CustomPainter {
 
     for (int i = 0; i < dataPoints.length; i++) {
       final x = i * widthStep;
-      final y = size.height - ((dataPoints[i] - minVal) / range) * (size.height - 20) - 10;
+      final y =
+          size.height -
+          ((dataPoints[i] - minVal) / range) * (size.height - 20) -
+          10;
       points.add(Offset(x, y));
     }
 
@@ -89,7 +98,14 @@ class _LineChartPainter extends CustomPainter {
       final p2 = points[i + 1];
       final controlPoint1 = Offset(p1.dx + (p2.dx - p1.dx) / 2, p1.dy);
       final controlPoint2 = Offset(p1.dx + (p2.dx - p1.dx) / 2, p2.dy);
-      path.cubicTo(controlPoint1.dx, controlPoint1.dy, controlPoint2.dx, controlPoint2.dy, p2.dx, p2.dy);
+      path.cubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        p2.dx,
+        p2.dy,
+      );
     }
 
     // Draw gradient fill below path
@@ -107,7 +123,9 @@ class _LineChartPainter extends CustomPainter {
       ],
     );
 
-    paintFill.shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    paintFill.shader = gradient.createShader(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+    );
     canvas.drawPath(fillPath, paintFill);
 
     // Draw main line path

@@ -52,26 +52,37 @@ class CartController extends GetxController {
   }
 
   // Add Item to Cart
-  void addToCart(Experience experience, {String color = '', String theme = '', String notes = ''}) {
+  void addToCart(
+    Experience experience, {
+    String color = '',
+    String theme = '',
+    String notes = '',
+  }) {
     // Check if identical item (same experience and same color) exists
     final existingIndex = rxCartItems.indexWhere(
-      (element) => element.experience.id == experience.id && element.color == color,
+      (element) =>
+          element.experience.id == experience.id && element.color == color,
     );
 
     if (existingIndex != -1) {
       rxCartItems[existingIndex].quantity += 1;
       rxCartItems.refresh();
     } else {
-      rxCartItems.add(CartItemSelection(
-        experience: experience,
-        quantity: 1,
-        color: color,
-        theme: theme,
-        notes: notes,
-      ));
+      rxCartItems.add(
+        CartItemSelection(
+          experience: experience,
+          quantity: 1,
+          color: color,
+          theme: theme,
+          notes: notes,
+        ),
+      );
     }
     persistCart();
-    Get.snackbar("Added to Selection", "${experience.name} added to your design canvas.");
+    Get.snackbar(
+      "Added to Selection",
+      "${experience.name} added to your design canvas.",
+    );
   }
 
   void changeQuantity(int index, int delta) {
@@ -138,13 +149,15 @@ class CartController extends GetxController {
             isActive: true,
           );
 
-          cachedItems.add(CartItemSelection(
-            experience: exp,
-            quantity: item['quantity'] ?? 1,
-            color: item['color'] ?? '',
-            theme: item['theme'] ?? '',
-            notes: item['notes'] ?? '',
-          ));
+          cachedItems.add(
+            CartItemSelection(
+              experience: exp,
+              quantity: item['quantity'] ?? 1,
+              color: item['color'] ?? '',
+              theme: item['theme'] ?? '',
+              notes: item['notes'] ?? '',
+            ),
+          );
         }
 
         rxCartItems.assignAll(cachedItems);
@@ -159,17 +172,24 @@ class CartController extends GetxController {
     return (val * 100).roundToDouble() / 100.0;
   }
 
-  double get subtotal => _roundToTwoDecimals(rxCartItems.fold(0.0, (sum, item) => sum + item.totalPrice));
+  double get subtotal => _roundToTwoDecimals(
+    rxCartItems.fold(0.0, (sum, item) => sum + item.totalPrice),
+  );
 
-  double get volumeDiscount => _roundToTwoDecimals(subtotal >= 50000 ? (subtotal * 0.05) : 0.0);
+  double get volumeDiscount =>
+      _roundToTwoDecimals(subtotal >= 50000 ? (subtotal * 0.05) : 0.0);
 
-  double get deliveryCharge => rxCartItems.isNotEmpty ? AppConstants.deliveryCharge : 0.0;
+  double get deliveryCharge =>
+      rxCartItems.isNotEmpty ? AppConstants.deliveryCharge : 0.0;
 
   double get travelCharge => AppConstants.travelCharge;
 
-  double get taxableAmount => _roundToTwoDecimals(subtotal - volumeDiscount + deliveryCharge + travelCharge);
+  double get taxableAmount => _roundToTwoDecimals(
+    subtotal - volumeDiscount + deliveryCharge + travelCharge,
+  );
 
-  double get gstAmount => _roundToTwoDecimals(taxableAmount * (AppConstants.gstPercent / 100.0));
+  double get gstAmount =>
+      _roundToTwoDecimals(taxableAmount * (AppConstants.gstPercent / 100.0));
 
   // WAIVER promotional discount: waives delivery fee + GST
   double get clientWaiverDiscount {

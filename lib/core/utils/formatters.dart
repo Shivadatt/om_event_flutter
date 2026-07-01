@@ -28,7 +28,13 @@ class AppFormatters {
   static String formatTime(String hourMinute24) {
     try {
       final parts = hourMinute24.split(':');
-      final time = DateTime(2026, 1, 1, int.parse(parts[0]), int.parse(parts[1]));
+      final time = DateTime(
+        2026,
+        1,
+        1,
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
       return DateFormat('hh:mm a').format(time);
     } catch (_) {
       return hourMinute24;

@@ -39,7 +39,9 @@ class LeadModel extends Lead {
       phone: json['phone'] ?? '',
       email: json['email'] ?? '',
       requestType: json['request_type'] ?? json['requestType'] ?? 'callback',
-      eventDate: _parseNullableDateTime(json['event_date'] ?? json['eventDate']),
+      eventDate: _parseNullableDateTime(
+        json['event_date'] ?? json['eventDate'],
+      ),
       budget: (json['budget'] as num?)?.toDouble(),
       requirements: json['requirements'] ?? '',
       status: json['status'] ?? 'new',

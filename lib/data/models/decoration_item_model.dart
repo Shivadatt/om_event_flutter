@@ -26,7 +26,10 @@ class DecorationItemModel extends DecorationItem {
     required super.createdAt,
   });
 
-  factory DecorationItemModel.fromJson(Map<String, dynamic> json, String documentId) {
+  factory DecorationItemModel.fromJson(
+    Map<String, dynamic> json,
+    String documentId,
+  ) {
     return DecorationItemModel(
       id: documentId,
       categoryId: json['category_id'] ?? json['categoryId'] ?? '',
@@ -36,8 +39,12 @@ class DecorationItemModel extends DecorationItem {
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      offerPrice: ((json['offer_price'] ?? json['offerPrice']) as num?)?.toDouble(),
-      durationHours: ((json['duration_hours'] ?? json['durationHours']) as num?)?.toDouble() ?? 3.0,
+      offerPrice:
+          ((json['offer_price'] ?? json['offerPrice']) as num?)?.toDouble(),
+      durationHours:
+          ((json['duration_hours'] ?? json['durationHours']) as num?)
+              ?.toDouble() ??
+          3.0,
       popularity: json['popularity'] ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
       reviewCount: json['review_count'] ?? json['reviewCount'] ?? 0,
@@ -49,9 +56,10 @@ class DecorationItemModel extends DecorationItem {
       videoUrl: json['video_url'] ?? json['videoUrl'] ?? '',
       isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
       isActive: json['is_active'] ?? json['isActive'] ?? true,
-      createdAt: (json['created_at'] ?? json['createdAt']) != null 
-          ? DateTime.parse((json['created_at'] ?? json['createdAt'])) 
-          : DateTime.now(),
+      createdAt:
+          (json['created_at'] ?? json['createdAt']) != null
+              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
+              : DateTime.now(),
     );
   }
 

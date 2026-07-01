@@ -18,16 +18,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, String>> _slides = [
     {
       'title': 'Celebrations,\nthoughtfully composed.',
-      'subtitle': 'From the first sketch to the final flower, create an experience that feels unmistakably yours.',
+      'subtitle':
+          'From the first sketch to the final flower, create an experience that feels unmistakably yours.',
     },
     {
       'title': 'Design your event canvas.',
-      'subtitle': 'Browse our curated collection of signature packages and personalize the colors, themes, and units.',
+      'subtitle':
+          'Browse our curated collection of signature packages and personalize the colors, themes, and units.',
     },
     {
       'title': 'Honest, live pricing.',
-      'subtitle': 'Build your selections, see every charge transparently, and download a polished quotation instantly.',
-    }
+      'subtitle':
+          'Build your selections, see every charge transparently, and download a polished quotation instantly.',
+    },
   ];
 
   @override
@@ -71,7 +74,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           "0${index + 1}",
                           style: AppTheme.serifHeader(
                             fontSize: 48,
-                            color: isDark ? AppTheme.darkGold : AppTheme.lightGold,
+                            color:
+                                isDark ? AppTheme.darkGold : AppTheme.lightGold,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -79,7 +83,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           slide['title']!,
                           style: AppTheme.serifHeader(
                             fontSize: 34,
-                            color: isDark ? AppTheme.darkInk : AppTheme.lightInk,
+                            color:
+                                isDark ? AppTheme.darkInk : AppTheme.lightInk,
                             height: 1.1,
                           ),
                         ),
@@ -88,7 +93,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           slide['subtitle']!,
                           style: AppTheme.sansBody(
                             fontSize: 15,
-                            color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                            color:
+                                isDark
+                                    ? AppTheme.darkMuted
+                                    : AppTheme.lightMuted,
                             height: 1.6,
                           ),
                         ),
@@ -113,9 +121,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         margin: const EdgeInsets.only(right: 6),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _currentPage == index
-                              ? (isDark ? AppTheme.darkGold : AppTheme.lightGold)
-                              : (isDark ? AppTheme.darkLine : AppTheme.lightLine),
+                          color:
+                              _currentPage == index
+                                  ? (isDark
+                                      ? AppTheme.darkGold
+                                      : AppTheme.lightGold)
+                                  : (isDark
+                                      ? AppTheme.darkLine
+                                      : AppTheme.lightLine),
                         ),
                       ),
                     ),
@@ -124,7 +137,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   SizedBox(
                     width: 140,
                     child: CustomButton(
-                      text: _currentPage == _slides.length - 1 ? "GET STARTED" : "NEXT",
+                      text:
+                          _currentPage == _slides.length - 1
+                              ? "GET STARTED"
+                              : "NEXT",
                       onPressed: () {
                         if (_currentPage < _slides.length - 1) {
                           _pageController.nextPage(
@@ -139,7 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

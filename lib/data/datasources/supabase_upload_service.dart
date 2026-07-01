@@ -9,7 +9,12 @@ class SupabaseUploadService {
 
   /// Loads a local asset from the bundle, uploads it to Supabase Storage, and returns its public URL.
   /// Implements retry logic with exponential backoff.
-  Future<String> uploadAsset(String assetPath, String bucket, {String? folder, int maxRetries = 3}) async {
+  Future<String> uploadAsset(
+    String assetPath,
+    String bucket, {
+    String? folder,
+    int maxRetries = 3,
+  }) async {
     final fileName = assetPath.split('/').last;
     final filePath = folder != null ? '$folder/$fileName' : fileName;
     final contentType = _getContentType(fileName);

@@ -45,15 +45,15 @@ class InitialBinding extends Bindings {
 
     // Seeder Service
     Get.lazyPut<SeederService>(
-      () => SeederService(Get.find<FirebaseFirestore>(), Get.find<SupabaseUploadService>()),
+      () => SeederService(
+        Get.find<FirebaseFirestore>(),
+        Get.find<SupabaseUploadService>(),
+      ),
       fenix: true,
     );
 
     // Seeder Controller
-    Get.lazyPut<SeederController>(
-      () => SeederController(),
-      fenix: true,
-    );
+    Get.lazyPut<SeederController>(() => SeederController(), fenix: true);
 
     // Admin Repository
     Get.lazyPut<AdminRepository>(

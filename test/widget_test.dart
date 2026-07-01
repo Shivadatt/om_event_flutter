@@ -20,9 +20,15 @@ void main() {
 
     test('Email validation checks format constraints', () {
       expect(AppValidators.isValidEmail('hello@omevents.in'), true);
-      expect(AppValidators.isValidEmail('omeventsanddecorators@gmail.com'), true);
+      expect(
+        AppValidators.isValidEmail('omeventsanddecorators@gmail.com'),
+        true,
+      );
       expect(AppValidators.isValidEmail('invalid-email'), false);
-      expect(AppValidators.isValidEmail(''), true); // Optional field allowed empty
+      expect(
+        AppValidators.isValidEmail(''),
+        true,
+      ); // Optional field allowed empty
     });
 
     test('Future date validator identifies past vs future events', () {

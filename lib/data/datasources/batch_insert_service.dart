@@ -15,7 +15,8 @@ class BatchInsertService {
 
     final int chunkSize = 400;
     for (int i = 0; i < documents.length; i += chunkSize) {
-      final end = (i + chunkSize < documents.length) ? i + chunkSize : documents.length;
+      final end =
+          (i + chunkSize < documents.length) ? i + chunkSize : documents.length;
       final chunk = documents.sublist(i, end);
 
       final WriteBatch batch = _firestore.batch();

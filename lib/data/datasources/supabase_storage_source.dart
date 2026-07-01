@@ -11,11 +11,18 @@ class SupabaseStorageSource {
     this.bucketName = 'gallery',
   });
 
-  Future<String> uploadFile(String filePath, List<int> fileBytes, String contentType, {String? bucket}) async {
+  Future<String> uploadFile(
+    String filePath,
+    List<int> fileBytes,
+    String contentType, {
+    String? bucket,
+  }) async {
     final activeBucket = bucket ?? bucketName;
     // Standardize URL
     final cleanUrl = projectUrl.endsWith('/') ? projectUrl : '$projectUrl/';
-    final uploadUrl = Uri.parse('${cleanUrl}storage/v1/object/$activeBucket/$filePath');
+    final uploadUrl = Uri.parse(
+      '${cleanUrl}storage/v1/object/$activeBucket/$filePath',
+    );
 
     final response = await http.post(
       uploadUrl,
@@ -31,7 +38,9 @@ class SupabaseStorageSource {
       // Returns the public URL for serving
       return '${cleanUrl}storage/v1/object/public/$activeBucket/$filePath';
     } else {
-      throw Exception('Failed to upload file to Supabase Storage: ${response.body}');
+      throw Exception(
+        'Failed to upload file to Supabase Storage: ${response.body}',
+      );
     }
   }
 }

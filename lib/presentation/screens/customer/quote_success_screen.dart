@@ -28,7 +28,10 @@ class QuoteSuccessScreen extends StatelessWidget {
                 height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isDark ? AppTheme.darkGold.withValues(alpha: 0.1) : AppTheme.lightGold.withValues(alpha: 0.1),
+                  color:
+                      isDark
+                          ? AppTheme.darkGold.withValues(alpha: 0.1)
+                          : AppTheme.lightGold.withValues(alpha: 0.1),
                 ),
                 child: Icon(
                   Icons.check_circle_outline,
@@ -40,13 +43,20 @@ class QuoteSuccessScreen extends StatelessWidget {
               Text(
                 "Your quotation is ready.",
                 textAlign: TextAlign.center,
-                style: AppTheme.serifHeader(fontSize: 30, fontWeight: FontWeight.bold),
+                style: AppTheme.serifHeader(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 "An itemized proposal has been saved and is ready for download.",
                 textAlign: TextAlign.center,
-                style: AppTheme.sansBody(fontSize: 13, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted, height: 1.5),
+                style: AppTheme.sansBody(
+                  fontSize: 13,
+                  color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                  height: 1.5,
+                ),
               ),
               if (quote != null) ...[
                 const SizedBox(height: 32),
@@ -55,11 +65,24 @@ class QuoteSuccessScreen extends StatelessWidget {
                   color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
                   child: Column(
                     children: [
-                      _detailRow("PROPOSAL ID", quote.publicId.toUpperCase(), isDark),
+                      _detailRow(
+                        "PROPOSAL ID",
+                        quote.publicId.toUpperCase(),
+                        isDark,
+                      ),
                       const SizedBox(height: 8),
-                      _detailRow("EVENT DATE", AppFormatters.formatDate(quote.eventDate), isDark),
+                      _detailRow(
+                        "EVENT DATE",
+                        AppFormatters.formatDate(quote.eventDate),
+                        isDark,
+                      ),
                       const SizedBox(height: 8),
-                      _detailRow("GRAND TOTAL", AppFormatters.formatCurrency(quote.grandTotal), isDark, isBold: true),
+                      _detailRow(
+                        "GRAND TOTAL",
+                        AppFormatters.formatCurrency(quote.grandTotal),
+                        isDark,
+                        isBold: true,
+                      ),
                     ],
                   ),
                 ),
@@ -74,7 +97,10 @@ class QuoteSuccessScreen extends StatelessWidget {
                       await launchUrl(uri);
                     }
                   } else {
-                    Get.snackbar("Download Error", "PDF file is still uploading or unavailable.");
+                    Get.snackbar(
+                      "Download Error",
+                      "PDF file is still uploading or unavailable.",
+                    );
                   }
                 },
               ),
@@ -91,7 +117,12 @@ class QuoteSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, String value, bool isDark, {bool isBold = false}) {
+  Widget _detailRow(
+    String label,
+    String value,
+    bool isDark, {
+    bool isBold = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

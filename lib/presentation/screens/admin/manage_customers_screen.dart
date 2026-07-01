@@ -18,7 +18,12 @@ class ManageCustomersScreen extends GetView<AdminController> {
       appBar: AppBar(
         title: Text(
           "CUSTOMER DIRECTORY",
-          style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
+          style: AppTheme.sansBody(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: Colors.white,
+          ),
         ),
       ),
       body: Column(
@@ -53,14 +58,21 @@ class ManageCustomersScreen extends GetView<AdminController> {
               var list = controller.rxCustomers.toList();
               final query = rxSearchQuery.value;
               if (query.isNotEmpty) {
-                list = list.where((c) =>
-                    c.name.toLowerCase().contains(query) ||
-                    c.phone.contains(query) ||
-                    c.email.toLowerCase().contains(query)).toList();
+                list =
+                    list
+                        .where(
+                          (c) =>
+                              c.name.toLowerCase().contains(query) ||
+                              c.phone.contains(query) ||
+                              c.email.toLowerCase().contains(query),
+                        )
+                        .toList();
               }
 
               if (list.isEmpty) {
-                return const Center(child: Text("No customers matching search criteria."));
+                return const Center(
+                  child: Text("No customers matching search criteria."),
+                );
               }
 
               return ListView.builder(
@@ -71,30 +83,52 @@ class ManageCustomersScreen extends GetView<AdminController> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 14),
                     color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                     child: ListTile(
-                      title: Text(customer.name, style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold)),
-                      subtitle: Text("${customer.phone} | ${customer.email}", style: AppTheme.sansBody(fontSize: 11, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted)),
+                      title: Text(
+                        customer.name,
+                        style: AppTheme.serifHeader(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "${customer.phone} | ${customer.email}",
+                        style: AppTheme.sansBody(
+                          fontSize: 11,
+                          color:
+                              isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                        ),
+                      ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20),
-                            onPressed: () => _showEditCustomerDialog(context, customer),
+                            onPressed:
+                                () =>
+                                    _showEditCustomerDialog(context, customer),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: Colors.redAccent,
+                            ),
                             onPressed: () => _confirmDelete(customer.phone),
                           ),
                         ],
                       ),
-                      onTap: () => _showCustomerDetailsDrawer(context, customer),
+                      onTap:
+                          () => _showCustomerDetailsDrawer(context, customer),
                     ),
                   );
                 },
               );
             }),
-          )
+          ),
         ],
       ),
     );
@@ -104,12 +138,11 @@ class ManageCustomersScreen extends GetView<AdminController> {
     Get.dialog(
       AlertDialog(
         title: const Text("Delete Customer"),
-        content: Text("Are you sure you want to delete customer '$phone'? This will remove their record from the directory."),
+        content: Text(
+          "Are you sure you want to delete customer '$phone'? This will remove their record from the directory.",
+        ),
         actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Get.back(),
-          ),
+          TextButton(child: const Text("Cancel"), onPressed: () => Get.back()),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Delete"),
@@ -161,10 +194,7 @@ class ManageCustomersScreen extends GetView<AdminController> {
           ),
         ),
         actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Get.back(),
-          ),
+          TextButton(child: const Text("Cancel"), onPressed: () => Get.back()),
           ElevatedButton(
             child: const Text("Save"),
             onPressed: () {
@@ -188,10 +218,17 @@ class ManageCustomersScreen extends GetView<AdminController> {
     );
   }
 
-  void _showCustomerDetailsDrawer(BuildContext context, CustomerModel customer) {
+  void _showCustomerDetailsDrawer(
+    BuildContext context,
+    CustomerModel customer,
+  ) {
     // Filter quotes and leads in memory
-    final quotes = controller.rxQuotes.where((q) => q.customerPhone == customer.phone).toList();
-    final leads = controller.rxLeads.where((l) => l.phone == customer.phone).toList();
+    final quotes =
+        controller.rxQuotes
+            .where((q) => q.customerPhone == customer.phone)
+            .toList();
+    final leads =
+        controller.rxLeads.where((l) => l.phone == customer.phone).toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     Get.bottomSheet(
@@ -199,7 +236,10 @@ class ManageCustomersScreen extends GetView<AdminController> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF141D1A) : Colors.white,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -208,7 +248,13 @@ class ManageCustomersScreen extends GetView<AdminController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(customer.name, style: AppTheme.serifHeader(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(
+                    customer.name,
+                    style: AppTheme.serifHeader(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Get.back(),
@@ -216,18 +262,40 @@ class ManageCustomersScreen extends GetView<AdminController> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text("Phone: ${customer.phone}", style: AppTheme.sansBody(fontSize: 13)),
-              Text("Email: ${customer.email}", style: AppTheme.sansBody(fontSize: 13)),
-              Text("Location: ${customer.city} | Address: ${customer.address}", style: AppTheme.sansBody(fontSize: 13)),
+              Text(
+                "Phone: ${customer.phone}",
+                style: AppTheme.sansBody(fontSize: 13),
+              ),
+              Text(
+                "Email: ${customer.email}",
+                style: AppTheme.sansBody(fontSize: 13),
+              ),
+              Text(
+                "Location: ${customer.city} | Address: ${customer.address}",
+                style: AppTheme.sansBody(fontSize: 13),
+              ),
               if (customer.mapLocation.isNotEmpty)
-                Text("Map Location: ${customer.mapLocation}", style: AppTheme.sansBody(fontSize: 13, color: Colors.blue)),
+                Text(
+                  "Map Location: ${customer.mapLocation}",
+                  style: AppTheme.sansBody(fontSize: 13, color: Colors.blue),
+                ),
               const Divider(height: 24),
-              
+
               // Previous Quotations
-              Text("PREVIOUS QUOTATIONS (${quotes.length})", style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+              Text(
+                "PREVIOUS QUOTATIONS (${quotes.length})",
+                style: AppTheme.sansBody(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
               const SizedBox(height: 8),
               if (quotes.isEmpty)
-                Text("No quotes found.", style: AppTheme.sansBody(fontSize: 12, color: Colors.grey))
+                Text(
+                  "No quotes found.",
+                  style: AppTheme.sansBody(fontSize: 12, color: Colors.grey),
+                )
               else
                 ListView.builder(
                   shrinkWrap: true,
@@ -237,19 +305,47 @@ class ManageCustomersScreen extends GetView<AdminController> {
                     final q = quotes[index];
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text("Quote ID: ${q.publicId}", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                      subtitle: Text("Grand Total: ${AppFormatters.formatCurrency(q.grandTotal)} | Date: ${q.createdAt.toString().split(' ').first}", style: const TextStyle(fontSize: 11)),
-                      trailing: Text(q.status.toUpperCase(), style: TextStyle(fontSize: 10, color: q.status == 'approved' ? Colors.green : Colors.grey)),
+                      title: Text(
+                        "Quote ID: ${q.publicId}",
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "Grand Total: ${AppFormatters.formatCurrency(q.grandTotal)} | Date: ${q.createdAt.toString().split(' ').first}",
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      trailing: Text(
+                        q.status.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color:
+                              q.status == 'approved'
+                                  ? Colors.green
+                                  : Colors.grey,
+                        ),
+                      ),
                     );
                   },
                 ),
               const Divider(height: 24),
 
               // Leads
-              Text("INQUIRY LEADS (${leads.length})", style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+              Text(
+                "INQUIRY LEADS (${leads.length})",
+                style: AppTheme.sansBody(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
               const SizedBox(height: 8),
               if (leads.isEmpty)
-                Text("No inquiries found.", style: AppTheme.sansBody(fontSize: 12, color: Colors.grey))
+                Text(
+                  "No inquiries found.",
+                  style: AppTheme.sansBody(fontSize: 12, color: Colors.grey),
+                )
               else
                 ListView.builder(
                   shrinkWrap: true,
@@ -259,8 +355,17 @@ class ManageCustomersScreen extends GetView<AdminController> {
                     final l = leads[index];
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l.requestType.toUpperCase(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                      subtitle: Text("Event Date: ${l.eventDate.toString().split(' ').first} | Status: ${l.status}", style: const TextStyle(fontSize: 11)),
+                      title: Text(
+                        l.requestType.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "Event Date: ${l.eventDate.toString().split(' ').first} | Status: ${l.status}",
+                        style: const TextStyle(fontSize: 11),
+                      ),
                     );
                   },
                 ),

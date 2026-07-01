@@ -15,7 +15,12 @@ class ManageUsersScreen extends GetView<AdminController> {
       appBar: AppBar(
         title: Text(
           "MANAGE USERS",
-          style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
+          style: AppTheme.sansBody(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: Colors.white,
+          ),
         ),
         actions: [
           IconButton(
@@ -42,16 +47,26 @@ class ManageUsersScreen extends GetView<AdminController> {
             return Card(
               margin: const EdgeInsets.only(bottom: 14),
               color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(2),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: user.role == 'admin' ? const Color(0xFFC9A77E) : Colors.grey.shade800,
+                      backgroundColor:
+                          user.role == 'admin'
+                              ? const Color(0xFFC9A77E)
+                              : Colors.grey.shade800,
                       child: Text(
-                        user.name.isNotEmpty ? user.name.substring(0, 1).toUpperCase() : 'U',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        user.name.isNotEmpty
+                            ? user.name.substring(0, 1).toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -59,21 +74,45 @@ class ManageUsersScreen extends GetView<AdminController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.name, style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text(user.email, style: AppTheme.sansBody(fontSize: 11, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted)),
+                          Text(
+                            user.name,
+                            style: AppTheme.serifHeader(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            user.email,
+                            style: AppTheme.sansBody(
+                              fontSize: 11,
+                              color:
+                                  isDark
+                                      ? AppTheme.darkMuted
+                                      : AppTheme.lightMuted,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: user.role == 'admin' ? Colors.redAccent.withValues(alpha: 0.2) : Colors.blue.withValues(alpha: 0.2),
+                              color:
+                                  user.role == 'admin'
+                                      ? Colors.redAccent.withValues(alpha: 0.2)
+                                      : Colors.blue.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               user.role.toUpperCase(),
                               style: TextStyle(
-                                fontSize: 9, 
-                                fontWeight: FontWeight.bold, 
-                                color: user.role == 'admin' ? Colors.redAccent : Colors.blue,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    user.role == 'admin'
+                                        ? Colors.redAccent
+                                        : Colors.blue,
                               ),
                             ),
                           ),
@@ -85,7 +124,10 @@ class ManageUsersScreen extends GetView<AdminController> {
                       children: [
                         Row(
                           children: [
-                            const Text("Active", style: TextStyle(fontSize: 10)),
+                            const Text(
+                              "Active",
+                              style: TextStyle(fontSize: 10),
+                            ),
                             Switch(
                               value: user.isActive,
                               onChanged: (val) {
@@ -106,16 +148,21 @@ class ManageUsersScreen extends GetView<AdminController> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit_outlined, size: 18),
-                              onPressed: () => _showEditUserDialog(context, user),
+                              onPressed:
+                                  () => _showEditUserDialog(context, user),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: Colors.redAccent,
+                              ),
                               onPressed: () => _confirmDelete(user.id),
                             ),
                           ],
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -130,12 +177,11 @@ class ManageUsersScreen extends GetView<AdminController> {
     Get.dialog(
       AlertDialog(
         title: const Text("Delete User Profile"),
-        content: const Text("Are you sure you want to delete this user profile? The user will lose their admin/staff access."),
+        content: const Text(
+          "Are you sure you want to delete this user profile? The user will lose their admin/staff access.",
+        ),
         actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Get.back(),
-          ),
+          TextButton(child: const Text("Cancel"), onPressed: () => Get.back()),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Delete"),
@@ -172,7 +218,10 @@ class ManageUsersScreen extends GetView<AdminController> {
                   items: const [
                     DropdownMenuItem(value: 'admin', child: Text("Admin")),
                     DropdownMenuItem(value: 'staff', child: Text("Staff")),
-                    DropdownMenuItem(value: 'customer', child: Text("Customer")),
+                    DropdownMenuItem(
+                      value: 'customer',
+                      child: Text("Customer"),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) {
@@ -228,7 +277,9 @@ class ManageUsersScreen extends GetView<AdminController> {
                 children: [
                   TextField(
                     controller: uidCtrl,
-                    decoration: const InputDecoration(labelText: "Firebase UID (from Console)"),
+                    decoration: const InputDecoration(
+                      labelText: "Firebase UID (from Console)",
+                    ),
                   ),
                   TextField(
                     controller: nameCtrl,
@@ -245,7 +296,10 @@ class ManageUsersScreen extends GetView<AdminController> {
                     items: const [
                       DropdownMenuItem(value: 'admin', child: Text("Admin")),
                       DropdownMenuItem(value: 'staff', child: Text("Staff")),
-                      DropdownMenuItem(value: 'customer', child: Text("Customer")),
+                      DropdownMenuItem(
+                        value: 'customer',
+                        child: Text("Customer"),
+                      ),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -266,8 +320,13 @@ class ManageUsersScreen extends GetView<AdminController> {
               ElevatedButton(
                 child: const Text("Create"),
                 onPressed: () {
-                  if (uidCtrl.text.isEmpty || nameCtrl.text.isEmpty || emailCtrl.text.isEmpty) {
-                    Get.snackbar("Validation Error", "All fields are required.");
+                  if (uidCtrl.text.isEmpty ||
+                      nameCtrl.text.isEmpty ||
+                      emailCtrl.text.isEmpty) {
+                    Get.snackbar(
+                      "Validation Error",
+                      "All fields are required.",
+                    );
                     return;
                   }
                   final newUser = UserModel(

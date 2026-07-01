@@ -44,10 +44,22 @@ class CatalogBinding extends Bindings {
     );
 
     // Usecases
-    Get.lazyPut<GetCategories>(() => GetCategories(Get.find<CatalogRepository>()), fenix: true);
-    Get.lazyPut<GetExperiences>(() => GetExperiences(Get.find<CatalogRepository>()), fenix: true);
-    Get.lazyPut<CreateQuotation>(() => CreateQuotation(Get.find<QuotationRepository>()), fenix: true);
-    Get.lazyPut<SubmitLead>(() => SubmitLead(Get.find<LeadRepository>()), fenix: true);
+    Get.lazyPut<GetCategories>(
+      () => GetCategories(Get.find<CatalogRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<GetExperiences>(
+      () => GetExperiences(Get.find<CatalogRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<CreateQuotation>(
+      () => CreateQuotation(Get.find<QuotationRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<SubmitLead>(
+      () => SubmitLead(Get.find<LeadRepository>()),
+      fenix: true,
+    );
 
     // Controllers
     Get.lazyPut<CatalogController>(
@@ -58,9 +70,7 @@ class CatalogBinding extends Bindings {
       ),
     );
 
-    Get.lazyPut<CartController>(
-      () => CartController(Get.find()),
-    );
+    Get.lazyPut<CartController>(() => CartController(Get.find()));
 
     Get.lazyPut<QuotationController>(
       () => QuotationController(

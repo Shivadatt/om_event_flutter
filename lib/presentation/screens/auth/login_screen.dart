@@ -4,6 +4,7 @@ import '../../../core/config/app_theme.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_input.dart';
 import '../../controllers/auth_controller.dart';
+import '../../../core/extensions/extensions.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,9 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = context.isDarkMode;
     final authController = Get.find<AuthController>();
-    final width = MediaQuery.of(context).size.width;
+    final width = context.screenWidth;
     final isDesktop = width >= 800;
 
     final loginForm = Form(
@@ -44,12 +45,18 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 50,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: isDark ? AppTheme.darkGold : AppTheme.lightGold, width: 1),
+                border: Border.all(
+                  color: isDark ? AppTheme.darkGold : AppTheme.lightGold,
+                  width: 1,
+                ),
               ),
               child: Center(
                 child: Text(
                   "OE",
-                  style: AppTheme.serifHeader(fontSize: 16, color: isDark ? AppTheme.darkInk : AppTheme.lightInk),
+                  style: AppTheme.serifHeader(
+                    fontSize: 16,
+                    color: isDark ? AppTheme.darkInk : AppTheme.lightInk,
+                  ),
                 ),
               ),
             ),
@@ -79,7 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             validator: (val) {
-              if (val == null || val.trim().isEmpty) return "Email is required.";
+              if (val == null || val.trim().isEmpty) {
+                return "Email is required.";
+              }
               return null;
             },
           ),
@@ -94,18 +103,20 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
           const SizedBox(height: 12),
-          Obx(() => CustomButton(
-                text: "Enter the studio",
-                isLoading: authController.isLoading.value,
-                onPressed: () async {
-                  if (_formKey.currentState?.validate() == true) {
-                    await authController.login(
-                      _emailController.text,
-                      _passwordController.text,
-                    );
-                  }
-                },
-              )),
+          Obx(
+            () => CustomButton(
+              text: "Enter the studio",
+              isLoading: authController.isLoading.value,
+              onPressed: () async {
+                if (_formKey.currentState?.validate() == true) {
+                  await authController.login(
+                    _emailController.text,
+                    _passwordController.text,
+                  );
+                }
+              },
+            ),
+          ),
           const SizedBox(height: 24),
           Center(
             child: Text(
@@ -121,91 +132,118 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF141A18) : const Color(0xFFFBF9F4),
+      backgroundColor:
+          isDark ? const Color(0xFF141A18) : const Color(0xFFFBF9F4),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black,
+          ),
           onPressed: () => Get.back(),
         ),
       ),
       body: SafeArea(
         child: Center(
-          child: isDesktop
-              ? Container(
-                  constraints: const BoxConstraints(maxWidth: 1100),
-                  height: 600,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
-                  ),
-                  child: Row(
-                    children: [
-                      // Left Column: Art Pane (login-art)
-                      Expanded(
-                        flex: 11,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: isDark
-                                  ? [const Color(0xFF0F1815), const Color(0xFF1E2E2A)]
-                                  : [const Color(0xFF1D2A26), const Color(0xFF2F413B)],
+          child:
+              isDesktop
+                  ? Container(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    height: 600,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Left Column: Art Pane (login-art)
+                        Expanded(
+                          flex: 11,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors:
+                                    isDark
+                                        ? [
+                                          const Color(0xFF0F1815),
+                                          const Color(0xFF1E2E2A),
+                                        ]
+                                        : [
+                                          const Color(0xFF1D2A26),
+                                          const Color(0xFF2F413B),
+                                        ],
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(48),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "OE",
+                                  style: AppTheme.serifHeader(
+                                    fontSize: 24,
+                                    color:
+                                        isDark
+                                            ? AppTheme.darkGold
+                                            : AppTheme.lightGold,
+                                  ),
+                                ),
+                                Text(
+                                  "Beautiful work begins with a clear view.",
+                                  style: AppTheme.serifHeader(
+                                    fontSize: 36,
+                                    color: Colors.white,
+                                    height: 1.2,
+                                  ),
+                                ),
+                                Text(
+                                  "Om Events · Celebration Studio Management",
+                                  style: AppTheme.sansBody(
+                                    fontSize: 11,
+                                    color: Colors.white54,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          padding: const EdgeInsets.all(48),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "OE",
-                                style: AppTheme.serifHeader(fontSize: 24, color: isDark ? AppTheme.darkGold : AppTheme.lightGold),
-                              ),
-                              Text(
-                                "Beautiful work begins with a clear view.",
-                                style: AppTheme.serifHeader(
-                                  fontSize: 36,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                ),
-                              ),
-                              Text(
-                                "Om Events · Celebration Studio Management",
-                                style: AppTheme.sansBody(
-                                  fontSize: 11,
-                                  color: Colors.white54,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                            ],
+                        ),
+                        // Right Column: Form Pane (login-card)
+                        Expanded(
+                          flex: 9,
+                          child: Container(
+                            color:
+                                isDark
+                                    ? AppTheme.darkPaper
+                                    : AppTheme.lightPaper,
+                            padding: const EdgeInsets.symmetric(horizontal: 48),
+                            child: loginForm,
                           ),
                         ),
-                      ),
-                      // Right Column: Form Pane (login-card)
-                      Expanded(
-                        flex: 9,
-                        child: Container(
-                          color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-                          padding: const EdgeInsets.symmetric(horizontal: 48),
-                          child: loginForm,
+                      ],
+                    ),
+                  )
+                  : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color:
+                            isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
+                        border: Border.all(
+                          color:
+                              isDark ? AppTheme.darkLine : AppTheme.lightLine,
                         ),
                       ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-                      border: Border.all(color: isDark ? AppTheme.darkLine : AppTheme.lightLine),
+                      child: loginForm,
                     ),
-                    child: loginForm,
                   ),
-                ),
         ),
       ),
     );

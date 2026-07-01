@@ -25,9 +25,10 @@ class ActivityLogModel {
       entityType: json['entity_type'] ?? json['entityType'] ?? '',
       entityId: json['entity_id'] ?? json['entityId'] ?? '',
       ipAddress: json['ip_address'] ?? json['ipAddress'] ?? '',
-      createdAt: (json['created_at'] ?? json['createdAt']) != null 
-          ? DateTime.parse((json['created_at'] ?? json['createdAt'])) 
-          : DateTime.now(),
+      createdAt:
+          (json['created_at'] ?? json['createdAt']) != null
+              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
+              : DateTime.now(),
     );
   }
 

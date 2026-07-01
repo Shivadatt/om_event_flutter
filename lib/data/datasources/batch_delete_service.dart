@@ -6,7 +6,10 @@ class BatchDeleteService {
   BatchDeleteService(this._firestore);
 
   /// Deletes all documents in the specified Firestore collections in batches of 200.
-  Future<void> deleteCollections(List<String> collectionNames, Function(String currentCollection) onCollectionCleared) async {
+  Future<void> deleteCollections(
+    List<String> collectionNames,
+    Function(String currentCollection) onCollectionCleared,
+  ) async {
     for (final collection in collectionNames) {
       onCollectionCleared(collection);
       await _clearCollection(collection);

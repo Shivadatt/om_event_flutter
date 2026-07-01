@@ -39,11 +39,12 @@ class SeederScreen extends StatelessWidget {
                           ? Icons.error_outline
                           : Icons.cloud_sync_outlined),
                   size: 80,
-                  color: controller.isCompleted.value
-                      ? Colors.green
-                      : (controller.errorMessage.isNotEmpty
-                          ? Colors.red
-                          : const Color(0xFFC9A77E)),
+                  color:
+                      controller.isCompleted.value
+                          ? Colors.green
+                          : (controller.errorMessage.isNotEmpty
+                              ? Colors.red
+                              : const Color(0xFFC9A77E)),
                 ),
                 const SizedBox(height: 24),
                 Text(
@@ -66,14 +67,16 @@ class SeederScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Progress Bar
-                if (controller.isMigrating.value || controller.isCompleted.value) ...[
+                if (controller.isMigrating.value ||
+                    controller.isCompleted.value) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: controller.progressPercent.value,
-                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                      backgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[200],
                       color: const Color(0xFFC9A77E),
                       minHeight: 8,
                     ),
@@ -91,7 +94,7 @@ class SeederScreen extends StatelessWidget {
                 ],
 
                 const SizedBox(height: 16),
-                
+
                 // Status Log Output
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -107,26 +110,32 @@ class SeederScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: AppTheme.sansBody(
                       fontSize: 13,
-                      color: controller.errorMessage.isNotEmpty ? Colors.red : null,
+                      color:
+                          controller.errorMessage.isNotEmpty
+                              ? Colors.red
+                              : null,
                     ).copyWith(fontStyle: FontStyle.italic),
                   ),
                 ),
 
                 const SizedBox(height: 32),
-                
+
                 // Action Buttons
                 if (!controller.isMigrating.value)
                   ElevatedButton(
                     onPressed: () => controller.runMigration(force: true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFC9A77E),
-                      disabledBackgroundColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                      disabledBackgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[300],
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: Text(
                       controller.isCompleted.value
                           ? "FORCE RE-SEED DATABASE"
-                          : (controller.errorMessage.isNotEmpty ? "RETRY SEEDING" : "START SEEDER"),
+                          : (controller.errorMessage.isNotEmpty
+                              ? "RETRY SEEDING"
+                              : "START SEEDER"),
                       style: AppTheme.sansBody(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,

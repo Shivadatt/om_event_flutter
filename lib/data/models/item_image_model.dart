@@ -18,13 +18,15 @@ class ItemImageModel {
   factory ItemImageModel.fromJson(Map<String, dynamic> json, String id) {
     return ItemImageModel(
       id: id,
-      decorationItemId: json['decoration_item_id'] ?? json['decorationItemId'] ?? '',
+      decorationItemId:
+          json['decoration_item_id'] ?? json['decorationItemId'] ?? '',
       url: json['url'] ?? '',
       altText: json['alt_text'] ?? json['altText'] ?? '',
       sortOrder: (json['sort_order'] ?? json['sortOrder']) as int? ?? 0,
-      createdAt: (json['created_at'] ?? json['createdAt']) != null
-          ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-          : DateTime.now(),
+      createdAt:
+          (json['created_at'] ?? json['createdAt']) != null
+              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
+              : DateTime.now(),
     );
   }
 

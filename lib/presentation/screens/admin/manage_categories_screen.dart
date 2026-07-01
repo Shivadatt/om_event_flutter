@@ -15,7 +15,12 @@ class ManageCategoriesScreen extends GetView<AdminController> {
       appBar: AppBar(
         title: Text(
           "MANAGE CATEGORIES",
-          style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
+          style: AppTheme.sansBody(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: Colors.white,
+          ),
         ),
         actions: [
           IconButton(
@@ -42,7 +47,9 @@ class ManageCategoriesScreen extends GetView<AdminController> {
             return Card(
               margin: const EdgeInsets.only(bottom: 14),
               color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(2),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -51,21 +58,50 @@ class ManageCategoriesScreen extends GetView<AdminController> {
                       width: 50,
                       height: 50,
                       color: Colors.grey.shade900,
-                      child: cat.imageUrl.isNotEmpty
-                          ? Image.network(cat.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildIcon(cat.icon))
-                          : _buildIcon(cat.icon),
+                      child:
+                          cat.imageUrl.isNotEmpty
+                              ? Image.network(
+                                cat.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (_, __, ___) => _buildIcon(cat.icon),
+                              )
+                              : _buildIcon(cat.icon),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(cat.name, style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text("Slug: ${cat.slug} | Order: ${cat.sortOrder}", style: AppTheme.sansBody(fontSize: 11, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted)),
+                          Text(
+                            cat.name,
+                            style: AppTheme.serifHeader(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            "Slug: ${cat.slug} | Order: ${cat.sortOrder}",
+                            style: AppTheme.sansBody(
+                              fontSize: 11,
+                              color:
+                                  isDark
+                                      ? AppTheme.darkMuted
+                                      : AppTheme.lightMuted,
+                            ),
+                          ),
                           if (cat.description.isNotEmpty) ...[
                             const SizedBox(height: 4),
-                            Text(cat.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTheme.sansBody(fontSize: 11, color: Colors.grey)),
-                          ]
+                            Text(
+                              cat.description,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTheme.sansBody(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -73,14 +109,19 @@ class ManageCategoriesScreen extends GetView<AdminController> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 20),
-                          onPressed: () => _showCategoryDialog(context, category: cat),
+                          onPressed:
+                              () => _showCategoryDialog(context, category: cat),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: Colors.redAccent,
+                          ),
                           onPressed: () => _confirmDelete(cat.slug),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -104,12 +145,11 @@ class ManageCategoriesScreen extends GetView<AdminController> {
     Get.dialog(
       AlertDialog(
         title: const Text("Delete Category"),
-        content: Text("Are you sure you want to delete category '$slug'? This action cannot be undone."),
+        content: Text(
+          "Are you sure you want to delete category '$slug'? This action cannot be undone.",
+        ),
         actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Get.back(),
-          ),
+          TextButton(child: const Text("Cancel"), onPressed: () => Get.back()),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Delete"),
@@ -131,7 +171,9 @@ class ManageCategoriesScreen extends GetView<AdminController> {
     final iconCtrl = TextEditingController(text: category?.icon ?? '✦');
     final colorCtrl = TextEditingController(text: category?.color ?? '#c79b61');
     final imgCtrl = TextEditingController(text: category?.imageUrl ?? '');
-    final orderCtrl = TextEditingController(text: category?.sortOrder.toString() ?? '0');
+    final orderCtrl = TextEditingController(
+      text: category?.sortOrder.toString() ?? '0',
+    );
     bool isActive = category?.isActive ?? true;
 
     Get.dialog(
@@ -148,7 +190,11 @@ class ManageCategoriesScreen extends GetView<AdminController> {
                     decoration: const InputDecoration(labelText: "Name"),
                     onChanged: (val) {
                       if (!isEdit) {
-                        slugCtrl.text = val.toLowerCase().trim().replaceAll(RegExp(r'\s+'), '-').replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+                        slugCtrl.text = val
+                            .toLowerCase()
+                            .trim()
+                            .replaceAll(RegExp(r'\s+'), '-')
+                            .replaceAll(RegExp(r'[^a-z0-9\-]'), '');
                       }
                     },
                   ),
@@ -163,7 +209,9 @@ class ManageCategoriesScreen extends GetView<AdminController> {
                   ),
                   TextField(
                     controller: iconCtrl,
-                    decoration: const InputDecoration(labelText: "Icon Character"),
+                    decoration: const InputDecoration(
+                      labelText: "Icon Character",
+                    ),
                   ),
                   TextField(
                     controller: colorCtrl,
@@ -186,7 +234,7 @@ class ManageCategoriesScreen extends GetView<AdminController> {
                         isActive = val;
                       });
                     },
-                  )
+                  ),
                 ],
               ),
             ),
@@ -199,7 +247,10 @@ class ManageCategoriesScreen extends GetView<AdminController> {
                 child: const Text("Save"),
                 onPressed: () {
                   if (nameCtrl.text.isEmpty || slugCtrl.text.isEmpty) {
-                    Get.snackbar("Validation Error", "Name and Slug are required.");
+                    Get.snackbar(
+                      "Validation Error",
+                      "Name and Slug are required.",
+                    );
                     return;
                   }
                   final sortOrder = int.tryParse(orderCtrl.text) ?? 0;

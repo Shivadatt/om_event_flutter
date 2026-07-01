@@ -1,29 +1,43 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/constants/app_collections.dart';
 import 'sql_seed_data.dart';
 
+/// Low-level Firestore data access layer.
+/// All collection strings are sourced from [AppCollections].
 class FirestoreRemoteSource {
   final FirebaseFirestore _firestore;
+
+  /// Creates a [FirestoreRemoteSource] instance.
   FirestoreRemoteSource(this._firestore);
 
-  // Auto-seed check
+  // ── Auto-seed ─────────────────────────────────────────────────────────────
+
+  /// Ensures the database is seeded before any catalog fetch.
   Future<void> ensureSeeded() async {
-    final catSnap = await _firestore.collection('categories').limit(1).get();
+    final catSnap =
+        await _firestore.collection(AppCollections.categories).limit(1).get();
     if (catSnap.docs.isEmpty) {
       await _seedDatabase();
     }
   }
 
-  // Categories
-  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchCategories() async {
-    final snap = await _firestore
-        .collection('categories')
-        .where('is_active', isEqualTo: true)
-        .orderBy('sort_order')
-        .get();
+  // ── Categories ────────────────────────────────────────────────────────────
+
+  /// Fetch all active event decoration categories ordered by [sort_order].
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  fetchCategories() async {
+    final snap =
+        await _firestore
+            .collection(AppCollections.categories)
+            .where('is_active', isEqualTo: true)
+            .orderBy('sort_order')
+            .get();
     return snap.docs;
   }
 
-  // Experiences (Items)
+  // ── Experiences ───────────────────────────────────────────────────────────
+
+  /// Fetch active decoration items with optional filters and sorting.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchExperiences({
     String? categorySlug,
     String? searchQuery,
@@ -31,7 +45,9 @@ class FirestoreRemoteSource {
     bool? featuredOnly,
     String? sortBy,
   }) async {
-    Query<Map<String, dynamic>> query = _firestore.collection('items').where('is_active', isEqualTo: true);
+    Query<Map<String, dynamic>> query = _firestore
+        .collection(AppCollections.items)
+        .where('is_active', isEqualTo: true);
 
     if (categorySlug != null && categorySlug.isNotEmpty) {
       query = query.where('category_id', isEqualTo: categorySlug);
@@ -43,24 +59,27 @@ class FirestoreRemoteSource {
     final snap = await query.get();
     var docs = snap.docs;
 
-    // Direct memory filtering for search query and theme filter (since Firestore does not support text searches like Q objects in Django)
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final queryLower = searchQuery.toLowerCase();
-      docs = docs.where((doc) {
-        final data = doc.data();
-        final name = (data['name'] as String? ?? '').toLowerCase();
-        final desc = (data['description'] as String? ?? '').toLowerCase();
-        final tags = (data['tags'] as List? ?? []).join(' ').toLowerCase();
-        return name.contains(queryLower) || desc.contains(queryLower) || tags.contains(queryLower);
-      }).toList();
+      docs =
+          docs.where((doc) {
+            final data = doc.data();
+            final name = (data['name'] as String? ?? '').toLowerCase();
+            final desc = (data['description'] as String? ?? '').toLowerCase();
+            final tags = (data['tags'] as List? ?? []).join(' ').toLowerCase();
+            return name.contains(queryLower) ||
+                desc.contains(queryLower) ||
+                tags.contains(queryLower);
+          }).toList();
     }
 
     if (themeFilter != null && themeFilter.isNotEmpty) {
       final themeLower = themeFilter.toLowerCase();
-      docs = docs.where((doc) {
-        final themes = List<String>.from(doc.data()['themes'] ?? []);
-        return themes.any((t) => t.toLowerCase() == themeLower);
-      }).toList();
+      docs =
+          docs.where((doc) {
+            final themes = List<String>.from(doc.data()['themes'] ?? []);
+            return themes.any((t) => t.toLowerCase() == themeLower);
+          }).toList();
     }
 
     // Sort in memory
@@ -83,7 +102,6 @@ class FirestoreRemoteSource {
         return db.toString().compareTo(da.toString());
       });
     } else {
-      // popular
       docs.sort((a, b) {
         final pa = (a.data()['popularity'] ?? 0) as num;
         final pb = (b.data()['popularity'] ?? 0) as num;
@@ -94,88 +112,131 @@ class FirestoreRemoteSource {
     return docs;
   }
 
-  // Experience Detail
-  Future<DocumentSnapshot<Map<String, dynamic>>> fetchExperienceDetail(String slug) async {
-    final snap = await _firestore.collection('items').where('slug', isEqualTo: slug).limit(1).get();
+  /// Fetch detail for a single experience by its URL slug.
+  Future<DocumentSnapshot<Map<String, dynamic>>> fetchExperienceDetail(
+    String slug,
+  ) async {
+    final snap =
+        await _firestore
+            .collection(AppCollections.items)
+            .where('slug', isEqualTo: slug)
+            .limit(1)
+            .get();
     if (snap.docs.isEmpty) {
-      throw Exception("Experience details not found.");
+      throw Exception('Experience details not found.');
     }
     final doc = snap.docs.first;
     // Increment popularity in background
-    _firestore.collection('items').doc(doc.id).update({
+    _firestore.collection(AppCollections.items).doc(doc.id).update({
       'popularity': FieldValue.increment(1),
     });
     return doc;
   }
 
-  // Reviews
-  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchPublishedReviews() async {
-    final snap = await _firestore
-        .collection('reviews')
-        .where('is_published', isEqualTo: true)
-        .orderBy('created_at', descending: true)
-        .limit(12)
-        .get();
+  // ── Reviews ───────────────────────────────────────────────────────────────
+
+  /// Fetch the 12 most recent published reviews.
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  fetchPublishedReviews() async {
+    final snap =
+        await _firestore
+            .collection(AppCollections.reviews)
+            .where('is_published', isEqualTo: true)
+            .orderBy('created_at', descending: true)
+            .limit(12)
+            .get();
     return snap.docs;
   }
 
-  // Leads
-  Future<DocumentReference<Map<String, dynamic>>> submitLead(Map<String, dynamic> leadJson) async {
-    return await _firestore.collection('leads').add({
+  // ── Leads ─────────────────────────────────────────────────────────────────
+
+  /// Submit a new contact / inquiry lead.
+  Future<DocumentReference<Map<String, dynamic>>> submitLead(
+    Map<String, dynamic> leadJson,
+  ) async {
+    return await _firestore.collection(AppCollections.leads).add({
       ...leadJson,
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
   }
 
+  /// Fetch all leads ordered by creation date descending.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchLeads() async {
-    final snap = await _firestore.collection('leads').orderBy('created_at', descending: true).get();
+    final snap =
+        await _firestore
+            .collection(AppCollections.leads)
+            .orderBy('created_at', descending: true)
+            .get();
     return snap.docs;
   }
 
+  /// Update the status of an existing lead.
   Future<void> updateLeadStatus(String id, String status) async {
-    await _firestore.collection('leads').doc(id).update({
+    await _firestore.collection(AppCollections.leads).doc(id).update({
       'status': status,
       'updated_at': FieldValue.serverTimestamp(),
     });
   }
 
-  // Quotations
-  Future<void> submitQuotation(Map<String, dynamic> quoteJson, String quoteId) async {
-    await _firestore.collection('quotations').doc(quoteId).set({
+  // ── Quotations ────────────────────────────────────────────────────────────
+
+  /// Submit or overwrite a quotation document.
+  Future<void> submitQuotation(
+    Map<String, dynamic> quoteJson,
+    String quoteId,
+  ) async {
+    await _firestore.collection(AppCollections.quotations).doc(quoteId).set({
       ...quoteJson,
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
   }
 
-  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchQuotations() async {
-    final snap = await _firestore.collection('quotations').orderBy('created_at', descending: true).get();
+  /// Fetch all quotations ordered by creation date descending.
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  fetchQuotations() async {
+    final snap =
+        await _firestore
+            .collection(AppCollections.quotations)
+            .orderBy('created_at', descending: true)
+            .get();
     return snap.docs;
   }
 
-  Future<DocumentSnapshot<Map<String, dynamic>>> fetchQuotationByPublicId(String publicId) async {
-    final snap = await _firestore.collection('quotations').where('public_id', isEqualTo: publicId).limit(1).get();
+  /// Fetch a single quotation by its public share ID.
+  Future<DocumentSnapshot<Map<String, dynamic>>> fetchQuotationByPublicId(
+    String publicId,
+  ) async {
+    final snap =
+        await _firestore
+            .collection(AppCollections.quotations)
+            .where('public_id', isEqualTo: publicId)
+            .limit(1)
+            .get();
     if (snap.docs.isEmpty) {
-      throw Exception("Quotation not found.");
+      throw Exception('Quotation not found.');
     }
     return snap.docs.first;
   }
 
+  /// Update the status of an existing quotation.
   Future<void> updateQuotationStatus(String id, String status) async {
-    await _firestore.collection('quotations').doc(id).update({
+    await _firestore.collection(AppCollections.quotations).doc(id).update({
       'status': status,
       'updated_at': FieldValue.serverTimestamp(),
     });
   }
 
-  // Customer Management
+  // ── Customer Management ───────────────────────────────────────────────────
+
+  /// Create or update a CRM customer record keyed by phone number.
   Future<void> upsertCustomer({
     required String phone,
     required String name,
     required String email,
   }) async {
-    final docRef = _firestore.collection('customers').doc(phone);
+    final docRef = _firestore.collection(AppCollections.customers).doc(phone);
     final doc = await docRef.get();
     if (!doc.exists) {
       await docRef.set({
@@ -194,86 +255,148 @@ class FirestoreRemoteSource {
     }
   }
 
-  // Admin CRUD for Categories
+  // ── Admin CRUD for Categories ─────────────────────────────────────────────
+
+  /// Create a new category document keyed by its slug.
   Future<void> createCategory(Map<String, dynamic> json) async {
-    await _firestore.collection('categories').doc(json['slug'] as String).set(json);
+    await _firestore
+        .collection(AppCollections.categories)
+        .doc(json['slug'] as String)
+        .set(json);
   }
+
+  /// Update an existing category document.
   Future<void> updateCategory(String slug, Map<String, dynamic> json) async {
-    await _firestore.collection('categories').doc(slug).update(json);
+    await _firestore
+        .collection(AppCollections.categories)
+        .doc(slug)
+        .update(json);
   }
+
+  /// Delete a category document.
   Future<void> deleteCategory(String slug) async {
-    await _firestore.collection('categories').doc(slug).delete();
+    await _firestore.collection(AppCollections.categories).doc(slug).delete();
   }
 
-  // Admin CRUD for Experiences (Items)
+  // ── Admin CRUD for Experiences ────────────────────────────────────────────
+
+  /// Create a new experience document keyed by its slug.
   Future<void> createExperience(Map<String, dynamic> json) async {
-    await _firestore.collection('items').doc(json['slug'] as String).set(json);
+    await _firestore
+        .collection(AppCollections.items)
+        .doc(json['slug'] as String)
+        .set(json);
   }
+
+  /// Update an existing experience document.
   Future<void> updateExperience(String slug, Map<String, dynamic> json) async {
-    await _firestore.collection('items').doc(slug).update(json);
+    await _firestore.collection(AppCollections.items).doc(slug).update(json);
   }
+
+  /// Delete an experience document.
   Future<void> deleteExperience(String slug) async {
-    await _firestore.collection('items').doc(slug).delete();
+    await _firestore.collection(AppCollections.items).doc(slug).delete();
   }
 
-  // Admin CRUD for Customers
-  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchCustomers() async {
-    final snap = await _firestore.collection('customers').orderBy('created_at', descending: true).get();
+  // ── Admin CRUD for Customers ──────────────────────────────────────────────
+
+  /// Fetch all CRM customers ordered by creation date descending.
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  fetchCustomers() async {
+    final snap =
+        await _firestore
+            .collection(AppCollections.customers)
+            .orderBy('created_at', descending: true)
+            .get();
     return snap.docs;
   }
+
+  /// Delete a customer record.
   Future<void> deleteCustomer(String phone) async {
-    await _firestore.collection('customers').doc(phone).delete();
-  }
-  Future<void> updateCustomerDetails(String phone, Map<String, dynamic> json) async {
-    await _firestore.collection('customers').doc(phone).update(json);
+    await _firestore.collection(AppCollections.customers).doc(phone).delete();
   }
 
-  // Admin CRUD for User Profiles
+  /// Update specific fields on a customer record.
+  Future<void> updateCustomerDetails(
+    String phone,
+    Map<String, dynamic> json,
+  ) async {
+    await _firestore
+        .collection(AppCollections.customers)
+        .doc(phone)
+        .update(json);
+  }
+
+  // ── Admin CRUD for User Profiles ──────────────────────────────────────────
+
+  /// Fetch all registered app users.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchUsers() async {
-    final snap = await _firestore.collection('users').get();
+    final snap = await _firestore.collection(AppCollections.users).get();
     return snap.docs;
   }
+
+  /// Create a new user profile document.
   Future<void> createUserProfile(String uid, Map<String, dynamic> json) async {
-    await _firestore.collection('users').doc(uid).set(json);
-  }
-  Future<void> updateUserProfile(String uid, Map<String, dynamic> json) async {
-    await _firestore.collection('users').doc(uid).update(json);
-  }
-  Future<void> deleteUserProfile(String uid) async {
-    await _firestore.collection('users').doc(uid).delete();
+    await _firestore.collection(AppCollections.users).doc(uid).set(json);
   }
 
-  // Admin Roles RBAC collection queries
-  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchAdminRoles() async {
-    final snap = await _firestore.collection('admin').get();
+  /// Update an existing user profile document.
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> json) async {
+    await _firestore.collection(AppCollections.users).doc(uid).update(json);
+  }
+
+  /// Delete a user profile document.
+  Future<void> deleteUserProfile(String uid) async {
+    await _firestore.collection(AppCollections.users).doc(uid).delete();
+  }
+
+  // ── Admin Roles RBAC ──────────────────────────────────────────────────────
+
+  /// Fetch all administrator role documents.
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+  fetchAdminRoles() async {
+    final snap = await _firestore.collection(AppCollections.admin).get();
     return snap.docs;
   }
-  Future<DocumentSnapshot<Map<String, dynamic>>> fetchAdminRole(String uid) async {
-    return await _firestore.collection('admin').doc(uid).get();
-  }
-  Future<void> upsertAdminRole(String uid, Map<String, dynamic> json) async {
-    await _firestore.collection('admin').doc(uid).set(json);
-  }
-  Future<void> deleteAdminRole(String uid) async {
-    await _firestore.collection('admin').doc(uid).delete();
+
+  /// Fetch a single admin role document by UID.
+  Future<DocumentSnapshot<Map<String, dynamic>>> fetchAdminRole(
+    String uid,
+  ) async {
+    return await _firestore.collection(AppCollections.admin).doc(uid).get();
   }
 
-  // Seeding Logic
+  /// Create or overwrite an admin role document.
+  Future<void> upsertAdminRole(String uid, Map<String, dynamic> json) async {
+    await _firestore.collection(AppCollections.admin).doc(uid).set(json);
+  }
+
+  /// Delete an admin role document.
+  Future<void> deleteAdminRole(String uid) async {
+    await _firestore.collection(AppCollections.admin).doc(uid).delete();
+  }
+
+  // ── Seeding Logic ─────────────────────────────────────────────────────────
+
   Future<void> _seedDatabase() async {
     final batch = _firestore.batch();
 
     for (var cat in SqlSeedData.categories) {
-      final ref = _firestore.collection('categories').doc(cat['slug'] as String);
+      final ref = _firestore
+          .collection(AppCollections.categories)
+          .doc(cat['slug'] as String);
       batch.set(ref, cat);
     }
 
     for (var item in SqlSeedData.decorationItems) {
-      final ref = _firestore.collection('items').doc(item['slug'] as String);
+      final ref = _firestore
+          .collection(AppCollections.items)
+          .doc(item['slug'] as String);
       batch.set(ref, item);
     }
 
     for (var review in SqlSeedData.reviews) {
-      final ref = _firestore.collection('reviews').doc();
+      final ref = _firestore.collection(AppCollections.reviews).doc();
       batch.set(ref, review);
     }
 

@@ -1,101 +1,133 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/constants/app_collections.dart';
+import '../../../core/constants/app_buckets.dart';
+import '../../../core/constants/app_permissions.dart';
+import '../../../core/constants/app_roles.dart';
+import '../../../core/constants/app_status.dart';
+import '../../../core/constants/app_strings.dart';
 import 'sql_seed_data.dart';
 import 'supabase_upload_service.dart';
 import 'batch_delete_service.dart';
 import 'batch_insert_service.dart';
 
+/// Orchestrates full database migration: delete → upload → seed.
 class SeederService {
   final FirebaseFirestore _firestore;
   final SupabaseUploadService _uploadService;
   final BatchDeleteService _deleteService;
   final BatchInsertService _insertService;
 
-  SeederService(
-    this._firestore,
-    this._uploadService,
-  )   : _deleteService = BatchDeleteService(_firestore),
-        _insertService = BatchInsertService(_firestore);
+  /// Creates a [SeederService] instance.
+  SeederService(this._firestore, this._uploadService)
+    : _deleteService = BatchDeleteService(_firestore),
+      _insertService = BatchInsertService(_firestore);
 
   /// Run the entire migration seeder once.
-  /// Reports progress status and completion states.
+  /// Reports progress via [onProgress] callback.
   Future<void> runMigration({
     required Function(String status, double progress) onProgress,
     bool force = false,
   }) async {
     try {
-      onProgress("Checking migration status...", 0.05);
+      onProgress(AppStrings.seederCheckStatus, 0.05);
 
       // Check migration lock
-      final appSettings = await _firestore.collection('settings').doc('app').get();
-      if (!force && appSettings.exists && appSettings.data()?['migration_completed'] == true) {
-        onProgress("Migration already completed. Skipping.", 1.0);
+      final appSettings =
+          await _firestore
+              .collection(AppCollections.settings)
+              .doc(AppStatus.settingsAppDoc)
+              .get();
+      if (!force &&
+          appSettings.exists &&
+          appSettings.data()?[AppStatus.migrationCompleted] == true) {
+        onProgress(AppStrings.seederAlreadyDone, 1.0);
         return;
       }
 
       // Step 1: Batch delete all existing collections and settings
-      onProgress("Pruning existing collections...", 0.1);
+      onProgress(AppStrings.seederPruning, 0.1);
       final collectionsToPrune = [
-        'users',
-        'admin',
-        'categories',
-        'items',
-        'item_images',
-        'customers',
-        'leads',
-        'quotations',
-        'quotation_items',
-        'bookings',
-        'reviews',
-        'activity_logs',
-        'settings',
+        AppCollections.users,
+        AppCollections.admin,
+        AppCollections.categories,
+        AppCollections.items,
+        AppCollections.itemImages,
+        AppCollections.customers,
+        AppCollections.leads,
+        AppCollections.quotations,
+        AppCollections.quotationItems,
+        AppCollections.bookings,
+        AppCollections.reviews,
+        AppCollections.activityLogs,
+        AppCollections.settings,
       ];
       await _deleteService.deleteCollections(collectionsToPrune, (collection) {
-        onProgress("Clearing collection: $collection...", 0.1 + (collectionsToPrune.indexOf(collection) * 0.02));
+        onProgress(
+          'Clearing collection: $collection...',
+          0.1 + (collectionsToPrune.indexOf(collection) * 0.02),
+        );
       });
 
-      // Step 2: Upload Category media assets to Supabase Storage ('gallery/images')
-      onProgress("Uploading category media to Supabase...", 0.4);
+      // Step 2: Upload Category media assets to Supabase Storage
+      onProgress(AppStrings.seederUploadCategories, 0.4);
       final List<Map<String, dynamic>> resolvedCategories = [];
       for (final cat in SqlSeedData.categories) {
         final Map<String, dynamic> updatedCat = Map.from(cat);
-        final String? imagePath = cat['image_url'];
+        final String? imagePath = cat[AppStrings.fieldImageUrl];
         if (imagePath != null && imagePath.startsWith('assets/')) {
           final fileName = imagePath.split('/').last;
-          updatedCat['image_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
+          updatedCat[AppStrings.fieldImageUrl] =
+              '${AppBuckets.galleryImagesUrl}/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
-            updatedCat['image_url'] = publicUrl;
+            final publicUrl = await _uploadService.uploadAsset(
+              imagePath,
+              AppBuckets.gallery,
+              folder: AppBuckets.imagesFolder,
+            );
+            updatedCat[AppStrings.fieldImageUrl] = publicUrl;
           } catch (_) {}
         }
         resolvedCategories.add(updatedCat);
       }
 
       // Step 3: Upload Decoration Item media assets (Photos & Videos)
-      onProgress("Uploading decoration items media to Supabase...", 0.6);
+      onProgress(AppStrings.seederUploadItems, 0.6);
       final List<Map<String, dynamic>> resolvedDecorationItems = [];
       for (final item in SqlSeedData.decorationItems) {
         final Map<String, dynamic> updatedItem = Map.from(item);
 
-        // Main Image -> 'gallery/images'
-        final String? imagePath = item['image_url'];
+        // Main Image -> gallery/images
+        final String? imagePath = item[AppStrings.fieldImageUrl];
         if (imagePath != null && imagePath.startsWith('assets/')) {
           final fileName = imagePath.split('/').last;
-          updatedItem['image_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
+          updatedItem[AppStrings.fieldImageUrl] =
+              '${AppBuckets.galleryImagesUrl}/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
-            updatedItem['image_url'] = publicUrl;
+            final publicUrl = await _uploadService.uploadAsset(
+              imagePath,
+              AppBuckets.gallery,
+              folder: AppBuckets.imagesFolder,
+            );
+            updatedItem[AppStrings.fieldImageUrl] = publicUrl;
           } catch (_) {}
         }
 
-        // Video Reel -> 'gallery/Video'
-        final String? videoPath = item['video_url'];
-        if (videoPath != null && videoPath.isNotEmpty && videoPath.startsWith('assets/')) {
+        // Video Reel -> gallery/Video
+        final String? videoPath = item[AppStrings.fieldVideoUrl];
+        if (videoPath != null &&
+            videoPath.isNotEmpty &&
+            videoPath.startsWith('assets/')) {
           final fileName = videoPath.split('/').last;
-          updatedItem['video_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/$fileName';
+          updatedItem[AppStrings.fieldVideoUrl] =
+              '${AppBuckets.galleryVideosUrl}/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(videoPath, 'gallery', folder: 'Video');
-            updatedItem['video_url'] = publicUrl;
+            final publicUrl = await _uploadService.uploadAsset(
+              videoPath,
+              AppBuckets.gallery,
+              folder: AppBuckets.videosFolder,
+            );
+            updatedItem[AppStrings.fieldVideoUrl] = publicUrl;
           } catch (_) {}
         }
 
@@ -103,115 +135,145 @@ class SeederService {
       }
 
       // Step 4: Upload Item Gallery Images
-      onProgress("Uploading secondary gallery images to Supabase...", 0.7);
+      onProgress(AppStrings.seederUploadGallery, 0.7);
       final List<Map<String, dynamic>> resolvedItemImages = [];
       for (final img in SqlSeedData.itemImages) {
         final Map<String, dynamic> updatedImg = Map.from(img);
-        final String? imagePath = img['url'];
+        final String? imagePath = img[AppStrings.fieldUrl];
         if (imagePath != null && imagePath.startsWith('assets/')) {
           final fileName = imagePath.split('/').last;
-          updatedImg['url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
+          updatedImg[AppStrings.fieldUrl] =
+              '${AppBuckets.galleryImagesUrl}/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
-            updatedImg['url'] = publicUrl;
+            final publicUrl = await _uploadService.uploadAsset(
+              imagePath,
+              AppBuckets.gallery,
+              folder: AppBuckets.imagesFolder,
+            );
+            updatedImg[AppStrings.fieldUrl] = publicUrl;
           } catch (_) {}
         }
         resolvedItemImages.add(updatedImg);
       }
 
       // Step 5: Upload Review pictures if present
-      onProgress("Uploading review media to Supabase...", 0.8);
+      onProgress(AppStrings.seederUploadReviews, 0.8);
       final List<Map<String, dynamic>> resolvedReviews = [];
       for (final r in SqlSeedData.reviews) {
         final Map<String, dynamic> updatedReview = Map.from(r);
-        final String? imagePath = r['image_url'];
-        if (imagePath != null && imagePath.isNotEmpty && imagePath.startsWith('assets/')) {
+        final String? imagePath = r[AppStrings.fieldImageUrl];
+        if (imagePath != null &&
+            imagePath.isNotEmpty &&
+            imagePath.startsWith('assets/')) {
           final fileName = imagePath.split('/').last;
-          updatedReview['image_url'] = 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/$fileName';
+          updatedReview[AppStrings.fieldImageUrl] =
+              '${AppBuckets.galleryImagesUrl}/$fileName';
           try {
-            final publicUrl = await _uploadService.uploadAsset(imagePath, 'gallery', folder: 'images');
-            updatedReview['image_url'] = publicUrl;
+            final publicUrl = await _uploadService.uploadAsset(
+              imagePath,
+              AppBuckets.gallery,
+              folder: AppBuckets.imagesFolder,
+            );
+            updatedReview[AppStrings.fieldImageUrl] = publicUrl;
           } catch (_) {}
         }
         resolvedReviews.add(updatedReview);
       }
 
       // Step 6: Batch insert converted structures
-      onProgress("Committing SQL data to Firestore collections...", 0.85);
+      onProgress(AppStrings.seederCommitting, 0.85);
 
-      await _insertService.insertDocuments('users', SqlSeedData.users);
-      
-      // Bootstrap Super Admin in 'admin'
-      await _firestore.collection('admin').doc('super-admin-uid').set({
-        'uid': 'super-admin-uid',
-        'name': 'Super Admin',
-        'email': 'omeventsanddecorators@gmail.com',
-        'role_type': 'super_admin',
-        'is_active': true,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-        'created_by': 'system',
-        'permissions': {
-          'can_manage_categories': true,
-          'can_manage_items': true,
-          'can_manage_customers': true,
-          'can_manage_users': true,
-          'can_manage_reviews': true,
-          'can_manage_quotes': true,
-          'can_manage_leads': true,
-          'can_manage_settings': true,
-          'can_delete': true,
-          'can_create': true,
-          'can_edit': true,
-        }
-      });
+      await _insertService.insertDocuments(
+        AppCollections.users,
+        SqlSeedData.users,
+      );
 
-      // Bootstrap Demo Admin in 'admin'
-      await _firestore.collection('admin').doc('demo-admin-uid').set({
-        'uid': 'demo-admin-uid',
-        'name': 'Demo Admin',
-        'email': 'Admin@gmail.com',
-        'role_type': 'demo_admin',
-        'is_active': true,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-        'created_by': 'system',
-        'permissions': {
-          'can_manage_categories': true,
-          'can_manage_items': true,
-          'can_manage_customers': true,
-          'can_manage_users': false,
-          'can_manage_reviews': false,
-          'can_manage_quotes': true,
-          'can_manage_leads': true,
-          'can_manage_settings': false,
-          'can_delete': false,
-          'can_create': true,
-          'can_edit': true,
-        }
-      });
+      // Bootstrap Super Admin
+      await _firestore
+          .collection(AppCollections.admin)
+          .doc(AppStrings.superAdminUid)
+          .set({
+            AppStrings.fieldUid: AppStrings.superAdminUid,
+            AppStrings.fieldName: AppStrings.superAdminName,
+            AppStrings.fieldEmail: AppStrings.businessEmail,
+            AppStrings.fieldRoleType: AppRoles.superAdmin,
+            AppStrings.fieldIsActive: true,
+            AppStrings.fieldCreatedAt: DateTime.now().toIso8601String(),
+            AppStrings.fieldUpdatedAt: DateTime.now().toIso8601String(),
+            AppStrings.fieldCreatedBy: AppStrings.createdBySystem,
+            AppStrings.fieldPermissions: AppPermissions.superAdminPermissions,
+          });
 
-      await _insertService.insertDocuments('categories', resolvedCategories);
-      await _insertService.insertDocuments('items', resolvedDecorationItems);
-      await _insertService.insertDocuments('item_images', resolvedItemImages);
-      await _insertService.insertDocuments('customers', SqlSeedData.customers);
-      await _insertService.insertDocuments('leads', SqlSeedData.leads);
-      await _insertService.insertDocuments('quotations', SqlSeedData.quotations);
-      await _insertService.insertDocuments('quotation_items', SqlSeedData.quotationItems);
-      await _insertService.insertDocuments('bookings', SqlSeedData.bookings);
-      await _insertService.insertDocuments('reviews', resolvedReviews);
-      await _insertService.insertDocuments('activity_logs', SqlSeedData.activityLogs);
+      // Bootstrap Demo Admin
+      await _firestore
+          .collection(AppCollections.admin)
+          .doc(AppStrings.demoAdminUid)
+          .set({
+            AppStrings.fieldUid: AppStrings.demoAdminUid,
+            AppStrings.fieldName: AppStrings.demoAdminName,
+            AppStrings.fieldEmail: AppStrings.demoAdminEmail,
+            AppStrings.fieldRoleType: AppRoles.demoAdmin,
+            AppStrings.fieldIsActive: true,
+            AppStrings.fieldCreatedAt: DateTime.now().toIso8601String(),
+            AppStrings.fieldUpdatedAt: DateTime.now().toIso8601String(),
+            AppStrings.fieldCreatedBy: AppStrings.createdBySystem,
+            AppStrings.fieldPermissions: AppPermissions.demoAdminPermissions,
+          });
 
-      // Step 7: Finalize lock document settings/app
-      onProgress("Setting migration lock marker...", 0.95);
-      await _firestore.collection('settings').doc('app').set({
-        'migration_completed': true,
-        'migration_date': FieldValue.serverTimestamp(),
-      });
+      await _insertService.insertDocuments(
+        AppCollections.categories,
+        resolvedCategories,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.items,
+        resolvedDecorationItems,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.itemImages,
+        resolvedItemImages,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.customers,
+        SqlSeedData.customers,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.leads,
+        SqlSeedData.leads,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.quotations,
+        SqlSeedData.quotations,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.quotationItems,
+        SqlSeedData.quotationItems,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.bookings,
+        SqlSeedData.bookings,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.reviews,
+        resolvedReviews,
+      );
+      await _insertService.insertDocuments(
+        AppCollections.activityLogs,
+        SqlSeedData.activityLogs,
+      );
 
-      onProgress("Migration completed successfully!", 1.0);
+      // Step 7: Finalize lock document
+      onProgress(AppStrings.seederLockMarker, 0.95);
+      await _firestore
+          .collection(AppCollections.settings)
+          .doc(AppStatus.settingsAppDoc)
+          .set({
+            AppStatus.migrationCompleted: true,
+            AppStatus.migrationDate: FieldValue.serverTimestamp(),
+          });
+
+      onProgress(AppStrings.seederSuccess, 1.0);
     } catch (e) {
-      onProgress("Migration failed: $e", -1.0);
+      onProgress('${AppStrings.seederFailed}$e', -1.0);
       rethrow;
     }
   }

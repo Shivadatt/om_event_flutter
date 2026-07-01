@@ -1,29 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../constants/app_colors.dart';
 
+/// Application theme configuration.
+/// All color references delegate to [AppColors].
 class AppTheme {
-  // Brand Color Palettes
-  static const Color lightCream = Color(0xFFF4F0E8);
-  static const Color lightInk = Color(0xFF17201E);
-  static const Color lightForest = Color(0xFF1E2B27);
-  static const Color lightForestSecondary = Color(0xFF2F413B);
-  static const Color lightPaper = Color(0xFFFBF9F4);
-  static const Color lightGold = Color(0xFFAA7C4B);
-  static const Color lightGoldSecondary = Color(0xFFD3AD7B);
-  static const Color lightMuted = Color(0xFF6D746F);
-  static const Color lightLine = Color(0x2317201E);
+  // ── Deprecated direct color fields — use AppColors instead ────────────────
+  static const Color lightCream = AppColors.lightCream;
+  static const Color lightInk = AppColors.lightInk;
+  static const Color lightForest = AppColors.lightForest;
+  static const Color lightForestSecondary = AppColors.lightForestSecondary;
+  static const Color lightPaper = AppColors.lightPaper;
+  static const Color lightGold = AppColors.lightGold;
+  static const Color lightGoldSecondary = AppColors.lightGoldSecondary;
+  static const Color lightMuted = AppColors.lightMuted;
+  static const Color lightLine = AppColors.lightLine;
 
-  static const Color darkCream = Color(0xFF141A18);
-  static const Color darkInk = Color(0xFFF2EEE6);
-  static const Color darkForest = Color(0xFFD8E3DC);
-  static const Color darkForestSecondary = Color(0xFFB7C8BF);
-  static const Color darkPaper = Color(0xFF1B2320);
-  static const Color darkGold = Color(0xFFD1A875);
-  static const Color darkGoldSecondary = Color(0xFFE3C89F);
-  static const Color darkMuted = Color(0xFFAAB4AE);
-  static const Color darkLine = Color(0x21FFFFFF);
+  static const Color darkCream = AppColors.darkCream;
+  static const Color darkInk = AppColors.darkInk;
+  static const Color darkForest = AppColors.darkForest;
+  static const Color darkForestSecondary = AppColors.darkForestSecondary;
+  static const Color darkPaper = AppColors.darkPaper;
+  static const Color darkGold = AppColors.darkGold;
+  static const Color darkGoldSecondary = AppColors.darkGoldSecondary;
+  static const Color darkMuted = AppColors.darkMuted;
+  static const Color darkLine = AppColors.darkLine;
 
-  // Typography Styles
+  // ── Typography ────────────────────────────────────────────────────────────
+
+  /// Returns an Italiana serif header text style.
   static TextStyle serifHeader({
     required double fontSize,
     Color? color,
@@ -40,6 +45,7 @@ class AppTheme {
     );
   }
 
+  /// Returns a DM Sans body text style.
   static TextStyle sansBody({
     required double fontSize,
     Color? color,
@@ -56,61 +62,85 @@ class AppTheme {
     );
   }
 
-  // Light Theme Configuration
+  // ── Light Theme ───────────────────────────────────────────────────────────
+
+  /// Returns the complete light theme configuration.
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
-      primaryColor: lightGold,
-      scaffoldBackgroundColor: lightCream,
+      primaryColor: AppColors.lightGold,
+      scaffoldBackgroundColor: AppColors.lightCream,
       colorScheme: const ColorScheme.light(
-        primary: lightGold,
-        secondary: lightGoldSecondary,
-        surface: lightPaper,
-        onSurface: lightInk,
-        error: Color(0xFFB85952),
+        primary: AppColors.lightGold,
+        secondary: AppColors.lightGoldSecondary,
+        surface: AppColors.lightPaper,
+        onSurface: AppColors.lightInk,
+        error: AppColors.error,
       ),
       textTheme: TextTheme(
-        displayLarge: serifHeader(fontSize: 48, color: lightInk, fontWeight: FontWeight.w400, height: 1.0),
-        titleLarge: serifHeader(fontSize: 24, color: lightInk),
-        bodyLarge: sansBody(fontSize: 16, color: lightInk),
-        bodyMedium: sansBody(fontSize: 14, color: lightMuted),
-        labelLarge: sansBody(fontSize: 12, color: lightInk, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+        displayLarge: serifHeader(
+          fontSize: 48,
+          color: AppColors.lightInk,
+          fontWeight: FontWeight.w400,
+          height: 1.0,
+        ),
+        titleLarge: serifHeader(fontSize: 24, color: AppColors.lightInk),
+        bodyLarge: sansBody(fontSize: 16, color: AppColors.lightInk),
+        bodyMedium: sansBody(fontSize: 14, color: AppColors.lightMuted),
+        labelLarge: sansBody(
+          fontSize: 12,
+          color: AppColors.lightInk,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
+        ),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: lightForest,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.lightForest,
+        foregroundColor: AppColors.white,
         elevation: 0,
       ),
-      dividerColor: lightLine,
+      dividerColor: AppColors.lightLine,
     );
   }
 
-  // Dark Theme Configuration
+  // ── Dark Theme ────────────────────────────────────────────────────────────
+
+  /// Returns the complete dark theme configuration.
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      primaryColor: darkGold,
-      scaffoldBackgroundColor: darkCream,
+      primaryColor: AppColors.darkGold,
+      scaffoldBackgroundColor: AppColors.darkCream,
       colorScheme: const ColorScheme.dark(
-        primary: darkGold,
-        secondary: darkGoldSecondary,
-        surface: darkPaper,
-        onSurface: darkInk,
-        error: Color(0xFFB85952),
+        primary: AppColors.darkGold,
+        secondary: AppColors.darkGoldSecondary,
+        surface: AppColors.darkPaper,
+        onSurface: AppColors.darkInk,
+        error: AppColors.error,
       ),
       textTheme: TextTheme(
-        displayLarge: serifHeader(fontSize: 48, color: darkInk, fontWeight: FontWeight.w400, height: 1.0),
-        titleLarge: serifHeader(fontSize: 24, color: darkInk),
-        bodyLarge: sansBody(fontSize: 16, color: darkInk),
-        bodyMedium: sansBody(fontSize: 14, color: darkMuted),
-        labelLarge: sansBody(fontSize: 12, color: darkInk, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+        displayLarge: serifHeader(
+          fontSize: 48,
+          color: AppColors.darkInk,
+          fontWeight: FontWeight.w400,
+          height: 1.0,
+        ),
+        titleLarge: serifHeader(fontSize: 24, color: AppColors.darkInk),
+        bodyLarge: sansBody(fontSize: 16, color: AppColors.darkInk),
+        bodyMedium: sansBody(fontSize: 14, color: AppColors.darkMuted),
+        labelLarge: sansBody(
+          fontSize: 12,
+          color: AppColors.darkInk,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
+        ),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: darkCream,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.darkCream,
+        foregroundColor: AppColors.white,
         elevation: 0,
       ),
-      dividerColor: darkLine,
+      dividerColor: AppColors.darkLine,
     );
   }
 }

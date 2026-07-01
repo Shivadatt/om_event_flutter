@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'core/config/app_routes.dart';
 import 'core/config/app_theme.dart';
+import 'core/constants/app_strings.dart';
+import 'core/seo/seo_manager.dart';
+import 'core/utils/app_logger.dart';
 import 'presentation/bindings/initial_binding.dart';
 
 void main() async {
@@ -17,46 +20,45 @@ void main() async {
     final prefs = await SharedPreferences.getInstance();
     Get.put<SharedPreferences>(prefs, permanent: true);
   } catch (e) {
-    // ignore: avoid_print
-    print("SharedPreferences initialization failed: ${e.toString()}");
+    AppLogger.error('SharedPreferences initialization failed', e);
   }
 
   // Initialize Firebase using the real project credentials
   try {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: "AIzaSyDFpKAUXwIDnoQBrt5Id-xJjn-h5WVv1pc",
-        authDomain: "om-event.firebaseapp.com",
-        projectId: "om-event",
-        storageBucket: "om-event.firebasestorage.app",
-        messagingSenderId: "443981257323",
-        appId: "1:443981257323:android:a99b824ca6d4a10b64af2e",
+        apiKey: 'AIzaSyDFpKAUXwIDnoQBrt5Id-xJjn-h5WVv1pc',
+        authDomain: 'om-event.firebaseapp.com',
+        projectId: 'om-event',
+        storageBucket: 'om-event.firebasestorage.app',
+        messagingSenderId: '443981257323',
+        appId: '1:443981257323:android:a99b824ca6d4a10b64af2e',
       ),
     );
-    // ignore: avoid_print
-    print("Firebase initialized successfully");
+    AppLogger.success('Firebase initialized successfully');
   } catch (e) {
-    // ignore: avoid_print
-    print("Firebase initialization failed: ${e.toString()}");
+    AppLogger.error('Firebase initialization failed', e);
   }
 
   runApp(const OmEventsApp());
 }
 
+/// Root application widget.
 class OmEventsApp extends StatelessWidget {
   const OmEventsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Om Events',
+      title: AppStrings.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Syncs automatically with OS settings
+      themeMode: ThemeMode.system,
       initialBinding: InitialBinding(),
       initialRoute: AppRoutes.home,
-      getPages: AppRoutes.pages,
+      getPages: AppRouter.pages,
+      navigatorObservers: [SeoManager()],
     );
   }
 }

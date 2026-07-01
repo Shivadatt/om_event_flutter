@@ -38,6 +38,13 @@ class CatalogController extends GetxController {
   void onInit() {
     super.onInit();
     refreshCatalog();
+
+    // Debounce search query changes to avoid database reads on every single keystroke
+    debounce(
+      searchQuery,
+      (_) => loadExperiences(),
+      time: const Duration(milliseconds: 500),
+    );
   }
 
   Future<void> refreshCatalog() async {
@@ -61,7 +68,10 @@ class CatalogController extends GetxController {
     try {
       isLoadingExperiences.value = true;
       final results = await getExperiences(
-        categorySlug: selectedCategorySlug.value.isEmpty ? null : selectedCategorySlug.value,
+        categorySlug:
+            selectedCategorySlug.value.isEmpty
+                ? null
+                : selectedCategorySlug.value,
         searchQuery: searchQuery.value.isEmpty ? null : searchQuery.value,
         sortBy: sortBy.value,
       );
@@ -84,7 +94,6 @@ class CatalogController extends GetxController {
 
   void updateSearchQuery(String query) {
     searchQuery.value = query;
-    loadExperiences();
   }
 
   void updateSort(String option) {
@@ -101,11 +110,17 @@ class CatalogController extends GetxController {
     required String requirements,
   }) async {
     if (!AppValidators.isValidName(name)) {
-      Get.snackbar("Validation Error", "Please enter a valid name (at least 2 letters).");
+      Get.snackbar(
+        "Validation Error",
+        "Please enter a valid name (at least 2 letters).",
+      );
       return false;
     }
     if (!AppValidators.isValidPhone(phone)) {
-      Get.snackbar("Validation Error", "Please enter a valid 10-digit phone number.");
+      Get.snackbar(
+        "Validation Error",
+        "Please enter a valid 10-digit phone number.",
+      );
       return false;
     }
 
@@ -130,8 +145,11 @@ class CatalogController extends GetxController {
       );
 
       await submitLead(lead);
-      Get.snackbar("Inquiry Received", "Thank you! Our event manager will call you shortly.",
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Inquiry Received",
+        "Thank you! Our event manager will call you shortly.",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return true;
     } on Failure catch (e) {
       Get.snackbar("Inquiry Failed", e.message);

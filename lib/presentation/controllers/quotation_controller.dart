@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -9,6 +8,7 @@ import '../../core/utils/validators.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/usecases/create_quotation.dart';
 import '../../domain/repositories/quotation_repository.dart';
+import '../../core/utils/app_logger.dart';
 import 'cart_controller.dart';
 
 class QuotationController extends GetxController {
@@ -29,7 +29,9 @@ class QuotationController extends GetxController {
   String _generatePublicId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final rnd = Random();
-    return String.fromCharCodes(Iterable.generate(10, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+    return String.fromCharCodes(
+      Iterable.generate(10, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
+    );
   }
 
   // Submit Quotation
@@ -42,11 +44,17 @@ class QuotationController extends GetxController {
     required String notes,
   }) async {
     if (!AppValidators.isValidName(name)) {
-      Get.snackbar("Validation Error", "Please enter a valid name (at least 2 letters).");
+      Get.snackbar(
+        "Validation Error",
+        "Please enter a valid name (at least 2 letters).",
+      );
       return false;
     }
     if (!AppValidators.isValidPhone(phone)) {
-      Get.snackbar("Validation Error", "Please enter a valid 10-digit phone number.");
+      Get.snackbar(
+        "Validation Error",
+        "Please enter a valid 10-digit phone number.",
+      );
       return false;
     }
     if (location.trim().isEmpty) {
@@ -54,7 +62,10 @@ class QuotationController extends GetxController {
       return false;
     }
     if (cartController.rxCartItems.isEmpty) {
-      Get.snackbar("Canvas is Empty", "Please select at least one decoration to generate a quotation.");
+      Get.snackbar(
+        "Canvas is Empty",
+        "Please select at least one decoration to generate a quotation.",
+      );
       return false;
     }
 
@@ -67,17 +78,18 @@ class QuotationController extends GetxController {
       final quotationId = DateTime.now().millisecondsSinceEpoch.toString();
 
       // Maps Cart Items to Quotation Items
-      final quotationItems = cartController.rxCartItems.map((cartItem) {
-        return QuotationItem(
-          experienceId: cartItem.experience.id,
-          name: cartItem.experience.name,
-          quantity: cartItem.quantity,
-          unitPrice: cartItem.experience.effectivePrice,
-          color: cartItem.color.isEmpty ? "As shown" : cartItem.color,
-          theme: cartItem.theme.isEmpty ? "As shown" : cartItem.theme,
-          notes: cartItem.notes,
-        );
-      }).toList();
+      final quotationItems =
+          cartController.rxCartItems.map((cartItem) {
+            return QuotationItem(
+              experienceId: cartItem.experience.id,
+              name: cartItem.experience.name,
+              quantity: cartItem.quantity,
+              unitPrice: cartItem.experience.effectivePrice,
+              color: cartItem.color.isEmpty ? "As shown" : cartItem.color,
+              theme: cartItem.theme.isEmpty ? "As shown" : cartItem.theme,
+              notes: cartItem.notes,
+            );
+          }).toList();
 
       // Calculation values matching backend standard
       final subtotal = cartController.subtotal;
@@ -120,10 +132,13 @@ class QuotationController extends GetxController {
       // Upload to Supabase Storage
       String uploadedPdfUrl = '';
       try {
-        uploadedPdfUrl = await quotationRepository.uploadQuotationPdf(publicId, pdfBytes);
+        uploadedPdfUrl = await quotationRepository.uploadQuotationPdf(
+          publicId,
+          pdfBytes,
+        );
       } catch (e) {
         // Fallback or log if Supabase keys not set
-        debugPrint("Supabase upload error: ${e.toString()}");
+        AppLogger.error("Supabase upload error", e);
       }
 
       final finalQuotation = Quotation(
@@ -206,16 +221,27 @@ class QuotationController extends GetxController {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text("Prepared for: ${quote.customerName}", style: const pw.TextStyle(fontSize: 10)),
-                      pw.Text("Location: ${quote.location}", style: const pw.TextStyle(fontSize: 10)),
+                      pw.Text(
+                        "Prepared for: ${quote.customerName}",
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
+                      pw.Text(
+                        "Location: ${quote.location}",
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text("Proposal ID: ${quote.publicId}", style: const pw.TextStyle(fontSize: 10)),
-                      pw.Text("Event Date: ${quote.eventDate.year}-${quote.eventDate.month}-${quote.eventDate.day} at ${quote.eventTime}",
-                          style: const pw.TextStyle(fontSize: 10)),
+                      pw.Text(
+                        "Proposal ID: ${quote.publicId}",
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
+                      pw.Text(
+                        "Event Date: ${quote.eventDate.year}-${quote.eventDate.month}-${quote.eventDate.day} at ${quote.eventTime}",
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
                     ],
                   ),
                 ],
@@ -224,7 +250,10 @@ class QuotationController extends GetxController {
 
               // Line Items Table
               pw.Table(
-                border: pw.TableBorder.all(color: PdfColor.fromHex("#D8D4CC"), width: 0.5),
+                border: pw.TableBorder.all(
+                  color: PdfColor.fromHex("#D8D4CC"),
+                  width: 0.5,
+                ),
                 columnWidths: const {
                   0: pw.FlexColumnWidth(3),
                   1: pw.FlexColumnWidth(2),
@@ -234,44 +263,92 @@ class QuotationController extends GetxController {
                 children: [
                   // Table Head
                   pw.TableRow(
-                    decoration: pw.BoxDecoration(color: PdfColor.fromHex("#1E2926")),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromHex("#1E2926"),
+                    ),
                     children: [
                       pw.Padding(
-                          padding: const pw.EdgeInsets.all(6),
-                          child: pw.Text("Decoration",
-                              style: pw.TextStyle(color: PdfColor.fromHex("#FFFFFF"), fontSize: 9, fontWeight: pw.FontWeight.bold))),
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text(
+                          "Decoration",
+                          style: pw.TextStyle(
+                            color: PdfColor.fromHex("#FFFFFF"),
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       pw.Padding(
-                          padding: const pw.EdgeInsets.all(6),
-                          child: pw.Text("Customisation",
-                              style: pw.TextStyle(color: PdfColor.fromHex("#FFFFFF"), fontSize: 9, fontWeight: pw.FontWeight.bold))),
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text(
+                          "Customisation",
+                          style: pw.TextStyle(
+                            color: PdfColor.fromHex("#FFFFFF"),
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       pw.Padding(
-                          padding: const pw.EdgeInsets.all(6),
-                          child: pw.Text("Qty",
-                              style: pw.TextStyle(color: PdfColor.fromHex("#FFFFFF"), fontSize: 9, fontWeight: pw.FontWeight.bold))),
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text(
+                          "Qty",
+                          style: pw.TextStyle(
+                            color: PdfColor.fromHex("#FFFFFF"),
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       pw.Padding(
-                          padding: const pw.EdgeInsets.all(6),
-                          child: pw.Text("Amount",
-                              style: pw.TextStyle(color: PdfColor.fromHex("#FFFFFF"), fontSize: 9, fontWeight: pw.FontWeight.bold))),
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text(
+                          "Amount",
+                          style: pw.TextStyle(
+                            color: PdfColor.fromHex("#FFFFFF"),
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   // Table Rows
                   ...quote.items.map((item) {
-                    final customStr = [item.color, item.theme].where((e) => e.isNotEmpty).join(' · ');
+                    final customStr = [
+                      item.color,
+                      item.theme,
+                    ].where((e) => e.isNotEmpty).join(' · ');
                     return pw.TableRow(
                       children: [
                         pw.Padding(
-                            padding: const pw.EdgeInsets.all(6),
-                            child: pw.Text(item.name, style: const pw.TextStyle(fontSize: 9))),
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(
+                            item.name,
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                        ),
                         pw.Padding(
-                            padding: const pw.EdgeInsets.all(6),
-                            child: pw.Text(customStr.isEmpty ? "As shown" : customStr,
-                                style: const pw.TextStyle(fontSize: 8))),
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(
+                            customStr.isEmpty ? "As shown" : customStr,
+                            style: const pw.TextStyle(fontSize: 8),
+                          ),
+                        ),
                         pw.Padding(
-                            padding: const pw.EdgeInsets.all(6),
-                            child: pw.Text(item.quantity.toString(), style: const pw.TextStyle(fontSize: 9))),
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(
+                            item.quantity.toString(),
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                        ),
                         pw.Padding(
-                            padding: const pw.EdgeInsets.all(6),
-                            child: pw.Text("Rs. ${item.totalPrice.toStringAsFixed(0)}", style: const pw.TextStyle(fontSize: 9))),
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(
+                            "Rs. ${item.totalPrice.toStringAsFixed(0)}",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                        ),
                       ],
                     );
                   }),
@@ -289,38 +366,76 @@ class QuotationController extends GetxController {
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text("Subtotal:", style: const pw.TextStyle(fontSize: 9)),
-                          pw.Text("Rs. ${quote.subtotal.toStringAsFixed(2)}", style: const pw.TextStyle(fontSize: 9)),
+                          pw.Text(
+                            "Subtotal:",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                          pw.Text(
+                            "Rs. ${quote.subtotal.toStringAsFixed(2)}",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
                         ],
                       ),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text("Celebration Discount:", style: const pw.TextStyle(fontSize: 9)),
-                          pw.Text("- Rs. ${quote.discount.toStringAsFixed(2)}", style: const pw.TextStyle(fontSize: 9)),
+                          pw.Text(
+                            "Celebration Discount:",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                          pw.Text(
+                            "- Rs. ${quote.discount.toStringAsFixed(2)}",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
                         ],
                       ),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text("Delivery:", style: const pw.TextStyle(fontSize: 9)),
-                          pw.Text("Rs. ${quote.deliveryCharge.toStringAsFixed(2)}", style: const pw.TextStyle(fontSize: 9)),
+                          pw.Text(
+                            "Delivery:",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                          pw.Text(
+                            "Rs. ${quote.deliveryCharge.toStringAsFixed(2)}",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
                         ],
                       ),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text("GST (${quote.gstPercent.toStringAsFixed(0)}%):", style: const pw.TextStyle(fontSize: 9)),
-                          pw.Text("Rs. ${quote.gstAmount.toStringAsFixed(2)}", style: const pw.TextStyle(fontSize: 9)),
+                          pw.Text(
+                            "GST (${quote.gstPercent.toStringAsFixed(0)}%):",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
+                          pw.Text(
+                            "Rs. ${quote.gstAmount.toStringAsFixed(2)}",
+                            style: const pw.TextStyle(fontSize: 9),
+                          ),
                         ],
                       ),
-                      pw.Divider(color: PdfColor.fromHex("#9A6B3D"), thickness: 1),
+                      pw.Divider(
+                        color: PdfColor.fromHex("#9A6B3D"),
+                        thickness: 1,
+                      ),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text("GRAND TOTAL:", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                          pw.Text("Rs. ${quote.grandTotal.toStringAsFixed(2)}",
-                              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                          pw.Text(
+                            "GRAND TOTAL:",
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.Text(
+                            "Rs. ${quote.grandTotal.toStringAsFixed(2)}",
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ],

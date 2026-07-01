@@ -18,104 +18,86 @@ import '../../presentation/screens/admin/profile_screen.dart';
 import '../../presentation/screens/docs/docs_screen.dart';
 import '../../presentation/bindings/catalog_binding.dart';
 import '../../presentation/bindings/admin_binding.dart';
+import '../../presentation/screens/admin/manage_bookings_screen.dart';
+import '../constants/app_routes.dart';
+export '../constants/app_routes.dart';
 
-class AppRoutes {
-  static const String splash = '/splash';
-  static const String onboarding = '/onboarding';
-  static const String home = '/';
-  static const String detail = '/detail';
-  static const String quoteSuccess = '/quote-success';
-  static const String login = '/admin';
-  static const String adminDashboard = '/admin-dashboard';
-  static const String manageLeads = '/admin/leads';
-  static const String manageQuotes = '/admin/quotes';
-  static const String manageExperiences = '/admin/experiences';
-  static const String manageCategories = '/admin/categories';
-  static const String manageCustomers = '/admin/customers';
-  static const String manageUsers = '/admin/users';
-  static const String systemSettings = '/admin/settings';
-  static const String docs = '/docs';
-
+/// Route definitions and page factory registry.
+/// All route path strings are sourced from [AppRoutes] in core/constants/.
+class AppRouter {
   static List<GetPage> get pages => [
-        GetPage(
-          name: splash,
-          page: () => const SplashScreen(),
-        ),
-        GetPage(
-          name: onboarding,
-          page: () => const OnboardingScreen(),
-        ),
-        GetPage(
-          name: home,
-          page: () => const HomeScreen(),
-          binding: CatalogBinding(),
-        ),
-        GetPage(
-          name: '$detail/:slug',
-          page: () => const ExperienceDetailScreen(),
-          binding: CatalogBinding(),
-        ),
-        GetPage(
-          name: quoteSuccess,
-          page: () => const QuoteSuccessScreen(),
-        ),
-        GetPage(
-          name: login,
-          page: () => const LoginScreen(),
-        ),
-        GetPage(
-          name: adminDashboard,
-          page: () => const AdminDashboardScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: manageLeads,
-          page: () => const ManageLeadsScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: manageQuotes,
-          page: () => const ManageQuotesScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: manageExperiences,
-          page: () => const ManageExperiencesScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: manageCategories,
-          page: () => const ManageCategoriesScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: manageCustomers,
-          page: () => const ManageCustomersScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: manageUsers,
-          page: () => const ManageAdminRolesScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: systemSettings,
-          page: () => const SystemSettingsScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: '/admin/reviews',
-          page: () => const ManageReviewsScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: '/admin/profile',
-          page: () => const ProfileScreen(),
-          binding: AdminBinding(),
-        ),
-        GetPage(
-          name: docs,
-          page: () => const DocsScreen(),
-        ),
-      ];
+    GetPage(name: AppRoutes.splash, page: () => const SplashScreen()),
+    GetPage(name: AppRoutes.onboarding, page: () => const OnboardingScreen()),
+    GetPage(
+      name: AppRoutes.home,
+      page: () => const HomeScreen(),
+      binding: CatalogBinding(),
+    ),
+    GetPage(
+      name: '${AppRoutes.detail}/:slug',
+      page: () => const ExperienceDetailScreen(),
+      binding: CatalogBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.quoteSuccess,
+      page: () => const QuoteSuccessScreen(),
+    ),
+    GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
+    GetPage(
+      name: AppRoutes.adminDashboard,
+      page: () => const AdminDashboardScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageLeads,
+      page: () => const ManageLeadsScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageQuotes,
+      page: () => const ManageQuotesScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageBookings,
+      page: () => const ManageBookingsScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageExperiences,
+      page: () => const ManageExperiencesScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageCategories,
+      page: () => const ManageCategoriesScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageCustomers,
+      page: () => const ManageCustomersScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageUsers,
+      page: () => const ManageAdminRolesScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.systemSettings,
+      page: () => const SystemSettingsScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manageReviews,
+      page: () => const ManageReviewsScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.adminProfile,
+      page: () => const ProfileScreen(),
+      binding: AdminBinding(),
+    ),
+    GetPage(name: AppRoutes.docs, page: () => const DocsScreen()),
+  ];
 }

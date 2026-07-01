@@ -4,7 +4,8 @@ class Booking {
   final String quotationId;
   final double advanceAmount;
   final String paymentStatus; // 'pending' | 'partially_paid' | 'paid'
-  final String status; // 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
+  final String
+  status; // 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
   final DateTime createdAt;
   final DateTime updatedAt;
 

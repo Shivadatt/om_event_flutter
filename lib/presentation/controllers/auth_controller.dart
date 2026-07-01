@@ -118,8 +118,11 @@ class AuthController extends GetxController {
       await checkAuthStatus();
       return true;
     } catch (e) {
-      Get.snackbar("Save Failed", "Could not save profile: ${e.toString()}",
-          backgroundColor: const Color(0xFF2D1515));
+      Get.snackbar(
+        "Save Failed",
+        "Could not save profile: ${e.toString()}",
+        backgroundColor: const Color(0xFF2D1515),
+      );
       return false;
     } finally {
       isProfileSaving.value = false;
@@ -138,8 +141,11 @@ class AuthController extends GetxController {
       await checkAuthStatus();
       return true;
     } catch (e) {
-      Get.snackbar("Upload Failed", "Could not update photo URL: ${e.toString()}",
-          backgroundColor: const Color(0xFF2D1515));
+      Get.snackbar(
+        "Upload Failed",
+        "Could not update photo URL: ${e.toString()}",
+        backgroundColor: const Color(0xFF2D1515),
+      );
       return false;
     } finally {
       isPhotoUploading.value = false;
@@ -169,23 +175,38 @@ class AuthController extends GetxController {
 
       // Then update password
       await user.updatePassword(newPassword);
-      Get.snackbar("Password Updated", "Your password was changed successfully.");
+      Get.snackbar(
+        "Password Updated",
+        "Your password was changed successfully.",
+      );
       return true;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        Get.snackbar("Incorrect Password", "The current password you entered is wrong.",
-            backgroundColor: const Color(0xFF2D1515));
+        Get.snackbar(
+          "Incorrect Password",
+          "The current password you entered is wrong.",
+          backgroundColor: const Color(0xFF2D1515),
+        );
       } else if (e.code == 'weak-password') {
-        Get.snackbar("Weak Password", "Please choose a stronger password.",
-            backgroundColor: const Color(0xFF2D1515));
+        Get.snackbar(
+          "Weak Password",
+          "Please choose a stronger password.",
+          backgroundColor: const Color(0xFF2D1515),
+        );
       } else {
-        Get.snackbar("Password Error", e.message ?? "Failed to change password.",
-            backgroundColor: const Color(0xFF2D1515));
+        Get.snackbar(
+          "Password Error",
+          e.message ?? "Failed to change password.",
+          backgroundColor: const Color(0xFF2D1515),
+        );
       }
       return false;
     } catch (e) {
-      Get.snackbar("Error", "Unexpected error: ${e.toString()}",
-          backgroundColor: const Color(0xFF2D1515));
+      Get.snackbar(
+        "Error",
+        "Unexpected error: ${e.toString()}",
+        backgroundColor: const Color(0xFF2D1515),
+      );
       return false;
     } finally {
       isPasswordChanging.value = false;

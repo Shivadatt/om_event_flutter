@@ -8,10 +8,14 @@ class DocsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? const Color(0xFF15211E) : const Color(0xFFFBF9F4);
-    final cardColor = isDark ? const Color(0xFF1E2E2A) : const Color(0xFFF4F0E6);
-    final textColor = isDark ? const Color(0xFFE5DDD0) : const Color(0xFF15211E);
-    final mutedColor = isDark ? const Color(0xFF9E9689) : const Color(0xFF5E6662);
+    final backgroundColor =
+        isDark ? const Color(0xFF15211E) : const Color(0xFFFBF9F4);
+    final cardColor =
+        isDark ? const Color(0xFF1E2E2A) : const Color(0xFFF4F0E6);
+    final textColor =
+        isDark ? const Color(0xFFE5DDD0) : const Color(0xFF15211E);
+    final mutedColor =
+        isDark ? const Color(0xFF9E9689) : const Color(0xFF5E6662);
     final goldColor = isDark ? AppTheme.darkGold : AppTheme.lightGold;
 
     return Scaffold(
@@ -80,10 +84,15 @@ class DocsScreen extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: cardColor,
-                          border: Border.all(color: goldColor.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: goldColor.withValues(alpha: 0.3),
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -191,20 +200,21 @@ class DocsScreen extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: endpoints.map((endpoint) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  endpoint,
-                  style: const TextStyle(
-                    fontFamily: 'Courier',
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFC39463),
-                  ),
-                ),
-              );
-            }).toList(),
+            children:
+                endpoints.map((endpoint) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      endpoint,
+                      style: const TextStyle(
+                        fontFamily: 'Courier',
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFC39463),
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
         ),
       ],

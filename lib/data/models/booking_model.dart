@@ -24,15 +24,21 @@ class BookingModel {
       id: id,
       bookingNumber: json['booking_number'] ?? json['bookingNumber'] ?? '',
       quotationId: json['quotation_id'] ?? json['quotationId'] ?? '',
-      advanceAmount: ((json['advance_amount'] ?? json['advanceAmount']) as num?)?.toDouble() ?? 0.0,
-      paymentStatus: json['payment_status'] ?? json['paymentStatus'] ?? 'pending',
+      advanceAmount:
+          ((json['advance_amount'] ?? json['advanceAmount']) as num?)
+              ?.toDouble() ??
+          0.0,
+      paymentStatus:
+          json['payment_status'] ?? json['paymentStatus'] ?? 'pending',
       status: json['status'] ?? 'pending',
-      createdAt: (json['created_at'] ?? json['createdAt']) != null 
-          ? DateTime.parse((json['created_at'] ?? json['createdAt'])) 
-          : DateTime.now(),
-      updatedAt: (json['updated_at'] ?? json['updatedAt']) != null 
-          ? DateTime.parse((json['updated_at'] ?? json['updatedAt'])) 
-          : DateTime.now(),
+      createdAt:
+          (json['created_at'] ?? json['createdAt']) != null
+              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
+              : DateTime.now(),
+      updatedAt:
+          (json['updated_at'] ?? json['updatedAt']) != null
+              ? DateTime.parse((json['updated_at'] ?? json['updatedAt']))
+              : DateTime.now(),
     );
   }
 

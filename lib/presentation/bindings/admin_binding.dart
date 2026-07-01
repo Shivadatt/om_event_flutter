@@ -28,7 +28,10 @@ class AdminBinding extends Bindings {
     Get.lazyPut<QuotationRepository>(
       () => QuotationRepositoryImpl(
         firestoreSource: Get.find(),
-        supabaseSource: Get.isRegistered<SupabaseStorageSource>() ? Get.find<SupabaseStorageSource>() : null,
+        supabaseSource:
+            Get.isRegistered<SupabaseStorageSource>()
+                ? Get.find<SupabaseStorageSource>()
+                : null,
       ),
       fenix: true,
     );

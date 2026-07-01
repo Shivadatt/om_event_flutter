@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../../core/extensions/string_extension.dart';
 
 class ItemVisualPlaceholder extends StatelessWidget {
   final String title;
@@ -22,17 +23,14 @@ class ItemVisualPlaceholder extends StatelessWidget {
     'entries': ['#9b81af', '#d4ad63', '#303344'],
   };
 
-  Color _parseHex(String hex) {
-    final cleanHex = hex.replaceAll('#', '');
-    return Color(int.parse('FF$cleanHex', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final palette = palettes[categorySlug.toLowerCase()] ?? ['#bd976c', '#8ba4a0', '#303b38'];
-    final colorA = _parseHex(palette[0]);
-    final colorB = _parseHex(palette[1]);
-    final colorC = _parseHex(palette[2]);
+    final palette =
+        palettes[categorySlug.toLowerCase()] ??
+        ['#bd976c', '#8ba4a0', '#303b38'];
+    final colorA = palette[0].toColor();
+    final colorB = palette[1].toColor();
+    final colorC = palette[2].toColor();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -41,11 +39,13 @@ class ItemVisualPlaceholder extends StatelessWidget {
           children: [
             // Custom Painter for Vector Background and Geometry
             Positioned.fill(
-              child: CustomPaint(
-                painter: SvgBackgroundPainter(
-                  a: colorA,
-                  b: colorB,
-                  c: colorC,
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: SvgBackgroundPainter(
+                    a: colorA,
+                    b: colorB,
+                    c: colorC,
+                  ),
                 ),
               ),
             ),
@@ -94,11 +94,7 @@ class SvgBackgroundPainter extends CustomPainter {
   final Color b;
   final Color c;
 
-  SvgBackgroundPainter({
-    required this.a,
-    required this.b,
-    required this.c,
-  });
+  SvgBackgroundPainter({required this.a, required this.b, required this.c});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -109,12 +105,12 @@ class SvgBackgroundPainter extends CustomPainter {
     canvas.scale(scaleX, scaleY);
 
     // 1. Draw linear gradient background (0,0) to (1200,850)
-    final bgPaint = Paint()
-      ..shader = ui.Gradient.linear(
-        Offset.zero,
-        const Offset(1200, 850),
-        [a, c],
-      );
+    final bgPaint =
+        Paint()
+          ..shader = ui.Gradient.linear(Offset.zero, const Offset(1200, 850), [
+            a,
+            c,
+          ]);
     canvas.drawRect(const Rect.fromLTWH(0, 0, 1200, 850), bgPaint);
 
     // 2. Draw grain pattern (simulated via dots grid)
@@ -131,57 +127,64 @@ class SvgBackgroundPainter extends CustomPainter {
     }
 
     // 3. Draw radial gradient glow at (950, 170)
-    final glowPaint = Paint()
-      ..shader = ui.Gradient.radial(
-        const Offset(950, 170),
-        330,
-        [b.withValues(alpha: 0.92), b.withValues(alpha: 0.0)],
-      );
+    final glowPaint =
+        Paint()
+          ..shader = ui.Gradient.radial(const Offset(950, 170), 330, [
+            b.withValues(alpha: 0.92),
+            b.withValues(alpha: 0.0),
+          ]);
     canvas.drawCircle(const Offset(950, 170), 330, glowPaint);
 
     // 4. Draw wave path at bottom: M0 650 Q230 510 450 645 T890 620 T1200 590 V850 H0Z fill #17221f opacity .58
-    final wavePath = Path()
-      ..moveTo(0, 650)
-      ..quadraticBezierTo(230, 510, 450, 645)
-      ..quadraticBezierTo(670, 780, 890, 620)
-      ..quadraticBezierTo(1110, 460, 1200, 590)
-      ..lineTo(1200, 850)
-      ..lineTo(0, 850)
-      ..close();
+    final wavePath =
+        Path()
+          ..moveTo(0, 650)
+          ..quadraticBezierTo(230, 510, 450, 645)
+          ..quadraticBezierTo(670, 780, 890, 620)
+          ..quadraticBezierTo(1110, 460, 1200, 590)
+          ..lineTo(1200, 850)
+          ..lineTo(0, 850)
+          ..close();
 
-    final wavePaint = Paint()
-      ..color = const Color(0xFF17221F).withValues(alpha: 0.58)
-      ..style = PaintingStyle.fill;
+    final wavePaint =
+        Paint()
+          ..color = const Color(0xFF17221F).withValues(alpha: 0.58)
+          ..style = PaintingStyle.fill;
     canvas.drawPath(wavePath, wavePaint);
 
     // 5. Draw arch shadow / fill: M435 650 V365 Q600 240 765 365 V650 fill #f8f0e6 opacity .18
-    final innerArchPath = Path()
-      ..moveTo(435, 650)
-      ..lineTo(435, 365)
-      ..quadraticBezierTo(600, 240, 765, 365)
-      ..lineTo(765, 650)
-      ..close();
-    final innerArchPaint = Paint()
-      ..color = const Color(0xFFF8F0E6).withValues(alpha: 0.18)
-      ..style = PaintingStyle.fill;
+    final innerArchPath =
+        Path()
+          ..moveTo(435, 650)
+          ..lineTo(435, 365)
+          ..quadraticBezierTo(600, 240, 765, 365)
+          ..lineTo(765, 650)
+          ..close();
+    final innerArchPaint =
+        Paint()
+          ..color = const Color(0xFFF8F0E6).withValues(alpha: 0.18)
+          ..style = PaintingStyle.fill;
     canvas.drawPath(innerArchPath, innerArchPaint);
 
     // 6. Draw arch line: M360 650 V330 Q600 145 840 330 V650 stroke 'b' stroke-width 22 opacity .85
-    final archPath = Path()
-      ..moveTo(360, 650)
-      ..lineTo(360, 330)
-      ..quadraticBezierTo(600, 145, 840, 330)
-      ..lineTo(840, 650);
-    final archPaint = Paint()
-      ..color = b.withValues(alpha: 0.85)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 22;
+    final archPath =
+        Path()
+          ..moveTo(360, 650)
+          ..lineTo(360, 330)
+          ..quadraticBezierTo(600, 145, 840, 330)
+          ..lineTo(840, 650);
+    final archPaint =
+        Paint()
+          ..color = b.withValues(alpha: 0.85)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 22;
     canvas.drawPath(archPath, archPaint);
 
     // 7. Draw balloons of color 'b' (opacity 0.9)
-    final balloonBPaint = Paint()
-      ..color = b.withValues(alpha: 0.9)
-      ..style = PaintingStyle.fill;
+    final balloonBPaint =
+        Paint()
+          ..color = b.withValues(alpha: 0.9)
+          ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(350, 345), 56, balloonBPaint);
     canvas.drawCircle(const Offset(414, 285), 42, balloonBPaint);
     canvas.drawCircle(const Offset(480, 246), 52, balloonBPaint);
@@ -190,26 +193,33 @@ class SvgBackgroundPainter extends CustomPainter {
     canvas.drawCircle(const Offset(850, 345), 56, balloonBPaint);
 
     // 8. Draw balloons of color 'a' (opacity 0.8)
-    final balloonAPaint = Paint()
-      ..color = a.withValues(alpha: 0.8)
-      ..style = PaintingStyle.fill;
+    final balloonAPaint =
+        Paint()
+          ..color = a.withValues(alpha: 0.8)
+          ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(323, 410), 38, balloonAPaint);
     canvas.drawCircle(const Offset(877, 410), 38, balloonAPaint);
     canvas.drawCircle(const Offset(540, 220), 35, balloonAPaint);
     canvas.drawCircle(const Offset(660, 220), 35, balloonAPaint);
 
     // 9. Draw poles: stroke 'b' stroke-width 4 opacity .8
-    final polePaint = Paint()
-      ..color = b.withValues(alpha: 0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
+    final polePaint =
+        Paint()
+          ..color = b.withValues(alpha: 0.8)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4;
     canvas.drawLine(const Offset(174, 560), const Offset(174, 300), polePaint);
-    canvas.drawLine(const Offset(1026, 560), const Offset(1026, 300), polePaint);
+    canvas.drawLine(
+      const Offset(1026, 560),
+      const Offset(1026, 300),
+      polePaint,
+    );
 
     // 10. Draw circles on top of poles
-    final poleTopPaint = Paint()
-      ..color = b
-      ..style = PaintingStyle.fill;
+    final poleTopPaint =
+        Paint()
+          ..color = b
+          ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(174, 290), 18, poleTopPaint);
     canvas.drawCircle(const Offset(1026, 290), 18, poleTopPaint);
 

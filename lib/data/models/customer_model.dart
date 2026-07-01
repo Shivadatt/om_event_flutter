@@ -30,12 +30,14 @@ class CustomerModel {
       address: json['address'] ?? '',
       city: json['city'] ?? '',
       mapLocation: json['map_location'] ?? json['mapLocation'] ?? '',
-      createdAt: (json['created_at'] ?? json['createdAt']) != null
-          ? DateTime.parse((json['created_at'] ?? json['createdAt']))
-          : DateTime.now(),
-      updatedAt: (json['updated_at'] ?? json['updatedAt']) != null
-          ? DateTime.parse((json['updated_at'] ?? json['updatedAt']))
-          : DateTime.now(),
+      createdAt:
+          (json['created_at'] ?? json['createdAt']) != null
+              ? DateTime.parse((json['created_at'] ?? json['createdAt']))
+              : DateTime.now(),
+      updatedAt:
+          (json['updated_at'] ?? json['updatedAt']) != null
+              ? DateTime.parse((json['updated_at'] ?? json['updatedAt']))
+              : DateTime.now(),
     );
   }
 

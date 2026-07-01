@@ -10,12 +10,17 @@ class CustomerRepositoryImpl implements CustomerRepository {
   @override
   Future<List<CustomerModel>> getCustomers() async {
     final docs = await firestoreSource.fetchCustomers();
-    return docs.map((doc) => CustomerModel.fromJson(doc.data(), doc.id)).toList();
+    return docs
+        .map((doc) => CustomerModel.fromJson(doc.data(), doc.id))
+        .toList();
   }
 
   @override
   Future<void> updateCustomer(CustomerModel customer) async {
-    await firestoreSource.updateCustomerDetails(customer.phone, customer.toJson());
+    await firestoreSource.updateCustomerDetails(
+      customer.phone,
+      customer.toJson(),
+    );
   }
 
   @override

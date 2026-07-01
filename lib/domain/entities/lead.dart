@@ -3,7 +3,8 @@ class Lead {
   final String name;
   final String phone;
   final String email;
-  final String requestType; // 'callback' | 'discount' | 'package' | 'meeting' | 'site_visit'
+  final String
+  requestType; // 'callback' | 'discount' | 'package' | 'meeting' | 'site_visit'
   final DateTime? eventDate;
   final double? budget;
   final String requirements;

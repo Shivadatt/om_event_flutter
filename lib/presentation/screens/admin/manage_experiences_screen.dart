@@ -16,7 +16,12 @@ class ManageExperiencesScreen extends GetView<AdminController> {
       appBar: AppBar(
         title: Text(
           "MANAGE CATALOG",
-          style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
+          style: AppTheme.sansBody(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: Colors.white,
+          ),
         ),
         actions: [
           IconButton(
@@ -43,7 +48,9 @@ class ManageExperiencesScreen extends GetView<AdminController> {
             return Card(
               margin: const EdgeInsets.only(bottom: 14),
               color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(2),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -52,23 +59,47 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                       width: 60,
                       height: 60,
                       color: Colors.grey.shade900,
-                      child: item.imageUrl.isNotEmpty
-                          ? Image.network(
-                              item.imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 20),
-                            )
-                          : const Icon(Icons.image, size: 20),
+                      child:
+                          item.imageUrl.isNotEmpty
+                              ? Image.network(
+                                item.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (_, __, ___) =>
+                                        const Icon(Icons.image, size: 20),
+                              )
+                              : const Icon(Icons.image, size: 20),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item.name, style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text(item.categoryName, style: AppTheme.sansBody(fontSize: 11, color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted)),
+                          Text(
+                            item.name,
+                            style: AppTheme.serifHeader(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            item.categoryName,
+                            style: AppTheme.sansBody(
+                              fontSize: 11,
+                              color:
+                                  isDark
+                                      ? AppTheme.darkMuted
+                                      : AppTheme.lightMuted,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text(AppFormatters.formatCurrency(item.effectivePrice), style: AppTheme.sansBody(fontSize: 13, fontWeight: FontWeight.bold)),
+                          Text(
+                            AppFormatters.formatCurrency(item.effectivePrice),
+                            style: AppTheme.sansBody(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -77,24 +108,42 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                       children: [
                         Row(
                           children: [
-                            const Text("Active", style: TextStyle(fontSize: 10)),
+                            const Text(
+                              "Active",
+                              style: TextStyle(fontSize: 10),
+                            ),
                             Switch(
                               value: item.isActive,
                               onChanged: (val) {
-                                final updated = _copyWithActiveFeatured(item, active: val);
-                                controller.saveExperience(updated, isEdit: true);
+                                final updated = _copyWithActiveFeatured(
+                                  item,
+                                  active: val,
+                                );
+                                controller.saveExperience(
+                                  updated,
+                                  isEdit: true,
+                                );
                               },
                             ),
                           ],
                         ),
                         Row(
                           children: [
-                            const Text("Featured", style: TextStyle(fontSize: 10)),
+                            const Text(
+                              "Featured",
+                              style: TextStyle(fontSize: 10),
+                            ),
                             Switch(
                               value: item.isFeatured,
                               onChanged: (val) {
-                                final updated = _copyWithActiveFeatured(item, featured: val);
-                                controller.saveExperience(updated, isEdit: true);
+                                final updated = _copyWithActiveFeatured(
+                                  item,
+                                  featured: val,
+                                );
+                                controller.saveExperience(
+                                  updated,
+                                  isEdit: true,
+                                );
                               },
                             ),
                           ],
@@ -103,16 +152,24 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit_outlined, size: 18),
-                              onPressed: () => _showExperienceDialog(context, experience: item),
+                              onPressed:
+                                  () => _showExperienceDialog(
+                                    context,
+                                    experience: item,
+                                  ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: Colors.redAccent,
+                              ),
                               onPressed: () => _confirmDelete(item.slug),
                             ),
                           ],
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -123,7 +180,11 @@ class ManageExperiencesScreen extends GetView<AdminController> {
     );
   }
 
-  Experience _copyWithActiveFeatured(Experience item, {bool? active, bool? featured}) {
+  Experience _copyWithActiveFeatured(
+    Experience item, {
+    bool? active,
+    bool? featured,
+  }) {
     return Experience(
       id: item.id,
       categoryId: item.categoryId,
@@ -153,12 +214,11 @@ class ManageExperiencesScreen extends GetView<AdminController> {
     Get.dialog(
       AlertDialog(
         title: const Text("Delete Experience"),
-        content: Text("Are you sure you want to delete experience '$slug'? This will remove it from the catalog."),
+        content: Text(
+          "Are you sure you want to delete experience '$slug'? This will remove it from the catalog.",
+        ),
         actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Get.back(),
-          ),
+          TextButton(child: const Text("Cancel"), onPressed: () => Get.back()),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Delete"),
@@ -177,15 +237,27 @@ class ManageExperiencesScreen extends GetView<AdminController> {
     final nameCtrl = TextEditingController(text: experience?.name ?? '');
     final slugCtrl = TextEditingController(text: experience?.slug ?? '');
     final descCtrl = TextEditingController(text: experience?.description ?? '');
-    final priceCtrl = TextEditingController(text: experience?.price.toString() ?? '');
-    final offerCtrl = TextEditingController(text: experience?.offerPrice?.toString() ?? '');
-    final durCtrl = TextEditingController(text: experience?.durationHours.toString() ?? '3');
+    final priceCtrl = TextEditingController(
+      text: experience?.price.toString() ?? '',
+    );
+    final offerCtrl = TextEditingController(
+      text: experience?.offerPrice?.toString() ?? '',
+    );
+    final durCtrl = TextEditingController(
+      text: experience?.durationHours.toString() ?? '3',
+    );
     final imgCtrl = TextEditingController(text: experience?.imageUrl ?? '');
     final vidCtrl = TextEditingController(text: experience?.videoUrl ?? '');
-    
-    final tagsCtrl = TextEditingController(text: experience?.tags.join(', ') ?? '');
-    final colorsCtrl = TextEditingController(text: experience?.colors.join(', ') ?? '');
-    final themesCtrl = TextEditingController(text: experience?.themes.join(', ') ?? '');
+
+    final tagsCtrl = TextEditingController(
+      text: experience?.tags.join(', ') ?? '',
+    );
+    final colorsCtrl = TextEditingController(
+      text: experience?.colors.join(', ') ?? '',
+    );
+    final themesCtrl = TextEditingController(
+      text: experience?.themes.join(', ') ?? '',
+    );
 
     String? selectedCategoryId = experience?.categoryId;
     if (selectedCategoryId == null && controller.rxCategories.isNotEmpty) {
@@ -210,7 +282,11 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                     decoration: const InputDecoration(labelText: "Name"),
                     onChanged: (val) {
                       if (!isEdit) {
-                        slugCtrl.text = val.toLowerCase().trim().replaceAll(RegExp(r'\s+'), '-').replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+                        slugCtrl.text = val
+                            .toLowerCase()
+                            .trim()
+                            .replaceAll(RegExp(r'\s+'), '-')
+                            .replaceAll(RegExp(r'[^a-z0-9\-]'), '');
                       }
                     },
                   ),
@@ -222,9 +298,13 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                   DropdownButtonFormField<String>(
                     value: selectedCategoryId,
                     decoration: const InputDecoration(labelText: "Category"),
-                    items: controller.rxCategories.map((c) {
-                      return DropdownMenuItem(value: c.id, child: Text(c.name));
-                    }).toList(),
+                    items:
+                        controller.rxCategories.map((c) {
+                          return DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.name),
+                          );
+                        }).toList(),
                     onChanged: (val) {
                       setState(() {
                         selectedCategoryId = val;
@@ -242,20 +322,32 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                   ),
                   TextField(
                     controller: offerCtrl,
-                    decoration: const InputDecoration(labelText: "Offer Price (Discounted, Optional)"),
+                    decoration: const InputDecoration(
+                      labelText: "Offer Price (Discounted, Optional)",
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                   TextField(
                     controller: durCtrl,
-                    decoration: const InputDecoration(labelText: "Duration (Hours)"),
+                    decoration: const InputDecoration(
+                      labelText: "Duration (Hours)",
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                   DropdownButtonFormField<String>(
                     value: availability,
-                    decoration: const InputDecoration(labelText: "Availability"),
+                    decoration: const InputDecoration(
+                      labelText: "Availability",
+                    ),
                     items: const [
-                      DropdownMenuItem(value: 'available', child: Text("Available")),
-                      DropdownMenuItem(value: 'unavailable', child: Text("Unavailable")),
+                      DropdownMenuItem(
+                        value: 'available',
+                        child: Text("Available"),
+                      ),
+                      DropdownMenuItem(
+                        value: 'unavailable',
+                        child: Text("Unavailable"),
+                      ),
                       DropdownMenuItem(value: 'booked', child: Text("Booked")),
                     ],
                     onChanged: (val) {
@@ -268,15 +360,21 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                   ),
                   TextField(
                     controller: tagsCtrl,
-                    decoration: const InputDecoration(labelText: "Tags (comma-separated)"),
+                    decoration: const InputDecoration(
+                      labelText: "Tags (comma-separated)",
+                    ),
                   ),
                   TextField(
                     controller: colorsCtrl,
-                    decoration: const InputDecoration(labelText: "Colors (comma-separated)"),
+                    decoration: const InputDecoration(
+                      labelText: "Colors (comma-separated)",
+                    ),
                   ),
                   TextField(
                     controller: themesCtrl,
-                    decoration: const InputDecoration(labelText: "Themes (comma-separated)"),
+                    decoration: const InputDecoration(
+                      labelText: "Themes (comma-separated)",
+                    ),
                   ),
                   TextField(
                     controller: imgCtrl,
@@ -307,15 +405,22 @@ class ManageExperiencesScreen extends GetView<AdminController> {
               ElevatedButton(
                 child: const Text("Save"),
                 onPressed: () {
-                  if (nameCtrl.text.isEmpty || slugCtrl.text.isEmpty || selectedCategoryId == null) {
-                    Get.snackbar("Validation Error", "Name, Slug and Category are required.");
+                  if (nameCtrl.text.isEmpty ||
+                      slugCtrl.text.isEmpty ||
+                      selectedCategoryId == null) {
+                    Get.snackbar(
+                      "Validation Error",
+                      "Name, Slug and Category are required.",
+                    );
                     return;
                   }
                   final price = double.tryParse(priceCtrl.text) ?? 0.0;
                   final offerPrice = double.tryParse(offerCtrl.text);
                   final duration = double.tryParse(durCtrl.text) ?? 3.0;
 
-                  final cat = controller.rxCategories.firstWhere((c) => c.id == selectedCategoryId);
+                  final cat = controller.rxCategories.firstWhere(
+                    (c) => c.id == selectedCategoryId,
+                  );
 
                   final updated = Experience(
                     id: experience?.id ?? slugCtrl.text,
@@ -332,9 +437,24 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                     rating: experience?.rating ?? 5.0,
                     reviewCount: experience?.reviewCount ?? 0,
                     availability: availability,
-                    tags: tagsCtrl.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList(),
-                    colors: colorsCtrl.text.split(',').map((c) => c.trim()).where((c) => c.isNotEmpty).toList(),
-                    themes: themesCtrl.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList(),
+                    tags:
+                        tagsCtrl.text
+                            .split(',')
+                            .map((t) => t.trim())
+                            .where((t) => t.isNotEmpty)
+                            .toList(),
+                    colors:
+                        colorsCtrl.text
+                            .split(',')
+                            .map((c) => c.trim())
+                            .where((c) => c.isNotEmpty)
+                            .toList(),
+                    themes:
+                        themesCtrl.text
+                            .split(',')
+                            .map((t) => t.trim())
+                            .where((t) => t.isNotEmpty)
+                            .toList(),
                     imageUrl: imgCtrl.text.trim(),
                     videoUrl: vidCtrl.text.trim(),
                     isFeatured: isFeatured,

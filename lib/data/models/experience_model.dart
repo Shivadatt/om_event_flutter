@@ -25,18 +25,30 @@ class ExperienceModel extends Experience {
     required super.isActive,
   });
 
-  factory ExperienceModel.fromJson(Map<String, dynamic> json, String documentId) {
+  factory ExperienceModel.fromJson(
+    Map<String, dynamic> json,
+    String documentId,
+  ) {
     return ExperienceModel(
       id: documentId,
       categoryId: json['category_id'] ?? json['categoryId'] ?? '',
       categoryName: json['category_name'] ?? json['categoryName'] ?? '',
-      categorySlug: json['category_slug'] ?? json['categorySlug'] ?? json['category_id'] ?? json['categoryId'] ?? '',
+      categorySlug:
+          json['category_slug'] ??
+          json['categorySlug'] ??
+          json['category_id'] ??
+          json['categoryId'] ??
+          '',
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      offerPrice: (json['offer_price'] ?? json['offerPrice'] as num?)?.toDouble(),
-      durationHours: (json['duration_hours'] ?? json['durationHours'] as num?)?.toDouble() ?? 3.0,
+      offerPrice:
+          (json['offer_price'] ?? json['offerPrice'] as num?)?.toDouble(),
+      durationHours:
+          (json['duration_hours'] ?? json['durationHours'] as num?)
+              ?.toDouble() ??
+          3.0,
       popularity: json['popularity'] ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
       reviewCount: json['review_count'] ?? json['reviewCount'] ?? 0,

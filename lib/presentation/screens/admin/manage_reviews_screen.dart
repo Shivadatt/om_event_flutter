@@ -14,7 +14,12 @@ class ManageReviewsScreen extends GetView<AdminController> {
       appBar: AppBar(
         title: Text(
           "CUSTOMER REVIEWS",
-          style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
+          style: AppTheme.sansBody(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: Colors.white,
+          ),
         ),
         actions: [
           IconButton(
@@ -25,12 +30,21 @@ class ManageReviewsScreen extends GetView<AdminController> {
       ),
       body: Obx(() {
         if (controller.isLoadingReviews.value) {
-          return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Color(0xFFC8A26A))));
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation(Color(0xFFC8A26A)),
+            ),
+          );
         }
 
         final reviews = controller.rxReviews;
         if (reviews.isEmpty) {
-          return const Center(child: Text("No customer reviews registered yet.", style: TextStyle(color: Colors.grey)));
+          return const Center(
+            child: Text(
+              "No customer reviews registered yet.",
+              style: TextStyle(color: Colors.grey),
+            ),
+          );
         }
 
         return ListView.builder(
@@ -59,8 +73,13 @@ class ManageReviewsScreen extends GetView<AdminController> {
                               backgroundColor: const Color(0xFF0D1915),
                               radius: 18,
                               child: Text(
-                                review.customerName.isEmpty ? 'C' : review.customerName[0].toUpperCase(),
-                                style: const TextStyle(color: Color(0xFFC8A26A), fontWeight: FontWeight.bold),
+                                review.customerName.isEmpty
+                                    ? 'C'
+                                    : review.customerName[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Color(0xFFC8A26A),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -69,11 +88,18 @@ class ManageReviewsScreen extends GetView<AdminController> {
                               children: [
                                 Text(
                                   review.customerName,
-                                  style: AppTheme.serifHeader(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: AppTheme.serifHeader(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                                 Text(
                                   review.eventName,
-                                  style: AppTheme.sansBody(fontSize: 11, color: const Color(0xFFA4A9A7)),
+                                  style: AppTheme.sansBody(
+                                    fontSize: 11,
+                                    color: const Color(0xFFA4A9A7),
+                                  ),
                                 ),
                               ],
                             ),
@@ -82,7 +108,9 @@ class ManageReviewsScreen extends GetView<AdminController> {
                         Row(
                           children: List.generate(5, (starIdx) {
                             return Icon(
-                              starIdx < review.rating ? Icons.star : Icons.star_border,
+                              starIdx < review.rating
+                                  ? Icons.star
+                                  : Icons.star_border,
                               color: const Color(0xFFC8A26A),
                               size: 16,
                             );
@@ -93,7 +121,11 @@ class ManageReviewsScreen extends GetView<AdminController> {
                     const SizedBox(height: 12),
                     Text(
                       review.comment,
-                      style: AppTheme.sansBody(fontSize: 13, color: Colors.white70, height: 1.4),
+                      style: AppTheme.sansBody(
+                        fontSize: 13,
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -101,13 +133,22 @@ class ManageReviewsScreen extends GetView<AdminController> {
                       children: [
                         Row(
                           children: [
-                            const Text("Published", style: TextStyle(fontSize: 11, color: Color(0xFFA4A9A7))),
+                            const Text(
+                              "Published",
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFFA4A9A7),
+                              ),
+                            ),
                             const SizedBox(width: 6),
                             Switch(
                               value: review.isPublished,
                               activeColor: const Color(0xFFC8A26A),
                               onChanged: (val) {
-                                final updated = _copyWith(review, isPublished: val);
+                                final updated = _copyWith(
+                                  review,
+                                  isPublished: val,
+                                );
                                 controller.saveReview(updated, isEdit: true);
                               },
                             ),
@@ -116,12 +157,25 @@ class ManageReviewsScreen extends GetView<AdminController> {
                         Row(
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 20, color: Color(0xFFA4A9A7)),
-                              onPressed: () => _showReviewDialog(context, review: review),
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                size: 20,
+                                color: Color(0xFFA4A9A7),
+                              ),
+                              onPressed:
+                                  () => _showReviewDialog(
+                                    context,
+                                    review: review,
+                                  ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
-                              onPressed: () => controller.deleteReview(review.id),
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                size: 20,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed:
+                                  () => controller.deleteReview(review.id),
                             ),
                           ],
                         ),
@@ -153,7 +207,12 @@ class ManageReviewsScreen extends GetView<AdminController> {
         ),
         title: Text(
           isEdit ? "EDIT REVIEW" : "ADD REVIEW",
-          style: const TextStyle(color: Color(0xFFC8A26A), fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1),
+          style: const TextStyle(
+            color: Color(0xFFC8A26A),
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -168,13 +227,23 @@ class ManageReviewsScreen extends GetView<AdminController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Rating Status", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const Text(
+                    "Rating Status",
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
                   DropdownButton<double>(
                     value: ratingVal,
                     dropdownColor: const Color(0xFF162822),
-                    items: [5.0, 4.0, 3.0, 2.0, 1.0].map((r) {
-                      return DropdownMenuItem(value: r, child: Text(r.toInt().toString(), style: const TextStyle(color: Colors.white)));
-                    }).toList(),
+                    items:
+                        [5.0, 4.0, 3.0, 2.0, 1.0].map((r) {
+                          return DropdownMenuItem(
+                            value: r,
+                            child: Text(
+                              r.toInt().toString(),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          );
+                        }).toList(),
                     onChanged: (val) {
                       if (val != null) ratingVal = val;
                     },
@@ -190,10 +259,14 @@ class ManageReviewsScreen extends GetView<AdminController> {
             child: const Text("CANCEL", style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC8A26A)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC8A26A),
+            ),
             onPressed: () {
               final newReview = ReviewModel(
-                id: review?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                id:
+                    review?.id ??
+                    DateTime.now().millisecondsSinceEpoch.toString(),
                 customerName: nameCtrl.text,
                 eventName: eventCtrl.text,
                 rating: ratingVal.toInt(),
@@ -206,18 +279,35 @@ class ManageReviewsScreen extends GetView<AdminController> {
               controller.saveReview(newReview, isEdit: isEdit);
               Get.back();
             },
-            child: const Text("SAVE", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "SAVE",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, {int maxLines = 1}) {
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl, {
+    int maxLines = 1,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFFC8A26A), fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Color(0xFFC8A26A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,
@@ -226,7 +316,9 @@ class ManageReviewsScreen extends GetView<AdminController> {
           decoration: const InputDecoration(
             fillColor: Color(0xFF0D1915),
             filled: true,
-            border: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF254235))),
+            border: OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF254235)),
+            ),
           ),
         ),
       ],
