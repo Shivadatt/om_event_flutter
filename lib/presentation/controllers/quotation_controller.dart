@@ -5,10 +5,12 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../core/config/app_routes.dart';
 import '../../core/config/constants.dart';
 import '../../core/utils/validators.dart';
+
 import '../../domain/entities/quotation.dart';
 import '../../domain/usecases/create_quotation.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../core/utils/app_logger.dart';
+import '../../core/services/business_details_service.dart';
 import 'cart_controller.dart';
 
 class QuotationController extends GetxController {
@@ -454,7 +456,7 @@ class QuotationController extends GetxController {
               pw.SizedBox(height: 4),
               pw.Center(
                 child: pw.Text(
-                  "${AppConstants.businessEmail}   •   +${AppConstants.businessPhone}",
+                  "${AppConstants.businessEmail}   •   ${BusinessDetailsService.to.rxDetails.value.contacts.phones.where((c) => c.isActive).map((c) => c.value).join(' / ')}",
                   style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey),
                 ),
               ),

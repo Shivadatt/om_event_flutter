@@ -18,6 +18,7 @@ class AppRoutes {
   static const String manageCustomers = '/admin/customers';
   static const String manageUsers = '/admin/users';
   static const String systemSettings = '/admin/settings';
+  static const String businessDetails = '/admin/business-details';
   static const String manageReviews = '/admin/reviews';
   static const String adminProfile = '/admin/profile';
   static const String docs = '/docs';

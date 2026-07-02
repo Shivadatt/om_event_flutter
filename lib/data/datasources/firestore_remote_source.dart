@@ -121,14 +121,30 @@ class FirestoreRemoteSource {
         .where('is_published', isEqualTo: true)
         .snapshots()
         .map((snap) {
-          final docs = snap.docs.toList();
-          // Sort by created_at descending in-memory (no composite index needed)
+          final docs = snap.docs.where((doc) {
+            final data = doc.data();
+            final isActive = data['is_active'] ?? data['isActive'] ?? true;
+            return isActive == true;
+          }).toList();
+
           docs.sort((a, b) {
-            final da = a.data()['created_at'] ?? '';
-            final db = b.data()['created_at'] ?? '';
-            return db.toString().compareTo(da.toString());
+            final dataA = a.data();
+            final dataB = b.data();
+
+            final featA = dataA['is_featured'] ?? dataA['isFeatured'] ?? false;
+            final featB = dataB['is_featured'] ?? dataB['isFeatured'] ?? false;
+            if (featA != featB) return featB ? 1 : -1;
+
+            final orderA = dataA['display_order'] ?? dataA['displayOrder'] ?? 1;
+            final orderB = dataB['display_order'] ?? dataB['displayOrder'] ?? 1;
+            if (orderA != orderB) return orderA.compareTo(orderB);
+
+            final dateA = dataA['created_at'] ?? '';
+            final dateB = dataB['created_at'] ?? '';
+            return dateB.toString().compareTo(dateA.toString());
           });
-          return docs.length > 12 ? docs.sublist(0, 12) : docs;
+
+          return docs;
         });
   }
 
@@ -239,14 +255,35 @@ class FirestoreRemoteSource {
   /// Fetch the 12 most recent published reviews.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
   fetchPublishedReviews() async {
-    final snap =
-        await _firestore
-            .collection(AppCollections.reviews)
-            .where('is_published', isEqualTo: true)
-            .orderBy('created_at', descending: true)
-            .limit(12)
-            .get();
-    return snap.docs;
+    final snap = await _firestore
+        .collection(AppCollections.reviews)
+        .where('is_published', isEqualTo: true)
+        .get();
+
+    final docs = snap.docs.where((doc) {
+      final data = doc.data();
+      final isActive = data['is_active'] ?? data['isActive'] ?? true;
+      return isActive == true;
+    }).toList();
+
+    docs.sort((a, b) {
+      final dataA = a.data();
+      final dataB = b.data();
+
+      final featA = dataA['is_featured'] ?? dataA['isFeatured'] ?? false;
+      final featB = dataB['is_featured'] ?? dataB['isFeatured'] ?? false;
+      if (featA != featB) return featB ? 1 : -1;
+
+      final orderA = dataA['display_order'] ?? dataA['displayOrder'] ?? 1;
+      final orderB = dataB['display_order'] ?? dataB['displayOrder'] ?? 1;
+      if (orderA != orderB) return orderA.compareTo(orderB);
+
+      final dateA = dataA['created_at'] ?? '';
+      final dateB = dataB['created_at'] ?? '';
+      return dateB.toString().compareTo(dateA.toString());
+    });
+
+    return docs.length > 12 ? docs.sublist(0, 12) : docs;
   }
 
   // ── Leads ─────────────────────────────────────────────────────────────────

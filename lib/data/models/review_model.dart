@@ -12,6 +12,9 @@ class ReviewModel extends Review {
     required super.isPublished,
     super.experienceId,
     required super.createdAt,
+    super.isFeatured,
+    super.displayOrder,
+    super.isActive,
   });
 
   static DateTime _parseDateTime(dynamic value) {
@@ -38,6 +41,9 @@ class ReviewModel extends Review {
       isPublished: json['is_published'] ?? json['isPublished'] ?? false,
       experienceId: json['experience_id'] ?? json['experienceId'],
       createdAt: _parseDateTime(json['created_at'] ?? json['createdAt']),
+      isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
+      displayOrder: json['display_order'] ?? json['displayOrder'] ?? 1,
+      isActive: json['is_active'] ?? json['isActive'] ?? true,
     );
   }
 
@@ -52,6 +58,9 @@ class ReviewModel extends Review {
       'is_published': isPublished,
       'experience_id': experienceId,
       'created_at': createdAt.toIso8601String(),
+      'is_featured': isFeatured,
+      'display_order': displayOrder,
+      'is_active': isActive,
     };
   }
 }

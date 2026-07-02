@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/services/app_config_service.dart';
 import 'package:om_event/domain/entities/settings_entities.dart';
+import 'package:om_event/domain/entities/contact_number_entity.dart';
 import 'package:om_event/domain/repositories/settings_repository.dart';
+import 'package:om_event/core/utils/validators.dart';
 import 'widgets/admin_back_button.dart';
 
 class SystemSettingsScreen extends StatefulWidget {
@@ -25,6 +27,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
   final _busCompany = TextEditingController();
   final _busPhone = TextEditingController();
   final _busEmail = TextEditingController();
+  List<ContactNumberEntity> _contactNumbers = [];
 
   // Branch 1
   final _b1Name = TextEditingController();
@@ -250,7 +253,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
     final bus = AppConfigService.to.rxBusinessProfile.value;
     _busName.text = bus.name;
     _busCompany.text = bus.companyName;
-    _busPhone.text = bus.phone;
+    _contactNumbers = List.from(bus.contactNumbers)
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     _busEmail.text = bus.email;
 
     final branches = bus.officeBranches;
@@ -1152,7 +1156,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
         const SizedBox(height: 24),
         _field("Business Name *", _busName),
         _field("Company Name", _busCompany),
-        _field("General Support Phone", _busPhone),
+        _buildBusinessContactNumbers(),
         _field("General Support Email", _busEmail),
         const SizedBox(height: 32),
         Text(
@@ -1267,6 +1271,25 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                   orElse: () => updatedBranches.first,
                 );
 
+                if (_contactNumbers.isEmpty) {
+                  Get.snackbar(
+                    "Validation Error",
+                    "At least one contact number is required.",
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                  return;
+                }
+                if (!_contactNumbers.any((c) => c.isPrimary && c.isActive)) {
+                  Get.snackbar(
+                    "Validation Error",
+                    "One active contact number must be marked as Primary.",
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                  return;
+                }
+
                 final busCurrent = AppConfigService.to.rxBusinessProfile.value;
                 await _repository.saveBusiness(
                   BusinessProfile(
@@ -1278,7 +1301,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                     gst: busCurrent.gst,
                     pan: busCurrent.pan,
                     ownerName: busCurrent.ownerName,
-                    phone: primaryBranch.phone1,
+                    contactNumbers: _contactNumbers,
                     email:
                         primaryBranch.email.isNotEmpty
                             ? primaryBranch.email
@@ -1312,6 +1335,535 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
           child: const Text("Save & Publish Live"),
         ),
       ],
+    );
+  }
+
+  Widget _buildBusinessContactNumbers() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    const int maxContactNumbers = 10; // Configurable maximum
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Business Contact Numbers",
+              style: GoogleFonts.italiana(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFC9A77E),
+              ),
+            ),
+            if (_contactNumbers.length < maxContactNumbers)
+              TextButton.icon(
+                onPressed: _showAddContactDialog,
+                icon: const Icon(Icons.add, color: Color(0xFFC9A77E)),
+                label: Text(
+                  "Add Contact Number",
+                  style: AppTheme.sansBody(
+                    fontSize: 12,
+                    color: const Color(0xFFC9A77E),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_contactNumbers.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              "No contact numbers configured. Add at least one.",
+              style: AppTheme.sansBody(fontSize: 14, color: Colors.red),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black12,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _contactNumbers.length,
+              onReorder: (oldIndex, newIndex) {
+                setState(() {
+                  if (oldIndex < newIndex) {
+                    newIndex -= 1;
+                  }
+                  final item = _contactNumbers.removeAt(oldIndex);
+                  _contactNumbers.insert(newIndex, item);
+                  // Update displayOrder
+                  for (int i = 0; i < _contactNumbers.length; i++) {
+                    final c = _contactNumbers[i];
+                    _contactNumbers[i] = ContactNumberEntity(
+                      id: c.id,
+                      label: c.label,
+                      number: c.number,
+                      isPrimary: c.isPrimary,
+                      isActive: c.isActive,
+                      displayOrder: i + 1,
+                    );
+                  }
+                });
+              },
+              itemBuilder: (context, index) {
+                final cn = _contactNumbers[index];
+                return Container(
+                  key: ValueKey(cn.id),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: index == _contactNumbers.length - 1
+                          ? BorderSide.none
+                          : BorderSide(
+                              color: isDark ? Colors.white10 : Colors.black12,
+                            ),
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(Icons.drag_handle, color: Colors.grey),
+                    title: Row(
+                      children: [
+                        Text(
+                          cn.number,
+                          style: AppTheme.sansBody(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (cn.isPrimary)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC9A77E),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              "Primary",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 6),
+                        if (!cn.isPrimary && index == 1)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white10 : Colors.black12,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              "Secondary",
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    subtitle: Text(
+                      cn.label,
+                      style: AppTheme.sansBody(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Switch(
+                          value: cn.isActive,
+                          activeColor: const Color(0xFFC9A77E),
+                          onChanged: (val) {
+                            if (!val && cn.isPrimary) {
+                              Get.snackbar(
+                                "Error",
+                                "Cannot disable the primary contact number.",
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+                            if (!val && _contactNumbers.where((c) => c.isActive).length <= 1) {
+                              Get.snackbar(
+                                "Error",
+                                "At least one contact number must remain active.",
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+                            setState(() {
+                              _contactNumbers[index] = ContactNumberEntity(
+                                id: cn.id,
+                                label: cn.label,
+                                number: cn.number,
+                                isPrimary: cn.isPrimary,
+                                isActive: val,
+                                displayOrder: cn.displayOrder,
+                              );
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () => _showEditContactDialog(cn, index),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            if (cn.isPrimary) {
+                              Get.snackbar(
+                                "Error",
+                                "Cannot delete the primary contact number.",
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+                            if (_contactNumbers.length <= 1) {
+                              Get.snackbar(
+                                "Error",
+                                "At least one contact number is required.",
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+                            setState(() {
+                              _contactNumbers.removeAt(index);
+                              for (int i = 0; i < _contactNumbers.length; i++) {
+                                final c = _contactNumbers[i];
+                                _contactNumbers[i] = ContactNumberEntity(
+                                  id: c.id,
+                                  label: c.label,
+                                  number: c.number,
+                                  isPrimary: c.isPrimary,
+                                  isActive: c.isActive,
+                                  displayOrder: i + 1,
+                                );
+                              }
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  void _showAddContactDialog() {
+    final numberCtrl = TextEditingController();
+    final labelCtrl = TextEditingController(text: "Mobile");
+    bool isPrimaryVal = _contactNumbers.isEmpty;
+    bool isActiveVal = true;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Add Contact Number"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: numberCtrl,
+                      decoration: const InputDecoration(
+                        labelText: "Phone Number (e.g. 9512149944)",
+                        hintText: "10-digit Indian number",
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: labelCtrl,
+                      decoration: const InputDecoration(
+                        labelText: "Label (e.g. Primary, Secondary, Office)",
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CheckboxListTile(
+                      title: const Text("Set as Primary Number"),
+                      value: isPrimaryVal,
+                      activeColor: const Color(0xFFC9A77E),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          isPrimaryVal = val ?? false;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: const Text("Is Active"),
+                      value: isActiveVal,
+                      activeColor: const Color(0xFFC9A77E),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          isActiveVal = val ?? true;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final numStr = numberCtrl.text.trim();
+                    final lblStr = labelCtrl.text.trim();
+
+                    if (!AppValidators.isValidPhone(numStr)) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "Please enter a valid 10-digit number.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+                    final formattedNum = AppValidators.cleanPhone(numStr);
+                    if (_contactNumbers.any((c) => c.number.endsWith(formattedNum))) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "This contact number already exists.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+                    if (lblStr.isEmpty) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "Label cannot be empty.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+                    if (!isActiveVal && isPrimaryVal) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "Primary number must be active.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      if (isPrimaryVal) {
+                        for (int i = 0; i < _contactNumbers.length; i++) {
+                          final c = _contactNumbers[i];
+                          _contactNumbers[i] = ContactNumberEntity(
+                            id: c.id,
+                            label: c.label,
+                            number: c.number,
+                            isPrimary: false,
+                            isActive: c.isActive,
+                            displayOrder: c.displayOrder,
+                          );
+                        }
+                      }
+
+                      _contactNumbers.add(
+                        ContactNumberEntity(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          label: lblStr,
+                          number: formattedNum,
+                          isPrimary: isPrimaryVal,
+                          isActive: isActiveVal,
+                          displayOrder: _contactNumbers.length + 1,
+                        ),
+                      );
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Add"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditContactDialog(ContactNumberEntity cn, int index) {
+    final numberCtrl = TextEditingController(text: cn.number);
+    final labelCtrl = TextEditingController(text: cn.label);
+    bool isPrimaryVal = cn.isPrimary;
+    bool isActiveVal = cn.isActive;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Edit Contact Number"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: numberCtrl,
+                      decoration: const InputDecoration(
+                        labelText: "Phone Number",
+                        hintText: "10-digit Indian number",
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: labelCtrl,
+                      decoration: const InputDecoration(
+                        labelText: "Label",
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CheckboxListTile(
+                      title: const Text("Set as Primary Number"),
+                      value: isPrimaryVal,
+                      activeColor: const Color(0xFFC9A77E),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          isPrimaryVal = val ?? false;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: const Text("Is Active"),
+                      value: isActiveVal,
+                      activeColor: const Color(0xFFC9A77E),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          isActiveVal = val ?? true;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final numStr = numberCtrl.text.trim();
+                    final lblStr = labelCtrl.text.trim();
+
+                    if (!AppValidators.isValidPhone(numStr)) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "Please enter a valid 10-digit number.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+                    final formattedNum = AppValidators.cleanPhone(numStr);
+                    if (_contactNumbers.asMap().entries.any((entry) => entry.key != index && entry.value.number.endsWith(formattedNum))) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "This contact number already exists.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+                    if (lblStr.isEmpty) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "Label cannot be empty.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+                    if (!isActiveVal && isPrimaryVal) {
+                      Get.snackbar(
+                        "Validation Error",
+                        "Primary number must be active.",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      if (isPrimaryVal) {
+                        for (int i = 0; i < _contactNumbers.length; i++) {
+                          final c = _contactNumbers[i];
+                          _contactNumbers[i] = ContactNumberEntity(
+                            id: c.id,
+                            label: c.label,
+                            number: c.number,
+                            isPrimary: false,
+                            isActive: c.isActive,
+                            displayOrder: c.displayOrder,
+                          );
+                        }
+                      } else if (cn.isPrimary) {
+                        final otherPrimary = _contactNumbers.asMap().entries.any((entry) => entry.key != index && entry.value.isPrimary);
+                        if (!otherPrimary) {
+                          Get.snackbar(
+                            "Validation Error",
+                            "One contact number must be marked as Primary.",
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+                      }
+
+                      _contactNumbers[index] = ContactNumberEntity(
+                        id: cn.id,
+                        label: lblStr,
+                        number: formattedNum,
+                        isPrimary: isPrimaryVal,
+                        isActive: isActiveVal,
+                        displayOrder: cn.displayOrder,
+                      );
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Save"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1962,7 +2514,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                       gst: busCurrent.gst,
                       pan: busCurrent.pan,
                       ownerName: busCurrent.ownerName,
-                      phone: busCurrent.phone,
+                      contactNumbers: busCurrent.contactNumbers,
                       email: busCurrent.email,
                       whatsapp: busCurrent.whatsapp,
                       officeBranches: busCurrent.officeBranches,

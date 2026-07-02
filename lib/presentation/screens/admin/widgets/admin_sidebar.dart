@@ -156,12 +156,18 @@ class AdminSidebar extends StatelessWidget {
                 onTap: () => _navigate('/admin/reviews'),
               ),
               if (isSuper ||
-                  (currentAdmin?.permissions['can_manage_settings'] ?? false))
+                  (currentAdmin?.permissions['can_manage_settings'] ?? false)) ...[
+                AdminSidebarItem(
+                  icon: Icons.business_outlined,
+                  label: "Business Details",
+                  onTap: () => _navigate(AppRoutes.businessDetails),
+                ),
                 AdminSidebarItem(
                   icon: Icons.settings_outlined,
                   label: "Settings",
                   onTap: () => _navigate(AppRoutes.systemSettings),
                 ),
+              ],
               const Divider(color: Color(0xFF254235), height: 32),
               AdminSidebarItem(
                 icon: Icons.logout_outlined,

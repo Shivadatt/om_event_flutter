@@ -9,6 +9,9 @@ class Review {
   final bool isPublished;
   final String? experienceId;
   final DateTime createdAt;
+  final bool isFeatured;
+  final int displayOrder;
+  final bool isActive;
 
   const Review({
     required this.id,
@@ -21,5 +24,8 @@ class Review {
     required this.isPublished,
     this.experienceId,
     required this.createdAt,
+    this.isFeatured = false,
+    this.displayOrder = 1,
+    this.isActive = true,
   });
 }

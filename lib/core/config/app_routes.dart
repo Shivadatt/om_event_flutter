@@ -19,6 +19,8 @@ import '../../presentation/screens/docs/docs_screen.dart';
 import '../../presentation/bindings/catalog_binding.dart';
 import '../../presentation/bindings/admin_binding.dart';
 import '../../presentation/screens/admin/manage_bookings_screen.dart';
+import '../../presentation/screens/admin/business_details_screen.dart';
+import '../../presentation/bindings/business_details_binding.dart';
 import '../constants/app_routes.dart';
 export '../constants/app_routes.dart';
 
@@ -87,6 +89,11 @@ class AppRouter {
       name: AppRoutes.systemSettings,
       page: () => const SystemSettingsScreen(),
       binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.businessDetails,
+      page: () => const BusinessDetailsScreen(),
+      binding: BusinessDetailsBinding(),
     ),
     GetPage(
       name: AppRoutes.manageReviews,

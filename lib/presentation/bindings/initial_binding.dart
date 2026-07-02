@@ -11,11 +11,18 @@ import '../../data/repositories/admin_repository.dart';
 import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/settings_repository.dart';
+import '../../domain/repositories/contact_number_repository.dart';
+import '../../data/repositories/contact_number_repository_impl.dart';
 import '../../core/services/app_config_service.dart';
 import '../controllers/seeder_controller.dart';
 import '../controllers/auth_controller.dart';
 
 import 'package:om_event/presentation/controllers/settings_controller.dart';
+import '../../data/datasources/business_details_remote_data_source.dart';
+import '../../data/repositories/business_details_repository_impl.dart';
+import '../../domain/repositories/business_details_repository.dart';
+import '../../core/services/business_details_cache_service.dart';
+import '../../core/services/business_details_service.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -27,7 +34,19 @@ class InitialBinding extends Bindings {
       () => SettingsRepositoryImpl(),
       fenix: true,
     );
+    Get.lazyPut<ContactNumberRepository>(
+      () => ContactNumberRepositoryImpl(),
+      fenix: true,
+    );
     Get.put<AppConfigService>(AppConfigService(), permanent: true);
+    
+    // Centralized Business Details DI
+    final businessDetailsRemote = BusinessDetailsRemoteDataSourceImpl();
+    final businessDetailsRepo = BusinessDetailsRepositoryImpl(businessDetailsRemote);
+    Get.put<BusinessDetailsRepository>(businessDetailsRepo, permanent: true);
+    Get.put<BusinessDetailsCacheService>(BusinessDetailsCacheService(), permanent: true);
+    Get.put<BusinessDetailsService>(BusinessDetailsService(), permanent: true);
+
     Get.lazyPut<SettingsController>(() => SettingsController(), fenix: true);
 
     // Local Storage Source

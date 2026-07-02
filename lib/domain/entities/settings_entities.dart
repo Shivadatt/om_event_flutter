@@ -1,3 +1,5 @@
+import 'contact_number_entity.dart';
+
 class OfficeBranch {
   final String id;
   final String branchName;
@@ -91,7 +93,7 @@ class BusinessProfile {
   final String gst;
   final String pan;
   final String ownerName;
-  final String phone;
+  final List<ContactNumberEntity> contactNumbers;
   final String email;
   final String whatsapp;
   final List<OfficeBranch> officeBranches;
@@ -107,7 +109,7 @@ class BusinessProfile {
     required this.gst,
     required this.pan,
     required this.ownerName,
-    required this.phone,
+    required this.contactNumbers,
     required this.email,
     required this.whatsapp,
     required this.officeBranches,
@@ -117,63 +119,20 @@ class BusinessProfile {
 
   factory BusinessProfile.defaultVal() {
     return const BusinessProfile(
-      name: "Om Events",
-      companyName: "Om Events & Decorators",
+      name: "",
+      companyName: "",
       logo: "",
       whiteLogo: "",
       favicon: "",
       gst: "",
       pan: "",
-      ownerName: "Shivadatt",
-      phone: "919512149944",
-      email: "omeventsanddecorators@gmail.com",
-      whatsapp: "Hello Om Events, I'd like to plan an event.",
-      officeBranches: [
-        OfficeBranch(
-          id: "branch_1",
-          branchName: "Kadi Main Office",
-          address: "near mahadev mandir medha",
-          city: "kadi",
-          state: "mahesana",
-          country: "India",
-          pincode: "382715",
-          googleMapUrl: "",
-          latitude: "",
-          longitude: "",
-          phone1: "919512149944",
-          phone2: "",
-          whatsapp: "919512149944",
-          email: "omeventsanddecorators@gmail.com",
-          instagram: "https://www.instagram.com/om_events_and_decorators/",
-          businessHours: "9:00 AM - 8:00 PM",
-          isPrimary: true,
-        ),
-        OfficeBranch(
-          id: "branch_2",
-          branchName: "Thangadh Office",
-          address: "thangath",
-          city: "Thangath",
-          state: "Gujarat",
-          country: "India",
-          pincode: "",
-          googleMapUrl: "",
-          latitude: "",
-          longitude: "",
-          phone1: "9313513156",
-          phone2: "",
-          whatsapp: "9313513156",
-          email: "omeventsanddecorators@gmail.com",
-          instagram: "https://www.instagram.com/om_events__decorators/",
-          businessHours: "9:00 AM - 8:00 PM",
-          isPrimary: false,
-        ),
-      ],
-      workingHours: "9:00 AM - 8:00 PM",
-      socialLinks: {
-        "instagram_kadi": "https://www.instagram.com/om_events_and_decorators/",
-        "instagram_thangadh":
-            "https://www.instagram.com/om_events__decorators/",
-      },
+      ownerName: "",
+      contactNumbers: [],
+      email: "",
+      whatsapp: "",
+      officeBranches: [],
+      workingHours: "",
+      socialLinks: {},
     );
   }
 }
@@ -497,10 +456,10 @@ class StatisticsSettings {
 
   factory StatisticsSettings.defaultVal() {
     return const StatisticsSettings(
-      completedEvents: 650,
-      happyClients: 650,
-      cities: 12,
-      years: 8,
+      completedEvents: 0,
+      happyClients: 0,
+      cities: 0,
+      years: 0,
     );
   }
 }

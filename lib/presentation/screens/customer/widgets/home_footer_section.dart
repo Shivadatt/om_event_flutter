@@ -4,7 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:om_event/core/config/app_routes.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/services/app_config_service.dart';
-import 'package:om_event/domain/entities/settings_entities.dart';
+import '../../../../core/services/business_details_service.dart';
+import '../../../../domain/entities/business_details_entity.dart';
 
 class FooterSection extends StatelessWidget {
   final bool isDesktop;
@@ -47,21 +48,22 @@ class FooterSection extends StatelessWidget {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Obx(() {
-            final profile = AppConfigService.to.rxBusinessProfile.value;
+            final details = BusinessDetailsService.to.rxDetails.value;
             final footer = AppConfigService.to.rxFooterSettings.value;
+            final activePhones = details.contacts.phones.where((c) => c.isActive).toList();
+            final activeEmails = details.contacts.emails.where((e) => e.isActive).toList();
 
-            // Sort primary branch first
-            final sortedBranches = List<OfficeBranch>.from(
-              profile.officeBranches,
+            final sortedBranches = List<BranchEntity>.from(
+              details.branches.where((b) => b.isActive),
             );
             sortedBranches.sort(
-              (a, b) => (b.isPrimary ? 1 : 0).compareTo(a.isPrimary ? 1 : 0),
+              (a, b) => a.displayOrder.compareTo(b.displayOrder),
             );
 
             final branchesText = sortedBranches
                 .map(
                   (b) =>
-                      "${b.branchName}\n${b.address}, ${b.city}, ${b.state}, ${b.country} - ${b.pincode}",
+                      "${b.branchName}\n${b.fullAddress}",
                 )
                 .join("\n\n");
 
@@ -86,7 +88,7 @@ class FooterSection extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              profile.name.toUpperCase(),
+                              details.general.businessName.toUpperCase(),
                               style: AppTheme.sansBody(
                                 fontSize: 12,
                                 color: Colors.white,
@@ -180,38 +182,57 @@ class FooterSection extends StatelessWidget {
                                 height: 1.4,
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            InkWell(
-                              onTap:
-                                  () => launchUrl(
-                                    Uri.parse("tel:${profile.phone}"),
-                                  ),
-                              child: Text(
-                                profile.phone,
-                                style: AppTheme.sansBody(
-                                  fontSize: 11,
-                                  color: Colors.white60,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            InkWell(
-                              onTap:
-                                  () => launchUrl(
-                                    Uri.parse("mailto:${profile.email}"),
-                                  ),
-                              child: Text(
-                                profile.email,
-                                style: AppTheme.sansBody(
-                                  fontSize: 11,
-                                  color: Colors.white60,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                             const SizedBox(height: 12),
+                             if (activePhones.length > 1) ...[
+                               Text(
+                                 "CALL US",
+                                 style: AppTheme.sansBody(
+                                   fontSize: 9,
+                                   color: const Color(0xFFC9A77E),
+                                   fontWeight: FontWeight.bold,
+                                   letterSpacing: 1.5,
+                                 ),
+                               ),
+                               const SizedBox(height: 8),
+                             ],
+                             ...activePhones.map((cn) {
+                               final cleanVal = cn.value.replaceAll(RegExp(r'\D'), '');
+                               final displayVal = cleanVal.length == 10 ? '+91 $cleanVal' : (cleanVal.length == 12 && cleanVal.startsWith('91') ? '+91 ${cleanVal.substring(2)}' : cn.value);
+                               final linkVal = cleanVal.length == 10 ? '91$cleanVal' : cleanVal;
+                               return Padding(
+                                 padding: const EdgeInsets.only(bottom: 8.0),
+                                 child: InkWell(
+                                   onTap: () => launchUrl(Uri.parse("tel:+$linkVal")),
+                                   child: Text(
+                                     "${cn.label}: $displayVal",
+                                     style: AppTheme.sansBody(
+                                       fontSize: 11,
+                                       color: Colors.white60,
+                                     ),
+                                   ),
+                                 ),
+                               );
+                             }),
+                             const SizedBox(height: 12),
+                             ...activeEmails.map((em) {
+                               return Padding(
+                                 padding: const EdgeInsets.only(bottom: 8.0),
+                                 child: InkWell(
+                                   onTap: () => launchUrl(Uri.parse("mailto:${em.value}")),
+                                   child: Text(
+                                     em.value,
+                                     style: AppTheme.sansBody(
+                                       fontSize: 11,
+                                       color: Colors.white60,
+                                       height: 1.4,
+                                     ),
+                                   ),
+                                 ),
+                               );
+                             }),
+                           ],
+                         ),
+                       ),
                       const SizedBox(width: 48),
                       Expanded(
                         child: Column(
@@ -227,27 +248,21 @@ class FooterSection extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            if (profile
-                                    .socialLinks['instagram_kadi']
-                                    ?.isNotEmpty ??
-                                false)
+                            if (details.social.instagramKadi.isNotEmpty)
                               _footerLink(
                                 "Instagram – Kadi ↗",
                                 () => launchUrl(
                                   Uri.parse(
-                                    profile.socialLinks['instagram_kadi']!,
+                                    details.social.instagramKadi,
                                   ),
                                 ),
                               ),
-                            if (profile
-                                    .socialLinks['instagram_thangadh']
-                                    ?.isNotEmpty ??
-                                false)
+                            if (details.social.instagramThangadh.isNotEmpty)
                               _footerLink(
                                 "Instagram – Thangadh ↗",
                                 () => launchUrl(
                                   Uri.parse(
-                                    profile.socialLinks['instagram_thangadh']!,
+                                    details.social.instagramThangadh,
                                   ),
                                 ),
                               ),
@@ -274,7 +289,7 @@ class FooterSection extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    profile.name.toUpperCase(),
+                    details.general.businessName.toUpperCase(),
                     style: AppTheme.sansBody(
                       fontSize: 12,
                       color: Colors.white,
@@ -360,27 +375,21 @@ class FooterSection extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            if (profile
-                                    .socialLinks['instagram_kadi']
-                                    ?.isNotEmpty ??
-                                false)
+                            if (details.social.instagramKadi.isNotEmpty)
                               _footerLink(
                                 "Instagram – Kadi ↗",
                                 () => launchUrl(
                                   Uri.parse(
-                                    profile.socialLinks['instagram_kadi']!,
+                                    details.social.instagramKadi,
                                   ),
                                 ),
                               ),
-                            if (profile
-                                    .socialLinks['instagram_thangadh']
-                                    ?.isNotEmpty ??
-                                false)
+                            if (details.social.instagramThangadh.isNotEmpty)
                               _footerLink(
                                 "Instagram – Thangadh ↗",
                                 () => launchUrl(
                                   Uri.parse(
-                                    profile.socialLinks['instagram_thangadh']!,
+                                    details.social.instagramThangadh,
                                   ),
                                 ),
                               ),
@@ -409,28 +418,50 @@ class FooterSection extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () => launchUrl(Uri.parse("tel:${profile.phone}")),
-                    child: Text(
-                      profile.phone,
+
+                  if (activePhones.length > 1) ...[
+                    Text(
+                      "CALL US",
                       style: AppTheme.sansBody(
-                        fontSize: 11,
-                        color: Colors.white60,
+                        fontSize: 9,
+                        color: const Color(0xFFC9A77E),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                  ],
+                  ...activePhones.map((cn) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: InkWell(
+                        onTap: () => launchUrl(Uri.parse("tel:${cn.value}")),
+                        child: Text(
+                          "${cn.label}: ${cn.value}",
+                          style: AppTheme.sansBody(
+                            fontSize: 11,
+                            color: Colors.white60,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
                   const SizedBox(height: 12),
-                  InkWell(
-                    onTap:
-                        () => launchUrl(Uri.parse("mailto:${profile.email}")),
-                    child: Text(
-                      profile.email,
-                      style: AppTheme.sansBody(
-                        fontSize: 11,
-                        color: Colors.white60,
+                  ...details.contacts.emails.where((e) => e.isActive).map((em) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: InkWell(
+                        onTap: () => launchUrl(Uri.parse("mailto:${em.value}")),
+                        child: Text(
+                          em.value,
+                          style: AppTheme.sansBody(
+                            fontSize: 11,
+                            color: Colors.white60,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                   const SizedBox(height: 48),
                   const Divider(color: Colors.white12),
                   const SizedBox(height: 16),

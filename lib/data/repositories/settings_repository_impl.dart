@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:om_event/core/constants/app_collections.dart';
 import '../../domain/entities/settings_entities.dart';
+import '../../domain/entities/contact_number_entity.dart';
+import '../models/contact_number_model.dart';
+import '../mappers/contact_number_mapper.dart';
 import '../../domain/repositories/settings_repository.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
@@ -40,6 +43,31 @@ class SettingsRepositoryImpl implements SettingsRepository {
             ),
           );
 
+          final List<dynamic> rawContacts = source['contactNumbers'] ?? [];
+          List<ContactNumberEntity> contactNumbers;
+          if (rawContacts.isNotEmpty) {
+            contactNumbers = rawContacts
+                .map((c) => ContactNumberModel.fromJson(Map<String, dynamic>.from(c)))
+                .map(ContactNumberMapper.toEntity)
+                .toList();
+          } else {
+            final oldPhone = source['phone']?.toString();
+            if (oldPhone != null && oldPhone.isNotEmpty) {
+              contactNumbers = [
+                ContactNumberEntity(
+                  id: '1',
+                  label: 'Primary',
+                  number: oldPhone,
+                  isPrimary: true,
+                  isActive: true,
+                  displayOrder: 1,
+                ),
+              ];
+            } else {
+              contactNumbers = [];
+            }
+          }
+
           return BusinessProfile(
             name: source['name'] ?? 'Om Events',
             companyName: source['companyName'] ?? 'Om Events & Decorators',
@@ -49,11 +77,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
             gst: source['gst'] ?? '',
             pan: source['pan'] ?? '',
             ownerName: source['ownerName'] ?? '',
-            phone: source['phone'] ?? '919512149944',
-            email: source['email'] ?? 'omeventsanddecorators@gmail.com',
-            whatsapp:
-                source['whatsapp'] ??
-                "Hello Om Events, I'd like to plan an event.",
+            contactNumbers: contactNumbers,
+            email: source['email'] ?? '',
+            whatsapp: source['whatsapp'] ?? '',
             officeBranches: officeBranches,
             workingHours: source['workingHours'] ?? '9:00 AM - 8:00 PM',
             socialLinks:
@@ -292,10 +318,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
           final data = doc.data()!;
           final source = data['published'] ?? data['draft'] ?? {};
           return StatisticsSettings(
-            completedEvents: source['completedEvents'] ?? 650,
-            happyClients: source['happyClients'] ?? 650,
-            cities: source['cities'] ?? 12,
-            years: source['years'] ?? 8,
+            completedEvents: source['completedEvents'] ?? 0,
+            happyClients: source['happyClients'] ?? 0,
+            cities: source['cities'] ?? 0,
+            years: source['years'] ?? 0,
           );
         });
   }
@@ -634,7 +660,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
       'gst': profile.gst,
       'pan': profile.pan,
       'ownerName': profile.ownerName,
-      'phone': profile.phone,
+      'contactNumbers': profile.contactNumbers
+          .map(ContactNumberMapper.toModel)
+          .map((m) => m.toJson())
+          .toList(),
       'email': profile.email,
       'whatsapp': profile.whatsapp,
       'officeBranches': profile.officeBranches.map((b) => b.toMap()).toList(),
