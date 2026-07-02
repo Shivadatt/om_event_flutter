@@ -22,4 +22,9 @@ class AppRoutes {
   static const String manageReviews = '/admin/reviews';
   static const String adminProfile = '/admin/profile';
   static const String docs = '/docs';
+  static const String customerLogin = '/client-login';
+  static const String customerDashboard = '/dashboard';
+  static const String customerPortalAdmin = '/admin/customer-portal';
+  static const String bookingCalendar = '/admin/calendar';
+  static const String adminKpis = '/admin/kpis';
 }

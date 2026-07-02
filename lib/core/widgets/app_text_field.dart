@@ -9,6 +9,8 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final int maxLines;
+  final bool readOnly;
+  final VoidCallback? onTap;
   final String? Function(String?)? validator;
 
   const AppTextField({
@@ -19,6 +21,8 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
+    this.readOnly = false,
+    this.onTap,
     this.validator,
   });
 
@@ -47,6 +51,8 @@ class AppTextField extends StatelessWidget {
             obscureText: obscureText,
             keyboardType: keyboardType,
             maxLines: maxLines,
+            readOnly: readOnly,
+            onTap: onTap,
             validator: validator,
             style: AppTheme.sansBody(
               fontSize: 14,

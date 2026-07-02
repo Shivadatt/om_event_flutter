@@ -210,15 +210,34 @@ class CustomerDialogHelper {
                             label: "Event Date",
                             placeholder: "YYYY-MM-DD",
                             controller: dateController,
-                            keyboardType: TextInputType.datetime,
+                            readOnly: true,
+                            onTap: () async {
+                              final DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now().add(const Duration(days: 7)),
+                                firstDate: DateTime.now().add(const Duration(days: 7)),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: const ColorScheme.dark(
+                                        primary: Color(0xFFC9A77E),
+                                        onPrimary: Color(0xFF091210),
+                                        surface: Color(0xFF12271F),
+                                        onSurface: Colors.white,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                dateController.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                              }
+                            },
                             validator: (val) {
                               if (val == null || val.isEmpty) {
-                                return "Date required.";
-                              }
-                              final parsed = DateTime.tryParse(val);
-                              if (parsed == null) return "Invalid date.";
-                              if (!AppValidators.isFutureDate(parsed)) {
-                                return "Cannot be in the past.";
+                                  return "Date required.";
                               }
                               return null;
                             },
@@ -230,20 +249,100 @@ class CustomerDialogHelper {
                             label: "Event Time",
                             placeholder: "HH:MM",
                             controller: timeController,
-                            keyboardType: TextInputType.datetime,
+                            readOnly: true,
+                            onTap: () async {
+                              final TimeOfDay? picked = await showTimePicker(
+                                context: context,
+                                initialTime: const TimeOfDay(hour: 18, minute: 0),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: const ColorScheme.dark(
+                                        primary: Color(0xFFC9A77E),
+                                        onPrimary: Color(0xFF091210),
+                                        surface: Color(0xFF12271F),
+                                        onSurface: Colors.white,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                timeController.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
+                              }
+                            },
                           ),
                         ),
                       ],
                     ),
-                    CustomInput(
-                      label: "Venue / Location",
-                      placeholder: "Venue name, area and city",
-                      controller: locController,
-                      validator:
-                          (val) =>
-                              (val != null && val.trim().isNotEmpty)
-                                  ? null
-                                  : "Location required.",
+                    Autocomplete<String>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<String>.empty();
+                        }
+                        final options = [
+                          "Sindhu Bhavan Hall, SBR, Ahmedabad",
+                          "SG Highway Royal Palace, Ahmedabad",
+                          "Club O7 Banquet, Shela, Ahmedabad",
+                          "Kadi Community Center, Kadi, Gujarat",
+                          "Thangadh Town Palace, Thangadh, Gujarat",
+                          "Bopal Celebration Ground, Ahmedabad",
+                          "Sabarmati Riverfront Event Center, Ahmedabad",
+                          "Nikol Party Plot, Ahmedabad",
+                        ];
+                        return options.where((String option) {
+                          return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                        });
+                      },
+                      onSelected: (String selection) {
+                        locController.text = selection;
+                      },
+                      fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                        // Initialize value if any
+                        if (textEditingController.text.isEmpty && locController.text.isNotEmpty) {
+                          textEditingController.text = locController.text;
+                        }
+                        // Listen for changes
+                        textEditingController.addListener(() {
+                          locController.text = textEditingController.text;
+                        });
+                        return CustomInput(
+                          label: "Venue / Location",
+                          placeholder: "Venue name, area and city",
+                          controller: textEditingController,
+                          validator: (val) => (val != null && val.trim().isNotEmpty) ? null : "Location required.",
+                        );
+                      },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            color: const Color(0xFF12271F),
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                              side: BorderSide(color: const Color(0xFFC9A77E).withValues(alpha: 0.3)),
+                            ),
+                            child: SizedBox(
+                              width: 440,
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: options.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final String option = options.elementAt(index);
+                                  return ListTile(
+                                    hoverColor: Colors.white12,
+                                    title: Text(option, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                                    onTap: () => onSelected(option),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     CustomInput(
                       label: "Notes or Special Instructions",

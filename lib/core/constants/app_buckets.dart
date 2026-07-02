@@ -22,4 +22,13 @@ class AppBuckets {
   /// Convenience URL for gallery videos folder.
   static const String galleryVideosUrl =
       '$supabaseBaseUrl/$gallery/$videosFolder';
+
+  // ==========================================
+  // CUSTOMER PORTAL BUCKETS
+  // ==========================================
+  static const String customerProfile = 'customer-profile';
+  static const String customerGallery = 'customer-gallery';
+  static const String bookingDocuments = 'booking-documents';
+  static const String paymentReceipts = 'payment-receipts';
+  static const String reviewImages = 'review-images';
 }

@@ -23,7 +23,13 @@ import '../../data/repositories/business_details_repository_impl.dart';
 import '../../domain/repositories/business_details_repository.dart';
 import '../../core/services/business_details_cache_service.dart';
 import '../../core/services/business_details_service.dart';
-
+import '../../domain/repositories/customer_auth_repository.dart';
+import '../../data/repositories/customer_auth_repository_impl.dart';
+import '../controllers/customer_auth_controller.dart';
+import '../../domain/repositories/customer_portal_repository.dart';
+import '../../data/repositories/customer_portal_repository_impl.dart';
+import '../controllers/customer_dashboard_controller.dart';
+import '../controllers/admin_customer_portal_controller.dart';
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
@@ -106,6 +112,41 @@ class InitialBinding extends Bindings {
     // Auth Controller
     Get.lazyPut<AuthController>(
       () => AuthController(Get.find<AuthRepository>()),
+      fenix: true,
+    );
+
+    // ==========================================
+    // CUSTOMER PORTAL DI
+    // ==========================================
+    Get.lazyPut<CustomerAuthRepository>(
+      () => CustomerAuthRepositoryImpl(
+        Get.find<FirebaseAuth>(),
+        Get.find<FirebaseFirestore>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<CustomerAuthController>(
+      () => CustomerAuthController(Get.find<CustomerAuthRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<CustomerPortalRepository>(
+      () => CustomerPortalRepositoryImpl(Get.find<FirebaseFirestore>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<CustomerDashboardController>(
+      () => CustomerDashboardController(
+        Get.find<CustomerPortalRepository>(),
+        Get.find<CustomerAuthRepository>(),
+        Get.find<CustomerAuthController>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<AdminCustomerPortalController>(
+      () => AdminCustomerPortalController(),
       fenix: true,
     );
   }

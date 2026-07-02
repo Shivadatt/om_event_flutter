@@ -44,4 +44,33 @@ class AppCollections {
 
   /// Payment records.
   static const String payments = 'payments';
+
+  // ==========================================
+  // CUSTOMER PORTAL COLLECTIONS
+  // ==========================================
+  static const String customerProfiles = 'customer_profiles';
+  static const String customerLeads = 'customer_leads';
+  static const String customerQuotes = 'customer_quotes';
+  static const String customerBookings = 'customer_bookings';
+  static const String customerNotifications = 'customer_notifications';
+  static const String customerReviews = 'customer_reviews';
+  static const String customerPayments = 'customer_payments';
+  static const String customerWishlist = 'customer_wishlist';
+  static const String customerGallery = 'customer_gallery';
+  static const String customerActivity = 'customer_activity';
+
+  static const String bookingTimelines = 'booking_timelines';
+  static const String paymentReceipts = 'payment_receipts';
+  static const String customerDocuments = 'customer_documents';
+  static const String bookingGallery = 'booking_gallery';
+  static const String rebookRequests = 'rebook_requests';
+  static const String offers = 'offers';
+  static const String promotions = 'promotions';
+  static const String supportTickets = 'support_tickets';
+  static const String coupons = 'coupons';
+  static const String coordinators = 'coordinators';
+  static const String inventory = 'inventory';
+  static const String staffLogs = 'staff_logs';
+  static const String expenses = 'expenses';
+  static const String websiteCms = 'website_cms';
 }

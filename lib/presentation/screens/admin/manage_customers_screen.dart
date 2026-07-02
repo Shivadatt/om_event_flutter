@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../data/models/customer_model.dart';
-import '../../../core/utils/formatters.dart';
 import 'widgets/admin_back_button.dart';
+import 'customer_detail_screen.dart';
 
 class ManageCustomersScreen extends GetView<AdminController> {
   const ManageCustomersScreen({super.key});
@@ -124,7 +124,7 @@ class ManageCustomersScreen extends GetView<AdminController> {
                         ],
                       ),
                       onTap:
-                          () => _showCustomerDetailsDrawer(context, customer),
+                          () => Get.to(() => CustomerDetailScreen(customer: customer)),
                     ),
                   );
                 },
@@ -216,164 +216,6 @@ class ManageCustomersScreen extends GetView<AdminController> {
             },
           ),
         ],
-      ),
-    );
-  }
-
-  void _showCustomerDetailsDrawer(
-    BuildContext context,
-    CustomerModel customer,
-  ) {
-    // Filter quotes and leads in memory
-    final quotes =
-        controller.rxQuotes
-            .where((q) => q.customerPhone == customer.phone)
-            .toList();
-    final leads =
-        controller.rxLeads.where((l) => l.phone == customer.phone).toList();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF141D1A) : Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    customer.name,
-                    style: AppTheme.serifHeader(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Get.back(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Phone: ${customer.phone}",
-                style: AppTheme.sansBody(fontSize: 13),
-              ),
-              Text(
-                "Email: ${customer.email}",
-                style: AppTheme.sansBody(fontSize: 13),
-              ),
-              Text(
-                "Location: ${customer.city} | Address: ${customer.address}",
-                style: AppTheme.sansBody(fontSize: 13),
-              ),
-              if (customer.mapLocation.isNotEmpty)
-                Text(
-                  "Map Location: ${customer.mapLocation}",
-                  style: AppTheme.sansBody(fontSize: 13, color: Colors.blue),
-                ),
-              const Divider(height: 24),
-
-              // Previous Quotations
-              Text(
-                "PREVIOUS QUOTATIONS (${quotes.length})",
-                style: AppTheme.sansBody(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              if (quotes.isEmpty)
-                Text(
-                  "No quotes found.",
-                  style: AppTheme.sansBody(fontSize: 12, color: Colors.grey),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: quotes.length,
-                  itemBuilder: (context, index) {
-                    final q = quotes[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        "Quote ID: ${q.publicId}",
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: Text(
-                        "Grand Total: ${AppFormatters.formatCurrency(q.grandTotal)} | Date: ${q.createdAt.toString().split(' ').first}",
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      trailing: Text(
-                        q.status.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color:
-                              q.status == 'approved'
-                                  ? Colors.green
-                                  : Colors.grey,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              const Divider(height: 24),
-
-              // Leads
-              Text(
-                "INQUIRY LEADS (${leads.length})",
-                style: AppTheme.sansBody(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              if (leads.isEmpty)
-                Text(
-                  "No inquiries found.",
-                  style: AppTheme.sansBody(fontSize: 12, color: Colors.grey),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: leads.length,
-                  itemBuilder: (context, index) {
-                    final l = leads[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        l.requestType.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: Text(
-                        "Event Date: ${l.eventDate.toString().split(' ').first} | Status: ${l.status}",
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }

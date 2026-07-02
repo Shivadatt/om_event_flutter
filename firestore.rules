@@ -76,6 +76,70 @@ service cloud.firestore {
     match /activity_logs/{logId} {
       allow create: if isAuthenticated();
       allow read: if isAuthenticated() && getUserRole() == 'admin';
+    // =========================================================================
+    // CUSTOMER PORTAL COLLECTIONS
+    // =========================================================================
+
+    // Helper to verify customer ownership of a resource document
+    function isCustomerOwner() {
+      return isAuthenticated() && resource.data.customerId == request.auth.uid;
+    }
+    function isCustomerCreator() {
+      return isAuthenticated() && request.resource.data.customerId == request.auth.uid;
+    }
+
+    match /customer_profiles/{customerId} {
+      allow read, write: if (isAuthenticated() && request.auth.uid == customerId) || isAdminOrStaff();
+    }
+
+    match /customer_leads/{leadId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow create: if isCustomerCreator();
+      allow update, delete: if isAdminOrStaff();
+    }
+
+    match /customer_quotes/{quoteId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow update: if isCustomerOwner() || isAdminOrStaff(); // e.g. accept/reject
+      allow create, delete: if isAdminOrStaff();
+    }
+
+    match /customer_bookings/{bookingId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow write: if isAdminOrStaff();
+    }
+
+    match /customer_payments/{paymentId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow write: if isAdminOrStaff();
+    }
+
+    match /customer_notifications/{notificationId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow update: if isCustomerOwner() || isAdminOrStaff(); // mark as read
+      allow create, delete: if isAdminOrStaff();
+    }
+
+    match /customer_reviews/{reviewId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow create: if isCustomerCreator();
+      allow update, delete: if isAdminOrStaff();
+    }
+
+    match /customer_wishlist/{wishlistId} {
+      allow read, update, delete: if isCustomerOwner() || isAdminOrStaff();
+      allow create: if isCustomerCreator();
+    }
+
+    match /customer_gallery/{galleryId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow write: if isAdminOrStaff(); // Only admins upload media
+    }
+
+    match /customer_activity/{activityId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow create: if isCustomerCreator();
+      allow update, delete: if isAdminOrStaff();
     }
   }
 }

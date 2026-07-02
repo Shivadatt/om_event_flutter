@@ -22,6 +22,11 @@ import '../../presentation/screens/admin/manage_bookings_screen.dart';
 import '../../presentation/screens/admin/business_details_screen.dart';
 import '../../presentation/bindings/business_details_binding.dart';
 import '../constants/app_routes.dart';
+import '../../presentation/screens/customer/auth/customer_auth_screen.dart';
+import '../../presentation/screens/customer/dashboard/customer_dashboard_screen.dart';
+import '../../presentation/screens/admin/customer_portal_admin_dashboard.dart';
+import '../../presentation/screens/admin/booking_calendar_screen.dart';
+import '../../presentation/screens/admin/admin_kpi_dashboard_screen.dart';
 export '../constants/app_routes.dart';
 
 /// Route definitions and page factory registry.
@@ -43,6 +48,14 @@ class AppRouter {
     GetPage(
       name: AppRoutes.quoteSuccess,
       page: () => const QuoteSuccessScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.customerLogin,
+      page: () => const CustomerAuthScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.customerDashboard,
+      page: () => const CustomerDashboardScreen(),
     ),
     GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
     GetPage(
@@ -104,6 +117,18 @@ class AppRouter {
       name: AppRoutes.adminProfile,
       page: () => const ProfileScreen(),
       binding: AdminBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.customerPortalAdmin,
+      page: () => const CustomerPortalAdminDashboard(),
+    ),
+    GetPage(
+      name: AppRoutes.bookingCalendar,
+      page: () => const BookingCalendarScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.adminKpis,
+      page: () => const AdminKpiDashboardScreen(),
     ),
     GetPage(name: AppRoutes.docs, page: () => const DocsScreen()),
   ];

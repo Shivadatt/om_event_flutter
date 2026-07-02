@@ -9,6 +9,8 @@ import 'package:om_event/core/extensions/extensions.dart';
 import 'package:om_event/presentation/controllers/cart_controller.dart';
 import 'package:om_event/presentation/controllers/catalog_controller.dart';
 import 'package:om_event/presentation/controllers/quotation_controller.dart';
+import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
+import 'auth/widgets/customer_auth_box.dart';
 import 'widgets/announcement_banner.dart';
 import 'widgets/nav_drawer.dart';
 import 'widgets/cart_drawer.dart';
@@ -32,6 +34,7 @@ class HomeScreen extends GetView<CatalogController> {
   Widget build(BuildContext context) {
     final cartController = Get.find<CartController>();
     final quoteController = Get.find<QuotationController>();
+    final authCtrl = Get.find<CustomerAuthController>();
     final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
     // Section Scroll Keys
@@ -234,6 +237,54 @@ class HomeScreen extends GetView<CatalogController> {
                     ),
                   ),
                 );
+              }),
+              const SizedBox(width: 14),
+              Obx(() {
+                final isLoggedIn = authCtrl.rxIsLoggedIn.value;
+                if (isDesktop) {
+                  return TextButton(
+                    onPressed: () {
+                      if (isLoggedIn) {
+                        Get.toNamed(AppRoutes.customerDashboard);
+                      } else {
+                        Get.dialog(
+                          const Dialog(
+                            backgroundColor: Colors.transparent,
+                            child: CustomerAuthBox(),
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(
+                      isLoggedIn ? "CLIENT PORTAL" : "CLIENT LOGIN",
+                      style: AppTheme.sansBody(
+                        fontSize: 10,
+                        color: const Color(0xFFD3AD7B),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  );
+                } else {
+                  return IconButton(
+                    icon: Icon(
+                      isLoggedIn ? Icons.dashboard_outlined : Icons.person_outline,
+                      color: isDark ? Colors.white : const Color(0xFF17201E),
+                    ),
+                    onPressed: () {
+                      if (isLoggedIn) {
+                        Get.toNamed(AppRoutes.customerDashboard);
+                      } else {
+                        Get.dialog(
+                          const Dialog(
+                            backgroundColor: Colors.transparent,
+                            child: CustomerAuthBox(),
+                          ),
+                        );
+                      }
+                    },
+                  );
+                }
               }),
               const SizedBox(width: 14),
               if (isDesktop)
