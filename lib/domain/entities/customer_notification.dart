@@ -7,6 +7,9 @@ class CustomerNotification {
   final bool isRead;
   final String branch;
   final DateTime createdAt;
+  final bool isArchived;
+  final String priority;
+  final String? expiresAt;
 
   const CustomerNotification({
     required this.id,
@@ -17,5 +20,8 @@ class CustomerNotification {
     required this.isRead,
     this.branch = '',
     required this.createdAt,
+    this.isArchived = false,
+    this.priority = 'normal',
+    this.expiresAt,
   });
 }

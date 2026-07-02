@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../core/config/app_theme.dart';
+import '../../../../../core/constants/app_collections.dart';
+import '../../../../../domain/entities/customer_quotation.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
 /// Quotations management tab view for customers.
@@ -54,25 +58,22 @@ class QuotesView extends StatelessWidget {
                                 Text("Notes: ${quote.notes}", style: AppTheme.sansBody(fontSize: 13)),
                                 const SizedBox(height: 12),
                               ],
+
+                              // List of items in this quotation rendered as homepage-style cards
+                              if (quote.items.isNotEmpty) ...[
+                                const Text("DECORATION ITEMS SELECTED", style: TextStyle(color: Color(0xFFC9A77E), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                                const SizedBox(height: 8),
+                                ...quote.items.map((item) => QuotationItemCard(item: item)),
+                                const SizedBox(height: 12),
+                              ],
+
                               Row(
                                 children: [
                                   if (quote.status == 'pending') ...[
                                     ElevatedButton(
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                      onPressed: () => controller.acceptQuotation(quote.id),
-                                      child: const Text("Accept", style: TextStyle(color: Colors.white)),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ElevatedButton(
                                       style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                       onPressed: () => controller.rejectQuotation(quote.id),
-                                      child: const Text("Reject", style: TextStyle(color: Colors.white)),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                                      onPressed: () => onRequestRevision(quote.id),
-                                      child: const Text("Request Revision", style: TextStyle(color: Colors.white)),
+                                      child: const Text("Cancel", style: TextStyle(color: Colors.white)),
                                     ),
                                   ],
                                   const Spacer(),
@@ -115,5 +116,188 @@ class QuotesView extends StatelessWidget {
       default:
         return Colors.white54;
     }
+  }
+}
+
+/// A premium list card representing a quotation decoration item styled exactly like a homepage concept card.
+class QuotationItemCard extends StatelessWidget {
+  final CustomerQuotationItem item;
+
+  const QuotationItemCard({super.key, required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final db = FirebaseFirestore.instance;
+
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: db.collection(AppCollections.items).doc(item.experienceId).get(),
+      builder: (context, snapshot) {
+        String imageUrl = '';
+        String description = 'Premium custom event decoration concept.';
+        String category = 'Decoration';
+        double duration = 3.0;
+        bool isFeatured = false;
+
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data()!;
+          imageUrl = data['imageUrl'] ?? data['image_url'] ?? '';
+          description = data['description'] ?? '';
+          category = data['categoryName'] ?? data['category_name'] ?? 'Decoration';
+          duration = (data['durationHours'] ?? data['duration_hours'] as num?)?.toDouble() ?? 3.0;
+          isFeatured = data['isFeatured'] ?? data['is_featured'] ?? false;
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0C1914),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withAlpha(13)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left: Image with MOST LOVED badge
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                          )
+                        : _buildPlaceholder(),
+                  ),
+                  if (isFeatured)
+                    Positioned(
+                      left: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                        color: const Color(0xEBFAF5EE),
+                        child: const Text(
+                          "MOST LOVED",
+                          style: TextStyle(
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF28322E),
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 14),
+              // Right: Content Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${category.toUpperCase()} · ${duration.toStringAsFixed(0)} HRS",
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: Color(0xFFAA7C4B),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.name,
+                      style: GoogleFonts.italiana(
+                        fontSize: 18,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.white,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (description.isNotEmpty)
+                      Text(
+                        description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white54,
+                          height: 1.4,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    // Selected Customizations badge row
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        if (item.color.isNotEmpty)
+                          _buildBadge("Color: ${item.color}"),
+                        if (item.theme.isNotEmpty)
+                          _buildBadge("Theme: ${item.theme}"),
+                        if (item.notes.isNotEmpty)
+                          _buildBadge("Notes: ${item.notes}"),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Qty and Price
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Qty: ${item.quantity}",
+                          style: const TextStyle(fontSize: 11, color: Colors.white70),
+                        ),
+                        Text(
+                          "₹${item.unitPrice.toStringAsFixed(0)}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFC9A77E),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      width: 100,
+      height: 100,
+      color: Colors.white.withAlpha(13),
+      alignment: Alignment.center,
+      child: const Icon(Icons.image, color: Colors.white24, size: 24),
+    );
+  }
+
+  Widget _buildBadge(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0x1FC9A77E),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0x3DC9A77E)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 9,
+          color: Color(0xFFC9A77E),
+        ),
+      ),
+    );
   }
 }

@@ -71,6 +71,15 @@ class AdminCustomerPortalController extends GetxController {
       pdfUrl: quote.pdfUrl,
       notes: quote.notes,
       versionHistory: quote.versionHistory,
+      items: quote.items.map((e) => CustomerQuotationItemModel(
+        experienceId: e.experienceId,
+        name: e.name,
+        quantity: e.quantity,
+        unitPrice: e.unitPrice,
+        color: e.color,
+        theme: e.theme,
+        notes: e.notes,
+      )).toList(),
     );
     await _firestore.collection(AppCollections.customerQuotes).add(model.toJson());
   }

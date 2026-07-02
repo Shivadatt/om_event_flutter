@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../core/config/app_routes.dart';
+import '../../core/services/fcm_notification_service.dart';
+import '../../core/services/notification_handler_service.dart';
+import '../../core/services/fcm/fcm_module.dart';
 
 class CustomerAuthController extends GetxController {
   final CustomerAuthRepository _authRepository;
@@ -28,6 +31,16 @@ class CustomerAuthController extends GetxController {
       if (uid != null) {
         final profile = await _authRepository.getCustomerProfile(uid);
         rxCustomerProfile.value = profile;
+        // New FCM module — initialize permission + token + listeners
+        FcmService.to.initialize(
+          userId: uid,
+          role: 'customer',
+        );
+        // Legacy FCM (backwards compatibility — kept until fully migrated)
+        if (!Get.isRegistered<NotificationHandlerService>()) {
+          Get.find<NotificationHandlerService>();
+        }
+        FcmNotificationService.to.initializeUserFcm(uid, role: 'customer');
       }
     } else {
       rxCustomerProfile.value = null;
@@ -157,6 +170,10 @@ class CustomerAuthController extends GetxController {
   Future<void> logout() async {
     try {
       isLoading.value = true;
+      final uid = await _authRepository.getCurrentUserId();
+      if (uid != null) {
+        await FcmNotificationService.to.removeToken(uid);
+      }
       await _authRepository.logout();
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);

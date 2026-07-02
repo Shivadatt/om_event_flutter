@@ -1,3 +1,23 @@
+class CustomerQuotationItem {
+  final String experienceId;
+  final String name;
+  final int quantity;
+  final double unitPrice;
+  final String color;
+  final String theme;
+  final String notes;
+
+  const CustomerQuotationItem({
+    required this.experienceId,
+    required this.name,
+    required this.quantity,
+    required this.unitPrice,
+    required this.color,
+    required this.theme,
+    required this.notes,
+  });
+}
+
 class CustomerQuotation {
   final String id;
   final String customerId;
@@ -9,6 +29,7 @@ class CustomerQuotation {
   final String pdfUrl;
   final String notes;
   final List<String> versionHistory;
+  final List<CustomerQuotationItem> items;
 
   const CustomerQuotation({
     required this.id,
@@ -21,5 +42,6 @@ class CustomerQuotation {
     required this.pdfUrl,
     this.notes = '',
     this.versionHistory = const [],
+    this.items = const [],
   });
 }

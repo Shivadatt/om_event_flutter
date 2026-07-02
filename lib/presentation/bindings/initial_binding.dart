@@ -21,8 +21,15 @@ import 'package:om_event/presentation/controllers/settings_controller.dart';
 import '../../data/datasources/business_details_remote_data_source.dart';
 import '../../data/repositories/business_details_repository_impl.dart';
 import '../../domain/repositories/business_details_repository.dart';
+import '../../core/services/fcm_notification_service.dart';
+import '../../core/services/notification_gateway_service.dart';
+import '../../core/services/local_notification_trigger_service.dart';
 import '../../core/services/business_details_cache_service.dart';
 import '../../core/services/business_details_service.dart';
+import '../../core/services/token_service.dart';
+import '../../core/services/notification_handler_service.dart';
+// FCM module — clean architecture sub-services
+import '../../core/services/fcm/fcm_module.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../../data/repositories/customer_auth_repository_impl.dart';
 import '../controllers/customer_auth_controller.dart';
@@ -30,6 +37,7 @@ import '../../domain/repositories/customer_portal_repository.dart';
 import '../../data/repositories/customer_portal_repository_impl.dart';
 import '../controllers/customer_dashboard_controller.dart';
 import '../controllers/admin_customer_portal_controller.dart';
+
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
@@ -44,9 +52,10 @@ class InitialBinding extends Bindings {
       () => ContactNumberRepositoryImpl(),
       fenix: true,
     );
-    Get.put<AppConfigService>(AppConfigService(), permanent: true);
+    // AppConfigService deferred — opens 30 Firestore listeners; only needed in admin / after home paints
+    Get.lazyPut<AppConfigService>(() => AppConfigService(), fenix: true);
     
-    // Centralized Business Details DI
+    // Centralized Business Details DI — these are needed on home, keep eager
     final businessDetailsRemote = BusinessDetailsRemoteDataSourceImpl();
     final businessDetailsRepo = BusinessDetailsRepositoryImpl(businessDetailsRemote);
     Get.put<BusinessDetailsRepository>(businessDetailsRepo, permanent: true);
@@ -64,6 +73,25 @@ class InitialBinding extends Bindings {
     // Firebase Instances
     Get.put<FirebaseAuth>(FirebaseAuth.instance, permanent: true);
     Get.put<FirebaseFirestore>(FirebaseFirestore.instance, permanent: true);
+
+    // ─── FCM Module (clean architecture sub-services) ──────────────────────
+    // All deferred — initialized only post-login, never at cold start.
+    Get.lazyPut<NotificationPermissionService>(
+      () => NotificationPermissionService(), fenix: true);
+    Get.lazyPut<NotificationTokenService>(
+      () => NotificationTokenService(), fenix: true);
+    Get.lazyPut<NotificationLocalService>(
+      () => NotificationLocalService(), fenix: true);
+    Get.lazyPut<NotificationHandler>(
+      () => NotificationHandler(), fenix: true);
+    Get.lazyPut<FcmService>(() => FcmService(), fenix: true);
+
+    // ─── Legacy notification services (kept for backwards compatibility) ───
+    Get.lazyPut<TokenService>(() => TokenService(), fenix: true);
+    Get.lazyPut<NotificationHandlerService>(() => NotificationHandlerService(), fenix: true);
+    Get.lazyPut<FcmNotificationService>(() => FcmNotificationService(), fenix: true);
+    Get.lazyPut<NotificationGatewayService>(() => NotificationGatewayService(), fenix: true);
+    Get.lazyPut<LocalNotificationTriggerService>(() => LocalNotificationTriggerService(), fenix: true);
 
     // Supabase Storage Source
     // Note: We use placeholder credentials which are replaced by .env values at runtime

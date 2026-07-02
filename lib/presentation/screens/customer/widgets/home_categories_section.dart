@@ -4,8 +4,6 @@ import 'package:get/get.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/domain/entities/category.dart';
 import 'package:om_event/presentation/controllers/catalog_controller.dart';
-import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
-import 'package:om_event/presentation/screens/customer/auth/widgets/customer_auth_box.dart';
 
 class ConcentricCirclesPainter extends CustomPainter {
   const ConcentricCirclesPainter();
@@ -343,16 +341,6 @@ class CategoriesSection extends StatelessWidget {
                     return CategoryCard(
                       category: cat,
                       onTap: () {
-                        final authCtrl = Get.find<CustomerAuthController>();
-                        if (!authCtrl.rxIsLoggedIn.value) {
-                          Get.dialog(
-                            const Dialog(
-                              backgroundColor: Colors.transparent,
-                              child: CustomerAuthBox(),
-                            ),
-                          );
-                          return;
-                        }
                         controller.selectCategory(cat.slug);
                         if (catalogKey.currentContext != null) {
                           Scrollable.ensureVisible(

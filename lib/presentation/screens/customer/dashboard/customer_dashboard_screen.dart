@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/config/app_theme.dart';
+import '../../../../core/constants/app_routes.dart';
 import '../../../controllers/customer_dashboard_controller.dart';
 import '../../../controllers/customer_auth_controller.dart';
 import 'views/overview_view.dart';
@@ -14,6 +15,7 @@ import 'views/notifications_view.dart';
 import 'views/profile_view.dart';
 import 'views/support_center_view.dart';
 import 'views/maps_agreements_view.dart';
+import 'views/preferences_view.dart';
 
 /// Desktop/Mobile layout orchestrator for the Client Portal.
 class CustomerDashboardScreen extends StatefulWidget {
@@ -36,6 +38,16 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF091210),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFC9A77E)),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Get.back();
+            } else {
+              Get.offAllNamed(AppRoutes.home);
+            }
+          },
+        ),
         title: Text("Client Portal", style: AppTheme.serifHeader(fontSize: 20)),
         backgroundColor: const Color(0xFF12271F),
         actions: [
@@ -114,6 +126,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           _SidebarTile(title: "Profile Settings", icon: Icons.person_outline, isActive: selectedIndex == 8, onTap: () => setState(() => selectedIndex = 8)),
           _SidebarTile(title: "Support Desk", icon: Icons.contact_support_outlined, isActive: selectedIndex == 9, onTap: () => setState(() => selectedIndex = 9)),
           _SidebarTile(title: "Maps & Legal Agreements", icon: Icons.gavel_outlined, isActive: selectedIndex == 10, onTap: () => setState(() => selectedIndex = 10)),
+          _SidebarTile(title: "Notification Preferences", icon: Icons.settings_outlined, isActive: selectedIndex == 11, onTap: () => setState(() => selectedIndex = 11)),
         ],
       ),
     );
@@ -161,6 +174,8 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
         return SupportCenterView(controller: controller);
       case 10:
         return MapsAgreementsView(controller: controller);
+      case 11:
+        return PreferencesView(controller: controller);
       default:
         return const SizedBox.shrink();
     }

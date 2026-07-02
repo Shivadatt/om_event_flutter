@@ -11,6 +11,9 @@ import '../../domain/usecases/create_quotation.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../core/utils/app_logger.dart';
 import '../../core/services/business_details_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/constants/app_collections.dart';
+import 'customer_auth_controller.dart';
 import 'cart_controller.dart';
 
 class QuotationController extends GetxController {
@@ -96,13 +99,14 @@ class QuotationController extends GetxController {
       // Calculation values matching backend standard
       final subtotal = cartController.subtotal;
       final discount = cartController.volumeDiscount;
-      final delivery = cartController.deliveryCharge;
-      final travel = cartController.travelCharge;
+      final delivery = AppConstants.enableClientFeeWaiver ? 0.0 : cartController.deliveryCharge;
+      final travel = AppConstants.enableClientFeeWaiver ? 0.0 : cartController.travelCharge;
+      final gstPercent = AppConstants.enableClientFeeWaiver ? 0.0 : AppConstants.gstPercent;
 
       // Note: We use standard server calculations for the database record
       // to ensure billing consistency
       final taxable = subtotal - discount + delivery + travel;
-      final gstAmount = taxable * (AppConstants.gstPercent / 100.0);
+      final gstAmount = taxable * (gstPercent / 100.0);
       final grandTotal = taxable + gstAmount;
 
       final partialQuotation = Quotation(
@@ -118,7 +122,7 @@ class QuotationController extends GetxController {
         discount: discount,
         deliveryCharge: delivery,
         travelCharge: travel,
-        gstPercent: AppConstants.gstPercent,
+        gstPercent: gstPercent,
         gstAmount: gstAmount,
         grandTotal: grandTotal,
         pdfUrl: '', // Updated post upload
@@ -168,6 +172,24 @@ class QuotationController extends GetxController {
 
       // Save to Cloud Firestore
       await createQuotationUsecase(finalQuotation);
+
+      // If customer is logged in, link quotation to customer portal
+      final authCtrl = Get.find<CustomerAuthController>();
+      final customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
+      if (customerId.isNotEmpty) {
+        final customerQuoteRef = FirebaseFirestore.instance.collection(AppCollections.customerQuotes).doc(quotationId);
+        await customerQuoteRef.set({
+          'customerId': customerId,
+          'quotationNumber': publicId,
+          'date': eventDate.toIso8601String(),
+          'amount': grandTotal,
+          'status': 'pending',
+          'expiryDate': eventDate.add(const Duration(days: 7)).toIso8601String(),
+          'pdfUrl': uploadedPdfUrl,
+          'notes': notes.trim(),
+          'versionHistory': [],
+        });
+      }
 
       rxCreatedQuotation.value = finalQuotation;
 

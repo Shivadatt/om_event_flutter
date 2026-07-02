@@ -5,6 +5,9 @@ import '../../core/config/app_routes.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/admin_role.dart';
 import '../../data/repositories/admin_repository.dart';
+import '../../core/services/fcm_notification_service.dart';
+import '../../core/services/notification_handler_service.dart';
+import '../../core/services/fcm/fcm_module.dart';
 
 class AuthController extends GetxController {
   final AuthRepository authRepository;
@@ -34,6 +37,16 @@ class AuthController extends GetxController {
       if (currentUser != null) {
         final adminData = await authRepository.getAdminRole(currentUser.uid);
         rxAdminRole.value = adminData;
+        // New FCM module — initialize permission + token + listeners
+        FcmService.to.initialize(
+          userId: currentUser.uid,
+          role: 'admin',
+        );
+        // Legacy FCM (backwards compatibility — kept until fully migrated)
+        if (!Get.isRegistered<NotificationHandlerService>()) {
+          Get.find<NotificationHandlerService>();
+        }
+        FcmNotificationService.to.initializeUserFcm(currentUser.uid, role: 'admin');
       }
     } else {
       rxUserRole.value = '';
@@ -70,6 +83,11 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     try {
       isLoading.value = true;
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        await FcmService.to.cleanup(currentUser.uid);
+        await FcmNotificationService.to.removeToken(currentUser.uid);
+      }
       await authRepository.logout();
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);

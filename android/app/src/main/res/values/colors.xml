@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification accent color — Om Events gold/amber brand color -->
+    <color name="notification_color">#C9A77E</color>
+</resources>

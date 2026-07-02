@@ -73,4 +73,15 @@ class AppCollections {
   static const String staffLogs = 'staff_logs';
   static const String expenses = 'expenses';
   static const String websiteCms = 'website_cms';
+
+  static const String notificationTokens = 'notification_tokens';
+  static const String notifications = 'notifications';
+  static const String notificationLogs = 'notification_logs';
+  static const String notificationTemplates = 'notification_templates';
+  static const String notificationQueue = 'notification_queue';
+  static const String deadLetterNotifications = 'dead_letter_notifications';
+  static const String customerNotificationPreferences = 'customer_notification_preferences';
+  static const String scheduledNotifications = 'scheduled_notifications';
+  static const String notificationDeliveryEvents = 'notification_delivery_events';
+  static const String notificationWebhookLogs = 'notification_webhook_logs';
 }

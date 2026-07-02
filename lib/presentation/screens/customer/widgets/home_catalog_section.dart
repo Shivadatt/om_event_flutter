@@ -9,8 +9,6 @@ import 'package:om_event/presentation/controllers/cart_controller.dart';
 import 'package:om_event/presentation/controllers/catalog_controller.dart';
 import 'package:om_event/presentation/widgets/item_visual_placeholder.dart';
 import 'package:om_event/presentation/screens/customer/widgets/home_detail_dialog.dart';
-import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
-import 'package:om_event/presentation/screens/customer/auth/widgets/customer_auth_box.dart';
 
 class ExperienceCard extends StatefulWidget {
   final Experience item;
@@ -304,19 +302,7 @@ class ExperiencesCatalogSection extends StatelessWidget {
     required bool isDark,
   }) {
     return GestureDetector(
-      onTap: () {
-        final authCtrl = Get.find<CustomerAuthController>();
-        if (!authCtrl.rxIsLoggedIn.value) {
-          Get.dialog(
-            const Dialog(
-              backgroundColor: Colors.transparent,
-              child: CustomerAuthBox(),
-            ),
-          );
-          return;
-        }
-        onTap();
-      },
+      onTap: onTap,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: AnimatedContainer(
@@ -643,16 +629,6 @@ class ExperiencesCatalogSection extends StatelessWidget {
                     return ExperienceCard(
                       item: item,
                       onQuickAdd: () {
-                        final authCtrl = Get.find<CustomerAuthController>();
-                        if (!authCtrl.rxIsLoggedIn.value) {
-                          Get.dialog(
-                            const Dialog(
-                              backgroundColor: Colors.transparent,
-                              child: CustomerAuthBox(),
-                            ),
-                          );
-                          return;
-                        }
                         cartController.addToCart(item);
                         Get.snackbar(
                           "Added to Canvas",
@@ -661,16 +637,6 @@ class ExperiencesCatalogSection extends StatelessWidget {
                         );
                       },
                       onTap: () {
-                        final authCtrl = Get.find<CustomerAuthController>();
-                        if (!authCtrl.rxIsLoggedIn.value) {
-                          Get.dialog(
-                            const Dialog(
-                              backgroundColor: Colors.transparent,
-                              child: CustomerAuthBox(),
-                            ),
-                          );
-                          return;
-                        }
                         showExperienceDetailDialog(context, item);
                       },
                     );

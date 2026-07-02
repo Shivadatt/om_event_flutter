@@ -11,6 +11,9 @@ import '../../domain/usecases/get_categories.dart';
 import '../../domain/usecases/get_experiences.dart';
 import '../../domain/usecases/submit_lead.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/constants/app_collections.dart';
+import 'customer_auth_controller.dart';
 /// Customer-facing catalog controller backed by Firestore realtime streams.
 ///
 /// Architecture:
@@ -249,6 +252,26 @@ class CatalogController extends GetxController {
       );
 
       await submitLead(lead);
+
+      // If customer is logged in, link lead to customer portal
+      final authCtrl = Get.find<CustomerAuthController>();
+      final customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
+      if (customerId.isNotEmpty) {
+        final leadId = DateTime.now().millisecondsSinceEpoch.toString();
+        final customerLeadRef = FirebaseFirestore.instance.collection(AppCollections.customerLeads).doc(leadId);
+        await customerLeadRef.set({
+          'customerId': customerId,
+          'leadNumber': 'L-${DateTime.now().millisecondsSinceEpoch}',
+          'date': DateTime.now().toIso8601String(),
+          'service': requirements.trim().isNotEmpty ? requirements.trim() : 'Event Inquiry',
+          'branch': authCtrl.rxCustomerProfile.value?.branch ?? 'Ahmedabad',
+          'budget': budget,
+          'eventDate': eventDate?.toIso8601String() ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+          'status': 'Pending',
+          'adminNotes': '',
+        });
+      }
+
       Get.snackbar(
         "Inquiry Received",
         "Thank you! Our event manager will call you shortly.",

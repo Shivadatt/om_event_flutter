@@ -18,6 +18,42 @@ import '../../domain/entities/booking_agreement.dart';
 import '../../core/utils/date_parser.dart';
 
 // 1. CustomerQuotationModel
+class CustomerQuotationItemModel extends CustomerQuotationItem {
+  const CustomerQuotationItemModel({
+    required super.experienceId,
+    required super.name,
+    required super.quantity,
+    required super.unitPrice,
+    required super.color,
+    required super.theme,
+    required super.notes,
+  });
+
+  factory CustomerQuotationItemModel.fromJson(Map<String, dynamic> json) {
+    return CustomerQuotationItemModel(
+      experienceId: json['experienceId'] ?? json['decoration_item_slug'] ?? '',
+      name: json['name'] ?? '',
+      quantity: json['quantity'] ?? 1,
+      unitPrice: (json['unitPrice'] ?? json['unit_price'] as num?)?.toDouble() ?? 0.0,
+      color: json['color'] ?? '',
+      theme: json['theme'] ?? '',
+      notes: json['notes'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'experienceId': experienceId,
+      'name': name,
+      'quantity': quantity,
+      'unitPrice': unitPrice,
+      'color': color,
+      'theme': theme,
+      'notes': notes,
+    };
+  }
+}
+
 class CustomerQuotationModel extends CustomerQuotation {
   const CustomerQuotationModel({
     required super.id,
@@ -30,9 +66,15 @@ class CustomerQuotationModel extends CustomerQuotation {
     required super.pdfUrl,
     super.notes,
     super.versionHistory,
+    required List<CustomerQuotationItemModel> super.items,
   });
 
   factory CustomerQuotationModel.fromJson(Map<String, dynamic> json, String id) {
+    final rawItems = json['items'] as List? ?? [];
+    final itemsList = rawItems
+        .map((e) => CustomerQuotationItemModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+
     return CustomerQuotationModel(
       id: id,
       customerId: json['customerId'] ?? '',
@@ -44,6 +86,7 @@ class CustomerQuotationModel extends CustomerQuotation {
       pdfUrl: json['pdfUrl'] ?? '',
       notes: json['notes'] ?? '',
       versionHistory: List<String>.from(json['versionHistory'] ?? []),
+      items: itemsList,
     );
   }
 
@@ -58,6 +101,7 @@ class CustomerQuotationModel extends CustomerQuotation {
       'pdfUrl': pdfUrl,
       'notes': notes,
       'versionHistory': versionHistory,
+      'items': items.map((e) => (e as CustomerQuotationItemModel).toJson()).toList(),
     };
   }
 }
@@ -145,6 +189,9 @@ class CustomerNotificationModel extends CustomerNotification {
     required super.isRead,
     super.branch,
     required super.createdAt,
+    super.isArchived,
+    super.priority,
+    super.expiresAt,
   });
 
   factory CustomerNotificationModel.fromJson(Map<String, dynamic> json, String id) {
@@ -157,6 +204,9 @@ class CustomerNotificationModel extends CustomerNotification {
       isRead: json['isRead'] ?? false,
       branch: json['branch'] ?? '',
       createdAt: DateParser.parse(json['createdAt']),
+      isArchived: json['isArchived'] ?? false,
+      priority: json['priority'] ?? 'normal',
+      expiresAt: json['expiresAt'],
     );
   }
 
@@ -169,6 +219,9 @@ class CustomerNotificationModel extends CustomerNotification {
       'isRead': isRead,
       'branch': branch,
       'createdAt': createdAt.toIso8601String(),
+      'isArchived': isArchived,
+      'priority': priority,
+      'expiresAt': expiresAt,
     };
   }
 }

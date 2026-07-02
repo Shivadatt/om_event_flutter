@@ -9,6 +9,7 @@ import 'package:om_event/domain/entities/contact_number_entity.dart';
 import 'package:om_event/domain/repositories/settings_repository.dart';
 import 'package:om_event/core/utils/validators.dart';
 import 'widgets/admin_back_button.dart';
+import 'widgets/settings_notifications_tab.dart';
 
 class SystemSettingsScreen extends StatefulWidget {
   const SystemSettingsScreen({super.key});
@@ -2156,33 +2157,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
   }
 
   Widget _buildNotificationsForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "NOTIFICATIONS INTEGRATION",
-          style: GoogleFonts.italiana(fontSize: 24),
-        ),
-        const SizedBox(height: 24),
-        _field("Push Alerts Title", _notifPush),
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed:
-              () => _saveAndPublish('notifications', () async {
-                final current =
-                    AppConfigService.to.rxNotificationsSettings.value;
-                await _repository.saveNotifications(
-                  NotificationsSettings(
-                    pushTemplates: {'title': _notifPush.text},
-                    smsTemplates: current.smsTemplates,
-                    emailTemplates: current.emailTemplates,
-                  ),
-                );
-              }),
-          child: const Text("Save & Publish Live"),
-        ),
-      ],
-    );
+    return const SettingsNotificationsTab();
   }
 
   Widget _buildPDFForm() {
