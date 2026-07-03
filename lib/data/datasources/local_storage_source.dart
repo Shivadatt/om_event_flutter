@@ -39,4 +39,17 @@ class LocalStorageSource {
   Future<bool> clearAdminToken() async {
     return await _prefs.remove(AppStrings.adminTokenKey);
   }
+
+  // User Role Caching
+  Future<bool> saveUserRole(String role) async {
+    return await _prefs.setString('oe-user-role', role);
+  }
+
+  String? getUserRole() {
+    return _prefs.getString('oe-user-role');
+  }
+
+  Future<bool> clearUserRole() async {
+    return await _prefs.remove('oe-user-role');
+  }
 }

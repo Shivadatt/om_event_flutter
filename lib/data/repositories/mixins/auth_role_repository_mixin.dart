@@ -1,17 +1,40 @@
+﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/entities/admin_role.dart';
 import '../../models/admin_role_model.dart';
+import '../../../core/config/rbac_config.dart';
 
 /// Mixin responsibility to handle admin role permissions CRUD and RBAC mappings.
 mixin AuthRoleRepositoryMixin {
   /// Firestore database source.
   FirebaseFirestore get firestore;
 
+  /// Firebase Auth dependency.
+  FirebaseAuth get firebaseAuth;
+
+  /// Retrieve current active user profile security role type.
+  Future<String?> getCurrentUserRole();
+
   /// Retrieve a specific administrator's active role.
   Future<AdminRole?> getAdminRole(String uid) async {
-    final doc = await firestore.collection('admin').doc(uid).get();
-    if (!doc.exists) return null;
-    return AdminRoleModel.fromJson(doc.data()!, doc.id);
+    final role = await getCurrentUserRole();
+    if (role == null) return null;
+
+    final permissions = RbacConfig.getPresetPermissions(role);
+    final user = firebaseAuth.currentUser;
+
+    return AdminRoleModel(
+      uid: uid,
+      name: user?.displayName ?? user?.email?.split('@').first ?? 'Admin',
+      email: user?.email ?? '',
+      role: role,
+      isActive: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      createdBy: 'system',
+      roleType: role,
+      permissions: permissions,
+    );
   }
 
   /// Retrieve all administrator team role configurations.

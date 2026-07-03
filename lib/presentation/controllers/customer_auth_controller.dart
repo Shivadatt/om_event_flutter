@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../core/config/app_routes.dart';
-import '../../core/services/fcm_notification_service.dart';
-import '../../core/services/notification_handler_service.dart';
 import '../../core/services/fcm/fcm_module.dart';
+import '../../data/datasources/local_storage_source.dart';
+import '../../core/utils/app_logger.dart';
 
 class CustomerAuthController extends GetxController {
   final CustomerAuthRepository _authRepository;
@@ -31,16 +34,15 @@ class CustomerAuthController extends GetxController {
       if (uid != null) {
         final profile = await _authRepository.getCustomerProfile(uid);
         rxCustomerProfile.value = profile;
-        // New FCM module — initialize permission + token + listeners
-        FcmService.to.initialize(
+
+        // Fetch and cache user role
+        final role = await _fetchAndCacheRole() ?? 'customer';
+
+        // FCM initialization
+        await FcmService.to.initialize(
           userId: uid,
-          role: 'customer',
+          role: role,
         );
-        // Legacy FCM (backwards compatibility — kept until fully migrated)
-        if (!Get.isRegistered<NotificationHandlerService>()) {
-          Get.find<NotificationHandlerService>();
-        }
-        FcmNotificationService.to.initializeUserFcm(uid, role: 'customer');
       }
     } else {
       rxCustomerProfile.value = null;
@@ -51,6 +53,7 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.loginWithEmail(email, password);
+      await _fetchAndCacheRole();
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);
       return true;
@@ -66,6 +69,7 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.registerWithEmail(email, password, fullName);
+      await _fetchAndCacheRole();
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);
       return true;
@@ -101,6 +105,7 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.signInWithSmsCode(verificationId.value, smsCode);
+      await _fetchAndCacheRole();
       await checkAuthStatus();
       
       // If profile doesn't exist, create a basic one
@@ -122,6 +127,7 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.signInWithGoogle();
+      await _fetchAndCacheRole();
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);
     } catch (e) {
@@ -137,6 +143,7 @@ class CustomerAuthController extends GetxController {
       // Fallback developer mode if Google Sign-In is not configured in Firebase Console
       try {
         await _authRepository.loginWithEmail("google.demo@omevents.com", "GoogleDemo123!");
+        await _fetchAndCacheRole();
         await checkAuthStatus();
         Get.offAllNamed(AppRoutes.home);
         Get.snackbar(
@@ -149,6 +156,7 @@ class CustomerAuthController extends GetxController {
       } catch (_) {
         try {
           await _authRepository.registerWithEmail("google.demo@omevents.com", "GoogleDemo123!", "Google Demo User");
+          await _fetchAndCacheRole();
           await checkAuthStatus();
           Get.offAllNamed(AppRoutes.home);
           Get.snackbar(
@@ -172,8 +180,10 @@ class CustomerAuthController extends GetxController {
       isLoading.value = true;
       final uid = await _authRepository.getCurrentUserId();
       if (uid != null) {
-        await FcmNotificationService.to.removeToken(uid);
+        await FcmService.to.cleanup(uid);
       }
+      final localStorage = Get.find<LocalStorageSource>();
+      await localStorage.clearUserRole();
       await _authRepository.logout();
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);
@@ -182,5 +192,39 @@ class CustomerAuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Fetch user role from Supabase Edge Function and cache it locally.
+  Future<String?> _fetchAndCacheRole() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return null;
+
+      final token = await currentUser.getIdToken();
+      if (token == null) return null;
+
+      final response = await http.post(
+        Uri.parse('https://kwegyvbgdaednljyhcgm.supabase.co/functions/v1/verify-firebase-token'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data != null && data['user'] != null) {
+          final role = data['user']['role'] as String?;
+          if (role != null) {
+            final localStorage = Get.find<LocalStorageSource>();
+            await localStorage.saveUserRole(role);
+            return role;
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.error('Failed to fetch customer role from Edge Function', e);
+    }
+    return null;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SupabaseStorageSource {
   final String projectUrl;
@@ -24,12 +25,14 @@ class SupabaseStorageSource {
       '${cleanUrl}storage/v1/object/$activeBucket/$filePath',
     );
 
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final response = await http.post(
       uploadUrl,
       headers: {
         'Authorization': 'Bearer $apiKey',
         'ApiKey': apiKey,
         'Content-Type': contentType,
+        if (uid.isNotEmpty) 'x-firebase-uid': uid,
       },
       body: fileBytes,
     );

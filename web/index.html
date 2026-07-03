@@ -146,7 +146,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/firebase-messaging-sw.js', { scope: '/' })
+        .register('firebase-messaging-sw.js')
         .then(function (registration) {
           console.log('[SW] Firebase Messaging SW registered:', registration.scope);
         })

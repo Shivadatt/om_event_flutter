@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import '../../utils/app_logger.dart';
 import 'notification_permission_service.dart';
 import 'notification_token_service.dart';
 import 'notification_handler.dart';
@@ -46,7 +45,7 @@ class FcmService extends GetxService {
     // Must be called before any messaging stream subscriptions.
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
-    AppLogger.info('FcmService: initialized');
+    print("INFO: FcmService: initialized");
   }
 
   // ─── Public API ──────────────────────────────────────────────────────────
@@ -64,14 +63,14 @@ class FcmService extends GetxService {
   }) async {
     if (userId.isEmpty) return;
 
-    AppLogger.info('FcmService: starting init for user=$userId role=$role');
+    print("INFO: FcmService: starting init for user=$userId role=$role");
 
     // 1. Permission
     final granted = await _permissionService.requestPermission();
     rxPermissionGranted.value = granted;
 
     if (!granted) {
-      AppLogger.warning('FcmService: permission denied — skipping token fetch');
+      print("WARNING: FcmService: permission denied — skipping token fetch");
       return;
     }
 
@@ -88,7 +87,7 @@ class FcmService extends GetxService {
 
     // 3. Token refresh listener
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
-      AppLogger.info('FcmService: token refreshed for user=$userId');
+      print("INFO: FcmService: token refreshed for user=$userId: $newToken");
       rxToken.value = newToken;
       await _tokenService.persistToken(
         userId: userId,
@@ -100,7 +99,7 @@ class FcmService extends GetxService {
     // 4. Notification listeners (foreground + taps + terminated)
     _handler.startListening(_localService);
 
-    AppLogger.success('FcmService: fully initialized for user=$userId');
+    print("SUCCESS: FcmService: fully initialized for user=$userId");
   }
 
   /// Remove this device's token on logout.
@@ -109,7 +108,7 @@ class FcmService extends GetxService {
     await _tokenService.removeToken(userId: userId);
     rxToken.value = '';
     rxPermissionGranted.value = false;
-    AppLogger.info('FcmService: cleanup done for user=$userId');
+    print("INFO: FcmService: cleanup done for user=$userId");
   }
 }
 
@@ -121,6 +120,5 @@ class FcmService extends GetxService {
 Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
   // Web does not run this handler (service worker handles it instead).
   if (kIsWeb) return;
-  AppLogger.info(
-      'FcmService BG: ${message.notification?.title} | data: ${message.data}');
+  print("INFO: FcmService BG message: ${message.notification?.title} | body: ${message.notification?.body} | data: ${message.data}");
 }

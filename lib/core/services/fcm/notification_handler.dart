@@ -1,6 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
-import '../../utils/app_logger.dart';
 import 'notification_local_service.dart';
 import 'notification_router.dart';
 
@@ -31,8 +30,7 @@ class NotificationHandler extends GetxService {
       final notification = message.notification;
       if (notification == null) return;
 
-      AppLogger.info(
-          'NotificationHandler FG: ${notification.title} | ${notification.body}');
+      print("INFO: NotificationHandler FG message received: title=${notification.title} | body=${notification.body} | data=${message.data}");
 
       // Show using flutter_local_notifications overlay
       localService.show(
@@ -49,8 +47,7 @@ class NotificationHandler extends GetxService {
 
   void _listenBackgroundTap() {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      AppLogger.info(
-          'NotificationHandler tapped (background): ${message.notification?.title}');
+      print("INFO: NotificationHandler tapped in background: title=${message.notification?.title} | data=${message.data}");
       NotificationRouter.navigate(message.data);
     });
   }
@@ -59,18 +56,17 @@ class NotificationHandler extends GetxService {
 
   void _handleTerminatedState() {
     FirebaseMessaging.instance
-        .getInitialMessage()
-        .then((RemoteMessage? message) {
-      if (message == null) return;
-      AppLogger.info(
-          'NotificationHandler terminated tap: ${message.notification?.title}');
-      // Delay slightly so GetX routing stack is ready
-      Future.delayed(
-        const Duration(milliseconds: 800),
-        () => NotificationRouter.navigate(message.data),
-      );
-    }).catchError((Object e) {
-      AppLogger.error('NotificationHandler: getInitialMessage error', e);
-    });
+      .getInitialMessage()
+      .then((RemoteMessage? message) {
+        if (message == null) return;
+        print("INFO: NotificationHandler terminated tap: title=${message.notification?.title} | data=${message.data}");
+        // Delay slightly so GetX routing stack is ready
+        Future.delayed(
+          const Duration(milliseconds: 800),
+          () => NotificationRouter.navigate(message.data),
+        );
+      }).catchError((Object e) {
+        print("ERROR: NotificationHandler: getInitialMessage error: $e");
+      });
   }
 }

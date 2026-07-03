@@ -1,10 +1,10 @@
+﻿import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../core/constants/app_collections.dart';
-import '../../../core/constants/app_permissions.dart';
-import '../../../core/constants/app_roles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/errors/failures.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../datasources/local_storage_source.dart';
 
 /// Mixin responsibility to handle admin logins, tokens, and active user sessions.
@@ -31,74 +31,25 @@ mixin AuthSessionRepositoryMixin {
         throw const AuthenticationFailure(AppStrings.errUserAuthFailed);
       }
 
-      var adminRoleDoc =
-          await firestore.collection(AppCollections.admin).doc(user.uid).get();
-
-      if (!adminRoleDoc.exists) {
-        final emailLower = user.email?.toLowerCase().trim() ?? '';
-        final isSuper = emailLower == AppStrings.businessEmail;
-        final isDemo = emailLower == AppStrings.demoAdminEmail;
-        final roleType =
-            isSuper
-                ? AppRoles.superAdmin
-                : (isDemo ? AppRoles.demoAdmin : AppRoles.customer);
-
-        final Map<String, bool> permissions =
-            isSuper
-                ? AppPermissions.superAdminPermissions
-                : (isDemo
-                    ? AppPermissions.demoAdminPermissions
-                    : AppPermissions.customerPermissions);
-
-        await firestore.collection(AppCollections.admin).doc(user.uid).set({
-          AppStrings.fieldUid: user.uid,
-          AppStrings.fieldName:
-              isSuper
-                  ? AppStrings.superAdminName
-                  : (isDemo
-                      ? AppStrings.demoAdminName
-                      : (user.displayName ??
-                          user.email?.split('@').first ??
-                          'Customer')),
-          AppStrings.fieldEmail: user.email,
-          AppStrings.fieldRole: roleType,
-          AppStrings.fieldRoleType: roleType,
-          AppStrings.fieldIsActive: true,
-          AppStrings.fieldCreatedAt: DateTime.now().toIso8601String(),
-          AppStrings.fieldUpdatedAt: DateTime.now().toIso8601String(),
-          AppStrings.fieldCreatedBy: AppStrings.createdBySystem,
-          AppStrings.fieldPermissions: permissions,
-        });
-        adminRoleDoc =
-            await firestore
-                .collection(AppCollections.admin)
-                .doc(user.uid)
-                .get();
-      }
-
-      final data = adminRoleDoc.data()!;
-      final roleType =
-          data[AppStrings.fieldRoleType] ??
-          data[AppStrings.fieldRole] ??
-          AppRoles.customer;
-      if (roleType == AppRoles.customer) {
-        await firebaseAuth.signOut();
-        throw const AuthenticationFailure(AppStrings.errAdminNotFound);
-      }
-
-      final isActive =
-          (data[AppStrings.fieldIsActive] ?? data[AppStrings.fieldIsActiveAlt])
-              as bool? ??
-          true;
-      if (!isActive) {
-        await firebaseAuth.signOut();
-        throw const AuthenticationFailure(AppStrings.errAccountDisabled);
-      }
-
       final token = await user.getIdToken();
-      if (token != null) {
-        await localStorage.saveAdminToken(token);
+      if (token == null) {
+        throw const AuthenticationFailure('Failed to retrieve authentication token.');
       }
+
+      // Fetch role from Supabase Edge Function
+      final role = await _fetchRoleFromEdgeFunction(token);
+      if (role == null) {
+        await firebaseAuth.signOut();
+        throw const AuthenticationFailure('User not registered in database.');
+      }
+
+      if (role == 'customer') {
+        await firebaseAuth.signOut();
+        throw const AuthenticationFailure('Access denied: User is not an administrator.');
+      }
+
+      await localStorage.saveUserRole(role);
+      await localStorage.saveAdminToken(token);
     } on FirebaseAuthException catch (e) {
       if (e.code == AppStrings.firebaseUserNotFound ||
           e.code == AppStrings.firebaseWrongPassword ||
@@ -116,6 +67,7 @@ mixin AuthSessionRepositoryMixin {
   Future<void> logout() async {
     await firebaseAuth.signOut();
     await localStorage.clearAdminToken();
+    await localStorage.clearUserRole();
   }
 
   /// Retrieve current active session bearer JWT token.
@@ -135,13 +87,20 @@ mixin AuthSessionRepositoryMixin {
 
   /// Retrieve current active user profile security role type.
   Future<String?> getCurrentUserRole() async {
+    final cached = localStorage.getUserRole();
+    if (cached != null) return cached;
+
     final user = firebaseAuth.currentUser;
     if (user == null) return null;
+
     try {
-      final doc =
-          await firestore.collection(AppCollections.admin).doc(user.uid).get();
-      if (doc.exists) {
-        return doc.data()?[AppStrings.fieldRoleType] as String?;
+      final token = await user.getIdToken();
+      if (token != null) {
+        final role = await _fetchRoleFromEdgeFunction(token);
+        if (role != null) {
+          await localStorage.saveUserRole(role);
+          return role;
+        }
       }
     } catch (_) {}
     return null;
@@ -150,5 +109,28 @@ mixin AuthSessionRepositoryMixin {
   /// Check whether an authenticated session exists.
   Future<bool> isLoggedIn() async {
     return firebaseAuth.currentUser != null;
+  }
+
+  /// Fetch user role from Supabase Edge Function verify-firebase-token.
+  Future<String?> _fetchRoleFromEdgeFunction(String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://kwegyvbgdaednljyhcgm.supabase.co/functions/v1/verify-firebase-token'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data != null && data['user'] != null) {
+          return data['user']['role'] as String?;
+        }
+      }
+    } catch (e) {
+      AppLogger.error('Failed to fetch role from Edge Function', e);
+    }
+    return null;
   }
 }

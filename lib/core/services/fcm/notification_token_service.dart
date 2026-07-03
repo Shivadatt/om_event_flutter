@@ -1,31 +1,27 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_collections.dart';
-import '../../utils/app_logger.dart';
 
 /// Manages FCM token lifecycle:
 ///   - fetch from Firebase
-///   - persist to Supabase (primary) + Firestore (fallback)
+///   - persist to Supabase (primary Edge Function) + Firestore (fallback)
 ///   - remove on logout
 ///   - generate a stable device-id without extra packages
 ///
-/// Supabase table: `notification_tokens`
-/// Columns: id, user_id, role, platform, device_id, token, created_at, updated_at
-/// Unique constraint: (user_id, device_id)
+/// Supabase Edge Function: `register-token`
 class NotificationTokenService extends GetxService {
   static NotificationTokenService get to =>
       Get.find<NotificationTokenService>();
 
   static const String _supabaseUrl =
       'https://kwegyvbgdaednljyhcgm.supabase.co';
-  static const String _supabaseAnonKey =
-      'sb_publishable_bN91Or0DGzltjdDFB3b4zw_oosYJUa8';
 
   // VAPID key for Web Push
   static const String _webVapidKey =
@@ -48,7 +44,6 @@ class NotificationTokenService extends GetxService {
   /// Returns a stable device-id persisted in SharedPreferences.
   /// Generates once on first call; reused on subsequent calls.
   Future<String> _getDeviceId() async {
-    if (kIsWeb) return 'web-browser';
     try {
       final prefs = Get.find<SharedPreferences>();
       final existing = prefs.getString(_deviceIdPrefKey);
@@ -69,20 +64,21 @@ class NotificationTokenService extends GetxService {
   /// Fetch an FCM registration token from Firebase.
   /// Returns `null` on failure — caller handles the null case gracefully.
   Future<String?> fetchToken() async {
+    print("INFO: Fetching FCM token...");
     try {
       final String? token = kIsWeb
           ? await _messaging.getToken(vapidKey: _webVapidKey)
           : await _messaging.getToken();
 
       if (token == null || token.isEmpty) {
-        AppLogger.warning('NotificationTokenService: getToken returned null');
+        print("WARNING: NotificationTokenService: getToken returned null");
         return null;
       }
 
-      AppLogger.info('NotificationTokenService: token fetched');
+      print("SUCCESS: NotificationTokenService: token fetched: $token");
       return token;
     } catch (e) {
-      AppLogger.error('NotificationTokenService: fetchToken failed', e);
+      print("ERROR: NotificationTokenService: fetchToken failed: $e");
       return null;
     }
   }
@@ -114,40 +110,55 @@ class NotificationTokenService extends GetxService {
     required String deviceId,
   }) async {
     try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print("WARNING: NotificationTokenService: No current Firebase user. Skipping Supabase save.");
+        return;
+      }
+      final idToken = await currentUser.getIdToken(true);
+      if (idToken == null || idToken.isEmpty) {
+        print("WARNING: NotificationTokenService: Failed to retrieve Firebase ID Token. Skipping Supabase save.");
+        return;
+      }
+
       final payload = {
-        'user_id': userId,
-        'role': role,
+        'action': 'upsert',
+        'token': token,
         'device_id': deviceId,
         'platform': _platform,
-        'token': token,
-        'updated_at': DateTime.now().toIso8601String(),
+        'role': role,
       };
+
+      final url = '$_supabaseUrl/functions/v1/register-token';
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      };
+
+      print("INFO: Saving token to Supabase Edge Function...");
+      print("DEBUG HTTP Request URL: $url");
+      print("DEBUG HTTP Request Headers: ${jsonEncode(headers)}");
+      print("DEBUG HTTP Request Payload: ${jsonEncode(payload)}");
 
       final response = await http
           .post(
-            Uri.parse('$_supabaseUrl/rest/v1/notification_tokens'),
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': _supabaseAnonKey,
-              'Authorization': 'Bearer $_supabaseAnonKey',
-              'Prefer': 'resolution=merge-duplicates',
-            },
+            Uri.parse(url),
+            headers: headers,
             body: jsonEncode(payload),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 15));
 
-      if (response.statusCode == 200 ||
-          response.statusCode == 201 ||
-          response.statusCode == 204) {
-        AppLogger.success(
-            'NotificationTokenService: Supabase token saved for user=$userId platform=$_platform');
+      print("DEBUG HTTP Response Status: ${response.statusCode}");
+      print("DEBUG HTTP Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+        print("SUCCESS: NotificationTokenService: Supabase Edge Function saved token for user=$userId");
       } else {
-        AppLogger.warning(
-            'NotificationTokenService: Supabase unexpected status=${response.statusCode}');
+        print("WARNING: NotificationTokenService: Supabase Edge Function unexpected status=${response.statusCode}");
       }
-    } catch (e) {
-      AppLogger.error(
-          'NotificationTokenService: Supabase saveToken failed', e);
+    } catch (e, stackTrace) {
+      print("ERROR: NotificationTokenService: Supabase Edge Function saveToken failed: $e");
+      print("DEBUG HTTP Error Stack: $stackTrace");
     }
   }
 
@@ -157,6 +168,7 @@ class NotificationTokenService extends GetxService {
     required String token,
     required String deviceId,
   }) async {
+    print("INFO: Saving token to Firestore...");
     try {
       await _firestore
           .collection(AppCollections.notificationTokens)
@@ -169,11 +181,9 @@ class NotificationTokenService extends GetxService {
         'deviceId': deviceId,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      AppLogger.success(
-          'NotificationTokenService: Firestore token saved for user=$userId');
+      print("SUCCESS: NotificationTokenService: Firestore token saved for user=$userId");
     } catch (e) {
-      AppLogger.error(
-          'NotificationTokenService: Firestore saveToken failed', e);
+      print("ERROR: NotificationTokenService: Firestore saveToken failed: $e");
     }
   }
 
@@ -196,32 +206,65 @@ class NotificationTokenService extends GetxService {
     required String deviceId,
   }) async {
     try {
-      await http.delete(
-        Uri.parse(
-            '$_supabaseUrl/rest/v1/notification_tokens?user_id=eq.$userId&device_id=eq.$deviceId'),
-        headers: {
-          'apikey': _supabaseAnonKey,
-          'Authorization': 'Bearer $_supabaseAnonKey',
-        },
-      ).timeout(const Duration(seconds: 10));
-      AppLogger.success(
-          'NotificationTokenService: Supabase token removed for user=$userId');
-    } catch (e) {
-      AppLogger.error(
-          'NotificationTokenService: Supabase removeToken failed', e);
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print("WARNING: NotificationTokenService: No current Firebase user. Skipping Supabase removal.");
+        return;
+      }
+      final idToken = await currentUser.getIdToken(true);
+      if (idToken == null || idToken.isEmpty) {
+        print("WARNING: NotificationTokenService: Failed to retrieve Firebase ID Token. Skipping Supabase removal.");
+        return;
+      }
+
+      final payload = {
+        'action': 'delete',
+        'device_id': deviceId,
+      };
+
+      final url = '$_supabaseUrl/functions/v1/register-token';
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      };
+
+      print("INFO: Removing token from Supabase Edge Function...");
+      print("DEBUG HTTP Request URL: $url");
+      print("DEBUG HTTP Request Headers: ${jsonEncode(headers)}");
+      print("DEBUG HTTP Request Payload: ${jsonEncode(payload)}");
+
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: headers,
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      print("DEBUG HTTP Response Status: ${response.statusCode}");
+      print("DEBUG HTTP Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print("SUCCESS: NotificationTokenService: Supabase Edge Function token removed for user=$userId");
+      } else {
+        print("WARNING: NotificationTokenService: Supabase Edge Function unexpected status=${response.statusCode}");
+      }
+    } catch (e, stackTrace) {
+      print("ERROR: NotificationTokenService: Supabase Edge Function removeToken failed: $e");
+      print("DEBUG HTTP Error Stack: $stackTrace");
     }
   }
 
   Future<void> _removeFromFirestore({required String userId}) async {
+    print("INFO: Removing token from Firestore...");
     try {
       await _firestore
           .collection(AppCollections.notificationTokens)
           .doc(userId)
           .delete();
-      AppLogger.success(
-          'NotificationTokenService: Firestore token removed for user=$userId');
-    } catch (_) {
-      // Non-fatal
+      print("SUCCESS: NotificationTokenService: Firestore token removed for user=$userId");
+    } catch (e) {
+      print("ERROR: NotificationTokenService: Firestore removeToken failed: $e");
     }
   }
 }

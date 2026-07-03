@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import '../../../core/constants/app_routes.dart';
-import '../../utils/app_logger.dart';
 
 /// Maps FCM notification payload data to in-app navigation routes.
 ///
@@ -24,21 +23,29 @@ class NotificationRouter {
       final type = (data['type'] ?? '').toString().toLowerCase();
       final url = (data['url'] ?? '').toString();
 
-      AppLogger.info('NotificationRouter: type=$type url=$url');
+      print("INFO: NotificationRouter: type=$type url=$url");
 
       if (type == 'booking' ||
           type == 'quote' ||
           type == 'payment' ||
+          type.contains('customer') ||
           url.contains('/dashboard')) {
+        print("INFO: NotificationRouter: Routing user to Customer Dashboard");
         Get.toNamed(AppRoutes.customerDashboard);
-      } else if (type == 'admin' || url.contains('/admin')) {
+      } else if (type == 'admin' ||
+          type.contains('alert') ||
+          type.contains('created') ||
+          url.contains('/admin')) {
+        print("INFO: NotificationRouter: Routing user to Admin Dashboard");
         Get.toNamed(AppRoutes.adminDashboard);
       } else if (url.isNotEmpty) {
+        print("INFO: NotificationRouter: Routing user to explicit path: $url");
         Get.toNamed(url);
+      } else {
+        print("WARNING: NotificationRouter: Unknown notification type and empty URL. Navigation skipped.");
       }
-      // Unknown type — intentionally do nothing to keep app stable
     } catch (e) {
-      AppLogger.error('NotificationRouter: navigation failed', e);
+      print("ERROR: NotificationRouter: navigation failed: $e");
     }
   }
 }

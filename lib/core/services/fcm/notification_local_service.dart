@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import '../../utils/app_logger.dart';
 import 'notification_router.dart';
 
 /// Displays local notifications while the app is in the foreground.
@@ -60,7 +59,7 @@ class NotificationLocalService extends GetxService {
     // Create Android notification channel (required for Android 8+)
     await _createAndroidChannel();
 
-    AppLogger.success('NotificationLocalService: initialized');
+    print("SUCCESS: NotificationLocalService: initialized");
   }
 
   Future<void> _createAndroidChannel() async {
@@ -78,7 +77,7 @@ class NotificationLocalService extends GetxService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
-    AppLogger.info('NotificationLocalService: Android channel created');
+    print("INFO: NotificationLocalService: Android channel created");
   }
 
   // ─── Show Notification ───────────────────────────────────────────────────
@@ -93,6 +92,7 @@ class NotificationLocalService extends GetxService {
     String? imageUrl,
     Map<String, dynamic> payload = const {},
   }) {
+    print("INFO: Showing foreground notification: title=$title body=$body");
     if (kIsWeb) {
       // Web fallback: styled GetX snackbar
       Get.snackbar(
@@ -161,7 +161,7 @@ class NotificationLocalService extends GetxService {
         payload: _encodePayload(payload),
       );
     } catch (e) {
-      AppLogger.error('NotificationLocalService: show failed', e);
+      print("ERROR: NotificationLocalService: show failed: $e");
     }
   }
 
@@ -171,7 +171,7 @@ class NotificationLocalService extends GetxService {
     final rawPayload = response.payload;
     if (rawPayload == null || rawPayload.isEmpty) return;
 
-    AppLogger.info('NotificationLocalService: tap payload=$rawPayload');
+    print("INFO: NotificationLocalService: tap payload=$rawPayload");
 
     // Parse encoded payload and route
     final data = _decodePayload(rawPayload);

@@ -1,6 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
-import '../../utils/app_logger.dart';
 
 /// Handles FCM permission negotiation across all platforms.
 ///
@@ -29,6 +28,7 @@ class NotificationPermissionService extends GetxService {
   /// [AuthorizationStatus.provisional] — token fetch may proceed.
   /// Returns `false` otherwise — no token fetch attempted.
   Future<bool> requestPermission() async {
+    print("INFO: NotificationPermissionService: Requesting permission...");
     try {
       final settings = await _messaging.requestPermission(
         alert: true,
@@ -44,28 +44,23 @@ class NotificationPermissionService extends GetxService {
 
       switch (settings.authorizationStatus) {
         case AuthorizationStatus.authorized:
-          AppLogger.success(
-              'NotificationPermissionService: permission AUTHORIZED');
+          print("SUCCESS: NotificationPermissionService: permission AUTHORIZED");
           return true;
 
         case AuthorizationStatus.provisional:
-          AppLogger.info(
-              'NotificationPermissionService: permission PROVISIONAL (iOS)');
+          print("INFO: NotificationPermissionService: permission PROVISIONAL (iOS)");
           return true;
 
         case AuthorizationStatus.denied:
-          AppLogger.warning(
-              'NotificationPermissionService: permission DENIED by user');
+          print("WARNING: NotificationPermissionService: permission DENIED by user");
           return false;
 
         case AuthorizationStatus.notDetermined:
-          AppLogger.warning(
-              'NotificationPermissionService: permission NOT DETERMINED — dialog not shown yet');
+          print("WARNING: NotificationPermissionService: permission NOT DETERMINED — dialog not shown yet");
           return false;
       }
     } catch (e) {
-      AppLogger.error(
-          'NotificationPermissionService: requestPermission failed', e);
+      print("ERROR: NotificationPermissionService: requestPermission failed: $e");
       return false;
     }
   }
@@ -77,8 +72,7 @@ class NotificationPermissionService extends GetxService {
       rxStatus.value = settings.authorizationStatus;
       return settings.authorizationStatus;
     } catch (e) {
-      AppLogger.error(
-          'NotificationPermissionService: checkStatus failed', e);
+      print("ERROR: NotificationPermissionService: checkStatus failed: $e");
       return AuthorizationStatus.notDetermined;
     }
   }

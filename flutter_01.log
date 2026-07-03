@@ -1,0 +1,99 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run
+
+## exception
+
+PathNotFoundException: PathNotFoundException: Cannot open file, path = 'D:\om_event_python\om_event\.dart_tool\chrome-device\Default\preferences' (OS Error: The system cannot find the path specified.
+, errno = 3)
+
+```
+#0      _File.throwIfError (dart:io/file_impl.dart:782:7)
+#1      _File.openSync (dart:io/file_impl.dart:575:5)
+#2      _File.writeAsBytesSync (dart:io/file_impl.dart:747:31)
+#3      _File.writeAsStringSync (dart:io/file_impl.dart:775:5)
+#4      ForwardingFile.writeAsStringSync (package:file/src/forwarding/forwarding_file.dart:150:16)
+#5      ErrorHandlingFile.writeAsStringSync.<anonymous closure> (package:flutter_tools/src/base/error_handling_io.dart:254:22)
+#6      _runSync (package:flutter_tools/src/base/error_handling_io.dart:550:14)
+#7      ErrorHandlingFile.writeAsStringSync (package:flutter_tools/src/base/error_handling_io.dart:253:5)
+#8      ChromiumLauncher._cacheUserSessionInformation (package:flutter_tools/src/web/chrome.dart:408:29)
+#9      ChromiumLauncher.launch.<anonymous closure> (package:flutter_tools/src/web/chrome.dart:241:11)
+#10     _rootRun (dart:async/zone.dart:1517:47)
+#11     _CustomZone.run (dart:async/zone.dart:1422:19)
+#12     _FutureListener.handleWhenComplete (dart:async/future_impl.dart:258:18)
+#13     Future._propagateToListeners.handleWhenCompleteCallback (dart:async/future_impl.dart:893:39)
+#14     Future._propagateToListeners (dart:async/future_impl.dart:958:11)
+#15     Future._completeWithValue (dart:async/future_impl.dart:712:5)
+#16     Future._asyncCompleteWithValue.<anonymous closure> (dart:async/future_impl.dart:792:7)
+#17     _rootRun (dart:async/zone.dart:1525:13)
+#18     _CustomZone.run (dart:async/zone.dart:1422:19)
+#19     _CustomZone.runGuarded (dart:async/zone.dart:1321:7)
+#20     _CustomZone.bindCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1362:23)
+#21     _microtaskLoop (dart:async/schedule_microtask.dart:40:21)
+#22     _startMicrotaskLoop (dart:async/schedule_microtask.dart:49:5)
+#23     _runPendingImmediateCallback (dart:isolate-patch/isolate_patch.dart:128:13)
+#24     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:195:5)
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel stable, 3.29.0, on Microsoft Windows [Version 10.0.26200.8655], locale en-US)
+    [1,340ms]
+    [32m•[39m Flutter version 3.29.0 on channel stable at C:\Users\ASUS\fvm\versions\3.29.0
+    [32m•[39m Upstream repository https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision 35c388afb5 (1 year, 5 months ago), 2025-02-10 12:48:41 -0800
+    [32m•[39m Engine revision f73bfc4522
+    [32m•[39m Dart version 3.7.0
+    [32m•[39m DevTools version 2.42.2
+
+[32m[✓][39m Windows Version (11 Home Single Language 64-bit, 25H2, 2009) [4.0s]
+
+[32m[✓][39m Android toolchain - develop for Android devices (Android SDK version 36.1.0) [8.2s]
+    [32m•[39m Android SDK at C:\Users\ASUS\AppData\Local\Android\sdk
+    [32m•[39m Platform android-36.1, build-tools 36.1.0
+    [32m•[39m Java binary at: C:\Program Files\Android\Android Studio1\jbr\bin\java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    [32m•[39m Java version OpenJDK Runtime Environment (build 21.0.9+-14787801-b1163.94)
+    [32m•[39m All Android licenses accepted.
+
+[32m[✓][39m Chrome - develop for the web [665ms]
+    [32m•[39m Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[33m[!][39m Visual Studio - develop Windows apps (SQL Server Management Studio 22 22.3.3) [663ms]
+    [32m•[39m Visual Studio at C:\Program Files\Microsoft SQL Server Management Studio 22\Release
+    [32m•[39m SQL Server Management Studio 22 version 22.3.11527.330
+    [31m✗[39m Visual Studio is missing necessary components. Please re-run the Visual Studio installer for the
+      "Desktop development with C++" workload, and include these components:
+        MSVC v142 - VS 2019 C++ x64/x86 build tools
+         - If there are multiple build tool versions available, install the latest
+        C++ CMake tools for Windows
+        Windows 10 SDK
+
+[32m[✓][39m Android Studio (version 2025.3.2) [12ms]
+    [32m•[39m Android Studio at C:\Program Files\Android\Android Studio1
+    [32m•[39m Flutter plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
+    [32m•[39m Dart plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/6351-dart
+    [32m•[39m Java version OpenJDK Runtime Environment (build 21.0.9+-14787801-b1163.94)
+
+[32m[✓][39m VS Code (version unknown) [9ms]
+    [32m•[39m VS Code at C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code
+    [32m•[39m Flutter extension version 3.116.0
+    [31m✗[39m Unable to determine VS Code version.
+
+[32m[✓][39m Connected device (3 available) [231ms]
+    [32m•[39m Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.26200.8655]
+    [32m•[39m Chrome (web)      • chrome  • web-javascript • Google Chrome 149.0.7827.114
+    [32m•[39m Edge (web)        • edge    • web-javascript • Microsoft Edge 149.0.4022.98
+
+[32m[✓][39m Network resources [1,307ms]
+    [32m•[39m All expected network resources are available.
+
+[33m![39m Doctor found issues in 1 category.
+```
