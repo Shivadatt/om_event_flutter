@@ -1,206 +1,234 @@
+import 'dart:async';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'notification_gateway_service.dart';
 
 class LocalNotificationTriggerService extends GetxService {
   static LocalNotificationTriggerService get to => Get.find();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _client = Supabase.instance.client;
+
+  // Track subscriptions to cancel on dispose (Task 10)
+  final List<StreamSubscription> _subscriptions = [];
+
+  // In-memory status caches to detect inserts and state changes
+  final Map<String, String> _bookingStatusCache = {};
+  final Map<String, String> _leadStatusCache = {};
+  final Map<String, String> _paymentStatusCache = {};
+  final Map<String, String> _quotationStatusCache = {};
 
   @override
   void onInit() {
     super.onInit();
     _startLocalListeners();
-    // Local queue runner and scheduler loops are disabled.
-    // Queue processing and schedules promotion are handled on the backend via Supabase Edge Functions.
   }
 
-  /// 1. Trigger outbox queue tasks when Firestore core records change
+  /// 1. Trigger outbox queue tasks when Supabase records change
   void _startLocalListeners() {
-    _firestore.collection(AppCollections.bookings).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final data = change.doc.data();
-          if (data != null) {
+    // A. Bookings Stream
+    final subBookings = _client.from('bookings').stream(primaryKey: ['id']).listen((rows) {
+      for (var row in rows) {
+        final id = row['id'] as String;
+        final status = row['status'] ?? 'pending';
+
+        if (!_bookingStatusCache.containsKey(id)) {
+          _bookingStatusCache[id] = status;
+          
+          // Notify Admin
+          _queueAdminNotification(
+            eventType: 'Booking Created',
+            description: 'New booking submitted by ${row['customer_name'] ?? 'Customer'}.',
+            params: {'customer_name': row['customer_name'] ?? 'Customer'},
+          );
+
+          // Notify Customer
+          final customerId = row['customer_id'] ?? '';
+          final email = row['customer_email'] ?? 'customer@gmail.com';
+          final phone = row['customer_phone'] ?? '';
+          _queueCustomerNotification(
+            customerId: customerId,
+            title: 'Booking Confirmed!',
+            body: 'Thank you for your event booking request ${row['booking_number'] ?? ''}. We will verify details and approve shortly.',
+            email: email,
+            phone: phone,
+            whatsappTemplate: 'booking_confirmation',
+            whatsappParams: [row['booking_number'] ?? ''],
+            variables: {'booking_number': row['booking_number'] ?? ''},
+          );
+
+          _scheduleEventDayReminders(id, row);
+        } else if (_bookingStatusCache[id] != status) {
+          _bookingStatusCache[id] = status;
+
+          final customerId = row['customer_id'] ?? '';
+          final email = row['customer_email'] ?? 'customer@gmail.com';
+          final phone = row['customer_phone'] ?? '';
+          final bookingNumber = row['booking_number'] ?? '';
+
+          if (status == 'confirmed' || status == 'approved') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Booking Approved!',
+              body: 'Your event booking request $bookingNumber has been approved.',
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'booking_approved',
+              whatsappParams: [bookingNumber],
+              variables: {'booking_number': bookingNumber},
+            );
+          } else if (status == 'cancelled' || status == 'rejected') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Booking Cancelled',
+              body: 'Your event booking $bookingNumber has been updated to: CANCELLED.',
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'booking_rejected',
+              whatsappParams: [bookingNumber],
+              variables: {'booking_number': bookingNumber},
+            );
+          } else if (status == 'completed') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Booking Completed!',
+              body: 'Thank you for choosing Om Events. Your booking $bookingNumber has been completed.',
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'booking_completed',
+              whatsappParams: [bookingNumber],
+              variables: {'booking_number': bookingNumber},
+            );
+          }
+        }
+      }
+    });
+    _subscriptions.add(subBookings);
+
+    // B. Leads Stream
+    final subLeads = _client.from('leads').stream(primaryKey: ['id']).listen((rows) {
+      for (var row in rows) {
+        final id = row['id'] as String;
+        final status = row['status'] ?? 'pending';
+
+        if (!_leadStatusCache.containsKey(id)) {
+          _leadStatusCache[id] = status;
+          _queueAdminNotification(
+            eventType: 'Lead Created',
+            description: 'New customer lead generated from ${row['customer_name'] ?? 'Customer'}.',
+            params: {'customer_name': row['customer_name'] ?? 'Customer'},
+          );
+        }
+      }
+    });
+    _subscriptions.add(subLeads);
+
+    // C. Payments Stream
+    final subPayments = _client.from('payments').stream(primaryKey: ['id']).listen((rows) {
+      for (var row in rows) {
+        final id = row['id'] as String;
+        final status = row['status'] ?? 'pending';
+
+        if (!_paymentStatusCache.containsKey(id)) {
+          _paymentStatusCache[id] = status;
+          _queueAdminNotification(
+            eventType: 'Payment Uploaded',
+            description: 'Payment receipt uploaded: ₹${row['amount'] ?? 0.0}.',
+            params: {'amount': (row['amount'] ?? 0.0).toString()},
+          );
+        } else if (_paymentStatusCache[id] != status) {
+          _paymentStatusCache[id] = status;
+
+          final customerId = row['customer_id'] ?? '';
+          final amount = (row['amount'] ?? 0.0).toString();
+          final phone = row['customer_phone'] ?? '';
+
+          if (status == 'approved' || status == 'verified') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Payment Verification Approved',
+              body: 'Receipt verified successfully for ₹$amount.',
+              email: 'customer@gmail.com',
+              phone: phone,
+              whatsappTemplate: 'payment_approved',
+              whatsappParams: [amount],
+              variables: {'amount': amount},
+            );
+          }
+        }
+      }
+    });
+    _subscriptions.add(subPayments);
+
+    // D. Quotations Stream
+    final subQuotations = _client.from('quotations').stream(primaryKey: ['id']).listen((rows) {
+      for (var row in rows) {
+        final id = row['id'] as String;
+        final status = row['status'] ?? 'pending';
+
+        if (!_quotationStatusCache.containsKey(id)) {
+          _quotationStatusCache[id] = status;
+        } else if (_quotationStatusCache[id] != status) {
+          _quotationStatusCache[id] = status;
+
+          final customerId = row['customer_id'] ?? '';
+          final customerName = row['customer_name'] ?? 'Customer';
+          final publicId = row['public_id'] ?? id;
+          final email = row['customer_email'] ?? 'customer@gmail.com';
+          final phone = row['customer_phone'] ?? '';
+
+          if (status == 'approved' || status == 'accepted' || status == 'booked') {
             // Notify Admin
             _queueAdminNotification(
-              eventType: 'Booking Created',
-              description: 'New booking submitted by {{customer_name}}.',
-              params: {'customer_name': data['customer_name'] ?? 'Customer'},
+              eventType: 'Quotation Approved',
+              description: 'Quotation $publicId has been approved/booked by $customerName.',
+              params: {
+                'public_id': publicId,
+                'customer_name': customerName,
+              },
             );
 
             // Notify Customer
-            final customerId = data['customerId'] ?? '';
-            final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
-            final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
             _queueCustomerNotification(
               customerId: customerId,
-              title: 'Booking Confirmed!',
-              body: 'Thank you for your event booking request {{booking_number}}. We will verify details and approve shortly.',
+              title: 'Quotation Approved',
+              body: 'Your quotation $publicId has been booked successfully.',
               email: email,
               phone: phone,
-              whatsappTemplate: 'booking_confirmation',
-              whatsappParams: [data['booking_number'] ?? ''],
-              variables: {'booking_number': data['booking_number'] ?? ''},
+              whatsappTemplate: 'quotation_approved',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
             );
-
-            _scheduleEventDayReminders(change.doc.id, data);
-          }
-        } else if (change.type == DocumentChangeType.modified) {
-          final data = change.doc.data();
-          if (data != null) {
-            final status = data['status'] ?? 'pending';
-            final customerId = data['customerId'] ?? '';
-            final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
-            final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
-
-            if (status == 'confirmed' || status == 'approved') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Booking Approved!',
-                body: 'Your event booking request {{booking_number}} has been approved.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'booking_approved',
-                whatsappParams: [data['booking_number'] ?? ''],
-                variables: {'booking_number': data['booking_number'] ?? ''},
-              );
-            } else if (status == 'cancelled' || status == 'rejected') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Booking Cancelled',
-                body: 'Your event booking {{booking_number}} has been updated to: CANCELLED.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'booking_rejected',
-                whatsappParams: [data['booking_number'] ?? ''],
-                variables: {'booking_number': data['booking_number'] ?? ''},
-              );
-            } else if (status == 'completed') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Booking Completed!',
-                body: 'Thank you for choosing Om Events. Your booking {{booking_number}} has been completed.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'booking_completed',
-                whatsappParams: [data['booking_number'] ?? ''],
-                variables: {'booking_number': data['booking_number'] ?? ''},
-              );
-            }
-          }
-        }
-      }
-    });
-
-    _firestore.collection(AppCollections.leads).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final data = change.doc.data();
-          if (data != null) {
-            _queueAdminNotification(
-              eventType: 'Lead Created',
-              description: 'New customer lead generated from {{customer_name}}.',
-              params: {'customer_name': data['name'] ?? 'Customer'},
+          } else if (status == 'rejected') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Quotation Rejected',
+              body: 'Your quotation $publicId has been rejected.',
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'quotation_rejected',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
             );
           }
         }
       }
     });
+    _subscriptions.add(subQuotations);
+  }
 
-    _firestore.collection(AppCollections.payments).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final data = change.doc.data();
-          if (data != null) {
-            _queueAdminNotification(
-              eventType: 'Payment Uploaded',
-              description: 'Payment receipt uploaded: ₹{{amount}}.',
-              params: {'amount': (data['amount'] ?? 0.0).toString()},
-            );
-          }
-        } else if (change.type == DocumentChangeType.modified) {
-          final data = change.doc.data();
-          if (data != null) {
-            final status = data['status'] ?? 'pending';
-            final customerId = data['customerId'] ?? '';
-            final amount = (data['amount'] ?? 0.0).toString();
-            final phone = data['customer_phone'] ?? '';
-
-            if (status == 'approved' || status == 'verified') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Payment Verification Approved',
-                body: 'Receipt verified successfully for ₹{{amount}}.',
-                email: 'customer@gmail.com',
-                phone: phone,
-                whatsappTemplate: 'payment_approved',
-                whatsappParams: [amount],
-                variables: {'amount': amount},
-              );
-            }
-          }
-        }
-      }
-    });
-
-    _firestore.collection(AppCollections.quotations).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.modified) {
-          final data = change.doc.data();
-          if (data != null) {
-            final status = data['status'] ?? 'pending';
-            final customerId = data['customerId'] ?? '';
-            final customerName = data['customer_name'] ?? data['customerName'] ?? 'Customer';
-            final publicId = data['public_id'] ?? data['publicId'] ?? change.doc.id;
-            final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
-            final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
-
-            if (status == 'approved' || status == 'accepted' || status == 'booked') {
-              // Notify Admin
-              _queueAdminNotification(
-                eventType: 'Quotation Approved',
-                description: 'Quotation {{public_id}} has been approved/booked by {{customer_name}}.',
-                params: {
-                  'public_id': publicId,
-                  'customer_name': customerName,
-                },
-              );
-
-              // Notify Customer
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Quotation Approved',
-                body: 'Your quotation {{public_id}} has been booked successfully.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'quotation_approved',
-                whatsappParams: [publicId],
-                variables: {'public_id': publicId},
-              );
-            } else if (status == 'rejected') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Quotation Rejected',
-                body: 'Your quotation {{public_id}} has been rejected.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'quotation_rejected',
-                whatsappParams: [publicId],
-                variables: {'public_id': publicId},
-              );
-            }
-          }
-        }
-      }
-    });
+  @override
+  void onClose() {
+    for (final sub in _subscriptions) {
+      sub.cancel();
+    }
+    _subscriptions.clear();
+    super.onClose();
   }
 
   void _scheduleEventDayReminders(String bookingId, Map<String, dynamic> bookingData) {
-    final customerId = bookingData['customerId'] ?? '';
-    final email = bookingData['customer_email'] ?? bookingData['customerEmail'] ?? 'customer@gmail.com';
-    final dateStr = bookingData['event_date'] ?? bookingData['eventDate'] ?? '';
+    final customerId = bookingData['customer_id'] ?? '';
+    final email = bookingData['customer_email'] ?? 'customer@gmail.com';
+    final dateStr = bookingData['event_date'] ?? '';
 
     if (dateStr.isEmpty) return;
     try {
@@ -287,15 +315,14 @@ class LocalNotificationTriggerService extends GetxService {
     Map<String, String>? variables,
   }) {
     // Preserve local in-app notifications inbox feature
-    _firestore.collection('customer_notifications').add({
-      'customerId': customerId,
+    _client.from('customer_notifications').insert({
+      'customer_id': customerId,
       'title': title,
       'body': body,
       'type': 'Alert',
-      'isRead': false,
+      'is_read': false,
       'branch': 'Ahmedabad',
       'priority': 'normal',
-      'createdAt': FieldValue.serverTimestamp(),
     });
 
     // 1. Email Alert
@@ -329,14 +356,16 @@ class LocalNotificationTriggerService extends GetxService {
     }
 
     // 3. Push Notification Alert
-    NotificationGatewayService.to.queueNotification(
-      recipient: customerId,
-      recipientId: customerId,
-      type: 'Customer Alert',
-      title: title,
-      body: body,
-      channel: 'push',
-      variables: variables,
-    );
+    if (customerId.isNotEmpty) {
+      NotificationGatewayService.to.queueNotification(
+        recipient: customerId,
+        recipientId: customerId,
+        type: 'Customer Alert',
+        title: title,
+        body: body,
+        channel: 'push',
+        variables: variables,
+      );
+    }
   }
 }

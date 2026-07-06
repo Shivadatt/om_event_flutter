@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/config/app_theme.dart';
-import '../../../../../core/constants/app_collections.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
 /// Notifications center panel rendering for customers.
@@ -22,14 +21,14 @@ class _NotificationsViewState extends State<NotificationsView> {
   String notificationQuery = '';
   String activeCategory = 'All'; // 'All' | 'Alert' | 'Booking' | 'Payment' | 'Announcement' | 'Archived'
   final searchController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _client = Supabase.instance.client;
 
   Future<void> _archiveNotification(String docId, bool archive) async {
     try {
-      await _firestore
-          .collection(AppCollections.customerNotifications)
-          .doc(docId)
-          .update({'isArchived': archive});
+      await _client
+          .from('customer_notifications')
+          .update({'is_archived': archive})
+          .eq('id', docId);
       Get.snackbar("Success", archive ? "Notification archived." : "Notification restored.");
     } catch (e) {
       Get.snackbar("Error", "Action failed: $e");

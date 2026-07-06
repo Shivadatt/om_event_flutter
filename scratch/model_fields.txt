@@ -1,0 +1,830 @@
+==================================================
+=== DIRECTORY: models ===
+==================================================
+
+=== FILE: activity_log_model.dart ===
+Classes: ActivityLogModel
+  Field: id (String)
+  Field: userId (String?)
+  Field: action (String)
+  Field: entityType (String)
+  Field: entityId (String)
+  Field: ipAddress (String)
+  Field: createdAt (DateTime)
+
+=== FILE: admin_role_model.dart ===
+Classes: AdminRoleModel
+
+=== FILE: booking_model.dart ===
+Classes: BookingModel
+  Field: id (String)
+  Field: bookingNumber (String)
+  Field: quotationId (String)
+  Field: advanceAmount (double)
+  Field: paymentStatus (String)
+  Field: status (String)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+
+=== FILE: business_details_model.dart ===
+Classes: BusinessDetailsModel, GeneralProfileModel, ContactItemModel, ContactDetailsModel, BranchModel, AddressModel, SocialMediaModel, WorkingHoursModel, BankDetailsModel, LegalDetailsModel, SEOModel, MapsModel
+
+=== FILE: category_model.dart ===
+Classes: CategoryModel
+
+=== FILE: contact_number_model.dart ===
+Classes: ContactNumberModel
+  Field: id (String)
+  Field: label (String)
+  Field: number (String)
+  Field: isPrimary (bool)
+  Field: isActive (bool)
+  Field: displayOrder (int)
+
+=== FILE: customer_booking_model.dart ===
+Classes: CustomerBookingModel
+
+=== FILE: customer_lead_model.dart ===
+Classes: CustomerLeadModel
+
+=== FILE: customer_model.dart ===
+Classes: CustomerModel
+  Field: id (String)
+  Field: name (String)
+  Field: phone (String)
+  Field: email (String)
+  Field: address (String)
+  Field: city (String)
+  Field: mapLocation (String)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+
+=== FILE: customer_portal_models.dart ===
+Classes: CustomerQuotationItemModel, CustomerQuotationModel, BookingTimelineModel, CustomerPaymentModel, CustomerNotificationModel, CustomerDocumentModel, BookingGalleryModel, CustomerWishlistModel, RebookRequestModel, OfferModel, CustomerActivityModel, SupportTicketModel, CouponModel, CoordinatorModel, InventoryItemModel, StaffLogModel, ExpenseItemModel, BookingAgreementModel
+
+=== FILE: customer_profile_model.dart ===
+Classes: CustomerProfileModel
+
+=== FILE: decoration_item_model.dart ===
+Classes: DecorationItemModel
+
+=== FILE: experience_model.dart ===
+Classes: ExperienceModel
+
+=== FILE: item_image_model.dart ===
+Classes: ItemImageModel
+  Field: id (String)
+  Field: decorationItemId (String)
+  Field: url (String)
+  Field: altText (String)
+  Field: sortOrder (int)
+  Field: createdAt (DateTime)
+
+=== FILE: lead_model.dart ===
+Classes: LeadModel
+
+=== FILE: notification_models.dart ===
+Classes: FcmTokenModel, NotificationLogModel, NotificationTemplateModel, QueueTaskModel, DeadLetterNotificationModel, NotificationPreferenceModel, ScheduledNotificationModel, DeliveryEventModel
+  Field: userId (String)
+  Field: deviceToken (String)
+  Field: platform (String)
+  Field: updatedAt (DateTime)
+  Field: id (String)
+  Field: recipientId (String)
+  Field: type (String)
+  Field: title (String)
+  Field: body (String)
+  Field: status (String)
+  Field: sentAt (DateTime)
+  Field: channelsUsed (List<String>)
+  Field: id (String)
+  Field: eventKey (String)
+  Field: titleTemplate (String)
+  Field: bodyTemplate (String)
+  Field: isPushEnabled (bool)
+  Field: isEmailEnabled (bool)
+  Field: isWhatsappEnabled (bool)
+  Field: id (String)
+  Field: recipient (String)
+  Field: recipientId (String)
+  Field: type (String)
+  Field: title (String)
+  Field: body (String)
+  Field: status (String)
+  Field: channel (String)
+  Field: retryCount (int)
+  Field: errorMessage (String)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+  Field: id (String)
+  Field: reason (String)
+  Field: channel (String)
+  Field: retryCount (int)
+  Field: timestamp (DateTime)
+  Field: stackTrace (String)
+  Field: uid (String)
+  Field: pushEnabled (bool)
+  Field: emailEnabled (bool)
+  Field: whatsappEnabled (bool)
+  Field: bookingEnabled (bool)
+  Field: paymentEnabled (bool)
+  Field: quotationEnabled (bool)
+  Field: reviewEnabled (bool)
+  Field: offerEnabled (bool)
+  Field: supportEnabled (bool)
+  Field: reminderEnabled (bool)
+  Field: marketingEnabled (bool)
+  Field: newsletterEnabled (bool)
+  Field: dndEnabled (bool)
+  Field: quietHoursStart (String)
+  Field: quietHoursEnd (String)
+  Field: dailyDigestEnabled (bool)
+  Field: id (String)
+  Field: eventId (String)
+  Field: eventType (String)
+  Field: recipient (String)
+  Field: recipientId (String)
+  Field: triggerAt (DateTime)
+  Field: title (String)
+  Field: body (String)
+  Field: channel (String)
+  Field: status (String)
+  Field: id (String)
+  Field: logId (String)
+  Field: event (String)
+  Field: status (String)
+  Field: timestamp (DateTime)
+
+=== FILE: payment_model.dart ===
+Classes: PaymentModel
+  Field: id (String)
+  Field: bookingId (String)
+  Field: provider (String)
+  Field: reference (String)
+  Field: amount (double)
+  Field: status (String)
+  Field: paidAt (DateTime?)
+  Field: createdAt (DateTime)
+
+=== FILE: quotation_item_model.dart ===
+Classes: QuotationItemModel
+  Field: id (String)
+  Field: quotationId (String)
+  Field: decorationItemId (String)
+  Field: name (String)
+  Field: quantity (int)
+  Field: unitPrice (double)
+  Field: color (String)
+  Field: theme (String)
+  Field: notes (String)
+
+=== FILE: quotation_model.dart ===
+Classes: QuotationItemModel, QuotationModel
+
+=== FILE: review_model.dart ===
+Classes: ReviewModel
+
+=== FILE: user_model.dart ===
+Classes: UserModel
+  Field: id (String)
+  Field: name (String)
+  Field: email (String)
+  Field: role (String)
+  Field: isActive (bool)
+  Field: createdAt (DateTime)
+
+==================================================
+=== DIRECTORY: entities ===
+==================================================
+
+=== FILE: admin_role.dart ===
+Classes: AdminRole
+  Field: uid (String)
+  Field: name (String)
+  Field: email (String)
+  Field: role (String)
+  Field: isActive (bool)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+  Field: createdBy (String)
+  Field: roleType (String)
+  Field: phone (String)
+  Field: designation (String)
+  Field: bio (String)
+  Field: address (String)
+  Field: photoUrl (String)
+  Field: lastLogin (DateTime?)
+
+=== FILE: booking.dart ===
+Classes: Booking
+  Field: id (String)
+  Field: bookingNumber (String)
+  Field: quotationId (String)
+  Field: advanceAmount (double)
+  Field: paymentStatus (String)
+  Field: status (String)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+
+=== FILE: booking_agreement.dart ===
+Classes: BookingAgreement
+  Field: id (String)
+  Field: bookingId (String)
+  Field: terms (String)
+  Field: digitalSignature (String)
+  Field: accepted (bool)
+
+=== FILE: booking_gallery.dart ===
+Classes: BookingGallery
+  Field: id (String)
+  Field: customerId (String)
+  Field: bookingId (String)
+  Field: mediaUrls (List<String>)
+  Field: createdAt (DateTime)
+
+=== FILE: booking_timeline.dart ===
+Classes: BookingTimeline
+  Field: id (String)
+  Field: bookingId (String)
+  Field: status (String)
+  Field: updatedTime (DateTime)
+  Field: notes (String)
+
+=== FILE: business_details_entity.dart ===
+Classes: BusinessDetailsEntity, GeneralProfileEntity, ContactDetailsEntity, ContactItemEntity, BranchEntity, AddressEntity, SocialMediaEntity, WorkingHoursEntity, BankDetailsEntity, LegalDetailsEntity, SEOEntity, MapsEntity
+  Field: general (GeneralProfileEntity)
+  Field: contacts (ContactDetailsEntity)
+  Field: branches (List<BranchEntity>)
+  Field: addresses (List<AddressEntity>)
+  Field: social (SocialMediaEntity)
+  Field: workingHours (WorkingHoursEntity)
+  Field: bank (BankDetailsEntity)
+  Field: legal (LegalDetailsEntity)
+  Field: seo (SEOEntity)
+  Field: maps (MapsEntity)
+  Field: businessName (String)
+  Field: companyName (String)
+  Field: tagline (String)
+  Field: description (String)
+  Field: ownerName (String)
+  Field: ownerDesignation (String)
+  Field: logo (String)
+  Field: coverImage (String)
+  Field: favicon (String)
+  Field: registrationNumber (String)
+  Field: gstNumber (String)
+  Field: panNumber (String)
+  Field: licenseNumber (String)
+  Field: establishedYear (String)
+  Field: phones (List<ContactItemEntity>)
+  Field: whatsapps (List<ContactItemEntity>)
+  Field: emails (List<ContactItemEntity>)
+  Field: customerCares (List<ContactItemEntity>)
+  Field: emergencyContacts (List<ContactItemEntity>)
+  Field: id (String)
+  Field: label (String)
+  Field: value (String)
+  Field: isPrimary (bool)
+  Field: isActive (bool)
+  Field: displayOrder (int)
+  Field: id (String)
+  Field: branchName (String)
+  Field: branchManager (String)
+  Field: phoneNumber (String)
+  Field: whatsapp (String)
+  Field: email (String)
+  Field: fullAddress (String)
+  Field: googleMapUrl (String)
+  Field: latitude (String)
+  Field: longitude (String)
+  Field: workingHours (String)
+  Field: openingDays (String)
+  Field: displayOrder (int)
+  Field: isActive (bool)
+  Field: instagram (String)
+  Field: id (String)
+  Field: addressTitle (String)
+  Field: street (String)
+  Field: area (String)
+  Field: city (String)
+  Field: district (String)
+  Field: state (String)
+  Field: country (String)
+  Field: pincode (String)
+  Field: landmark (String)
+  Field: googleMapsLink (String)
+  Field: latitude (String)
+  Field: longitude (String)
+  Field: instagramKadi (String)
+  Field: instagramThangadh (String)
+  Field: website (String)
+  Field: googleBusinessProfile (String)
+  Field: monday (String)
+  Field: tuesday (String)
+  Field: wednesday (String)
+  Field: thursday (String)
+  Field: friday (String)
+  Field: saturday (String)
+  Field: sunday (String)
+  Field: holidayNotes (String)
+  Field: emergencyHours (String)
+  Field: bankName (String)
+  Field: accountHolder (String)
+  Field: accountNumber (String)
+  Field: ifsc (String)
+  Field: upiId (String)
+  Field: qrCode (String)
+  Field: gstNumber (String)
+  Field: panNumber (String)
+  Field: msmeNumber (String)
+  Field: termsAndConditions (String)
+  Field: privacyPolicy (String)
+  Field: refundPolicy (String)
+  Field: cancellationPolicy (String)
+  Field: metaTitle (String)
+  Field: metaDescription (String)
+  Field: keywords (String)
+  Field: canonicalUrl (String)
+  Field: ogImage (String)
+  Field: twitterCardImage (String)
+  Field: embedCode (String)
+  Field: mapUrl (String)
+  Field: coordinates (String)
+
+=== FILE: category.dart ===
+Classes: Category
+  Field: id (String)
+  Field: name (String)
+  Field: slug (String)
+  Field: description (String)
+  Field: icon (String)
+  Field: color (String)
+  Field: imageUrl (String)
+  Field: sortOrder (int)
+  Field: itemCount (int)
+  Field: isActive (bool)
+
+=== FILE: contact_number_entity.dart ===
+Classes: ContactNumberEntity
+  Field: id (String)
+  Field: label (String)
+  Field: number (String)
+  Field: isPrimary (bool)
+  Field: isActive (bool)
+  Field: displayOrder (int)
+
+=== FILE: coordinator.dart ===
+Classes: Coordinator
+  Field: id (String)
+  Field: name (String)
+  Field: phone (String)
+  Field: photoUrl (String)
+  Field: isActive (bool)
+
+=== FILE: coupon.dart ===
+Classes: Coupon
+  Field: id (String)
+  Field: code (String)
+  Field: discount (double)
+  Field: validity (DateTime)
+  Field: usageLimit (int)
+  Field: branch (String)
+
+=== FILE: customer.dart ===
+Classes: Customer
+  Field: id (String)
+  Field: name (String)
+  Field: phone (String)
+  Field: email (String)
+  Field: city (String)
+  Field: address (String)
+  Field: latitude (double?)
+  Field: longitude (double?)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+
+=== FILE: customer_activity.dart ===
+Classes: CustomerActivity
+  Field: id (String)
+  Field: customerId (String)
+  Field: status (String)
+  Field: updatedAt (DateTime)
+  Field: details (String)
+
+=== FILE: customer_booking.dart ===
+Classes: CustomerBooking
+  Field: id (String)
+  Field: customerId (String)
+  Field: bookingNumber (String)
+  Field: eventName (String)
+  Field: package (String)
+  Field: branch (String)
+  Field: decorationType (String)
+  Field: date (DateTime)
+  Field: venue (String)
+  Field: amount (double)
+  Field: advancePaid (double)
+  Field: remainingAmount (double)
+  Field: assignedBranch (String)
+  Field: assignedContact (String)
+  Field: status (String)
+
+=== FILE: customer_document.dart ===
+Classes: CustomerDocument
+  Field: id (String)
+  Field: customerId (String)
+  Field: bookingId (String)
+  Field: name (String)
+  Field: url (String)
+  Field: type (String)
+  Field: createdAt (DateTime)
+
+=== FILE: customer_lead.dart ===
+Classes: CustomerLead
+  Field: id (String)
+  Field: customerId (String)
+  Field: leadNumber (String)
+  Field: date (DateTime)
+  Field: service (String)
+  Field: branch (String)
+  Field: budget (double)
+  Field: eventDate (DateTime)
+  Field: status (String)
+  Field: adminNotes (String)
+
+=== FILE: customer_notification.dart ===
+Classes: CustomerNotification
+  Field: id (String)
+  Field: customerId (String)
+  Field: title (String)
+  Field: body (String)
+  Field: type (String)
+  Field: isRead (bool)
+  Field: branch (String)
+  Field: createdAt (DateTime)
+  Field: isArchived (bool)
+  Field: priority (String)
+  Field: expiresAt (String?)
+
+=== FILE: customer_payment.dart ===
+Classes: CustomerPayment
+  Field: id (String)
+  Field: customerId (String)
+  Field: bookingId (String)
+  Field: amount (double)
+  Field: status (String)
+  Field: method (String)
+  Field: receiptUrl (String)
+  Field: invoiceUrl (String)
+  Field: paymentDate (DateTime)
+
+=== FILE: customer_profile.dart ===
+Classes: CustomerProfile
+  Field: id (String)
+  Field: fullName (String)
+  Field: phone (String)
+  Field: email (String)
+  Field: gender (String)
+  Field: dateOfBirth (DateTime?)
+  Field: address (String)
+  Field: city (String)
+  Field: state (String)
+  Field: pincode (String)
+  Field: branch (String)
+  Field: profileImageUrl (String)
+  Field: createdAt (DateTime)
+  Field: lastLogin (DateTime?)
+
+=== FILE: customer_quotation.dart ===
+Classes: CustomerQuotationItem, CustomerQuotation
+  Field: experienceId (String)
+  Field: name (String)
+  Field: quantity (int)
+  Field: unitPrice (double)
+  Field: color (String)
+  Field: theme (String)
+  Field: notes (String)
+  Field: id (String)
+  Field: customerId (String)
+  Field: quotationNumber (String)
+  Field: date (DateTime)
+  Field: amount (double)
+  Field: status (String)
+  Field: expiryDate (DateTime)
+  Field: pdfUrl (String)
+  Field: notes (String)
+  Field: versionHistory (List<String>)
+  Field: items (List<CustomerQuotationItem>)
+
+=== FILE: customer_wishlist.dart ===
+Classes: CustomerWishlist
+  Field: id (String)
+  Field: customerId (String)
+  Field: experienceId (String)
+  Field: addedAt (DateTime)
+
+=== FILE: decoration_item.dart ===
+Classes: DecorationItem
+  Field: id (String)
+  Field: categoryId (String)
+  Field: categoryName (String)
+  Field: categorySlug (String)
+  Field: name (String)
+  Field: slug (String)
+  Field: description (String)
+  Field: price (double)
+  Field: offerPrice (double?)
+  Field: durationHours (double)
+  Field: popularity (int)
+  Field: rating (double)
+  Field: reviewCount (int)
+  Field: availability (String)
+  Field: tags (List<String>)
+  Field: colors (List<String>)
+  Field: themes (List<String>)
+  Field: imageUrl (String)
+  Field: videoUrl (String)
+  Field: isFeatured (bool)
+  Field: isActive (bool)
+  Field: createdAt (DateTime)
+
+=== FILE: expense_item.dart ===
+Classes: ExpenseItem
+  Field: id (String)
+  Field: category (String)
+  Field: amount (double)
+  Field: date (DateTime)
+  Field: bookingId (String)
+
+=== FILE: experience.dart ===
+Classes: Experience
+  Field: id (String)
+  Field: categoryId (String)
+  Field: categoryName (String)
+  Field: categorySlug (String)
+  Field: name (String)
+  Field: slug (String)
+  Field: description (String)
+  Field: price (double)
+  Field: offerPrice (double?)
+  Field: durationHours (double)
+  Field: popularity (int)
+  Field: rating (double)
+  Field: reviewCount (int)
+  Field: availability (String)
+  Field: tags (List<String>)
+  Field: colors (List<String>)
+  Field: themes (List<String>)
+  Field: imageUrl (String)
+  Field: videoUrl (String)
+  Field: isFeatured (bool)
+  Field: isActive (bool)
+
+=== FILE: inventory_item.dart ===
+Classes: InventoryItem
+  Field: id (String)
+  Field: name (String)
+  Field: stock (int)
+  Field: lowStockThreshold (int)
+  Field: supplierName (String)
+
+=== FILE: lead.dart ===
+Classes: Lead
+  Field: id (String)
+  Field: name (String)
+  Field: phone (String)
+  Field: email (String)
+  Field: requestType (String)
+  Field: eventDate (DateTime?)
+  Field: budget (double?)
+  Field: requirements (String)
+  Field: status (String)
+  Field: assignedStaffId (String?)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+
+=== FILE: offer.dart ===
+Classes: Offer
+  Field: id (String)
+  Field: title (String)
+  Field: description (String)
+  Field: imageUrl (String)
+  Field: isActive (bool)
+  Field: priority (int)
+  Field: expiryDate (DateTime)
+  Field: branch (String)
+
+=== FILE: payment.dart ===
+Classes: Payment
+  Field: id (String)
+  Field: bookingId (String)
+  Field: provider (String)
+  Field: reference (String)
+  Field: amount (double)
+  Field: status (String)
+  Field: paidAt (DateTime?)
+  Field: createdAt (DateTime)
+
+=== FILE: quotation.dart ===
+Classes: QuotationItem, Quotation
+  Field: experienceId (String)
+  Field: name (String)
+  Field: quantity (int)
+  Field: unitPrice (double)
+  Field: color (String)
+  Field: theme (String)
+  Field: notes (String)
+  Field: id (String)
+  Field: publicId (String)
+  Field: customerPhone (String)
+  Field: customerName (String)
+  Field: eventDate (DateTime)
+  Field: eventTime (String)
+  Field: location (String)
+  Field: notes (String)
+  Field: subtotal (double)
+  Field: discount (double)
+  Field: deliveryCharge (double)
+  Field: travelCharge (double)
+  Field: gstPercent (double)
+  Field: gstAmount (double)
+  Field: grandTotal (double)
+  Field: pdfUrl (String)
+  Field: status (String)
+  Field: items (List<QuotationItem>)
+  Field: createdAt (DateTime)
+  Field: updatedAt (DateTime)
+
+=== FILE: rebook_request.dart ===
+Classes: RebookRequest
+  Field: id (String)
+  Field: customerId (String)
+  Field: previousBookingId (String)
+  Field: newDate (DateTime)
+  Field: status (String)
+  Field: createdAt (DateTime)
+
+=== FILE: review.dart ===
+Classes: Review
+  Field: id (String)
+  Field: customerName (String)
+  Field: eventName (String)
+  Field: rating (int)
+  Field: comment (String)
+  Field: imageUrl (String)
+  Field: isVerified (bool)
+  Field: isPublished (bool)
+  Field: experienceId (String?)
+  Field: createdAt (DateTime)
+  Field: isFeatured (bool)
+  Field: displayOrder (int)
+  Field: isActive (bool)
+
+=== FILE: settings_entities.dart ===
+Classes: OfficeBranch, BusinessProfile, HomepageSettings, ThemeSettings, SEOSettings, FooterSettings, ContactSettings, PricingSettings, BookingSettings, NotificationsSettings, PDFSettings, StatisticsSettings, FeatureFlagsSettings, MaintenanceSettings, AppSettings, AboutSettings, EmailTemplatesSettings, SmsTemplatesSettings, InvoiceSettings, AnalyticsSettings, DashboardSettings, WorkingHoursSettings, PoliciesSettings, ValidationSettings, MessagesSettings, HomeSectionsSettings, CtaSettings, GallerySettings, VideoSettings, ReviewSettings, FaqSettings
+  Field: id (String)
+  Field: branchName (String)
+  Field: address (String)
+  Field: city (String)
+  Field: state (String)
+  Field: country (String)
+  Field: pincode (String)
+  Field: googleMapUrl (String)
+  Field: latitude (String)
+  Field: longitude (String)
+  Field: phone1 (String)
+  Field: phone2 (String)
+  Field: whatsapp (String)
+  Field: email (String)
+  Field: instagram (String)
+  Field: businessHours (String)
+  Field: isPrimary (bool)
+  Field: name (String)
+  Field: companyName (String)
+  Field: logo (String)
+  Field: whiteLogo (String)
+  Field: favicon (String)
+  Field: gst (String)
+  Field: pan (String)
+  Field: ownerName (String)
+  Field: contactNumbers (List<ContactNumberEntity>)
+  Field: email (String)
+  Field: whatsapp (String)
+  Field: officeBranches (List<OfficeBranch>)
+  Field: workingHours (String)
+  Field: heroTitle (String)
+  Field: heroSubtitle (String)
+  Field: heroEyebrow (String)
+  Field: heroButtons (List<dynamic>)
+  Field: heroImages (List<dynamic>)
+  Field: heroVideo (String)
+  Field: heroBadge (String)
+  Field: statistics (List<dynamic>)
+  Field: benefits (List<dynamic>)
+  Field: about (String)
+  Field: cta (String)
+  Field: whyChooseUs (String)
+  Field: galleryHeader (String)
+  Field: reviewHeader (String)
+  Field: faqHeader (String)
+  Field: sectionOrder (List<dynamic>)
+  Field: faqs (List<dynamic>)
+  Field: primaryColor (String)
+  Field: secondaryColor (String)
+  Field: accentColor (String)
+  Field: typography (String)
+  Field: borderRadius (double)
+  Field: buttonStyle (String)
+  Field: cardStyle (String)
+  Field: animationSpeed (double)
+  Field: defaultTitle (String)
+  Field: metaDescription (String)
+  Field: keywords (String)
+  Field: canonicalUrl (String)
+  Field: robots (String)
+  Field: description (String)
+  Field: copyright (String)
+  Field: quickLinks (List<dynamic>)
+  Field: legalLinks (List<dynamic>)
+  Field: phone (String)
+  Field: email (String)
+  Field: whatsapp (String)
+  Field: address (String)
+  Field: googleMaps (String)
+  Field: branches (List<dynamic>)
+  Field: gst (double)
+  Field: deliveryCharge (double)
+  Field: travelCharge (double)
+  Field: discount (double)
+  Field: coupons (List<dynamic>)
+  Field: advanceAmount (double)
+  Field: bookingRules (List<dynamic>)
+  Field: advanceDays (int)
+  Field: workingHours (String)
+  Field: cancellationRules (List<dynamic>)
+  Field: refundRules (List<dynamic>)
+  Field: invoiceHeader (String)
+  Field: invoiceFooter (String)
+  Field: terms (String)
+  Field: upi (String)
+  Field: signature (String)
+  Field: completedEvents (int)
+  Field: happyClients (int)
+  Field: cities (int)
+  Field: years (int)
+  Field: enableReviews (bool)
+  Field: enableGallery (bool)
+  Field: enableBooking (bool)
+  Field: enablePayments (bool)
+  Field: enableCart (bool)
+  Field: enableQuotes (bool)
+  Field: enableAnalytics (bool)
+  Field: maintenanceMode (bool)
+  Field: message (String)
+  Field: eta (String)
+  Field: version (String)
+  Field: forceUpdate (bool)
+  Field: buildNumber (int)
+  Field: description (String)
+  Field: mission (String)
+  Field: vision (String)
+  Field: story (String)
+  Field: taxNumber (String)
+  Field: invoiceNote (String)
+  Field: measurementId (String)
+  Field: enableTracking (bool)
+  Field: welcomeMessage (String)
+  Field: activeWidgets (List<dynamic>)
+  Field: weekdayHours (List<dynamic>)
+  Field: holidays (List<dynamic>)
+  Field: privacyPolicy (String)
+  Field: termsOfService (String)
+  Field: refundPolicy (String)
+  Field: activeSections (List<dynamic>)
+  Field: buttonText (String)
+  Field: buttonUrl (String)
+  Field: enableGrid (bool)
+  Field: columns (int)
+  Field: videosList (List<dynamic>)
+  Field: enableSorting (bool)
+  Field: minimumStars (double)
+  Field: title (String)
+  Field: enableAccordion (bool)
+
+=== FILE: staff_log.dart ===
+Classes: StaffLog
+  Field: id (String)
+  Field: name (String)
+  Field: attendance (String)
+  Field: taskDescription (String)
+  Field: date (DateTime)
+
+=== FILE: support_ticket.dart ===
+Classes: SupportTicket
+  Field: id (String)
+  Field: customerId (String)
+  Field: subject (String)
+  Field: status (String)
+  Field: messages (List<String>)
+  Field: createdAt (DateTime)
+

@@ -11,8 +11,7 @@ import '../../domain/usecases/create_quotation.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../core/utils/app_logger.dart';
 import '../../core/services/business_details_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'customer_auth_controller.dart';
 import 'cart_controller.dart';
 
@@ -177,17 +176,18 @@ class QuotationController extends GetxController {
       final authCtrl = Get.find<CustomerAuthController>();
       final customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
       if (customerId.isNotEmpty) {
-        final customerQuoteRef = FirebaseFirestore.instance.collection(AppCollections.customerQuotes).doc(quotationId);
-        await customerQuoteRef.set({
-          'customerId': customerId,
-          'quotationNumber': publicId,
+        final client = Supabase.instance.client;
+        await client.from('customer_quotes').upsert({
+          'id': quotationId,
+          'customer_id': customerId,
+          'quotation_number': publicId,
           'date': eventDate.toIso8601String(),
           'amount': grandTotal,
           'status': 'pending',
-          'expiryDate': eventDate.add(const Duration(days: 7)).toIso8601String(),
-          'pdfUrl': uploadedPdfUrl,
+          'expiry_date': eventDate.add(const Duration(days: 7)).toIso8601String(),
+          'pdf_url': uploadedPdfUrl,
           'notes': notes.trim(),
-          'versionHistory': [],
+          'version_history': [],
         });
       }
 

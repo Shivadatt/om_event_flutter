@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/constants.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
@@ -80,37 +79,39 @@ class CustomerDashboardController extends GetxController {
   }
 
   Future<void> _syncMasterData(CustomerProfile profile) async {
-    final db = FirebaseFirestore.instance;
+    final client = Supabase.instance.client;
     String syncPhone = profile.phone;
 
     // If profile phone is empty, try to resolve it from the master customers collection or leads collection
     if (syncPhone.isEmpty) {
       try {
         // A. Search in master customers by email
-        final custSnap = await db
-            .collection(AppCollections.customers)
-            .where('email', isEqualTo: profile.email)
-            .get();
-        if (custSnap.docs.isNotEmpty) {
-          syncPhone = custSnap.docs.first.id;
+        final custSnap = await client
+            .from('customers')
+            .select('id')
+            .eq('email', profile.email)
+            .maybeSingle();
+        if (custSnap != null) {
+          syncPhone = custSnap['id'] as String;
         }
 
         // B. If still empty, search in master leads by email
         if (syncPhone.isEmpty) {
-          final leadSnap = await db
-              .collection(AppCollections.leads)
-              .where('email', isEqualTo: profile.email)
-              .get();
-          if (leadSnap.docs.isNotEmpty) {
-            syncPhone = leadSnap.docs.first.data()['phone'] ?? '';
+          final leadSnap = await client
+              .from('leads')
+              .select('customer_phone')
+              .eq('customer_email', profile.email)
+              .maybeSingle();
+          if (leadSnap != null) {
+            syncPhone = leadSnap['customer_phone'] as String? ?? '';
           }
         }
 
         // C. If we found a phone number, update the profile automatically so it's persisted!
         if (syncPhone.isNotEmpty) {
-          await db.collection(AppCollections.customerProfiles).doc(profile.id).update({
+          await client.from('customer_profiles').update({
             'phone': syncPhone,
-          });
+          }).eq('id', profile.id);
           // Update local state
           _authController.checkAuthStatus();
         }
@@ -120,7 +121,7 @@ class CustomerDashboardController extends GetxController {
     }
 
     try {
-      List<QueryDocumentSnapshot<Map<String, dynamic>>> matchedQuoteDocs = [];
+      List<Map<String, dynamic>> matchedQuoteDocs = [];
 
       if (syncPhone.isNotEmpty) {
         final normalizedPhone = syncPhone.replaceAll(RegExp(r'\D'), '');
@@ -137,29 +138,29 @@ class CustomerDashboardController extends GetxController {
           if (tenDigitPhone.length == 10) "0$tenDigitPhone",
         }.toList();
 
-        final quotesSnapshot = await db
-            .collection(AppCollections.quotations)
-            .where('customer_phone', whereIn: phoneVariations)
-            .get();
-        matchedQuoteDocs = quotesSnapshot.docs;
+        final quotesSnapshot = await client
+            .from('quotations')
+            .select()
+            .inFilter('customer_phone', phoneVariations);
+        matchedQuoteDocs = List<Map<String, dynamic>>.from(quotesSnapshot);
       } else if (profile.fullName.isNotEmpty) {
         // Fallback to name matching if phone is completely unavailable
-        final quotesSnapshot = await db
-            .collection(AppCollections.quotations)
-            .where('customer_name', isEqualTo: profile.fullName)
-            .get();
-        matchedQuoteDocs = quotesSnapshot.docs;
+        final quotesSnapshot = await client
+            .from('quotations')
+            .select()
+            .eq('customer_name', profile.fullName);
+        matchedQuoteDocs = List<Map<String, dynamic>>.from(quotesSnapshot);
 
         // If we matched a quote by name, extract its phone number and update user profile!
         if (matchedQuoteDocs.isNotEmpty) {
-          final firstQuoteData = matchedQuoteDocs.first.data();
-          final phoneFromQuote = firstQuoteData['customer_phone'] ?? firstQuoteData['customerPhone'] ?? '';
+          final firstQuoteData = matchedQuoteDocs.first;
+          final phoneFromQuote = firstQuoteData['customer_phone'] ?? '';
           if (phoneFromQuote.isNotEmpty) {
             syncPhone = phoneFromQuote;
             try {
-              await db.collection(AppCollections.customerProfiles).doc(profile.id).update({
+              await client.from('customer_profiles').update({
                 'phone': syncPhone,
-              });
+              }).eq('id', profile.id);
               _authController.checkAuthStatus();
             } catch (_) {}
           }
@@ -167,27 +168,26 @@ class CustomerDashboardController extends GetxController {
       }
 
       // 1. Sync Quotations
-      for (var doc in matchedQuoteDocs) {
-        final quoteData = doc.data();
-        final quoteId = doc.id;
-        final publicId = quoteData['public_id'] ?? quoteData['publicId'] ?? '';
+      for (var quoteData in matchedQuoteDocs) {
+        final quoteId = quoteData['id'] ?? '';
+        final publicId = quoteData['public_id'] ?? '';
         
         final subtotal = (quoteData['subtotal'] as num?)?.toDouble() ?? 0.0;
         final discount = (quoteData['discount'] as num?)?.toDouble() ?? 0.0;
         final amount = AppConstants.enableClientFeeWaiver 
             ? (subtotal - discount)
-            : ((quoteData['grand_total'] ?? quoteData['grandTotal'] as num?)?.toDouble() ?? 0.0);
+            : ((quoteData['grand_total'] as num?)?.toDouble() ?? 0.0);
 
         final status = quoteData['status'] ?? 'pending';
-        final dateStr = quoteData['event_date'] ?? quoteData['eventDate'] ?? DateTime.now().toIso8601String();
-        final pdfUrl = quoteData['pdf_url'] ?? quoteData['pdfUrl'] ?? '';
+        final dateStr = quoteData['event_date'] ?? DateTime.now().toIso8601String();
+        final pdfUrl = quoteData['pdf_url'] ?? '';
         final notes = quoteData['notes'] ?? '';
 
         final rawItems = quoteData['items'] as List? ?? [];
         final mappedItems = rawItems.map((item) {
           final itemMap = Map<String, dynamic>.from(item);
           return {
-            'experienceId': itemMap['decoration_item_slug'] ?? itemMap['experienceId'] ?? '',
+            'experienceId': itemMap['experience_id'] ?? itemMap['experienceId'] ?? '',
             'name': itemMap['name'] ?? '',
             'quantity': itemMap['quantity'] ?? 1,
             'unitPrice': (itemMap['unit_price'] ?? itemMap['unitPrice'] as num?)?.toDouble() ?? 0.0,
@@ -197,17 +197,17 @@ class CustomerDashboardController extends GetxController {
           };
         }).toList();
 
-        final customerQuoteRef = db.collection(AppCollections.customerQuotes).doc(quoteId);
-        await customerQuoteRef.set({
-          'customerId': profile.id,
-          'quotationNumber': publicId,
+        await client.from('customer_quotes').upsert({
+          'id': quoteId,
+          'customer_id': profile.id,
+          'quotation_number': publicId,
           'date': dateStr,
           'amount': amount,
           'status': status,
-          'expiryDate': DateTime.tryParse(dateStr)?.add(const Duration(days: 7)).toIso8601String() ?? DateTime.now().toIso8601String(),
-          'pdfUrl': pdfUrl,
+          'expiry_date': DateTime.tryParse(dateStr)?.add(const Duration(days: 7)).toIso8601String() ?? DateTime.now().toIso8601String(),
+          'pdf_url': pdfUrl,
           'notes': notes,
-          'versionHistory': [],
+          'version_history': [],
           'items': mappedItems,
         });
       }
@@ -228,117 +228,97 @@ class CustomerDashboardController extends GetxController {
           if (tenDigitPhone.length == 10) "0$tenDigitPhone",
         }.toList();
 
-        final leadsSnapshot = await db
-            .collection(AppCollections.leads)
-            .where('phone', whereIn: phoneVariations)
-            .get();
+        final leadsSnapshot = await client
+            .from('leads')
+            .select()
+            .inFilter('customer_phone', phoneVariations);
 
-        for (var doc in leadsSnapshot.docs) {
-          final leadData = doc.data();
-          final leadId = doc.id;
+        for (var leadData in leadsSnapshot) {
+          final leadId = leadData['id'] ?? '';
           final service = leadData['requirements'] ?? 'Event Inquiry';
           final budget = (leadData['budget'] as num?)?.toDouble() ?? 0.0;
-          final eventDateStr = leadData['event_date'] ?? leadData['eventDate'] ?? DateTime.now().toIso8601String();
+          final eventDateStr = leadData['event_date'] ?? DateTime.now().toIso8601String();
           final status = leadData['status'] ?? 'Pending';
 
-          final customerLeadRef = db.collection(AppCollections.customerLeads).doc(leadId);
-          final customerLeadDoc = await customerLeadRef.get();
-          if (!customerLeadDoc.exists) {
-            await customerLeadRef.set({
-              'customerId': profile.id,
-              'leadNumber': 'L-$leadId',
-              'date': DateTime.now().toIso8601String(),
-              'service': service,
-              'branch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
-              'budget': budget,
-              'eventDate': eventDateStr,
-              'status': status,
-              'adminNotes': '',
-            });
-          }
+          await client.from('customer_leads').upsert({
+            'id': leadId,
+            'customer_id': profile.id,
+            'lead_number': 'L-$leadId',
+            'date': DateTime.now().toIso8601String(),
+            'service': service,
+            'branch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
+            'budget': budget,
+            'event_date': eventDateStr,
+            'status': status,
+            'admin_notes': '',
+          });
         }
       } else if (profile.fullName.isNotEmpty) {
         // Fallback matching leads by name if phone is not set
-        final leadsSnapshot = await db
-            .collection(AppCollections.leads)
-            .where('name', isEqualTo: profile.fullName)
-            .get();
+        final leadsSnapshot = await client
+            .from('leads')
+            .select()
+            .eq('customer_name', profile.fullName);
 
-        for (var doc in leadsSnapshot.docs) {
-          final leadData = doc.data();
-          final leadId = doc.id;
+        for (var leadData in leadsSnapshot) {
+          final leadId = leadData['id'] ?? '';
           final service = leadData['requirements'] ?? 'Event Inquiry';
           final budget = (leadData['budget'] as num?)?.toDouble() ?? 0.0;
-          final eventDateStr = leadData['event_date'] ?? leadData['eventDate'] ?? DateTime.now().toIso8601String();
+          final eventDateStr = leadData['event_date'] ?? DateTime.now().toIso8601String();
           final status = leadData['status'] ?? 'Pending';
 
-          final customerLeadRef = db.collection(AppCollections.customerLeads).doc(leadId);
-          final customerLeadDoc = await customerLeadRef.get();
-          if (!customerLeadDoc.exists) {
-            await customerLeadRef.set({
-              'customerId': profile.id,
-              'leadNumber': 'L-$leadId',
-              'date': DateTime.now().toIso8601String(),
-              'service': service,
-              'branch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
-              'budget': budget,
-              'eventDate': eventDateStr,
-              'status': status,
-              'adminNotes': '',
-            });
-          }
+          await client.from('customer_leads').upsert({
+            'id': leadId,
+            'customer_id': profile.id,
+            'lead_number': 'L-$leadId',
+            'date': DateTime.now().toIso8601String(),
+            'service': service,
+            'branch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
+            'budget': budget,
+            'event_date': eventDateStr,
+            'status': status,
+            'admin_notes': '',
+          });
         }
       }
 
       // 3. Sync Bookings
-      final allQuoteIds = matchedQuoteDocs.map((doc) => doc.id).toList();
+      final allQuoteIds = matchedQuoteDocs.map((doc) => doc['id'] as String).toList();
       if (allQuoteIds.isNotEmpty) {
-        final List<List<String>> chunks = [];
-        for (var i = 0; i < allQuoteIds.length; i += 10) {
-          chunks.add(allQuoteIds.sublist(i, i + 10 > allQuoteIds.length ? allQuoteIds.length : i + 10));
-        }
+        final bookingsSnapshot = await client
+            .from('bookings')
+            .select()
+            .inFilter('quotation_id', allQuoteIds);
 
-        for (var chunk in chunks) {
-          final bookingsSnapshot = await db
-              .collection(AppCollections.bookings)
-              .where('quotation_id', whereIn: chunk)
-              .get();
+        for (var bookingData in bookingsSnapshot) {
+          final bookingId = bookingData['id'] ?? '';
+          final bookingNumber = bookingData['booking_number'] ?? '';
+          final status = bookingData['status'] ?? 'pending';
+          final advanceAmount = (bookingData['advance_amount'] as num?)?.toDouble() ?? 0.0;
+          final qId = bookingData['quotation_id'] ?? '';
 
-          for (var doc in bookingsSnapshot.docs) {
-            final bookingData = doc.data();
-            final bookingId = doc.id;
-            final bookingNumber = bookingData['booking_number'] ?? bookingData['bookingNumber'] ?? '';
-            final status = bookingData['status'] ?? 'pending';
-            final advanceAmount = (bookingData['advance_amount'] ?? bookingData['advanceAmount'] as num?)?.toDouble() ?? 0.0;
-            final qId = bookingData['quotation_id'] ?? bookingData['quotationId'] ?? '';
+          final matchedQuoteData = matchedQuoteDocs.firstWhere((q) => q['id'] == qId);
+          final location = matchedQuoteData['location'] ?? '';
+          final grandTotal = (matchedQuoteData['grand_total'] as num?)?.toDouble() ?? 0.0;
+          final dateStr = matchedQuoteData['event_date'] ?? DateTime.now().toIso8601String();
 
-            final matchedQuoteDoc = matchedQuoteDocs.firstWhere((q) => q.id == qId);
-            final matchedQuoteData = matchedQuoteDoc.data();
-            final location = matchedQuoteData['location'] ?? '';
-            final grandTotal = (matchedQuoteData['grand_total'] ?? matchedQuoteData['grandTotal'] as num?)?.toDouble() ?? 0.0;
-            final dateStr = matchedQuoteData['event_date'] ?? matchedQuoteData['eventDate'] ?? DateTime.now().toIso8601String();
-
-            final customerBookingRef = db.collection(AppCollections.customerBookings).doc(bookingId);
-            final customerBookingDoc = await customerBookingRef.get();
-            if (!customerBookingDoc.exists) {
-              await customerBookingRef.set({
-                'customerId': profile.id,
-                'bookingNumber': bookingNumber,
-                'eventName': 'Event Celebration',
-                'package': 'Custom Decoration',
-                'branch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
-                'decorationType': 'Theme Decor',
-                'date': dateStr,
-                'venue': location,
-                'amount': grandTotal,
-                'advancePaid': advanceAmount,
-                'remainingAmount': grandTotal - advanceAmount,
-                'assignedBranch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
-                'assignedContact': 'Customer Relations',
-                'status': status,
-              });
-            }
-          }
+          await client.from('customer_bookings').upsert({
+            'id': bookingId,
+            'customer_id': profile.id,
+            'booking_number': bookingNumber,
+            'event_name': 'Event Celebration',
+            'package': 'Custom Decoration',
+            'branch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
+            'decoration_type': 'Theme Decor',
+            'date': dateStr,
+            'venue': location,
+            'amount': grandTotal,
+            'advance_paid': advanceAmount,
+            'remaining_amount': grandTotal - advanceAmount,
+            'assigned_branch': profile.branch.isNotEmpty ? profile.branch : 'Ahmedabad',
+            'assigned_contact': 'Customer Relations',
+            'status': status,
+          });
         }
       }
     } catch (e) {

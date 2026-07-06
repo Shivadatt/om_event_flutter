@@ -1,10 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import '../../data/datasources/firestore_remote_source.dart';
-import '../../data/datasources/supabase_storage_source.dart';
-import '../../data/repositories/catalog_repository_impl.dart';
-import '../../data/repositories/lead_repository_impl.dart';
-import '../../data/repositories/quotation_repository_impl.dart';
+import '../../data/repositories/supabase_catalog_repository.dart';
+import '../../data/repositories/supabase_lead_repository.dart';
+import '../../data/repositories/supabase_quotation_repository.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../../domain/repositories/quotation_repository.dart';
@@ -19,27 +16,19 @@ import '../controllers/quotation_controller.dart';
 class CatalogBinding extends Bindings {
   @override
   void dependencies() {
-    // Sources & Repositories
-    Get.lazyPut<FirestoreRemoteSource>(
-      () => FirestoreRemoteSource(Get.find<FirebaseFirestore>()),
-      fenix: true,
-    );
-
+    // Sources & Repositories (Supabase-only)
     Get.lazyPut<CatalogRepository>(
-      () => CatalogRepositoryImpl(Get.find<FirestoreRemoteSource>()),
+      () => SupabaseCatalogRepository(),
       fenix: true,
     );
 
     Get.lazyPut<QuotationRepository>(
-      () => QuotationRepositoryImpl(
-        firestoreSource: Get.find<FirestoreRemoteSource>(),
-        supabaseSource: Get.find<SupabaseStorageSource>(),
-      ),
+      () => SupabaseQuotationRepository(),
       fenix: true,
     );
 
     Get.lazyPut<LeadRepository>(
-      () => LeadRepositoryImpl(Get.find<FirestoreRemoteSource>()),
+      () => SupabaseLeadRepository(),
       fenix: true,
     );
 

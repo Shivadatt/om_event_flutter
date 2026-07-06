@@ -1,6 +1,7 @@
 # This is a generated file; do not edit or check into version control.
-cloud_firestore=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\cloud_firestore-5.6.12\\
-cloud_firestore_web=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\cloud_firestore_web-4.4.12\\
+app_links=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\app_links-6.4.1\\
+app_links_linux=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\app_links_linux-1.0.3\\
+app_links_web=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\app_links_web-1.0.4\\
 file_picker=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\file_picker-11.0.2\\
 firebase_auth=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\firebase_auth-5.7.0\\
 firebase_auth_web=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\firebase_auth_web-5.15.3\\
@@ -15,6 +16,7 @@ google_maps_flutter=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev
 google_maps_flutter_android=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\google_maps_flutter_android-2.18.3\\
 google_maps_flutter_ios=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\google_maps_flutter_ios-2.15.5\\
 google_maps_flutter_web=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\google_maps_flutter_web-0.5.14+3\\
+gtk=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\gtk-2.2.0\\
 path_provider=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\path_provider-2.1.5\\
 path_provider_android=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\path_provider_android-2.2.19\\
 path_provider_foundation=C:\\Users\\ASUS\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\path_provider_foundation-2.4.2\\

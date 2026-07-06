@@ -1,0 +1,653 @@
+{
+  "admins": {
+    "count": 4,
+    "fields": {
+      "uid": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Adu3Mo47s3hx0VuWU0vh4nVKnqz2"
+      },
+      "name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Om Super Admin"
+      },
+      "email": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "omeventsanddecorators@gmail.com"
+      },
+      "permissions": {
+        "type": "ARRAY",
+        "nullable": false,
+        "required": true,
+        "example": [
+          "all"
+        ]
+      },
+      "role": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "super_admin"
+      },
+      "createdBy": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "system"
+      },
+      "phone": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "9512149944"
+      },
+      "createdAt": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:41.093000+00:00"
+      }
+    },
+    "relationships": []
+  },
+  "bookings": {
+    "count": 1,
+    "fields": {
+      "service_name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Royal Stage Decoration"
+      },
+      "remaining_amount": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 50000.0
+      },
+      "status": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "pending"
+      },
+      "event_date": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "2026-07-05T11:11:40.450371"
+      },
+      "advance_amount": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 25000.0
+      },
+      "event_time": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Evening"
+      },
+      "venue": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Royal Palace Hall, Kadi"
+      },
+      "budget": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 75000.0
+      },
+      "mobile": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "9876543210"
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:41.282000+00:00"
+      },
+      "payment_status": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "partial"
+      }
+    },
+    "relationships": []
+  },
+  "chat_rooms": {
+    "count": 1,
+    "fields": {
+      "title": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Support Chat"
+      },
+      "updated_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:43.043000+00:00"
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:43.043000+00:00"
+      }
+    },
+    "relationships": []
+  },
+  "device_tokens": {
+    "count": 1,
+    "fields": {
+      "platform": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "android"
+      },
+      "token": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "fcm_sample_token_123456abcdefg"
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:43.342000+00:00"
+      }
+    },
+    "relationships": []
+  },
+  "gallery": {
+    "count": 430,
+    "fields": {
+      "category": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Birthday"
+      },
+      "title": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Butterfly Theme Gallery 2"
+      },
+      "variation_id": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": ""
+      },
+      "service_id": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 7
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T06:11:04.147000+00:00"
+      },
+      "image_url": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "https://gkfcfebywgmqqhartrhv.supabase.co/storage/v1/object/public/gallery/birthday/butterfly_theme/image_2.jpg"
+      }
+    },
+    "relationships": [
+      {
+        "field": "service_id",
+        "target": "services.id"
+      }
+    ]
+  },
+  "inquiries": {
+    "count": 1,
+    "fields": {
+      "event_type": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Reception"
+      },
+      "name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Rahul Sharma"
+      },
+      "event_date": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "2026-07-10T11:11:41.798779"
+      },
+      "venue": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Open Lawn, Mehsana"
+      },
+      "notes": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Looking for a premium setup with lightings."
+      },
+      "phone": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "9988776655"
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:42.602000+00:00"
+      },
+      "status": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "new"
+      }
+    },
+    "relationships": []
+  },
+  "notifications": {
+    "count": 3,
+    "fields": {
+      "is_read": {
+        "type": "BOOLEAN",
+        "nullable": false,
+        "required": true,
+        "example": false
+      },
+      "title": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "New Booking Alert \ud83d\udd14"
+      },
+      "message": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "A new booking inquiry has been submitted."
+      },
+      "type": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "alert"
+      },
+      "user_id": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "admin"
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:41.680000+00:00"
+      }
+    },
+    "relationships": [
+      {
+        "field": "user_id",
+        "target": "users.id"
+      }
+    ]
+  },
+  "permissions": {
+    "count": 19,
+    "fields": {
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:30.626000+00:00"
+      },
+      "name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Admin Management"
+      }
+    },
+    "relationships": []
+  },
+  "reviews": {
+    "count": 1,
+    "fields": {
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:42.837000+00:00"
+      },
+      "is_approved": {
+        "type": "BOOLEAN",
+        "nullable": false,
+        "required": true,
+        "example": true
+      },
+      "comment": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Outstanding decoration! Very professional service."
+      },
+      "customer_name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Karan Patel"
+      },
+      "rating": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 5.0
+      }
+    },
+    "relationships": []
+  },
+  "roles": {
+    "count": 3,
+    "fields": {
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:15.991000+00:00"
+      },
+      "name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Admin"
+      }
+    },
+    "relationships": []
+  },
+  "service_categories": {
+    "count": 11,
+    "fields": {
+      "name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Birthday"
+      },
+      "is_active": {
+        "type": "BOOLEAN",
+        "nullable": false,
+        "required": true,
+        "example": true
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T06:10:44.768000+00:00"
+      },
+      "image_url": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "https://picsum.photos/seed/cat-bday/300/200"
+      }
+    },
+    "relationships": []
+  },
+  "services": {
+    "count": 43,
+    "fields": {
+      "variations_count": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 0
+      },
+      "short_description": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Birthday Setup"
+      },
+      "what_included": {
+        "type": "ARRAY",
+        "nullable": false,
+        "required": true,
+        "example": []
+      },
+      "image_url": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "https://gkfcfebywgmqqhartrhv.supabase.co/storage/v1/object/public/gallery/birthday/basic_birthday_decoration/image_1.jpg"
+      },
+      "luxury_price": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 10000.0
+      },
+      "premium_price": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 5000.0
+      },
+      "setup_duration": {
+        "type": "NULL",
+        "nullable": true,
+        "required": true,
+        "example": null
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T06:10:51.106000+00:00"
+      },
+      "service_name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Basic Birthday Decoration"
+      },
+      "basic_price": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 2500.0
+      },
+      "review_count": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 0
+      },
+      "is_active": {
+        "type": "BOOLEAN",
+        "nullable": false,
+        "required": true,
+        "example": true
+      },
+      "description": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Basic Birthday Decoration"
+      },
+      "category": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Birthday"
+      },
+      "starting_price": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 2500.0
+      },
+      "min_starting_price": {
+        "type": "NULL",
+        "nullable": true,
+        "required": true,
+        "example": null
+      },
+      "theme_options": {
+        "type": "ARRAY",
+        "nullable": false,
+        "required": true,
+        "example": []
+      },
+      "rating": {
+        "type": "NUMBER",
+        "nullable": false,
+        "required": true,
+        "example": 0.0
+      }
+    },
+    "relationships": []
+  },
+  "settings": {
+    "count": 12,
+    "fields": {
+      "value": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "1.0.0"
+      },
+      "updated_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:33.273000+00:00"
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T05:41:33.273000+00:00"
+      }
+    },
+    "relationships": []
+  },
+  "users": {
+    "count": 8,
+    "fields": {
+      "uid": {
+        "type": "STRING",
+        "nullable": false,
+        "required": false,
+        "example": "Adu3Mo47s3hx0VuWU0vh4nVKnqz2"
+      },
+      "name": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "Om Super Admin"
+      },
+      "createdAt": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": false,
+        "example": "2026-06-25T05:41:41.002000+00:00"
+      },
+      "role": {
+        "type": "STRING",
+        "nullable": false,
+        "required": false,
+        "example": "super_admin"
+      },
+      "fcmToken": {
+        "type": "STRING",
+        "nullable": false,
+        "required": false,
+        "example": "dQQk4vDWRYKXW3WGM38Vpd:APA91bHDL_iw57hVYqTNEgazScG2_U1gAj3Ju-RsItsAsTVYedogo4p3dRs_q-7gBNLwhYVT08g7AZi4xyD9MBPXXM13UTXnYSmWzM6jJHTOm_9FnXDYxBY"
+      },
+      "updatedAt": {
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "required": true,
+        "example": "2026-06-25T06:01:09.440000+00:00"
+      },
+      "phone": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "9512149944"
+      },
+      "profileImage": {
+        "type": "STRING",
+        "nullable": false,
+        "required": false,
+        "example": ""
+      },
+      "isActive": {
+        "type": "BOOLEAN",
+        "nullable": false,
+        "required": false,
+        "example": true
+      },
+      "email": {
+        "type": "STRING",
+        "nullable": false,
+        "required": true,
+        "example": "omeventanddecorators@gmail.com"
+      },
+      "saved_addresses": {
+        "type": "ARRAY",
+        "nullable": false,
+        "required": false,
+        "example": []
+      },
+      "avatar_url": {
+        "type": "STRING",
+        "nullable": false,
+        "required": false,
+        "example": "https://gkfcfebywgmqqhartrhv.supabase.co/storage/v1/object/public/profile_images/avatars/avatar_SHYuZRzsfJWsZJccXPbtaY5F14g2_1782386303721.jpg"
+      },
+      "notification_preferences": {
+        "type": "MAP",
+        "nullable": false,
+        "required": false,
+        "example": {
+          "push": true,
+          "email": true
+        }
+      }
+    },
+    "relationships": []
+  }
+}

@@ -1,15 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/helpers/supabase_mapper.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../models/customer_profile_model.dart';
 
 class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
   final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
+  final SupabaseClient _client = Supabase.instance.client;
 
-  CustomerAuthRepositoryImpl(this._auth, this._firestore);
+  CustomerAuthRepositoryImpl(this._auth);
 
   @override
   Future<void> loginWithEmail(String email, String password) async {
@@ -45,8 +45,6 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
     Function(String verificationId) codeSent,
     Function(String error) verificationFailed,
   ) async {
-    // Basic Web implementation using ConfirmationResult
-    // Note: In a full app, this requires reCAPTCHA setup
     await _auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
@@ -94,20 +92,38 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
 
   @override
   Future<CustomerProfile?> getCustomerProfile(String uid) async {
-    final doc = await _firestore.collection(AppCollections.customerProfiles).doc(uid).get();
-    if (doc.exists && doc.data() != null) {
-      return CustomerProfileModel.fromJson(doc.data()!, doc.id);
+    final data = await _client
+        .from('customer_profiles')
+        .select()
+        .eq('id', uid)
+        .maybeSingle();
+    if (data != null) {
+      return CustomerProfileModel.fromJson(SupabaseMapper.toCamelCase(data), uid);
     }
     return null;
   }
 
   @override
   Future<void> saveCustomerProfile(CustomerProfile profile, {bool isEdit = false}) async {
-    final model = profile as CustomerProfileModel;
-    if (isEdit) {
-      await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).update(model.toJson());
-    } else {
-      await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).set(model.toJson());
-    }
+    final model = CustomerProfileModel(
+      id: profile.id,
+      fullName: profile.fullName,
+      phone: profile.phone,
+      email: profile.email,
+      gender: profile.gender,
+      address: profile.address,
+      city: profile.city,
+      state: profile.state,
+      pincode: profile.pincode,
+      branch: profile.branch,
+      profileImageUrl: profile.profileImageUrl,
+      createdAt: profile.createdAt,
+      lastLogin: profile.lastLogin,
+    );
+    final payload = SupabaseMapper.toSnakeCase(model.toJson());
+    await _client.from('customer_profiles').upsert({
+      'id': profile.id,
+      ...payload,
+    });
   }
 }

@@ -1,5 +1,4 @@
 import '../../domain/entities/admin_role.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminRoleModel extends AdminRole {
   const AdminRoleModel({
@@ -25,15 +24,15 @@ class AdminRoleModel extends AdminRole {
     // Safely parse timestamps
     DateTime parseTime(dynamic val) {
       if (val == null) return DateTime.now();
-      if (val is Timestamp) return val.toDate();
       if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+      if (val is int) return DateTime.fromMillisecondsSinceEpoch(val);
       return DateTime.now();
     }
 
     DateTime? parseNullableTime(dynamic val) {
       if (val == null) return null;
-      if (val is Timestamp) return val.toDate();
       if (val is String) return DateTime.tryParse(val);
+      if (val is int) return DateTime.fromMillisecondsSinceEpoch(val);
       return null;
     }
 

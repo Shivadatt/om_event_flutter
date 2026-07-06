@@ -1,26 +1,26 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/local_storage_source.dart';
 import '../../data/datasources/supabase_storage_source.dart';
 import '../../data/datasources/supabase_upload_service.dart';
-import '../../data/datasources/seeder_service.dart';
+import '../../data/datasources/supabase_seeder_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/admin_repository.dart';
-import '../../data/repositories/settings_repository_impl.dart';
+import '../../data/repositories/supabase_settings_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../../domain/repositories/contact_number_repository.dart';
-import '../../data/repositories/contact_number_repository_impl.dart';
 import '../../core/services/app_config_service.dart';
+import '../../core/services/enterprise_verification_service.dart';
 import '../controllers/seeder_controller.dart';
 import '../controllers/auth_controller.dart';
 
 import 'package:om_event/presentation/controllers/settings_controller.dart';
-import '../../data/datasources/business_details_remote_data_source.dart';
+import '../../data/datasources/supabase_business_details_remote_data_source.dart';
 import '../../data/repositories/business_details_repository_impl.dart';
 import '../../domain/repositories/business_details_repository.dart';
+import '../../data/repositories/supabase_contact_number_repository.dart';
 import '../../core/services/fcm_notification_service.dart';
 import '../../core/services/notification_gateway_service.dart';
 import '../../core/services/local_notification_trigger_service.dart';
@@ -34,9 +34,11 @@ import '../../domain/repositories/customer_auth_repository.dart';
 import '../../data/repositories/customer_auth_repository_impl.dart';
 import '../controllers/customer_auth_controller.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
-import '../../data/repositories/customer_portal_repository_impl.dart';
+import '../../data/repositories/supabase_customer_portal_repository.dart';
 import '../controllers/customer_dashboard_controller.dart';
 import '../controllers/admin_customer_portal_controller.dart';
+import '../../domain/repositories/customer_repository.dart';
+import '../../data/repositories/customer_repository_impl.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -45,18 +47,18 @@ class InitialBinding extends Bindings {
 
     // Settings Repository, AppConfigService & Controller
     Get.lazyPut<SettingsRepository>(
-      () => SettingsRepositoryImpl(),
+      () => SupabaseSettingsRepository(),
       fenix: true,
     );
     Get.lazyPut<ContactNumberRepository>(
-      () => ContactNumberRepositoryImpl(),
+      () => SupabaseContactNumberRepository(),
       fenix: true,
     );
-    // AppConfigService deferred — opens 30 Firestore listeners; only needed in admin / after home paints
+    // AppConfigService deferred — opens 30 listeners; only needed in admin / after home paints
     Get.lazyPut<AppConfigService>(() => AppConfigService(), fenix: true);
     
     // Centralized Business Details DI — these are needed on home, keep eager
-    final businessDetailsRemote = BusinessDetailsRemoteDataSourceImpl();
+    final businessDetailsRemote = SupabaseBusinessDetailsRemoteDataSourceImpl();
     final businessDetailsRepo = BusinessDetailsRepositoryImpl(businessDetailsRemote);
     Get.put<BusinessDetailsRepository>(businessDetailsRepo, permanent: true);
     Get.put<BusinessDetailsCacheService>(BusinessDetailsCacheService(), permanent: true);
@@ -72,7 +74,6 @@ class InitialBinding extends Bindings {
 
     // Firebase Instances
     Get.put<FirebaseAuth>(FirebaseAuth.instance, permanent: true);
-    Get.put<FirebaseFirestore>(FirebaseFirestore.instance, permanent: true);
 
     // ─── FCM Module (clean architecture sub-services) ──────────────────────
     // All deferred — initialized only post-login, never at cold start.
@@ -109,21 +110,27 @@ class InitialBinding extends Bindings {
       fenix: true,
     );
 
-    // Seeder Service
-    Get.lazyPut<SeederService>(
-      () => SeederService(
-        Get.find<FirebaseFirestore>(),
-        Get.find<SupabaseUploadService>(),
-      ),
+    // Supabase Seeder Service
+    Get.lazyPut<SupabaseSeederService>(
+      () => SupabaseSeederService(),
       fenix: true,
     );
 
     // Seeder Controller
     Get.lazyPut<SeederController>(() => SeederController(), fenix: true);
 
+    // Enterprise Verification Service
+    Get.put<EnterpriseVerificationService>(EnterpriseVerificationService(), permanent: true);
+
     // Admin Repository
     Get.lazyPut<AdminRepository>(
-      () => AdminRepository(Get.find<FirebaseFirestore>()),
+      () => AdminRepository(),
+      fenix: true,
+    );
+
+    // Customer Repository (CRM contacts check)
+    Get.lazyPut<CustomerRepository>(
+      () => CustomerRepositoryImpl(),
       fenix: true,
     );
 
@@ -131,7 +138,6 @@ class InitialBinding extends Bindings {
     Get.lazyPut<AuthRepository>(
       () => AuthRepositoryImpl(
         Get.find<FirebaseAuth>(),
-        Get.find<FirebaseFirestore>(),
         Get.find<LocalStorageSource>(),
       ),
       fenix: true,
@@ -149,7 +155,6 @@ class InitialBinding extends Bindings {
     Get.lazyPut<CustomerAuthRepository>(
       () => CustomerAuthRepositoryImpl(
         Get.find<FirebaseAuth>(),
-        Get.find<FirebaseFirestore>(),
       ),
       fenix: true,
     );
@@ -160,7 +165,7 @@ class InitialBinding extends Bindings {
     );
 
     Get.lazyPut<CustomerPortalRepository>(
-      () => CustomerPortalRepositoryImpl(Get.find<FirebaseFirestore>()),
+      () => SupabaseCustomerPortalRepository(),
       fenix: true,
     );
 

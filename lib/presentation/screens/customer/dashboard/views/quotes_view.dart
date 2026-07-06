@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../../core/helpers/supabase_mapper.dart';
 import '../../../../../core/config/app_theme.dart';
-import '../../../../../core/constants/app_collections.dart';
 import '../../../../../domain/entities/customer_quotation.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
@@ -127,10 +127,10 @@ class QuotationItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final db = FirebaseFirestore.instance;
+    final client = Supabase.instance.client;
 
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: db.collection(AppCollections.items).doc(item.experienceId).get(),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: client.from('experiences').select().eq('id', item.experienceId).maybeSingle(),
       builder: (context, snapshot) {
         String imageUrl = '';
         String description = 'Premium custom event decoration concept.';
@@ -138,8 +138,8 @@ class QuotationItemCard extends StatelessWidget {
         double duration = 3.0;
         bool isFeatured = false;
 
-        if (snapshot.hasData && snapshot.data!.exists) {
-          final data = snapshot.data!.data()!;
+        if (snapshot.hasData && snapshot.data != null) {
+          final data = SupabaseMapper.toCamelCase(snapshot.data!);
           imageUrl = data['imageUrl'] ?? data['image_url'] ?? '';
           description = data['description'] ?? '';
           category = data['categoryName'] ?? data['category_name'] ?? 'Decoration';

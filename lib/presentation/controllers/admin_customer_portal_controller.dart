@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/helpers/supabase_mapper.dart';
 import '../../data/models/customer_portal_models.dart';
 import '../../domain/entities/customer_quotation.dart';
 import '../../domain/entities/booking_timeline.dart';
@@ -12,7 +12,7 @@ import '../../domain/entities/offer.dart';
 import '../../domain/entities/customer_activity.dart';
 
 class AdminCustomerPortalController extends GetxController {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _client = Supabase.instance.client;
 
   final rxAllQuotes = <CustomerQuotation>[].obs;
   final rxAllTimelines = <BookingTimeline>[].obs;
@@ -32,36 +32,36 @@ class AdminCustomerPortalController extends GetxController {
   }
 
   void _bindAdminStreams() {
-    // Stream ALL records for admin dashboard management
-    rxAllQuotes.bindStream(_firestore.collection(AppCollections.customerQuotes).snapshots().map((snap) =>
-        snap.docs.map((doc) => CustomerQuotationModel.fromJson(doc.data(), doc.id)).toList()));
+    // Stream ALL records for admin dashboard management via Supabase Realtime Streams
+    rxAllQuotes.bindStream(_client.from('customer_quotes').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => CustomerQuotationModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
 
-    rxAllTimelines.bindStream(_firestore.collection(AppCollections.bookingTimelines).snapshots().map((snap) =>
-        snap.docs.map((doc) => BookingTimelineModel.fromJson(doc.data(), doc.id)).toList()));
+    rxAllTimelines.bindStream(_client.from('booking_timelines').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => BookingTimelineModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
 
-    rxAllPayments.bindStream(_firestore.collection(AppCollections.customerPayments).snapshots().map((snap) =>
-        snap.docs.map((doc) => CustomerPaymentModel.fromJson(doc.data(), doc.id)).toList()));
+    rxAllPayments.bindStream(_client.from('customer_payments').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => CustomerPaymentModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
 
-    rxAllNotifications.bindStream(_firestore.collection(AppCollections.customerNotifications).snapshots().map((snap) =>
-        snap.docs.map((doc) => CustomerNotificationModel.fromJson(doc.data(), doc.id)).toList()));
+    rxAllNotifications.bindStream(_client.from('customer_notifications').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => CustomerNotificationModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
 
-    rxAllRebookRequests.bindStream(_firestore.collection(AppCollections.rebookRequests).snapshots().map((snap) =>
-        snap.docs.map((doc) => RebookRequestModel.fromJson(doc.data(), doc.id)).toList()));
+    rxAllRebookRequests.bindStream(_client.from('rebook_requests').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => RebookRequestModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
 
-    rxAllOffers.bindStream(_firestore.collection(AppCollections.offers).snapshots().map((snap) =>
-        snap.docs.map((doc) => OfferModel.fromJson(doc.data(), doc.id)).toList()));
+    rxAllOffers.bindStream(_client.from('offers').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => OfferModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
 
-    rxAllActivities.bindStream(_firestore.collection(AppCollections.customerActivity).snapshots().map((snap) =>
-        snap.docs.map((doc) => CustomerActivityModel.fromJson(doc.data(), doc.id)).toList()));
+    rxAllActivities.bindStream(_client.from('customer_activity').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => CustomerActivityModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
 
-    rxAllGalleries.bindStream(_firestore.collection(AppCollections.bookingGallery).snapshots().map((snap) =>
-        snap.docs.map((doc) => BookingGalleryModel.fromJson(doc.data(), doc.id)).toList()));
+    rxAllGalleries.bindStream(_client.from('booking_gallery').stream(primaryKey: ['id']).map((rows) =>
+        rows.map((row) => BookingGalleryModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? '')).toList()));
   }
 
   // 1. Quotation Admin Panel
   Future<void> adminCreateQuotation(CustomerQuotation quote) async {
     final model = CustomerQuotationModel(
-      id: '',
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       customerId: quote.customerId,
       quotationNumber: quote.quotationNumber,
       date: quote.date,
@@ -81,32 +81,35 @@ class AdminCustomerPortalController extends GetxController {
         notes: e.notes,
       )).toList(),
     );
-    await _firestore.collection(AppCollections.customerQuotes).add(model.toJson());
+    final payload = SupabaseMapper.toSnakeCase(model.toJson());
+    await _client.from('customer_quotes').insert(payload);
   }
 
   Future<void> adminUpdateQuotation(String id, Map<String, dynamic> data) async {
-    await _firestore.collection(AppCollections.customerQuotes).doc(id).update(data);
+    final payload = SupabaseMapper.toSnakeCase(data);
+    await _client.from('customer_quotes').update(payload).eq('id', id);
   }
 
   Future<void> adminDeleteQuotation(String id) async {
-    await _firestore.collection(AppCollections.customerQuotes).doc(id).delete();
+    await _client.from('customer_quotes').delete().eq('id', id);
   }
 
   // 2. Booking Timeline Admin
   Future<void> adminAddTimelineCheckpoint(String bookingId, String status, String notes) async {
     final checkpoint = BookingTimelineModel(
-      id: '',
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       bookingId: bookingId,
       status: status,
       updatedTime: DateTime.now(),
       notes: notes,
     );
-    await _firestore.collection(AppCollections.bookingTimelines).add(checkpoint.toJson());
+    final payload = SupabaseMapper.toSnakeCase(checkpoint.toJson());
+    await _client.from('booking_timelines').insert(payload);
   }
 
   // 3. Payments Admin Verification
   Future<void> adminVerifyPayment(String id, String status) async {
-    await _firestore.collection(AppCollections.customerPayments).doc(id).update({'status': status});
+    await _client.from('customer_payments').update({'status': status}).eq('id', id);
   }
 
   // 4. Notifications Composer Admin
@@ -118,7 +121,7 @@ class AdminCustomerPortalController extends GetxController {
     String branch = '',
   }) async {
     final model = CustomerNotificationModel(
-      id: '',
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       customerId: customerId,
       title: title,
       body: body,
@@ -127,31 +130,34 @@ class AdminCustomerPortalController extends GetxController {
       branch: branch,
       createdAt: DateTime.now(),
     );
-    await _firestore.collection(AppCollections.customerNotifications).add(model.toJson());
+    final payload = SupabaseMapper.toSnakeCase(model.toJson());
+    await _client.from('customer_notifications').insert(payload);
   }
 
   // 5. Shared Booking Gallery Admin
   Future<void> adminUploadGalleryMedia(String bookingId, String customerId, String mediaUrl) async {
-    final query = await _firestore
-        .collection(AppCollections.bookingGallery)
-        .where('bookingId', isEqualTo: bookingId)
-        .limit(1)
-        .get();
+    final existing = await _client
+        .from('booking_gallery')
+        .select()
+        .eq('booking_id', bookingId)
+        .maybeSingle();
 
-    if (query.docs.isNotEmpty) {
-      final docId = query.docs.first.id;
-      await _firestore.collection(AppCollections.bookingGallery).doc(docId).update({
-        'mediaUrls': FieldValue.arrayUnion([mediaUrl]),
-      });
+    if (existing != null) {
+      final List<dynamic> currentUrls = existing['media_urls'] ?? [];
+      currentUrls.add(mediaUrl);
+      await _client.from('booking_gallery').update({
+        'media_urls': currentUrls,
+      }).eq('id', existing['id']);
     } else {
       final gallery = BookingGalleryModel(
-        id: '',
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
         customerId: customerId,
         bookingId: bookingId,
         mediaUrls: [mediaUrl],
         createdAt: DateTime.now(),
       );
-      await _firestore.collection(AppCollections.bookingGallery).add(gallery.toJson());
+      final payload = SupabaseMapper.toSnakeCase(gallery.toJson());
+      await _client.from('booking_gallery').insert(payload);
     }
   }
 
@@ -167,15 +173,16 @@ class AdminCustomerPortalController extends GetxController {
       expiryDate: offer.expiryDate,
       branch: offer.branch,
     );
+    final payload = SupabaseMapper.toSnakeCase(model.toJson());
     if (isEdit) {
-      await _firestore.collection(AppCollections.offers).doc(offer.id).update(model.toJson());
+      await _client.from('offers').update(payload).eq('id', offer.id);
     } else {
-      await _firestore.collection(AppCollections.offers).add(model.toJson());
+      await _client.from('offers').insert(payload);
     }
   }
 
   // 7. Rebook Approvals
   Future<void> adminApproveRebook(String requestId, String status) async {
-    await _firestore.collection(AppCollections.rebookRequests).doc(requestId).update({'status': status});
+    await _client.from('rebook_requests').update({'status': status}).eq('id', requestId);
   }
 }

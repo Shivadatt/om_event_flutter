@@ -1,7 +1,6 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/utils/app_logger.dart';
@@ -11,9 +10,6 @@ import '../../datasources/local_storage_source.dart';
 mixin AuthSessionRepositoryMixin {
   /// Firebase Auth dependency.
   FirebaseAuth get firebaseAuth;
-
-  /// Firestore dependency.
-  FirebaseFirestore get firestore;
 
   /// Local Storage caching source.
   LocalStorageSource get localStorage;

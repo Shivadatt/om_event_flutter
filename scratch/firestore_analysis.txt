@@ -1,0 +1,394 @@
+=== CATEGORY: COLLECTION (Count: 185) ===
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:21: _firestore.collection(AppCollections.bookings).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:97: _firestore.collection(AppCollections.leads).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:112: _firestore.collection(AppCollections.payments).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:148: _firestore.collection(AppCollections.quotations).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:290: _firestore.collection('customer_notifications').add({
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:31: final doc = await _firestore.collection('system_config').doc('notifications').get();
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:57: _firestore.collection('system_config').doc('notifications').set({
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:423: Query<Map<String, dynamic>> query = _firestore.collection('customer_profiles');
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:438: _firestore.collection('customer_notifications').add({
+d:/om_event_python/om_event/lib/core/services/fcm/notification_token_service.dart:174: .collection(AppCollections.notificationTokens)
+d:/om_event_python/om_event/lib/core/services/fcm/notification_token_service.dart:262: .collection(AppCollections.notificationTokens)
+d:/om_event_python/om_event/lib/data/datasources/batch_delete_service.dart:20: final collectionRef = _firestore.collection(collectionName);
+d:/om_event_python/om_event/lib/data/datasources/batch_insert_service.dart:25: final docRef = _firestore.collection(collectionName).doc(id);
+d:/om_event_python/om_event/lib/data/datasources/business_details_remote_data_source.dart:17: .collection('settings')
+d:/om_event_python/om_event/lib/data/datasources/business_details_remote_data_source.dart:37: final docRef = _firestore.collection('settings').doc('business');
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:18: await _firestore.collection(AppCollections.categories).limit(1).get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:33: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:52: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:66: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:77: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:94: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:111: .collection(AppCollections.items)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:120: .collection(AppCollections.reviews)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:163: Query<Map<String, dynamic>> query = _firestore.collection(AppCollections.items);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:238: .collection(AppCollections.items)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:247: _firestore.collection(AppCollections.items).doc(doc.id).update({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:259: .collection(AppCollections.reviews)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:295: return await _firestore.collection(AppCollections.leads).add({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:306: .collection(AppCollections.leads)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:314: await _firestore.collection(AppCollections.leads).doc(id).update({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:327: await _firestore.collection(AppCollections.quotations).doc(quoteId).set({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:339: .collection(AppCollections.quotations)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:351: .collection(AppCollections.quotations)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:363: await _firestore.collection(AppCollections.quotations).doc(id).update({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:377: final docRef = _firestore.collection(AppCollections.customers).doc(phone);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:401: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:409: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:416: await _firestore.collection(AppCollections.categories).doc(slug).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:424: .collection(AppCollections.items)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:431: await _firestore.collection(AppCollections.items).doc(slug).update(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:436: await _firestore.collection(AppCollections.items).doc(slug).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:446: .collection(AppCollections.customers)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:454: await _firestore.collection(AppCollections.customers).doc(phone).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:463: .collection(AppCollections.customers)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:472: final snap = await _firestore.collection(AppCollections.users).get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:478: await _firestore.collection(AppCollections.users).doc(uid).set(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:483: await _firestore.collection(AppCollections.users).doc(uid).update(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:488: await _firestore.collection(AppCollections.users).doc(uid).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:496: final snap = await _firestore.collection(AppCollections.admin).get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:504: return await _firestore.collection(AppCollections.admin).doc(uid).get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:509: await _firestore.collection(AppCollections.admin).doc(uid).set(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:514: await _firestore.collection(AppCollections.admin).doc(uid).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:524: .collection(AppCollections.categories)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:531: .collection(AppCollections.items)
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:537: final ref = _firestore.collection(AppCollections.reviews).doc();
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:38: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:193: .collection(AppCollections.admin)
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:209: .collection(AppCollections.admin)
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:267: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:22: .collection(AppCollections.reviews)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:34: .collection(AppCollections.reviews)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:39: .collection(AppCollections.reviews)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:47: await _firestore.collection(AppCollections.reviews).doc(id).delete();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:56: .collection(AppCollections.bookings)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:68: .collection(AppCollections.bookings)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:73: .collection(AppCollections.bookings)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:81: await _firestore.collection(AppCollections.bookings).doc(id).delete();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:90: .collection(AppCollections.payments)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:102: .collection(AppCollections.payments)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:107: .collection(AppCollections.payments)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:115: await _firestore.collection(AppCollections.payments).doc(id).delete();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:124: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:133: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:142: await _firestore.collection(AppCollections.admin).doc(uid).update({
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:153: await _firestore.collection(AppCollections.admin).doc(uid).update({
+d:/om_event_python/om_event/lib/data/repositories/contact_number_repository_impl.dart:15: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/contact_number_repository_impl.dart:34: final docRef = _firestore.collection(AppCollections.settings).doc('business');
+d:/om_event_python/om_event/lib/data/repositories/customer_auth_repository_impl.dart:97: final doc = await _firestore.collection(AppCollections.customerProfiles).doc(uid).get();
+d:/om_event_python/om_event/lib/data/repositories/customer_auth_repository_impl.dart:108: await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).update(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_auth_repository_impl.dart:110: await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:28: .collection(AppCollections.customerLeads)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:51: .collection(AppCollections.customerLeads)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:59: .collection(AppCollections.customerBookings)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:70: final docRef = _firestore.collection(AppCollections.customerReviews).doc();
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:84: .collection(AppCollections.customerQuotes)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:95: .collection(AppCollections.customerQuotes)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:103: .collection(AppCollections.bookingTimelines)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:114: .collection(AppCollections.customerPayments)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:136: .collection(AppCollections.customerPayments)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:144: .collection(AppCollections.customerNotifications)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:155: .collection(AppCollections.customerNotifications)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:163: .collection(AppCollections.customerDocuments)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:174: .collection(AppCollections.bookingGallery)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:185: .collection(AppCollections.customerWishlist)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:202: .collection(AppCollections.customerWishlist)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:210: .collection(AppCollections.customerWishlist)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:226: .collection(AppCollections.rebookRequests)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:234: .collection(AppCollections.offers)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:246: .collection(AppCollections.customerActivity)
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:264: .collection(AppCollections.customerActivity)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:18: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:96: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:135: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:160: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:184: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:206: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:227: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:248: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:268: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:292: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:313: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:332: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:354: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:372: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:391: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:410: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:424: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:438: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:455: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:472: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:489: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:506: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:524: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:540: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:556: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:572: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:589: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:606: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:620: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:637: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:960: final docRef = _firestore.collection(AppCollections.settings).doc(docId);
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:981: final docRef = _firestore.collection(AppCollections.settings).doc(docId);
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:993: await docRef.collection('history').doc(currentVersion.toString()).set({
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1008: await _firestore.collection(AppCollections.activityLogs).add({
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1023: .collection(AppCollections.settings)
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1025: .collection('history')
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1033: final docRef = _firestore.collection(AppCollections.settings).doc(docId);
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1035: await docRef.collection('history').doc(version.toString()).get();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:42: final snap = await firestore.collection('admin').get();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:63: await firestore.collection('admin').doc(role.uid).update(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:65: await firestore.collection('admin').doc(role.uid).set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:71: await firestore.collection('admin').doc(uid).delete();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:11: final snap = await firestore.collection('users').get();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:19: await firestore.collection('users').doc(user.id).set(user.toJson());
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:24: await firestore.collection('users').doc(user.id).update(user.toJson());
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:29: await firestore.collection('users').doc(uid).delete();
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:36: rxAllQuotes.bindStream(_firestore.collection(AppCollections.customerQuotes).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:39: rxAllTimelines.bindStream(_firestore.collection(AppCollections.bookingTimelines).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:42: rxAllPayments.bindStream(_firestore.collection(AppCollections.customerPayments).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:45: rxAllNotifications.bindStream(_firestore.collection(AppCollections.customerNotifications).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:48: rxAllRebookRequests.bindStream(_firestore.collection(AppCollections.rebookRequests).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:51: rxAllOffers.bindStream(_firestore.collection(AppCollections.offers).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:54: rxAllActivities.bindStream(_firestore.collection(AppCollections.customerActivity).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:57: rxAllGalleries.bindStream(_firestore.collection(AppCollections.bookingGallery).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:84: await _firestore.collection(AppCollections.customerQuotes).add(model.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:88: await _firestore.collection(AppCollections.customerQuotes).doc(id).update(data);
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:92: await _firestore.collection(AppCollections.customerQuotes).doc(id).delete();
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:104: await _firestore.collection(AppCollections.bookingTimelines).add(checkpoint.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:109: await _firestore.collection(AppCollections.customerPayments).doc(id).update({'status': status});
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:130: await _firestore.collection(AppCollections.customerNotifications).add(model.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:136: .collection(AppCollections.bookingGallery)
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:143: await _firestore.collection(AppCollections.bookingGallery).doc(docId).update({
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:154: await _firestore.collection(AppCollections.bookingGallery).add(gallery.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:171: await _firestore.collection(AppCollections.offers).doc(offer.id).update(model.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:173: await _firestore.collection(AppCollections.offers).add(model.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:179: await _firestore.collection(AppCollections.rebookRequests).doc(requestId).update({'status': status});
+d:/om_event_python/om_event/lib/presentation/controllers/catalog_controller.dart:261: final customerLeadRef = FirebaseFirestore.instance.collection(AppCollections.customerLeads).doc(leadId);
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:91: .collection(AppCollections.customers)
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:101: .collection(AppCollections.leads)
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:111: await db.collection(AppCollections.customerProfiles).doc(profile.id).update({
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:141: .collection(AppCollections.quotations)
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:148: .collection(AppCollections.quotations)
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:160: await db.collection(AppCollections.customerProfiles).doc(profile.id).update({
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:200: final customerQuoteRef = db.collection(AppCollections.customerQuotes).doc(quoteId);
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:232: .collection(AppCollections.leads)
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:244: final customerLeadRef = db.collection(AppCollections.customerLeads).doc(leadId);
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:263: .collection(AppCollections.leads)
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:275: final customerLeadRef = db.collection(AppCollections.customerLeads).doc(leadId);
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:303: .collection(AppCollections.bookings)
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:321: final customerBookingRef = db.collection(AppCollections.customerBookings).doc(bookingId);
+d:/om_event_python/om_event/lib/presentation/controllers/quotation_controller.dart:180: final customerQuoteRef = FirebaseFirestore.instance.collection(AppCollections.customerQuotes).doc(quotationId);
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/notifications_view.dart:30: .collection(AppCollections.customerNotifications)
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/preferences_view.dart:57: .collection(AppCollections.customerNotificationPreferences)
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/preferences_view.dart:95: .collection(AppCollections.customerNotificationPreferences)
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes_view.dart:133: future: db.collection(AppCollections.items).doc(item.experienceId).get(),
+
+=== CATEGORY: STREAM (Count: 59) ===
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:21: _firestore.collection(AppCollections.bookings).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:97: _firestore.collection(AppCollections.leads).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:112: _firestore.collection(AppCollections.payments).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart:148: _firestore.collection(AppCollections.quotations).snapshots().listen((snap) {
+d:/om_event_python/om_event/lib/data/datasources/business_details_remote_data_source.dart:19: .snapshots()
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:79: .snapshots()
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:95: .snapshots()
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:113: .snapshots()
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:122: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/contact_number_repository_impl.dart:17: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:30: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:61: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:86: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:105: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:116: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:146: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:165: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:176: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:187: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:237: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:248: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:20: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:98: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:137: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:162: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:186: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:208: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:229: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:250: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:270: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:294: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:315: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:334: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:356: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:374: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:393: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:412: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:426: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:440: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:457: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:474: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:491: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:508: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:526: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:542: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:558: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:574: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:591: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:608: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:622: .snapshots()
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:639: .snapshots()
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:36: rxAllQuotes.bindStream(_firestore.collection(AppCollections.customerQuotes).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:39: rxAllTimelines.bindStream(_firestore.collection(AppCollections.bookingTimelines).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:42: rxAllPayments.bindStream(_firestore.collection(AppCollections.customerPayments).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:45: rxAllNotifications.bindStream(_firestore.collection(AppCollections.customerNotifications).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:48: rxAllRebookRequests.bindStream(_firestore.collection(AppCollections.rebookRequests).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:51: rxAllOffers.bindStream(_firestore.collection(AppCollections.offers).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:54: rxAllActivities.bindStream(_firestore.collection(AppCollections.customerActivity).snapshots().map((snap) =>
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:57: rxAllGalleries.bindStream(_firestore.collection(AppCollections.bookingGallery).snapshots().map((snap) =>
+
+=== CATEGORY: BATCH (Count: 3) ===
+d:/om_event_python/om_event/lib/data/datasources/batch_delete_service.dart:26: final WriteBatch batch = _firestore.batch();
+d:/om_event_python/om_event/lib/data/datasources/batch_insert_service.dart:22: final WriteBatch batch = _firestore.batch();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:520: final batch = _firestore.batch();
+
+=== CATEGORY: TRANSACTION (Count: 0) ===
+
+=== CATEGORY: GET (Count: 48) ===
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:31: final doc = await _firestore.collection('system_config').doc('notifications').get();
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:245: final response = await http.get(
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:261: final response = await http.get(
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:277: final response = await http.get(
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:293: final response = await http.get(
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:428: final usersSnap = await query.get();
+d:/om_event_python/om_event/lib/data/datasources/batch_delete_service.dart:22: final snapshot = await collectionRef.limit(200).get();
+d:/om_event_python/om_event/lib/data/datasources/business_details_remote_data_source.dart:38: final snap = await docRef.get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:18: await _firestore.collection(AppCollections.categories).limit(1).get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:35: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:53: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:176: final snap = await query.get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:241: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:261: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:308: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:341: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:354: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:378: final doc = await docRef.get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:448: .get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:472: final snap = await _firestore.collection(AppCollections.users).get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:496: final snap = await _firestore.collection(AppCollections.admin).get();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:504: return await _firestore.collection(AppCollections.admin).doc(uid).get();
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:40: .get();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:24: .get();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:58: .get();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:92: .get();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:126: .get();
+d:/om_event_python/om_event/lib/data/repositories/contact_number_repository_impl.dart:35: final snap = await docRef.get();
+d:/om_event_python/om_event/lib/data/repositories/customer_auth_repository_impl.dart:97: final doc = await _firestore.collection(AppCollections.customerProfiles).doc(uid).get();
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:961: final snap = await docRef.get();
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:982: final snap = await docRef.get();
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1027: .get();
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1035: await docRef.collection('history').doc(version.toString()).get();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:42: final snap = await firestore.collection('admin').get();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:11: final snap = await firestore.collection('users').get();
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:139: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:93: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:103: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:143: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:150: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:234: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:245: final customerLeadDoc = await customerLeadRef.get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:265: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:276: final customerLeadDoc = await customerLeadRef.get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:305: .get();
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:322: final customerBookingDoc = await customerBookingRef.get();
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/preferences_view.dart:59: .get();
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes_view.dart:133: future: db.collection(AppCollections.items).doc(item.experienceId).get(),
+
+=== CATEGORY: SET (Count: 40) ===
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:57: _firestore.collection('system_config').doc('notifications').set({
+d:/om_event_python/om_event/lib/core/services/fcm/notification_token_service.dart:176: .set({
+d:/om_event_python/om_event/lib/data/datasources/batch_insert_service.dart:28: batch.set(docRef, data);
+d:/om_event_python/om_event/lib/data/datasources/business_details_remote_data_source.dart:44: await docRef.set({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:327: await _firestore.collection(AppCollections.quotations).doc(quoteId).set({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:380: await docRef.set({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:403: .set(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:426: .set(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:478: await _firestore.collection(AppCollections.users).doc(uid).set(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:509: await _firestore.collection(AppCollections.admin).doc(uid).set(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:526: batch.set(ref, cat);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:533: batch.set(ref, item);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:538: batch.set(ref, review);
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:195: .set({
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:211: .set({
+d:/om_event_python/om_event/lib/data/datasources/seeder_service.dart:269: .set({
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:41: .set(review.toJson());
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:75: .set(booking.toJson());
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:109: .set(payment.toJson());
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:135: .set(settings, SetOptions(merge: true));
+d:/om_event_python/om_event/lib/data/repositories/contact_number_repository_impl.dart:43: await docRef.set({
+d:/om_event_python/om_event/lib/data/repositories/customer_auth_repository_impl.dart:110: await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:53: .set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:71: await docRef.set({
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:138: .set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:204: .set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:228: .set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:266: .set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:967: await docRef.set({
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:993: await docRef.collection('history').doc(currentVersion.toString()).set({
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:1044: await docRef.set({
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:65: await firestore.collection('admin').doc(role.uid).set(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:19: await firestore.collection('users').doc(user.id).set(user.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/catalog_controller.dart:262: await customerLeadRef.set({
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:201: await customerQuoteRef.set({
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:247: await customerLeadRef.set({
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:278: await customerLeadRef.set({
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:324: await customerBookingRef.set({
+d:/om_event_python/om_event/lib/presentation/controllers/quotation_controller.dart:181: await customerQuoteRef.set({
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/preferences_view.dart:97: .set({
+
+=== CATEGORY: UPDATE (Count: 28) ===
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:68: .update({'is_active': isActive});
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:247: _firestore.collection(AppCollections.items).doc(doc.id).update({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:314: await _firestore.collection(AppCollections.leads).doc(id).update({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:363: await _firestore.collection(AppCollections.quotations).doc(id).update({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:388: await docRef.update({
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:411: .update(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:431: await _firestore.collection(AppCollections.items).doc(slug).update(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:465: .update(json);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:483: await _firestore.collection(AppCollections.users).doc(uid).update(json);
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:36: .update(review.toJson());
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:70: .update(booking.toJson());
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:104: .update(payment.toJson());
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:142: await _firestore.collection(AppCollections.admin).doc(uid).update({
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:153: await _firestore.collection(AppCollections.admin).doc(uid).update({
+d:/om_event_python/om_event/lib/data/repositories/customer_auth_repository_impl.dart:108: await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).update(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:97: .update({'status': status});
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:157: .update({'isRead': isRead});
+d:/om_event_python/om_event/lib/data/repositories/settings_repository_impl.dart:998: await docRef.update({
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:63: await firestore.collection('admin').doc(role.uid).update(model.toJson());
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:24: await firestore.collection('users').doc(user.id).update(user.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:88: await _firestore.collection(AppCollections.customerQuotes).doc(id).update(data);
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:109: await _firestore.collection(AppCollections.customerPayments).doc(id).update({'status': status});
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:143: await _firestore.collection(AppCollections.bookingGallery).doc(docId).update({
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:171: await _firestore.collection(AppCollections.offers).doc(offer.id).update(model.toJson());
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:179: await _firestore.collection(AppCollections.rebookRequests).doc(requestId).update({'status': status});
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:111: await db.collection(AppCollections.customerProfiles).doc(profile.id).update({
+d:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart:160: await db.collection(AppCollections.customerProfiles).doc(profile.id).update({
+d:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/notifications_view.dart:32: .update({'isArchived': archive});
+
+=== CATEGORY: DELETE (Count: 15) ===
+d:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart:404: final response = await http.delete(
+d:/om_event_python/om_event/lib/core/services/fcm/notification_token_service.dart:264: .delete();
+d:/om_event_python/om_event/lib/data/datasources/batch_delete_service.dart:28: batch.delete(doc.reference);
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:416: await _firestore.collection(AppCollections.categories).doc(slug).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:436: await _firestore.collection(AppCollections.items).doc(slug).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:454: await _firestore.collection(AppCollections.customers).doc(phone).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:488: await _firestore.collection(AppCollections.users).doc(uid).delete();
+d:/om_event_python/om_event/lib/data/datasources/firestore_remote_source.dart:514: await _firestore.collection(AppCollections.admin).doc(uid).delete();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:47: await _firestore.collection(AppCollections.reviews).doc(id).delete();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:81: await _firestore.collection(AppCollections.bookings).doc(id).delete();
+d:/om_event_python/om_event/lib/data/repositories/admin_repository.dart:115: await _firestore.collection(AppCollections.payments).doc(id).delete();
+d:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart:212: .delete();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart:71: await firestore.collection('admin').doc(uid).delete();
+d:/om_event_python/om_event/lib/data/repositories/mixins/auth_user_repository_mixin.dart:29: await firestore.collection('users').doc(uid).delete();
+d:/om_event_python/om_event/lib/presentation/controllers/admin_customer_portal_controller.dart:92: await _firestore.collection(AppCollections.customerQuotes).doc(id).delete();
+

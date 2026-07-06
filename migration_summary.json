@@ -1,0 +1,121 @@
+{
+  "total_firestore_documents": 538,
+  "total_supabase_rows": 534,
+  "total_failed": 0,
+  "total_skipped": 4,
+  "migration_accuracy": "100.0%",
+  "details": [
+    {
+      "collection": "roles",
+      "table": "roles",
+      "found": 3,
+      "migrated": 3,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "permissions",
+      "table": "permissions",
+      "found": 19,
+      "migrated": 19,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "admins",
+      "table": "admins",
+      "found": 4,
+      "migrated": 4,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "service_categories",
+      "table": "categories",
+      "found": 11,
+      "migrated": 11,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "services",
+      "table": "experiences",
+      "found": 43,
+      "migrated": 43,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "users",
+      "table": "users",
+      "found": 8,
+      "migrated": 8,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "bookings",
+      "table": "bookings",
+      "found": 1,
+      "migrated": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "gallery",
+      "table": "gallery",
+      "found": 430,
+      "migrated": 430,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "chat_rooms",
+      "table": "chat_rooms",
+      "found": 1,
+      "migrated": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "device_tokens",
+      "table": "notification_tokens",
+      "found": 1,
+      "migrated": 0,
+      "skipped": 1,
+      "failed": 0
+    },
+    {
+      "collection": "inquiries",
+      "table": "leads",
+      "found": 1,
+      "migrated": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "notifications",
+      "table": "notification_queue",
+      "found": 3,
+      "migrated": 0,
+      "skipped": 3,
+      "failed": 0
+    },
+    {
+      "collection": "reviews",
+      "table": "reviews",
+      "found": 1,
+      "migrated": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "collection": "settings",
+      "table": "settings",
+      "found": 12,
+      "migrated": 12,
+      "skipped": 0,
+      "failed": 0
+    }
+  ]
+}

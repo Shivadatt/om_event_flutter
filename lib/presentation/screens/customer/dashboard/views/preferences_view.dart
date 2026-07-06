@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:get/get.dart';
 import '../../../../../core/config/app_theme.dart';
-import '../../../../../core/constants/app_collections.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
 class PreferencesView extends StatefulWidget {
@@ -18,7 +17,7 @@ class PreferencesView extends StatefulWidget {
 }
 
 class _PreferencesViewState extends State<PreferencesView> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _client = Supabase.instance.client;
 
   bool pushEnabled = true;
   bool emailEnabled = true;
@@ -53,30 +52,31 @@ class _PreferencesViewState extends State<PreferencesView> {
       final profile = widget.controller.rxProfile.value;
       if (profile != null) {
         userId = profile.id;
-        final doc = await _firestore
-            .collection(AppCollections.customerNotificationPreferences)
-            .doc(userId)
-            .get();
+        final data = await _client
+            .from('notification_preferences')
+            .select()
+            .eq('user_id', userId!)
+            .maybeSingle();
 
-        if (doc.exists) {
-          final data = doc.data()!;
+        if (data != null) {
+          final eventPrefs = data['event_type_preferences'] as Map<String, dynamic>? ?? {};
           setState(() {
-            pushEnabled = data['pushEnabled'] ?? true;
-            emailEnabled = data['emailEnabled'] ?? true;
-            whatsappEnabled = data['whatsappEnabled'] ?? true;
-            bookingEnabled = data['bookingEnabled'] ?? true;
-            paymentEnabled = data['paymentEnabled'] ?? true;
-            quotationEnabled = data['quotationEnabled'] ?? true;
-            reviewEnabled = data['reviewEnabled'] ?? true;
-            offerEnabled = data['offerEnabled'] ?? true;
-            supportEnabled = data['supportEnabled'] ?? true;
-            reminderEnabled = data['reminderEnabled'] ?? true;
-            marketingEnabled = data['marketingEnabled'] ?? false;
-            newsletterEnabled = data['newsletterEnabled'] ?? false;
-            dndEnabled = data['dndEnabled'] ?? false;
-            quietHoursStart = data['quietHoursStart'] ?? '22:00';
-            quietHoursEnd = data['quietHoursEnd'] ?? '07:00';
-            dailyDigestEnabled = data['dailyDigestEnabled'] ?? false;
+            pushEnabled = data['push_enabled'] ?? true;
+            emailEnabled = data['email_enabled'] ?? true;
+            whatsappEnabled = data['whatsapp_enabled'] ?? true;
+            bookingEnabled = eventPrefs['bookingEnabled'] ?? true;
+            paymentEnabled = eventPrefs['paymentEnabled'] ?? true;
+            quotationEnabled = eventPrefs['quotationEnabled'] ?? true;
+            reviewEnabled = eventPrefs['reviewEnabled'] ?? true;
+            offerEnabled = eventPrefs['offerEnabled'] ?? true;
+            supportEnabled = eventPrefs['supportEnabled'] ?? true;
+            reminderEnabled = eventPrefs['reminderEnabled'] ?? true;
+            marketingEnabled = eventPrefs['marketingEnabled'] ?? false;
+            newsletterEnabled = eventPrefs['newsletterEnabled'] ?? false;
+            dndEnabled = data['dnd_enabled'] ?? false;
+            quietHoursStart = (data['quiet_hours_start'] as String?)?.substring(0, 5) ?? '22:00';
+            quietHoursEnd = (data['quiet_hours_end'] as String?)?.substring(0, 5) ?? '07:00';
+            dailyDigestEnabled = eventPrefs['dailyDigestEnabled'] ?? false;
           });
         }
       }
@@ -91,28 +91,29 @@ class _PreferencesViewState extends State<PreferencesView> {
     if (userId == null) return;
     try {
       setState(() => isLoading = true);
-      await _firestore
-          .collection(AppCollections.customerNotificationPreferences)
-          .doc(userId)
-          .set({
-        'pushEnabled': pushEnabled,
-        'emailEnabled': emailEnabled,
-        'whatsappEnabled': whatsappEnabled,
-        'bookingEnabled': bookingEnabled,
-        'paymentEnabled': paymentEnabled,
-        'quotationEnabled': quotationEnabled,
-        'reviewEnabled': reviewEnabled,
-        'offerEnabled': offerEnabled,
-        'supportEnabled': supportEnabled,
-        'reminderEnabled': reminderEnabled,
-        'marketingEnabled': marketingEnabled,
-        'newsletterEnabled': newsletterEnabled,
-        'dndEnabled': dndEnabled,
-        'quietHoursStart': quietHoursStart,
-        'quietHoursEnd': quietHoursEnd,
-        'dailyDigestEnabled': dailyDigestEnabled,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      final payload = {
+        'user_id': userId,
+        'push_enabled': pushEnabled,
+        'email_enabled': emailEnabled,
+        'whatsapp_enabled': whatsappEnabled,
+        'dnd_enabled': dndEnabled,
+        'quiet_hours_start': quietHoursStart.contains(':') && quietHoursStart.split(':').length == 2 ? '$quietHoursStart:00' : quietHoursStart,
+        'quiet_hours_end': quietHoursEnd.contains(':') && quietHoursEnd.split(':').length == 2 ? '$quietHoursEnd:00' : quietHoursEnd,
+        'event_type_preferences': {
+          'bookingEnabled': bookingEnabled,
+          'paymentEnabled': paymentEnabled,
+          'quotationEnabled': quotationEnabled,
+          'reviewEnabled': reviewEnabled,
+          'offerEnabled': offerEnabled,
+          'supportEnabled': supportEnabled,
+          'reminderEnabled': reminderEnabled,
+          'marketingEnabled': marketingEnabled,
+          'newsletterEnabled': newsletterEnabled,
+          'dailyDigestEnabled': dailyDigestEnabled,
+        }
+      };
+
+      await _client.from('notification_preferences').upsert(payload, onConflict: 'user_id');
 
       Get.snackbar(
         "Preferences Saved",

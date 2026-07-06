@@ -1,17 +1,15 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/constants/app_collections.dart';
 
 /// Manages FCM token lifecycle:
 ///   - fetch from Firebase
-///   - persist to Supabase (primary Edge Function) + Firestore (fallback)
+///   - persist to Supabase (primary Edge Function)
 ///   - remove on logout
 ///   - generate a stable device-id without extra packages
 ///
@@ -30,7 +28,6 @@ class NotificationTokenService extends GetxService {
   static const String _deviceIdPrefKey = 'fcm_device_id';
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ─── Platform helpers ─────────────────────────────────────────────────────
 
@@ -85,7 +82,7 @@ class NotificationTokenService extends GetxService {
 
   // ─── Persist ─────────────────────────────────────────────────────────────
 
-  /// Upsert token to Supabase (primary) and Firestore (fallback).
+  /// Upsert token to Supabase (primary).
   Future<void> persistToken({
     required String userId,
     required String role,
@@ -95,12 +92,8 @@ class NotificationTokenService extends GetxService {
 
     final deviceId = await _getDeviceId();
 
-    await Future.wait([
-      _saveToSupabase(
-          userId: userId, role: role, token: token, deviceId: deviceId),
-      _saveToFirestore(
-          userId: userId, role: role, token: token, deviceId: deviceId),
-    ]);
+    await _saveToSupabase(
+        userId: userId, role: role, token: token, deviceId: deviceId);
   }
 
   Future<void> _saveToSupabase({
@@ -162,31 +155,6 @@ class NotificationTokenService extends GetxService {
     }
   }
 
-  Future<void> _saveToFirestore({
-    required String userId,
-    required String role,
-    required String token,
-    required String deviceId,
-  }) async {
-    print("INFO: Saving token to Firestore...");
-    try {
-      await _firestore
-          .collection(AppCollections.notificationTokens)
-          .doc(userId)
-          .set({
-        'userId': userId,
-        'deviceToken': token,
-        'role': role,
-        'platform': _platform,
-        'deviceId': deviceId,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      print("SUCCESS: NotificationTokenService: Firestore token saved for user=$userId");
-    } catch (e) {
-      print("ERROR: NotificationTokenService: Firestore saveToken failed: $e");
-    }
-  }
-
   // ─── Remove ──────────────────────────────────────────────────────────────
 
   /// Remove token from both stores on logout.
@@ -195,10 +163,7 @@ class NotificationTokenService extends GetxService {
 
     final deviceId = await _getDeviceId();
 
-    await Future.wait([
-      _removeFromSupabase(userId: userId, deviceId: deviceId),
-      _removeFromFirestore(userId: userId),
-    ]);
+    await _removeFromSupabase(userId: userId, deviceId: deviceId);
   }
 
   Future<void> _removeFromSupabase({
@@ -252,19 +217,6 @@ class NotificationTokenService extends GetxService {
     } catch (e, stackTrace) {
       print("ERROR: NotificationTokenService: Supabase Edge Function removeToken failed: $e");
       print("DEBUG HTTP Error Stack: $stackTrace");
-    }
-  }
-
-  Future<void> _removeFromFirestore({required String userId}) async {
-    print("INFO: Removing token from Firestore...");
-    try {
-      await _firestore
-          .collection(AppCollections.notificationTokens)
-          .doc(userId)
-          .delete();
-      print("SUCCESS: NotificationTokenService: Firestore token removed for user=$userId");
-    } catch (e) {
-      print("ERROR: NotificationTokenService: Firestore removeToken failed: $e");
     }
   }
 }

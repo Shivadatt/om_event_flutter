@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class NotificationGatewayService extends GetxService {
   static NotificationGatewayService get to => Get.find();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _client = Supabase.instance.client;
 
   static const String _supabaseUrl = 'https://kwegyvbgdaednljyhcgm.supabase.co';
   static const String _supabaseAnonKey =
@@ -28,14 +28,14 @@ class NotificationGatewayService extends GetxService {
 
   Future<void> _loadCredentials() async {
     try {
-      final doc = await _firestore.collection('system_config').doc('notifications').get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        _resendApiKey = data['resendApiKey'] ?? 're_1234567890';
-        _whatsappToken = data['whatsappToken'] ?? 'EAABw...';
-        _whatsappPhoneId = data['whatsappPhoneId'] ?? '1029384756';
-        _whatsappBusinessId = data['whatsappBusinessId'] ?? '9876543210';
-        _senderEmail = data['senderEmail'] ?? 'notifications@omevents.com';
+      final data = await _client.from('settings').select().eq('id', 'notifications').maybeSingle();
+      if (data != null && data['value'] != null) {
+        final config = data['value'] as Map<String, dynamic>;
+        _resendApiKey = config['resendApiKey'] ?? 're_1234567890';
+        _whatsappToken = config['whatsappToken'] ?? 'EAABw...';
+        _whatsappPhoneId = config['whatsappPhoneId'] ?? '1029384756';
+        _whatsappBusinessId = config['whatsappBusinessId'] ?? '9876543210';
+        _senderEmail = config['senderEmail'] ?? 'notifications@omevents.com';
       }
     } catch (_) {}
   }
@@ -54,14 +54,17 @@ class NotificationGatewayService extends GetxService {
     _whatsappBusinessId = whatsappBusinessId;
     _senderEmail = senderEmail;
 
-    _firestore.collection('system_config').doc('notifications').set({
-      'resendApiKey': _resendApiKey,
-      'whatsappToken': _whatsappToken,
-      'whatsappPhoneId': _whatsappPhoneId,
-      'whatsappBusinessId': _whatsappBusinessId,
-      'senderEmail': _senderEmail,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    _client.from('settings').upsert({
+      'id': 'notifications',
+      'value': {
+        'resendApiKey': _resendApiKey,
+        'whatsappToken': _whatsappToken,
+        'whatsappPhoneId': _whatsappPhoneId,
+        'whatsappBusinessId': _whatsappBusinessId,
+        'senderEmail': _senderEmail,
+      },
+      'updated_at': DateTime.now().toIso8601String(),
+    });
   }
 
   // ─── Supabase Outbox Queue Integration ──────────────────────────────────────
@@ -420,30 +423,28 @@ class NotificationGatewayService extends GetxService {
     required String priority,
   }) async {
     try {
-      Query<Map<String, dynamic>> query = _firestore.collection('customer_profiles');
+      var query = _client.from('customer_profiles').select();
       if (segment == 'Ahmedabad' || segment == 'Baroda') {
-        query = query.where('branch', isEqualTo: segment);
+        query = query.eq('branch', segment);
       }
 
-      final usersSnap = await query.get();
-      if (usersSnap.docs.isEmpty) return false;
+      final List<dynamic> users = await query;
+      if (users.isEmpty) return false;
 
-      for (var doc in usersSnap.docs) {
-        final data = doc.data();
-        final email = data['email'] ?? '';
-        final phone = data['phone'] ?? '';
-        final customerId = doc.id;
+      for (var user in users) {
+        final email = user['email'] ?? '';
+        final phone = user['phone'] ?? '';
+        final customerId = user['id'] ?? '';
 
-        // Add to customer notifications inbox in Firestore (to preserve in-app notifications inbox feature)
-        _firestore.collection('customer_notifications').add({
-          'customerId': customerId,
+        // Add to customer notifications inbox in Supabase
+        await _client.from('customer_notifications').insert({
+          'customer_id': customerId,
           'title': title,
           'body': body,
           'type': 'Announcement',
-          'isRead': false,
+          'is_read': false,
           'branch': segment,
           'priority': priority,
-          'createdAt': FieldValue.serverTimestamp(),
         });
 
         // Queue in Supabase for FCM push notification delivery

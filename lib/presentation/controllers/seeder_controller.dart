@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import '../../data/datasources/seeder_service.dart';
+import '../../data/datasources/supabase_seeder_service.dart';
 
 class SeederController extends GetxController {
-  final SeederService _seederService = Get.find<SeederService>();
+  final SupabaseSeederService _seederService = Get.find<SupabaseSeederService>();
 
   final RxString statusMessage = 'Ready to migrate'.obs;
   final RxDouble progressPercent = 0.0.obs;
@@ -20,8 +20,7 @@ class SeederController extends GetxController {
     statusMessage.value = 'Initializing migration...';
 
     try {
-      await _seederService.runMigration(
-        force: force,
+      await _seederService.migrateAll(
         onProgress: (status, progress) {
           if (progress == -1.0) {
             errorMessage.value = status;

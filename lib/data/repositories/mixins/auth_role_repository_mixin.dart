@@ -1,16 +1,13 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/helpers/supabase_mapper.dart';
 import '../../../domain/entities/admin_role.dart';
 import '../../models/admin_role_model.dart';
 import '../../../core/config/rbac_config.dart';
 
-/// Mixin responsibility to handle admin role permissions CRUD and RBAC mappings.
+/// Mixin responsibility to handle admin role permissions CRUD and RBAC mappings on Supabase.
 mixin AuthRoleRepositoryMixin {
-  /// Firestore database source.
-  FirebaseFirestore get firestore;
-
-  /// Firebase Auth dependency.
-  FirebaseAuth get firebaseAuth;
+  final SupabaseClient _client = Supabase.instance.client;
 
   /// Retrieve current active user profile security role type.
   Future<String?> getCurrentUserRole();
@@ -21,7 +18,7 @@ mixin AuthRoleRepositoryMixin {
     if (role == null) return null;
 
     final permissions = RbacConfig.getPresetPermissions(role);
-    final user = firebaseAuth.currentUser;
+    final user = fb.FirebaseAuth.instance.currentUser;
 
     return AdminRoleModel(
       uid: uid,
@@ -39,9 +36,9 @@ mixin AuthRoleRepositoryMixin {
 
   /// Retrieve all administrator team role configurations.
   Future<List<AdminRole>> getAdminRoles() async {
-    final snap = await firestore.collection('admin').get();
-    return snap.docs
-        .map((doc) => AdminRoleModel.fromJson(doc.data(), doc.id))
+    final response = await _client.from('admins').select();
+    return response
+        .map((row) => AdminRoleModel.fromJson(SupabaseMapper.toCamelCase(row), row['id'] ?? ''))
         .toList();
   }
 
@@ -59,15 +56,15 @@ mixin AuthRoleRepositoryMixin {
       roleType: role.roleType,
       permissions: role.permissions,
     );
-    if (isEdit) {
-      await firestore.collection('admin').doc(role.uid).update(model.toJson());
-    } else {
-      await firestore.collection('admin').doc(role.uid).set(model.toJson());
-    }
+    final payload = SupabaseMapper.toSnakeCase(model.toJson());
+    await _client.from('admins').upsert({
+      'id': role.uid,
+      ...payload,
+    });
   }
 
   /// Delete an administrator team role profile.
   Future<void> deleteAdminRole(String uid) async {
-    await firestore.collection('admin').doc(uid).delete();
+    await _client.from('admins').delete().eq('id', uid);
   }
 }
