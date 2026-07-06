@@ -283,8 +283,6 @@ class EnterpriseVerificationService extends GetxService {
       'admins',
       'roles',
       'permissions',
-      'services',
-      'service_categories',
       'categories',
       'experiences',
       'booking_gallery',
