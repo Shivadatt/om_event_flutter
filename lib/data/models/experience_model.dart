@@ -39,39 +39,40 @@ class ExperienceModel extends Experience {
         '';
 
     // Runtime sanitization to correct legacy mis-seeded Firestore categories
-    final itemName = (json['name'] as String? ?? '').toLowerCase();
     final itemId = documentId.toLowerCase();
 
-    if (itemName.contains('baby shower') ||
-        itemName.contains('chhathi') ||
-        itemId == 'pastel-dream-birthday' ||
-        itemId == 'ivory-vow-stage') {
+    if (itemId == 'pastel-dream-birthday' && catSlug == 'birthday') {
       catId = 'baby';
       catName = 'Baby Celebrations';
       catSlug = 'baby';
-    } else if (itemName.contains('birthday') ||
-        itemName.contains('ballon decoration') ||
-        itemId == 'moonlit-marry-me' ||
-        itemId == 'royal-fog-entry') {
-      catId = 'birthday';
-      catName = 'Birthday Celebrations';
-      catSlug = 'birthday';
-    } else if (itemName.contains('wedding') ||
-        itemName.contains('rasam') ||
-        itemName.contains('haldi') ||
-        itemName.contains('mehndi') ||
-        itemId == 'little-cloud-welcome' ||
-        itemId == 'opening-day-essentials') {
+    } else if (itemId == 'ivory-vow-stage' && catSlug == 'wedding') {
+      catId = 'baby';
+      catName = 'Baby Celebrations';
+      catSlug = 'baby';
+    } else if (itemId == 'little-cloud-welcome' && catSlug == 'baby') {
       catId = 'wedding';
       catName = 'Wedding & Engagement';
       catSlug = 'wedding';
-    } else if (itemName.contains('pyro') ||
-        itemName.contains('smoke pot') ||
-        itemId == 'signature-brand-launch' ||
-        itemId == 'terrace-sunset-story') {
+    } else if (itemId == 'moonlit-marry-me' && catSlug == 'proposal') {
+      catId = 'birthday';
+      catName = 'Birthday Celebrations';
+      catSlug = 'birthday';
+    } else if (itemId == 'royal-fog-entry' && catSlug == 'entries') {
+      catId = 'birthday';
+      catName = 'Birthday Celebrations';
+      catSlug = 'birthday';
+    } else if (itemId == 'signature-brand-launch' && catSlug == 'corporate') {
       catId = 'entries';
       catName = 'Grand Entries';
       catSlug = 'entries';
+    } else if (itemId == 'terrace-sunset-story' && catSlug == 'proposal') {
+      catId = 'entries';
+      catName = 'Grand Entries';
+      catSlug = 'entries';
+    } else if (itemId == 'opening-day-essentials' && catSlug == 'corporate') {
+      catId = 'wedding';
+      catName = 'Wedding & Engagement';
+      catSlug = 'wedding';
     }
 
     return ExperienceModel(

@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:async';
 import 'package:get/get.dart';
 import '../../core/errors/failures.dart';
@@ -151,12 +152,16 @@ class CatalogController extends GetxController {
     // Keyword search
     final query = searchQuery.value.toLowerCase().trim();
     if (query.isNotEmpty) {
-      list =
-          list.where((e) {
-            return e.name.toLowerCase().contains(query) ||
-                e.description.toLowerCase().contains(query) ||
-                e.tags.any((t) => t.toLowerCase().contains(query));
-          }).toList();
+      final keywords = query.split(RegExp(r'\s+'));
+      list = list.where((e) {
+        return keywords.every((keyword) {
+          return e.name.toLowerCase().contains(keyword) ||
+              e.categoryName.toLowerCase().contains(keyword) ||
+              e.categorySlug.toLowerCase().contains(keyword) ||
+              e.description.toLowerCase().contains(keyword) ||
+              e.tags.any((t) => t.toLowerCase().contains(keyword));
+        });
+      }).toList();
     }
 
     // Sort
@@ -171,6 +176,21 @@ class CatalogController extends GetxController {
         // 'popular' and 'latest' both sort by popularity
         list.sort((a, b) => b.popularity.compareTo(a.popularity));
     }
+
+    // Temporary debug logs for filter investigation
+    final matchedCat = rxCategories.firstWhereOrNull((c) => c.slug == catFilter);
+    print("Selected Category: ${matchedCat?.name ?? (catFilter.isEmpty ? 'All' : 'Unknown')}");
+    print("Category ID: ${matchedCat?.id ?? 'N/A'}");
+    print("Category Name: ${matchedCat?.name ?? (catFilter.isEmpty ? 'All' : 'Unknown')}");
+    print("Category Slug: ${catFilter.isEmpty ? 'N/A' : catFilter}");
+
+    for (final e in _allActiveExperiences) {
+      print("Item Name: ${e.name}");
+      print("Item Category ID: ${e.categoryId}");
+      print("Item Category Name: ${e.categoryName}");
+      print("Item Category Slug: ${e.categorySlug}");
+    }
+    print("Final Filtered Item Count: ${list.length}");
 
     rxExperiences.assignAll(list);
   }
@@ -201,6 +221,7 @@ class CatalogController extends GetxController {
 
   void updateSearchQuery(String query) {
     searchQuery.value = query;
+    _applyExperienceFilters();
   }
 
   void updateSort(String option) {

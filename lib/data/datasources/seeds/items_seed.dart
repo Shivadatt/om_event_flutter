@@ -257,7 +257,7 @@ class ItemsSeed {
       'category_id': 'birthday',
       'category_name': 'Birthday Celebrations',
       'category_slug': 'birthday',
-      'name': 'Ballon Decoration ',
+      'name': 'Balloon Decoration',
       'slug': 'royal-fog-entry',
       'description':
           'Low fog aisle, four cold pyro moments and coordinated spotlight cues.',
