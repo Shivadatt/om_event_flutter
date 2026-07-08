@@ -614,33 +614,71 @@ class ExperiencesCatalogSection extends StatelessWidget {
                 final double childAspectRatio =
                     cardWidth / ((cardWidth / 1.12) + 170);
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: gridCount,
-                    crossAxisSpacing: 18,
-                    mainAxisSpacing: 32,
-                    childAspectRatio: childAspectRatio,
-                  ),
-                  itemCount: controller.rxExperiences.length,
-                  itemBuilder: (context, index) {
-                    final item = controller.rxExperiences[index];
-                    return ExperienceCard(
-                      item: item,
-                      onQuickAdd: () {
-                        cartController.addToCart(item);
-                        Get.snackbar(
-                          "Added to Canvas",
-                          "${item.name} added.",
-                          snackPosition: SnackPosition.BOTTOM,
+                final totalItems = controller.rxExperiences.length;
+                final visibleCount = controller.rxVisibleCount.value.clamp(0, totalItems);
+                final hasMore = visibleCount < totalItems;
+
+                return Column(
+                  children: [
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: gridCount,
+                        crossAxisSpacing: 18,
+                        mainAxisSpacing: 32,
+                        childAspectRatio: childAspectRatio,
+                      ),
+                      itemCount: visibleCount,
+                      itemBuilder: (context, index) {
+                        final item = controller.rxExperiences[index];
+                        return ExperienceCard(
+                          item: item,
+                          onQuickAdd: () {
+                            cartController.addToCart(item);
+                            Get.snackbar(
+                              "Added to Canvas",
+                              "${item.name} added.",
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          },
+                          onTap: () {
+                            showExperienceDetailDialog(context, item);
+                          },
                         );
                       },
-                      onTap: () {
-                        showExperienceDetailDialog(context, item);
-                      },
-                    );
-                  },
+                    ),
+                    if (hasMore) ...[
+                      const SizedBox(height: 48),
+                      Center(
+                        child: OutlinedButton(
+                          onPressed: () => controller.loadMore(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: isDark ? Colors.white : const Color(0xFF17201E),
+                            side: BorderSide(
+                              color: isDark ? Colors.white30 : Colors.black26,
+                              width: 1.2,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 38,
+                              vertical: 18,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: Text(
+                            "LOAD MORE",
+                            style: AppTheme.sansBody(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 );
               }),
             ],

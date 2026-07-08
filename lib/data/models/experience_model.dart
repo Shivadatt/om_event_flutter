@@ -6,6 +6,7 @@ class ExperienceModel extends Experience {
     required super.categoryId,
     required super.categoryName,
     required super.categorySlug,
+    super.categoryIds = const [],
     required super.name,
     required super.slug,
     required super.description,
@@ -41,15 +42,7 @@ class ExperienceModel extends Experience {
     // Runtime sanitization to correct legacy mis-seeded Firestore categories
     final itemId = documentId.toLowerCase();
 
-    if (itemId == 'pastel-dream-birthday' && catSlug == 'birthday') {
-      catId = 'baby';
-      catName = 'Baby Celebrations';
-      catSlug = 'baby';
-    } else if (itemId == 'ivory-vow-stage' && catSlug == 'wedding') {
-      catId = 'baby';
-      catName = 'Baby Celebrations';
-      catSlug = 'baby';
-    } else if (itemId == 'little-cloud-welcome' && catSlug == 'baby') {
+    if (itemId == 'little-cloud-welcome' && catSlug == 'baby') {
       catId = 'wedding';
       catName = 'Wedding & Engagement';
       catSlug = 'wedding';
@@ -62,24 +55,30 @@ class ExperienceModel extends Experience {
       catName = 'Birthday Celebrations';
       catSlug = 'birthday';
     } else if (itemId == 'signature-brand-launch' && catSlug == 'corporate') {
-      catId = 'entries';
+      catId = 'grand-entries';
       catName = 'Grand Entries';
-      catSlug = 'entries';
+      catSlug = 'grand-entries';
     } else if (itemId == 'terrace-sunset-story' && catSlug == 'proposal') {
-      catId = 'entries';
+      catId = 'grand-entries';
       catName = 'Grand Entries';
-      catSlug = 'entries';
+      catSlug = 'grand-entries';
     } else if (itemId == 'opening-day-essentials' && catSlug == 'corporate') {
       catId = 'wedding';
       catName = 'Wedding & Engagement';
       catSlug = 'wedding';
     }
 
+    final categoryIdsRaw = json['category_ids'] ?? json['categoryIds'];
+    final List<String> categoryIds = categoryIdsRaw != null
+        ? List<String>.from(categoryIdsRaw)
+        : (catId.isNotEmpty ? [catId] : []);
+
     return ExperienceModel(
       id: documentId,
       categoryId: catId,
       categoryName: catName,
       categorySlug: catSlug,
+      categoryIds: categoryIds,
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',
@@ -109,6 +108,7 @@ class ExperienceModel extends Experience {
       'category_id': categoryId,
       'category_name': categoryName,
       'category_slug': categorySlug,
+      'category_ids': categoryIds,
       'name': name,
       'slug': slug,
       'description': description,

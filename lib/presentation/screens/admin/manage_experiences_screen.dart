@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -195,6 +196,7 @@ class ManageExperiencesScreen extends GetView<AdminController> {
       categoryId: item.categoryId,
       categoryName: item.categoryName,
       categorySlug: item.categorySlug,
+      categoryIds: item.categoryIds,
       name: item.name,
       slug: item.slug,
       description: item.description,
@@ -264,14 +266,32 @@ class ManageExperiencesScreen extends GetView<AdminController> {
       text: experience?.themes.join(', ') ?? '',
     );
 
-    String? selectedCategoryId = experience?.categoryId;
-    if (selectedCategoryId == null && controller.rxCategories.isNotEmpty) {
-      selectedCategoryId = controller.rxCategories.first.id;
+    final selectedCategoryIds = <String>{};
+    if (experience != null) {
+      selectedCategoryIds.addAll(experience.categoryIds);
+      if (selectedCategoryIds.isEmpty && experience.categoryId.isNotEmpty) {
+        selectedCategoryIds.add(experience.categoryId);
+      }
+    } else if (controller.rxCategories.isNotEmpty) {
+      selectedCategoryIds.add(controller.rxCategories.first.id);
     }
 
     String availability = experience?.availability ?? 'available';
     bool isActive = experience?.isActive ?? true;
     bool isFeatured = experience?.isFeatured ?? false;
+
+    // Debug logs as requested by the user
+    if (isEdit) {
+      print("Firestore Document Loaded");
+      print("Experience ID: ${experience.id}");
+      print("Name: ${experience.name}");
+      print("Slug: ${experience.slug}");
+      print("category_id: ${experience.categoryId}");
+      print("category_ids: ${experience.categoryIds}");
+    }
+    print("TextControllers initialized");
+    print("Selected Categories Count: ${selectedCategoryIds.length}");
+    print("Categories Checked: $selectedCategoryIds");
 
     Get.dialog(
       StatefulBuilder(
@@ -300,21 +320,52 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                     decoration: const InputDecoration(labelText: "Slug"),
                     enabled: !isEdit,
                   ),
-                  DropdownButtonFormField<String>(
-                    value: selectedCategoryId,
-                    decoration: const InputDecoration(labelText: "Category"),
-                    items:
-                        controller.rxCategories.map((c) {
-                          return DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.name),
-                          );
-                        }).toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        selectedCategoryId = val;
-                      });
-                    },
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Select Categories",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Column(
+                      children: controller.rxCategories.map((cat) {
+                        final isChecked = selectedCategoryIds.contains(cat.id);
+                        return CheckboxListTile(
+                          title: Text(cat.name),
+                          value: isChecked,
+                          dense: true,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: (bool? val) {
+                            setState(() {
+                              if (val == true) {
+                                selectedCategoryIds.add(cat.id);
+                              } else {
+                                if (selectedCategoryIds.length > 1) {
+                                  selectedCategoryIds.remove(cat.id);
+                                } else {
+                                  Get.snackbar(
+                                    "Validation Error",
+                                    "At least one category must be selected.",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                  );
+                                }
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
                   ),
                   TextField(
                     controller: descCtrl,
@@ -804,7 +855,7 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                 onPressed: () {
                   if (nameCtrl.text.isEmpty ||
                       slugCtrl.text.isEmpty ||
-                      selectedCategoryId == null) {
+                      selectedCategoryIds.isEmpty) {
                     Get.snackbar(
                       "Validation Error",
                       "Name, Slug and Category are required.",
@@ -815,15 +866,20 @@ class ManageExperiencesScreen extends GetView<AdminController> {
                   final offerPrice = double.tryParse(offerCtrl.text);
                   final duration = double.tryParse(durCtrl.text) ?? 3.0;
 
+                  final firstCatId = selectedCategoryIds.first;
                   final cat = controller.rxCategories.firstWhere(
-                    (c) => c.id == selectedCategoryId,
+                    (c) => c.id == firstCatId,
                   );
+
+                  print("Saving category_ids: ${selectedCategoryIds.toList()}");
+                  print("Saving category_id: ${cat.id}");
 
                   final updated = Experience(
                     id: experience?.id ?? slugCtrl.text,
                     categoryId: cat.id,
                     categoryName: cat.name,
                     categorySlug: cat.slug,
+                    categoryIds: selectedCategoryIds.toList(),
                     name: nameCtrl.text.trim(),
                     slug: slugCtrl.text.trim(),
                     description: descCtrl.text.trim(),

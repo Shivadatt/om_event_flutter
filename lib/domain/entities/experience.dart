@@ -3,6 +3,7 @@ class Experience {
   final String categoryId;
   final String categoryName;
   final String categorySlug;
+  final List<String> categoryIds;
   final String name;
   final String slug;
   final String description;
@@ -26,6 +27,7 @@ class Experience {
     required this.categoryId,
     required this.categoryName,
     required this.categorySlug,
+    this.categoryIds = const [],
     required this.name,
     required this.slug,
     required this.description,

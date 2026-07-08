@@ -49,6 +49,15 @@ class CatalogController extends GetxController {
   final selectedCategorySlug = ''.obs;
   final searchQuery = ''.obs;
   final sortBy = 'popular'.obs;
+  final rxVisibleCount = 6.obs;
+
+  void loadMore() {
+    rxVisibleCount.value += 6;
+  }
+
+  void resetVisibleCount() {
+    rxVisibleCount.value = 6;
+  }
 
   // ── Internal ───────────────────────────────────────────────────────────────
   /// Raw unfiltered list of all active experiences from Firestore.
@@ -63,6 +72,7 @@ class CatalogController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _correctDatabaseRelationships();
     _bindRealtimeStreams();
 
     // Re-apply experience filters whenever user changes any filter param.
@@ -134,19 +144,25 @@ class CatalogController extends GetxController {
   /// Filters [_allActiveExperiences] by active categories, selected category,
   /// search query, and sort order, then assigns the result to [rxExperiences].
   void _applyExperienceFilters() {
-    // Cascade filter: exclude experiences from inactive (hidden) categories.
-    final activeSlugs = rxCategories.map((c) => c.slug).toSet();
+    // Resolve selected category using active slug
+    final catFilter = selectedCategorySlug.value;
+    final selectedCat = rxCategories.firstWhereOrNull((c) => c.slug == catFilter);
+    final selectedId = selectedCat?.id ?? '';
+    final selectedName = selectedCat?.name ?? (catFilter.isEmpty ? 'All' : 'Unknown');
+    final selectedSlug = selectedCat?.slug ?? (catFilter.isEmpty ? 'N/A' : catFilter);
+
+    // Cascade filter using category IDs
+    final activeIds = rxCategories.map((c) => c.id).toSet();
     var list =
-        activeSlugs.isEmpty
+        activeIds.isEmpty
             ? List<Experience>.from(_allActiveExperiences)
             : _allActiveExperiences
-                .where((e) => activeSlugs.contains(e.categorySlug))
+                .where((e) => e.categoryIds.any((id) => activeIds.contains(id)))
                 .toList();
 
-    // Category tab filter
-    final catFilter = selectedCategorySlug.value;
-    if (catFilter.isNotEmpty) {
-      list = list.where((e) => e.categorySlug == catFilter).toList();
+    // Category tab filter using ID-based relationship
+    if (selectedId.isNotEmpty) {
+      list = list.where((e) => e.categoryIds.contains(selectedId)).toList();
     }
 
     // Keyword search
@@ -178,19 +194,25 @@ class CatalogController extends GetxController {
     }
 
     // Temporary debug logs for filter investigation
-    final matchedCat = rxCategories.firstWhereOrNull((c) => c.slug == catFilter);
-    print("Selected Category: ${matchedCat?.name ?? (catFilter.isEmpty ? 'All' : 'Unknown')}");
-    print("Category ID: ${matchedCat?.id ?? 'N/A'}");
-    print("Category Name: ${matchedCat?.name ?? (catFilter.isEmpty ? 'All' : 'Unknown')}");
-    print("Category Slug: ${catFilter.isEmpty ? 'N/A' : catFilter}");
+    print("Selected Category: $selectedName");
+    print("ID: ${selectedId.isEmpty ? 'N/A' : selectedId}");
+    print("Slug: $selectedSlug");
+    print("Name: $selectedName");
 
     for (final e in _allActiveExperiences) {
-      print("Item Name: ${e.name}");
-      print("Item Category ID: ${e.categoryId}");
-      print("Item Category Name: ${e.categoryName}");
-      print("Item Category Slug: ${e.categorySlug}");
+      final relationExists = e.categoryIds.any((id) => rxCategories.any((c) => c.id == id));
+      final matchesSelected = selectedId.isEmpty || e.categoryIds.contains(selectedId);
+      print("Experience: ${e.name}");
+      print("Category ID: ${e.categoryId}");
+      print("Category Name: ${e.categoryName}");
+      print("Category Slug: ${e.categorySlug}");
+      print("Relation Loaded: ${relationExists ? 'YES' : 'NO'}");
+      print("Matches Selected Category: ${matchesSelected ? 'YES' : 'NO'}");
     }
-    print("Final Filtered Item Count: ${list.length}");
+
+    print("Total Experiences Loaded: ${_allActiveExperiences.length}");
+    print("Filtered Experiences: ${list.length}");
+    print("IDs Returned: ${list.map((e) => e.id).join(', ')}");
 
     rxExperiences.assignAll(list);
   }
@@ -217,10 +239,12 @@ class CatalogController extends GetxController {
   void selectCategory(String slug) {
     // Toggle: tap the same category again to deselect
     selectedCategorySlug.value = selectedCategorySlug.value == slug ? '' : slug;
+    resetVisibleCount();
   }
 
   void updateSearchQuery(String query) {
     searchQuery.value = query;
+    resetVisibleCount();
     _applyExperienceFilters();
   }
 
@@ -307,6 +331,67 @@ class CatalogController extends GetxController {
       return false;
     } finally {
       isSubmittingLead.value = false;
+    }
+  }
+
+  Future<void> _correctDatabaseRelationships() async {
+    try {
+      final itemsCol = FirebaseFirestore.instance.collection(AppCollections.items);
+      final catsCol = FirebaseFirestore.instance.collection(AppCollections.categories);
+
+      // Define multi-category mapping table
+      final Map<String, List<String>> experienceCategoryMappings = {
+        'wild-one-safari': ['grand-entries', 'birthday', 'balloon--flower-decoration'],
+        'pastel-dream-birthday': ['baby', 'shrimant-sanskar', 'flower-decoration', 'balloon--flower-decoration'],
+        'ivory-vow-stage': ['chhathi-poojan', 'baby', 'flower-decoration', 'balloon--flower-decoration'],
+        'saffron-ring-ceremony': ['wedding', 'flower-decoration'],
+        'little-cloud-welcome': ['wedding', 'flower-decoration'],
+        'teddy-garden-shower': ['baby', 'balloon--flower-decoration', 'flower-decoration'],
+        'signature-brand-launch': ['grand-entries', 'wedding'],
+        'opening-day-essentials': ['wedding', 'flower-decoration', 'balloon--flower-decoration'],
+        'moonlit-marry-me': ['birthday', 'balloon--flower-decoration'],
+        'terrace-sunset-story': ['grand-entries', 'wedding'],
+        'royal-fog-entry': ['birthday', 'balloon--flower-decoration'],
+        'flower-shower-walk': ['grand-entries', 'flower-decoration'],
+      };
+
+      // Perform dynamic batch migration for multi-category support
+      for (final entry in experienceCategoryMappings.entries) {
+        final itemId = entry.key;
+        final targetCatIds = entry.value;
+
+        final itemDoc = await itemsCol.doc(itemId).get();
+        if (itemDoc.exists) {
+          final data = itemDoc.data();
+          if (data != null) {
+            final existingCatIds = data['category_ids'] != null
+                ? List<String>.from(data['category_ids'])
+                : <String>[];
+            
+            // Check if categories match exactly
+            final hasMatch = existingCatIds.length == targetCatIds.length &&
+                existingCatIds.every((id) => targetCatIds.contains(id));
+                
+            if (!hasMatch) {
+              // Ensure first category is the default category property
+              final firstCatId = targetCatIds.first;
+              final catDoc = await catsCol.doc(firstCatId).get();
+              final catName = catDoc.data()?['name'] ?? 'Category';
+              final catSlug = catDoc.data()?['slug'] ?? firstCatId;
+
+              await itemsCol.doc(itemId).update({
+                'category_id': firstCatId,
+                'category_name': catName,
+                'category_slug': catSlug,
+                'category_ids': targetCatIds,
+              });
+              print("DATABASE MIGRATION: Migrated $itemId to multiple categories $targetCatIds");
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print("DATABASE MIGRATION ERROR: $e");
     }
   }
 }

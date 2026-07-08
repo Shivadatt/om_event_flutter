@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:get/get.dart';
 import '../../domain/entities/experience.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -31,6 +32,7 @@ mixin ExperienceControllerMixin on GetxController {
       final catalogRepository = Get.find<CatalogRepository>();
       if (isEdit) {
         await catalogRepository.updateExperience(experience);
+        print("Firestore update success");
       } else {
         await catalogRepository.createExperience(experience);
       }
