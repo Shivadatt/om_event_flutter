@@ -69,131 +69,192 @@ class _CategoryCardState extends State<CategoryCard> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedContainer(
+        child: AnimatedScale(
+          scale: _isHovered ? 1.025 : 1.0,
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          transform:
-              Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            boxShadow:
-                _isHovered
-                    ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ]
-                    : [],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [catColor, cardBackground],
-                      ),
-                    ),
-                  ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            transform: Matrix4.identity()..translate(0.0, _isHovered ? -8.0 : 0.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: catColor.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: _isHovered ? 0.30 : 0.15),
+                  blurRadius: _isHovered ? 24 : 12,
+                  offset: Offset(0, _isHovered ? 12 : 6),
                 ),
-                Positioned(
-                  right: -60,
-                  top: -70,
-                  child: const CustomPaint(
-                    size: Size(240, 240),
-                    painter: ConcentricCirclesPainter(),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(28.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        widget.category.icon,
-                        style: const TextStyle(fontSize: 34),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "${widget.category.itemCount} SIGNATURE EXPERIENCES",
-                            style: AppTheme.sansBody(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white.withValues(alpha: 0.65),
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            widget.category.name,
-                            style: GoogleFonts.italiana(
-                              fontSize: 30,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.white,
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.category.description,
-                            style: AppTheme.sansBody(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.7),
-                              height: 1.6,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  right: 24,
-                  bottom: 24,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isHovered ? Colors.white : Colors.transparent,
-                      border: Border.all(
-                        color:
-                            _isHovered
-                                ? Colors.transparent
-                                : Colors.white.withValues(alpha: 0.35),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: AnimatedRotation(
-                      turns: _isHovered ? 0.125 : 0.0,
-                      duration: const Duration(milliseconds: 250),
-                      child: Text(
-                        "↗",
-                        style: AppTheme.sansBody(
-                          fontSize: 18,
-                          color:
-                              _isHovered
-                                  ? const Color(0xFF17201E)
-                                  : Colors.white,
-                          fontWeight: FontWeight.bold,
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22.5),
+              child: Stack(
+                children: [
+                  // Gradient Background using the card's signature color
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            catColor.withValues(alpha: 0.55),
+                            cardBackground,
+                          ],
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  // Concentric Circles Painter
+                  Positioned(
+                    right: -60,
+                    top: -70,
+                    child: const CustomPaint(
+                      size: Size(240, 240),
+                      painter: ConcentricCirclesPainter(),
+                    ),
+                  ),
+
+                  // Content Layout
+                  Padding(
+                    padding: const EdgeInsets.all(28.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Small Category Image / Icon Preview
+                        if (widget.category.imageUrl.isNotEmpty)
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25),
+                                width: 1.2,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                widget.category.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Center(
+                                  child: Text(
+                                    widget.category.icon.isNotEmpty
+                                        ? widget.category.icon
+                                        : '✦',
+                                    style: const TextStyle(fontSize: 24),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Text(
+                            widget.category.icon.isNotEmpty
+                                ? widget.category.icon
+                                : '✦',
+                            style: const TextStyle(fontSize: 34),
+                          ),
+
+                        // Title & Subtitle Info
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "${widget.category.itemCount} SIGNATURE EXPERIENCES",
+                              style: AppTheme.sansBody(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                                color: catColor.withValues(alpha: 0.95),
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              widget.category.name,
+                              style: GoogleFonts.italiana(
+                                fontSize: 30,
+                                fontWeight: FontWeight.normal,
+                                color: Colors.white,
+                                height: 1.1,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.category.description,
+                              style: AppTheme.sansBody(
+                                fontSize: 12.5,
+                                color: Colors.white.withValues(alpha: 0.75),
+                                height: 1.5,
+                                letterSpacing: 0.2,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Arrow button at bottom-right
+                  Positioned(
+                    right: 24,
+                    bottom: 24,
+                    child: AnimatedScale(
+                      scale: _isHovered ? 1.12 : 1.0,
+                      duration: const Duration(milliseconds: 250),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _isHovered ? Colors.white : Colors.transparent,
+                          border: Border.all(
+                            color: _isHovered
+                                ? Colors.transparent
+                                : Colors.white.withValues(alpha: 0.35),
+                            width: 1.5,
+                          ),
+                          boxShadow: _isHovered
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.15),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ]
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: AnimatedRotation(
+                          turns: _isHovered ? 0.125 : 0.0,
+                          duration: const Duration(milliseconds: 250),
+                          child: Text(
+                            "↗",
+                            style: AppTheme.sansBody(
+                              fontSize: 18,
+                              color: _isHovered
+                                  ? const Color(0xFF17201E)
+                                  : Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

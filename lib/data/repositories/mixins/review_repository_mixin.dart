@@ -41,8 +41,9 @@ mixin ReviewRepositoryMixin {
   Future<List<Review>> getPublishedReviews() async {
     try {
       final docs = await remoteSource.fetchPublishedReviews();
-      return List<Review>.from(docs
-          .map<Review>((doc) => ReviewModel.fromJson(doc.data(), doc.id)));
+      return docs
+          .map<Review>((doc) => ReviewModel.fromJson(doc.data(), doc.id))
+          .toList();
     } catch (_) {
       return _fallbackReviews;
     }
@@ -53,9 +54,10 @@ mixin ReviewRepositoryMixin {
   /// Realtime stream of published customer reviews.
   /// Emits a new list automatically whenever Firestore changes.
   Stream<List<Review>> streamPublishedReviews() {
-    return remoteSource.streamPublishedReviews().map(
-      (docs) => List<Review>.from(
-          docs.map<Review>((doc) => ReviewModel.fromJson(doc.data(), doc.id))),
+    return remoteSource.streamPublishedReviews().map<List<Review>>(
+      (docs) => docs
+          .map<Review>((doc) => ReviewModel.fromJson(doc.data(), doc.id))
+          .toList(),
     );
   }
 }

@@ -91,8 +91,9 @@ mixin CategoryRepositoryMixin {
     try {
       await remoteSource.ensureSeeded();
       final docs = await remoteSource.fetchCategories();
-      return List<Category>.from(docs
-          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id)));
+      return docs
+          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))
+          .toList();
     } catch (_) {
       return _fallbackCategories;
     }
@@ -104,8 +105,9 @@ mixin CategoryRepositoryMixin {
     try {
       await remoteSource.ensureSeeded();
       final docs = await remoteSource.fetchAllCategories();
-      return List<Category>.from(docs
-          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id)));
+      return docs
+          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))
+          .toList();
     } catch (_) {
       return _fallbackCategories;
     }
@@ -163,18 +165,20 @@ mixin CategoryRepositoryMixin {
   /// Realtime stream of active categories for the customer website.
   /// Emits a new list automatically whenever Firestore changes.
   Stream<List<Category>> streamCategories() {
-    return remoteSource.streamActiveCategories().map(
-      (docs) => List<Category>.from(
-          docs.map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))),
+    return remoteSource.streamActiveCategories().map<List<Category>>(
+      (docs) => docs
+          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))
+          .toList(),
     );
   }
 
   /// Realtime stream of ALL categories (active + inactive) for the Admin Panel.
   /// Emits a new list automatically whenever Firestore changes.
   Stream<List<Category>> streamAllCategories() {
-    return remoteSource.streamAllCategories().map(
-      (docs) => List<Category>.from(
-          docs.map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))),
+    return remoteSource.streamAllCategories().map<List<Category>>(
+      (docs) => docs
+          .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))
+          .toList(),
     );
   }
 }

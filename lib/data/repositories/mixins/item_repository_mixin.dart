@@ -173,9 +173,9 @@ mixin ItemRepositoryMixin {
       final list = docs.map<Experience>((doc) => ExperienceModel.fromJson(doc.data(), doc.id));
 
       if (activeOnly != false) {
-        return List<Experience>.from(list.where((e) => activeCategorySlugs.contains(e.categorySlug)));
+        return list.where((e) => activeCategorySlugs.contains(e.categorySlug)).toList();
       } else {
-        return List<Experience>.from(list);
+        return list.toList();
       }
     } catch (_) {
       var list = List<Experience>.from(_fallbackExperiences);
@@ -293,9 +293,10 @@ mixin ItemRepositoryMixin {
   /// The CatalogController applies category cascade, search, and sort in-memory.
   /// Emits a new list automatically whenever Firestore changes.
   Stream<List<Experience>> streamAllActiveExperiences() {
-    return remoteSource.streamAllActiveItems().map(
-      (docs) => List<Experience>.from(docs.map<Experience>(
-          (doc) => ExperienceModel.fromJson(doc.data(), doc.id))),
+    return remoteSource.streamAllActiveItems().map<List<Experience>>(
+      (docs) => docs
+          .map<Experience>((doc) => ExperienceModel.fromJson(doc.data(), doc.id))
+          .toList(),
     );
   }
 }

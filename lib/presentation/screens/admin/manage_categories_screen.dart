@@ -329,7 +329,7 @@ class ManageCategoriesScreen extends GetView<AdminController> {
     final nameCtrl = TextEditingController(text: category?.name ?? '');
     final slugCtrl = TextEditingController(text: category?.slug ?? '');
     final descCtrl = TextEditingController(text: category?.description ?? '');
-    final iconCtrl = TextEditingController(text: category?.icon ?? 'U+2726');
+    final iconCtrl = TextEditingController(text: category?.icon ?? '✦');
     final colorCtrl = TextEditingController(text: category?.color ?? '#c79b61');
     final imgCtrl = TextEditingController(text: category?.imageUrl ?? '');
     final orderCtrl = TextEditingController(
@@ -366,12 +366,6 @@ class ManageCategoriesScreen extends GetView<AdminController> {
                   TextField(
                     controller: descCtrl,
                     decoration: const InputDecoration(labelText: "Description"),
-                  ),
-                  TextField(
-                    controller: iconCtrl,
-                    decoration: const InputDecoration(
-                      labelText: "Icon Character",
-                    ),
                   ),
                   TextField(
                     controller: colorCtrl,
