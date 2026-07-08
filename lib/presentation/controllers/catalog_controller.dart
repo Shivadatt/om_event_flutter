@@ -1,8 +1,10 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/errors/failures.dart';
 import '../../core/utils/validators.dart';
+import '../../core/constants/app_collections.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/experience.dart';
 import '../../domain/entities/lead.dart';
@@ -11,21 +13,13 @@ import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/usecases/get_categories.dart';
 import '../../domain/usecases/get_experiences.dart';
 import '../../domain/usecases/submit_lead.dart';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
-import 'customer_auth_controller.dart';
 import '../../data/datasources/database_migration_service.dart';
+import 'customer_auth_controller.dart';
+
+part 'parts/catalog_filter.dart';
+part 'parts/catalog_lead.dart';
+
 /// Customer-facing catalog controller backed by Firestore realtime streams.
-///
-/// Architecture:
-/// - Categories  → direct Firestore snapshot stream via [CatalogRepository.streamCategories]
-/// - Experiences → snapshot stream of ALL active items; filters (category,
-///                 search, sort) applied in-memory via [_applyExperienceFilters]
-/// - Reviews     → direct Firestore snapshot stream via [CatalogRepository.streamPublishedReviews]
-///
-/// Any Firestore write (admin toggle, edit, delete) is automatically pushed to
-/// the customer UI within milliseconds. No manual refresh or app restart needed.
 class CatalogController extends GetxController {
   final GetCategories getCategories;
   final GetExperiences getExperiences;
@@ -52,6 +46,9 @@ class CatalogController extends GetxController {
   final sortBy = 'popular'.obs;
   final rxVisibleCount = 6.obs;
 
+  // Raw unfiltered list of all active experiences from Firestore.
+  final List<Experience> _allActiveExperiences = <Experience>[];
+
   void loadMore() {
     rxVisibleCount.value += 6;
   }
@@ -59,10 +56,6 @@ class CatalogController extends GetxController {
   void resetVisibleCount() {
     rxVisibleCount.value = 6;
   }
-
-  // ── Internal ───────────────────────────────────────────────────────────────
-  /// Raw unfiltered list of all active experiences from Firestore.
-  final _allActiveExperiences = <Experience>[];
 
   /// Active Firestore stream subscriptions — cancelled in [onClose].
   StreamSubscription<List<Category>>? _categoriesSub;
@@ -77,16 +70,16 @@ class CatalogController extends GetxController {
     _bindRealtimeStreams();
 
     // Re-apply experience filters whenever user changes any filter param.
-    ever(selectedCategorySlug, (_) => _applyExperienceFilters());
-    ever(sortBy, (_) => _applyExperienceFilters());
+    ever(selectedCategorySlug, (_) => applyExperienceFilters());
+    ever(sortBy, (_) => applyExperienceFilters());
 
     // Re-apply when categories change (cascade: hide experiences of inactive category).
-    ever(rxCategories, (_) => _applyExperienceFilters());
+    ever(rxCategories, (_) => applyExperienceFilters());
 
     // Debounce keystroke-level search so we don't re-filter on every character.
     debounce(
       searchQuery,
-      (_) => _applyExperienceFilters(),
+      (_) => applyExperienceFilters(),
       time: const Duration(milliseconds: 400),
     );
   }
@@ -100,7 +93,6 @@ class CatalogController extends GetxController {
   }
 
   // ── Realtime stream binding ────────────────────────────────────────────────
-
   void _bindRealtimeStreams() {
     final repo = Get.find<CatalogRepository>();
 
@@ -116,16 +108,14 @@ class CatalogController extends GetxController {
       },
     );
 
-    // 2. Experiences — stream ALL active items; filter in-memory so that:
-    //    (a) changing a filter param does not create a new Firestore listener
-    //    (b) disabling a category auto-hides its experiences via cascade filter
+    // 2. Experiences
     isLoadingExperiences.value = true;
     _experiencesSub = repo.streamAllActiveExperiences().listen(
       (experiences) {
         _allActiveExperiences
           ..clear()
           ..addAll(experiences);
-        _applyExperienceFilters();
+        applyExperienceFilters();
         isLoadingExperiences.value = false;
       },
       onError: (_) {
@@ -140,88 +130,7 @@ class CatalogController extends GetxController {
     );
   }
 
-  // ── In-memory filtering ────────────────────────────────────────────────────
-
-  /// Filters [_allActiveExperiences] by active categories, selected category,
-  /// search query, and sort order, then assigns the result to [rxExperiences].
-  void _applyExperienceFilters() {
-    // Resolve selected category using active slug
-    final catFilter = selectedCategorySlug.value;
-    final selectedCat = rxCategories.firstWhereOrNull((c) => c.slug == catFilter);
-    final selectedId = selectedCat?.id ?? '';
-    final selectedName = selectedCat?.name ?? (catFilter.isEmpty ? 'All' : 'Unknown');
-    final selectedSlug = selectedCat?.slug ?? (catFilter.isEmpty ? 'N/A' : catFilter);
-
-    // Cascade filter using category IDs
-    final activeIds = rxCategories.map((c) => c.id).toSet();
-    var list =
-        activeIds.isEmpty
-            ? List<Experience>.from(_allActiveExperiences)
-            : _allActiveExperiences
-                .where((e) => e.categoryIds.any((id) => activeIds.contains(id)))
-                .toList();
-
-    // Category tab filter using ID-based relationship
-    if (selectedId.isNotEmpty) {
-      list = list.where((e) => e.categoryIds.contains(selectedId)).toList();
-    }
-
-    // Keyword search
-    final query = searchQuery.value.toLowerCase().trim();
-    if (query.isNotEmpty) {
-      final keywords = query.split(RegExp(r'\s+'));
-      list = list.where((e) {
-        return keywords.every((keyword) {
-          return e.name.toLowerCase().contains(keyword) ||
-              e.categoryName.toLowerCase().contains(keyword) ||
-              e.categorySlug.toLowerCase().contains(keyword) ||
-              e.description.toLowerCase().contains(keyword) ||
-              e.tags.any((t) => t.toLowerCase().contains(keyword));
-        });
-      }).toList();
-    }
-
-    // Sort
-    switch (sortBy.value) {
-      case 'price_low':
-        list.sort((a, b) => a.effectivePrice.compareTo(b.effectivePrice));
-        break;
-      case 'price_high':
-        list.sort((a, b) => b.effectivePrice.compareTo(a.effectivePrice));
-        break;
-      default:
-        // 'popular' and 'latest' both sort by popularity
-        list.sort((a, b) => b.popularity.compareTo(a.popularity));
-    }
-
-    // Temporary debug logs for filter investigation
-    print("Selected Category: $selectedName");
-    print("ID: ${selectedId.isEmpty ? 'N/A' : selectedId}");
-    print("Slug: $selectedSlug");
-    print("Name: $selectedName");
-
-    for (final e in _allActiveExperiences) {
-      final relationExists = e.categoryIds.any((id) => rxCategories.any((c) => c.id == id));
-      final matchesSelected = selectedId.isEmpty || e.categoryIds.contains(selectedId);
-      print("Experience: ${e.name}");
-      print("Category ID: ${e.categoryId}");
-      print("Category Name: ${e.categoryName}");
-      print("Category Slug: ${e.categorySlug}");
-      print("Relation Loaded: ${relationExists ? 'YES' : 'NO'}");
-      print("Matches Selected Category: ${matchesSelected ? 'YES' : 'NO'}");
-    }
-
-    print("Total Experiences Loaded: ${_allActiveExperiences.length}");
-    print("Filtered Experiences: ${list.length}");
-    print("IDs Returned: ${list.map((e) => e.id).join(', ')}");
-
-    rxExperiences.assignAll(list);
-  }
-
   // ── Public API (UI compatibility) ──────────────────────────────────────────
-
-  /// Force re-subscription to all Firestore streams (pull-to-refresh).
-  /// Streams auto-refresh on Firestore changes; this is a fallback.
   Future<void> refreshCatalog() async {
     _categoriesSub?.cancel();
     _experiencesSub?.cancel();
@@ -232,9 +141,9 @@ class CatalogController extends GetxController {
   /// Kept for backward compatibility — streams handle this automatically.
   Future<void> loadCategories() async {}
 
-  /// Kept for backward compatibility — [_applyExperienceFilters] handles this.
+  /// Kept for backward compatibility
   Future<void> loadExperiences() async {
-    _applyExperienceFilters();
+    applyExperienceFilters();
   }
 
   void selectCategory(String slug) {
@@ -246,14 +155,12 @@ class CatalogController extends GetxController {
   void updateSearchQuery(String query) {
     searchQuery.value = query;
     resetVisibleCount();
-    _applyExperienceFilters();
+    applyExperienceFilters();
   }
 
   void updateSort(String option) {
     sortBy.value = option;
   }
-
-  // ── Lead / Callback form ───────────────────────────────────────────────────
 
   Future<bool> requestCallback({
     required String name,
@@ -262,77 +169,13 @@ class CatalogController extends GetxController {
     required String budgetStr,
     required String requirements,
   }) async {
-    if (!AppValidators.isValidName(name)) {
-      Get.snackbar(
-        "Validation Error",
-        "Please enter a valid name (at least 2 letters).",
-      );
-      return false;
-    }
-    if (!AppValidators.isValidPhone(phone)) {
-      Get.snackbar(
-        "Validation Error",
-        "Please enter a valid 10-digit phone number.",
-      );
-      return false;
-    }
-
-    try {
-      isSubmittingLead.value = true;
-      final cleanedPhone = AppValidators.cleanPhone(phone);
-      final budget = double.tryParse(budgetStr) ?? 0.0;
-      final eventDate = DateTime.tryParse(dateStr);
-
-      final lead = Lead(
-        id: '',
-        name: name.trim(),
-        phone: cleanedPhone,
-        email: '',
-        requestType: 'callback',
-        eventDate: eventDate,
-        budget: budget > 0 ? budget : null,
-        requirements: requirements.trim(),
-        status: 'new',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      await submitLead(lead);
-
-      // If customer is logged in, link lead to customer portal
-      final authCtrl = Get.find<CustomerAuthController>();
-      final customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
-      if (customerId.isNotEmpty) {
-        final leadId = DateTime.now().millisecondsSinceEpoch.toString();
-        final customerLeadRef = FirebaseFirestore.instance.collection(AppCollections.customerLeads).doc(leadId);
-        await customerLeadRef.set({
-          'customerId': customerId,
-          'leadNumber': 'L-${DateTime.now().millisecondsSinceEpoch}',
-          'date': DateTime.now().toIso8601String(),
-          'service': requirements.trim().isNotEmpty ? requirements.trim() : 'Event Inquiry',
-          'branch': authCtrl.rxCustomerProfile.value?.branch ?? 'Ahmedabad',
-          'budget': budget,
-          'eventDate': eventDate?.toIso8601String() ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-          'status': 'Pending',
-          'adminNotes': '',
-        });
-      }
-
-      Get.snackbar(
-        "Inquiry Received",
-        "Thank you! Our event manager will call you shortly.",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return true;
-    } on Failure catch (e) {
-      Get.snackbar("Inquiry Failed", e.message);
-      return false;
-    } catch (e) {
-      Get.snackbar("Inquiry Failed", e.toString());
-      return false;
-    } finally {
-      isSubmittingLead.value = false;
-    }
+    return handleRequestCallback(
+      name: name,
+      phone: phone,
+      dateStr: dateStr,
+      budgetStr: budgetStr,
+      requirements: requirements,
+    );
   }
 
   Future<void> _checkAndRunMigration() async {

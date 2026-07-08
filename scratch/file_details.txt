@@ -1,0 +1,404 @@
+| Folder | Dart Files | Files Analyzed | Files Skipped |
+| ------ | ---------- | -------------- | ------------- |
+| core/config | 4 | 4 | 0 |
+| core/constants | 14 | 14 | 0 |
+| core/errors | 1 | 1 | 0 |
+| core/extensions | 9 | 9 | 0 |
+| core/helpers | 1 | 1 | 0 |
+| core/network | 1 | 1 | 0 |
+| core/seo | 7 | 7 | 0 |
+| core/services | 10 | 10 | 0 |
+| core/services/fcm | 7 | 7 | 0 |
+| core/services/parts | 2 | 2 | 0 |
+| core/utils | 5 | 5 | 0 |
+| core/widgets | 23 | 23 | 0 |
+| data/datasources | 10 | 10 | 0 |
+| data/datasources/seeds | 7 | 7 | 0 |
+| data/mappers | 1 | 1 | 0 |
+| data/models | 21 | 21 | 0 |
+| data/models/customer_portal | 5 | 5 | 0 |
+| data/repositories | 11 | 11 | 0 |
+| data/repositories/mixins | 6 | 6 | 0 |
+| domain/entities | 33 | 33 | 0 |
+| domain/repositories | 10 | 10 | 0 |
+| domain/usecases | 4 | 4 | 0 |
+| lib | 2 | 2 | 0 |
+| presentation/bindings | 4 | 4 | 0 |
+| presentation/controllers | 18 | 18 | 0 |
+| presentation/controllers/parts | 4 | 4 | 0 |
+| presentation/screens/admin | 19 | 19 | 0 |
+| presentation/screens/admin/customer_portal_admin_dashboard/views | 12 | 12 | 0 |
+| presentation/screens/admin/parts | 14 | 14 | 0 |
+| presentation/screens/admin/widgets | 34 | 34 | 0 |
+| presentation/screens/admin/widgets/parts | 3 | 3 | 0 |
+| presentation/screens/auth | 1 | 1 | 0 |
+| presentation/screens/customer/auth | 1 | 1 | 0 |
+| presentation/screens/customer/auth/widgets | 1 | 1 | 0 |
+| presentation/screens/customer/dashboard | 1 | 1 | 0 |
+| presentation/screens/customer/dashboard/views | 12 | 12 | 0 |
+| presentation/screens/customer | 3 | 3 | 0 |
+| presentation/screens/customer/helpers | 1 | 1 | 0 |
+| presentation/screens/customer/widgets | 21 | 21 | 0 |
+| presentation/screens/customer/widgets/parts | 2 | 2 | 0 |
+| presentation/screens/docs | 1 | 1 | 0 |
+| presentation/screens/onboarding | 1 | 1 | 0 |
+| presentation/screens/splash | 1 | 1 | 0 |
+| presentation/widgets | 1 | 1 | 0 |
+| presentation/widgets/reusable | 2 | 2 | 0 |
+| **Total** | **351** | **351** | **0** |
+
+
+TOTAL FILES: 351
+
+ALL FILES DETAILS:
+lib/core/config/app_routes.dart : 135 lines
+lib/core/config/app_theme.dart : 146 lines
+lib/core/config/constants.dart : 70 lines
+lib/core/config/rbac_config.dart : 288 lines
+lib/core/constants/app_assets.dart : 30 lines
+lib/core/constants/app_buckets.dart : 34 lines
+lib/core/constants/app_collections.dart : 87 lines
+lib/core/constants/app_colors.dart : 35 lines
+lib/core/constants/app_dimensions.dart : 37 lines
+lib/core/constants/app_fonts.dart : 10 lines
+lib/core/constants/app_icons.dart : 60 lines
+lib/core/constants/app_images.dart : 21 lines
+lib/core/constants/app_permissions.dart : 86 lines
+lib/core/constants/app_regex.dart : 23 lines
+lib/core/constants/app_roles.dart : 16 lines
+lib/core/constants/app_routes.dart : 30 lines
+lib/core/constants/app_status.dart : 63 lines
+lib/core/constants/app_strings.dart : 89 lines
+lib/core/errors/failures.dart : 27 lines
+lib/core/extensions/context_extension.dart : 19 lines
+lib/core/extensions/date_extension.dart : 13 lines
+lib/core/extensions/double_extension.dart : 10 lines
+lib/core/extensions/extensions.dart : 8 lines
+lib/core/extensions/navigation_extension.dart : 20 lines
+lib/core/extensions/padding_extension.dart : 34 lines
+lib/core/extensions/string_extension.dart : 21 lines
+lib/core/extensions/theme_extension.dart : 13 lines
+lib/core/extensions/widget_extension.dart : 13 lines
+lib/core/helpers/snackbar_helper.dart : 40 lines
+lib/core/network/connectivity.dart : 12 lines
+lib/core/seo/meta_manager.dart : 14 lines
+lib/core/seo/meta_manager_stub.dart : 6 lines
+lib/core/seo/meta_manager_web.dart : 68 lines
+lib/core/seo/seo_constants.dart : 29 lines
+lib/core/seo/seo_manager.dart : 29 lines
+lib/core/seo/seo_models.dart : 42 lines
+lib/core/seo/seo_routes.dart : 62 lines
+lib/core/services/ai_recommendation_service.dart : 59 lines
+lib/core/services/app_config_service.dart : 84 lines
+lib/core/services/business_details_cache_service.dart : 32 lines
+lib/core/services/business_details_service.dart : 27 lines
+lib/core/services/export_service.dart : 42 lines
+lib/core/services/fcm/fcm_module.dart : 12 lines
+lib/core/services/fcm/fcm_service.dart : 126 lines
+lib/core/services/fcm/notification_handler.dart : 76 lines
+lib/core/services/fcm/notification_local_service.dart : 202 lines
+lib/core/services/fcm/notification_permission_service.dart : 85 lines
+lib/core/services/fcm/notification_router.dart : 44 lines
+lib/core/services/fcm/notification_token_service.dart : 227 lines
+lib/core/services/fcm_notification_service.dart : 171 lines
+lib/core/services/local_notification_trigger_service.dart : 75 lines
+lib/core/services/notification_gateway_service.dart : 112 lines
+lib/core/services/notification_handler_service.dart : 102 lines
+lib/core/services/parts/local_notification_listeners.dart : 272 lines
+lib/core/services/parts/local_notification_queue_runner.dart : 202 lines
+lib/core/services/token_service.dart : 117 lines
+lib/core/utils/app_logger.dart : 37 lines
+lib/core/utils/date_parser.dart : 37 lines
+lib/core/utils/formatters.dart : 47 lines
+lib/core/utils/navigation_helper.dart : 18 lines
+lib/core/utils/validators.dart : 35 lines
+lib/core/widgets/app_bottom_sheet.dart : 50 lines
+lib/core/widgets/app_button.dart : 143 lines
+lib/core/widgets/app_card.dart : 35 lines
+lib/core/widgets/app_chip.dart : 55 lines
+lib/core/widgets/app_dialog.dart : 36 lines
+lib/core/widgets/app_divider.dart : 21 lines
+lib/core/widgets/app_dropdown.dart : 74 lines
+lib/core/widgets/app_empty_state.dart : 56 lines
+lib/core/widgets/app_error_state.dart : 61 lines
+lib/core/widgets/app_header.dart : 60 lines
+lib/core/widgets/app_image.dart : 60 lines
+lib/core/widgets/app_loader.dart : 38 lines
+lib/core/widgets/app_pagination.dart : 53 lines
+lib/core/widgets/app_search_bar.dart : 67 lines
+lib/core/widgets/app_section_title.dart : 28 lines
+lib/core/widgets/app_status_chip.dart : 56 lines
+lib/core/widgets/app_table.dart : 66 lines
+lib/core/widgets/app_text_field.dart : 107 lines
+lib/core/widgets/app_video_player.dart : 75 lines
+lib/core/widgets/custom_button.dart : 4 lines
+lib/core/widgets/custom_input.dart : 4 lines
+lib/core/widgets/loading_indicator.dart : 4 lines
+lib/core/widgets/widgets.dart : 22 lines
+lib/data/datasources/batch_delete_service.dart : 33 lines
+lib/data/datasources/batch_insert_service.dart : 33 lines
+lib/data/datasources/business_details_remote_data_source.dart : 54 lines
+lib/data/datasources/database_migration_service.dart : 175 lines
+lib/data/datasources/firestore_remote_source.dart : 509 lines
+lib/data/datasources/local_storage_source.dart : 42 lines
+lib/data/datasources/seeder_service.dart : 280 lines
+lib/data/datasources/seeds/booking_seed.dart : 5 lines
+lib/data/datasources/seeds/category_seed.dart : 74 lines
+lib/data/datasources/seeds/items_seed.dart : 309 lines
+lib/data/datasources/seeds/migration_seed.dart : 577 lines
+lib/data/datasources/seeds/payment_seed.dart : 42 lines
+lib/data/datasources/seeds/review_seed.dart : 42 lines
+lib/data/datasources/seeds/settings_seed.dart : 35 lines
+lib/data/datasources/sql_seed_data.dart : 45 lines
+lib/data/datasources/supabase_storage_source.dart : 46 lines
+lib/data/datasources/supabase_upload_service.dart : 66 lines
+lib/data/mappers/contact_number_mapper.dart : 26 lines
+lib/data/models/activity_log_model.dart : 44 lines
+lib/data/models/admin_role_model.dart : 89 lines
+lib/data/models/booking_model.dart : 52 lines
+lib/data/models/business_details_model.dart : 766 lines
+lib/data/models/category_model.dart : 65 lines
+lib/data/models/contact_number_model.dart : 39 lines
+lib/data/models/customer_booking_model.dart : 61 lines
+lib/data/models/customer_lead_model.dart : 46 lines
+lib/data/models/customer_model.dart : 52 lines
+lib/data/models/customer_portal/admin_and_operations.dart : 193 lines
+lib/data/models/customer_portal/booking_and_gallery.dart : 94 lines
+lib/data/models/customer_portal/notifications_and_tickets.dart : 121 lines
+lib/data/models/customer_portal/payment_and_activity.dart : 100 lines
+lib/data/models/customer_portal/quotation_and_agreement.dart : 132 lines
+lib/data/models/customer_portal_models.dart : 5 lines
+lib/data/models/customer_profile_model.dart : 58 lines
+lib/data/models/decoration_item_model.dart : 89 lines
+lib/data/models/experience_model.dart : 102 lines
+lib/data/models/item_image_model.dart : 41 lines
+lib/data/models/lead_model.dart : 69 lines
+lib/data/models/notification_models.dart : 406 lines
+lib/data/models/payment_model.dart : 48 lines
+lib/data/models/quotation_item_model.dart : 53 lines
+lib/data/models/quotation_model.dart : 138 lines
+lib/data/models/review_model.dart : 66 lines
+lib/data/models/user_model.dart : 40 lines
+lib/data/repositories/admin_repository.dart : 158 lines
+lib/data/repositories/auth_repository_impl.dart : 25 lines
+lib/data/repositories/business_details_repository_impl.dart : 19 lines
+lib/data/repositories/catalog_repository_impl.dart : 16 lines
+lib/data/repositories/contact_number_repository_impl.dart : 52 lines
+lib/data/repositories/customer_auth_repository_impl.dart : 113 lines
+lib/data/repositories/customer_portal_repository_impl.dart : 268 lines
+lib/data/repositories/customer_repository_impl.dart : 30 lines
+lib/data/repositories/lead_repository_impl.dart : 68 lines
+lib/data/repositories/mixins/auth_role_repository_mixin.dart : 50 lines
+lib/data/repositories/mixins/auth_session_repository_mixin.dart : 154 lines
+lib/data/repositories/mixins/auth_user_repository_mixin.dart : 31 lines
+lib/data/repositories/mixins/category_repository_mixin.dart : 104 lines
+lib/data/repositories/mixins/item_repository_mixin.dart : 134 lines
+lib/data/repositories/mixins/review_repository_mixin.dart : 33 lines
+lib/data/repositories/quotation_repository_impl.dart : 119 lines
+lib/data/repositories/settings_repository_impl.dart : 1054 lines
+lib/domain/entities/admin_role.dart : 44 lines
+lib/domain/entities/booking.dart : 22 lines
+lib/domain/entities/booking_agreement.dart : 16 lines
+lib/domain/entities/booking_gallery.dart : 15 lines
+lib/domain/entities/booking_timeline.dart : 15 lines
+lib/domain/entities/business_details_entity.dart : 376 lines
+lib/domain/entities/category.dart : 25 lines
+lib/domain/entities/contact_number_entity.dart : 38 lines
+lib/domain/entities/coordinator.dart : 16 lines
+lib/domain/entities/coupon.dart : 18 lines
+lib/domain/entities/customer.dart : 25 lines
+lib/domain/entities/customer_activity.dart : 15 lines
+lib/domain/entities/customer_booking.dart : 35 lines
+lib/domain/entities/customer_document.dart : 19 lines
+lib/domain/entities/customer_lead.dart : 25 lines
+lib/domain/entities/customer_notification.dart : 27 lines
+lib/domain/entities/customer_payment.dart : 23 lines
+lib/domain/entities/customer_profile.dart : 33 lines
+lib/domain/entities/customer_quotation.dart : 47 lines
+lib/domain/entities/customer_wishlist.dart : 13 lines
+lib/domain/entities/decoration_item.dart : 51 lines
+lib/domain/entities/expense_item.dart : 16 lines
+lib/domain/entities/experience.dart : 51 lines
+lib/domain/entities/inventory_item.dart : 16 lines
+lib/domain/entities/lead.dart : 30 lines
+lib/domain/entities/offer.dart : 21 lines
+lib/domain/entities/payment.dart : 21 lines
+lib/domain/entities/quotation.dart : 67 lines
+lib/domain/entities/rebook_request.dart : 17 lines
+lib/domain/entities/review.dart : 31 lines
+lib/domain/entities/settings_entities.dart : 714 lines
+lib/domain/entities/staff_log.dart : 16 lines
+lib/domain/entities/support_ticket.dart : 18 lines
+lib/domain/repositories/auth_repository.dart : 22 lines
+lib/domain/repositories/business_details_repository.dart : 6 lines
+lib/domain/repositories/catalog_repository.dart : 50 lines
+lib/domain/repositories/contact_number_repository.dart : 6 lines
+lib/domain/repositories/customer_auth_repository.dart : 25 lines
+lib/domain/repositories/customer_portal_repository.dart : 60 lines
+lib/domain/repositories/customer_repository.dart : 7 lines
+lib/domain/repositories/lead_repository.dart : 7 lines
+lib/domain/repositories/quotation_repository.dart : 9 lines
+lib/domain/repositories/settings_repository.dart : 73 lines
+lib/domain/usecases/create_quotation.dart : 11 lines
+lib/domain/usecases/get_categories.dart : 11 lines
+lib/domain/usecases/get_experiences.dart : 23 lines
+lib/domain/usecases/submit_lead.dart : 11 lines
+lib/firebase_options.dart : 97 lines
+lib/main.dart : 62 lines
+lib/presentation/bindings/admin_binding.dart : 59 lines
+lib/presentation/bindings/business_details_binding.dart : 20 lines
+lib/presentation/bindings/catalog_binding.dart : 83 lines
+lib/presentation/bindings/initial_binding.dart : 181 lines
+lib/presentation/controllers/admin_controller.dart : 121 lines
+lib/presentation/controllers/admin_customer_portal_controller.dart : 181 lines
+lib/presentation/controllers/auth_controller.dart : 233 lines
+lib/presentation/controllers/booking_controller_mixin.dart : 55 lines
+lib/presentation/controllers/business_details_controller.dart : 321 lines
+lib/presentation/controllers/cart_controller.dart : 210 lines
+lib/presentation/controllers/catalog_controller.dart : 194 lines
+lib/presentation/controllers/category_controller_mixin.dart : 127 lines
+lib/presentation/controllers/customer_auth_controller.dart : 186 lines
+lib/presentation/controllers/customer_controller_mixin.dart : 56 lines
+lib/presentation/controllers/customer_dashboard_controller.dart : 108 lines
+lib/presentation/controllers/experience_controller_mixin.dart : 62 lines
+lib/presentation/controllers/parts/catalog_filter.dart : 80 lines
+lib/presentation/controllers/parts/catalog_lead.dart : 83 lines
+lib/presentation/controllers/parts/customer_actions.dart : 248 lines
+lib/presentation/controllers/parts/customer_sync.dart : 270 lines
+lib/presentation/controllers/payment_controller_mixin.dart : 53 lines
+lib/presentation/controllers/quotation_controller.dart : 493 lines
+lib/presentation/controllers/review_controller_mixin.dart : 72 lines
+lib/presentation/controllers/seeder_controller.dart : 115 lines
+lib/presentation/controllers/settings_controller.dart : 29 lines
+lib/presentation/controllers/user_controller_mixin.dart : 108 lines
+lib/presentation/screens/admin/admin_dashboard_screen.dart : 386 lines
+lib/presentation/screens/admin/admin_kpi_dashboard_screen.dart : 211 lines
+lib/presentation/screens/admin/booking_calendar_screen.dart : 210 lines
+lib/presentation/screens/admin/business_details_screen.dart : 1051 lines
+lib/presentation/screens/admin/customer_detail_screen.dart : 200 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/coordinators_admin_view.dart : 148 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/homepage_builder_admin_view.dart : 47 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/inventory_cms_view.dart : 148 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/notifications_admin_view.dart : 94 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/offers_admin_view.dart : 88 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/payments_admin_view.dart : 93 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/quotes_admin_view.dart : 89 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/rebooks_admin_view.dart : 51 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/reschedules_admin_view.dart : 96 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/search_logs_admin_view.dart : 119 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/staff_finance_view.dart : 182 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard/views/timelines_admin_view.dart : 98 lines
+lib/presentation/screens/admin/customer_portal_admin_dashboard.dart : 103 lines
+lib/presentation/screens/admin/dashboard_chart.dart : 137 lines
+lib/presentation/screens/admin/manage_admin_roles_screen.dart : 117 lines
+lib/presentation/screens/admin/manage_bookings_screen.dart : 50 lines
+lib/presentation/screens/admin/manage_categories_screen.dart : 644 lines
+lib/presentation/screens/admin/manage_customers_screen.dart : 222 lines
+lib/presentation/screens/admin/manage_experiences_screen.dart : 927 lines
+lib/presentation/screens/admin/manage_leads_screen.dart : 166 lines
+lib/presentation/screens/admin/manage_quotes_screen.dart : 157 lines
+lib/presentation/screens/admin/manage_reviews_screen.dart : 581 lines
+lib/presentation/screens/admin/manage_users_screen.dart : 352 lines
+lib/presentation/screens/admin/parts/settings_advanced_form.dart : 247 lines
+lib/presentation/screens/admin/parts/settings_business_branch_card.dart : 115 lines
+lib/presentation/screens/admin/parts/settings_business_contacts.dart : 191 lines
+lib/presentation/screens/admin/parts/settings_business_contacts_add.dart : 145 lines
+lib/presentation/screens/admin/parts/settings_business_contacts_edit.dart : 154 lines
+lib/presentation/screens/admin/parts/settings_business_form.dart : 168 lines
+lib/presentation/screens/admin/parts/settings_business_validation.dart : 114 lines
+lib/presentation/screens/admin/parts/settings_dispose.dart : 97 lines
+lib/presentation/screens/admin/parts/settings_fields.dart : 65 lines
+lib/presentation/screens/admin/parts/settings_marketing_form.dart : 278 lines
+lib/presentation/screens/admin/parts/settings_operations_form.dart : 229 lines
+lib/presentation/screens/admin/parts/settings_saves.dart : 202 lines
+lib/presentation/screens/admin/parts/settings_social_form.dart : 111 lines
+lib/presentation/screens/admin/parts/settings_templates_form.dart : 206 lines
+lib/presentation/screens/admin/profile_screen.dart : 413 lines
+lib/presentation/screens/admin/seeder_screen.dart : 228 lines
+lib/presentation/screens/admin/system_settings_screen.dart : 289 lines
+lib/presentation/screens/admin/widgets/add_admin_dialog.dart : 125 lines
+lib/presentation/screens/admin/widgets/add_payment_dialog.dart : 103 lines
+lib/presentation/screens/admin/widgets/admin_action_button.dart : 37 lines
+lib/presentation/screens/admin/widgets/admin_back_button.dart : 17 lines
+lib/presentation/screens/admin/widgets/admin_card.dart : 22 lines
+lib/presentation/screens/admin/widgets/admin_delete_dialog.dart : 41 lines
+lib/presentation/screens/admin/widgets/admin_dialog.dart : 37 lines
+lib/presentation/screens/admin/widgets/admin_drawer.dart : 14 lines
+lib/presentation/screens/admin/widgets/admin_empty_state.dart : 51 lines
+lib/presentation/screens/admin/widgets/admin_filters.dart : 26 lines
+lib/presentation/screens/admin/widgets/admin_header.dart : 57 lines
+lib/presentation/screens/admin/widgets/admin_loading.dart : 15 lines
+lib/presentation/screens/admin/widgets/admin_metric_card.dart : 100 lines
+lib/presentation/screens/admin/widgets/admin_pagination.dart : 58 lines
+lib/presentation/screens/admin/widgets/admin_role_card.dart : 355 lines
+lib/presentation/screens/admin/widgets/admin_search.dart : 62 lines
+lib/presentation/screens/admin/widgets/admin_sidebar.dart : 191 lines
+lib/presentation/screens/admin/widgets/admin_sidebar_item.dart : 67 lines
+lib/presentation/screens/admin/widgets/admin_stat_card.dart : 4 lines
+lib/presentation/screens/admin/widgets/admin_table.dart : 59 lines
+lib/presentation/screens/admin/widgets/booking_tab_widget.dart : 211 lines
+lib/presentation/screens/admin/widgets/inquiries_trend_chart.dart : 64 lines
+lib/presentation/screens/admin/widgets/parts/notif_campaigns.dart : 217 lines
+lib/presentation/screens/admin/widgets/parts/notif_dashboard.dart : 274 lines
+lib/presentation/screens/admin/widgets/parts/notif_saves.dart : 160 lines
+lib/presentation/screens/admin/widgets/payment_tab_widget.dart : 173 lines
+lib/presentation/screens/admin/widgets/profile_edit_card.dart : 403 lines
+lib/presentation/screens/admin/widgets/profile_hero_card.dart : 354 lines
+lib/presentation/screens/admin/widgets/profile_password_card.dart : 334 lines
+lib/presentation/screens/admin/widgets/profile_photo_sheet.dart : 76 lines
+lib/presentation/screens/admin/widgets/profile_security_card.dart : 151 lines
+lib/presentation/screens/admin/widgets/profile_skeleton.dart : 51 lines
+lib/presentation/screens/admin/widgets/profile_sticky_bar.dart : 98 lines
+lib/presentation/screens/admin/widgets/recent_inquiries_widget.dart : 133 lines
+lib/presentation/screens/admin/widgets/settings_contact_tab.dart : 92 lines
+lib/presentation/screens/admin/widgets/settings_general_tab.dart : 92 lines
+lib/presentation/screens/admin/widgets/settings_notifications_tab.dart : 901 lines
+lib/presentation/screens/auth/login_screen.dart : 251 lines
+lib/presentation/screens/customer/auth/customer_auth_screen.dart : 19 lines
+lib/presentation/screens/customer/auth/widgets/customer_auth_box.dart : 181 lines
+lib/presentation/screens/customer/dashboard/customer_dashboard_screen.dart : 347 lines
+lib/presentation/screens/customer/dashboard/views/bookings_view.dart : 130 lines
+lib/presentation/screens/customer/dashboard/views/gallery_view.dart : 129 lines
+lib/presentation/screens/customer/dashboard/views/leads_view.dart : 98 lines
+lib/presentation/screens/customer/dashboard/views/maps_agreements_view.dart : 147 lines
+lib/presentation/screens/customer/dashboard/views/notifications_view.dart : 220 lines
+lib/presentation/screens/customer/dashboard/views/overview_view.dart : 355 lines
+lib/presentation/screens/customer/dashboard/views/payments_view.dart : 120 lines
+lib/presentation/screens/customer/dashboard/views/preferences_view.dart : 306 lines
+lib/presentation/screens/customer/dashboard/views/profile_view.dart : 123 lines
+lib/presentation/screens/customer/dashboard/views/quotes_view.dart : 303 lines
+lib/presentation/screens/customer/dashboard/views/support_center_view.dart : 211 lines
+lib/presentation/screens/customer/dashboard/views/wishlist_view.dart : 53 lines
+lib/presentation/screens/customer/experience_detail_screen.dart : 408 lines
+lib/presentation/screens/customer/helpers/customer_dialog_helper.dart : 539 lines
+lib/presentation/screens/customer/home_screen.dart : 500 lines
+lib/presentation/screens/customer/quote_success_screen.dart : 149 lines
+lib/presentation/screens/customer/widgets/announcement_banner.dart : 30 lines
+lib/presentation/screens/customer/widgets/cart_drawer.dart : 378 lines
+lib/presentation/screens/customer/widgets/customer_reviews_section.dart : 71 lines
+lib/presentation/screens/customer/widgets/empty_review_widget.dart : 34 lines
+lib/presentation/screens/customer/widgets/home_benefits_section.dart : 234 lines
+lib/presentation/screens/customer/widgets/home_catalog_section.dart : 170 lines
+lib/presentation/screens/customer/widgets/home_categories_section.dart : 424 lines
+lib/presentation/screens/customer/widgets/home_contact_section.dart : 139 lines
+lib/presentation/screens/customer/widgets/home_detail_dialog.dart : 446 lines
+lib/presentation/screens/customer/widgets/home_faq_section.dart : 123 lines
+lib/presentation/screens/customer/widgets/home_footer_section.dart : 516 lines
+lib/presentation/screens/customer/widgets/home_hero_section.dart : 397 lines
+lib/presentation/screens/customer/widgets/home_marquee_ribbon.dart : 109 lines
+lib/presentation/screens/customer/widgets/home_process_section.dart : 168 lines
+lib/presentation/screens/customer/widgets/home_stats_band.dart : 271 lines
+lib/presentation/screens/customer/widgets/home_video_stories_section.dart : 389 lines
+lib/presentation/screens/customer/widgets/nav_drawer.dart : 104 lines
+lib/presentation/screens/customer/widgets/parts/catalog_card.dart : 269 lines
+lib/presentation/screens/customer/widgets/parts/catalog_toolbar.dart : 278 lines
+lib/presentation/screens/customer/widgets/rating_widget.dart : 26 lines
+lib/presentation/screens/customer/widgets/review_card.dart : 204 lines
+lib/presentation/screens/customer/widgets/review_slider.dart : 209 lines
+lib/presentation/screens/customer/widgets/verified_badge.dart : 38 lines
+lib/presentation/screens/docs/docs_screen.dart : 223 lines
+lib/presentation/screens/onboarding/onboarding_screen.dart : 164 lines
+lib/presentation/screens/splash/splash_screen.dart : 113 lines
+lib/presentation/widgets/item_visual_placeholder.dart : 233 lines
+lib/presentation/widgets/reusable/glass_card.dart : 40 lines
+lib/presentation/widgets/reusable/shimmer_loading.dart : 64 lines
