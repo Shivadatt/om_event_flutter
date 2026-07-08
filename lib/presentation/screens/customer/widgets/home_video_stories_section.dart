@@ -36,39 +36,11 @@ class VideoStoriesSection extends StatelessWidget {
             final videoSettings = AppConfigService.to.rxVideoSettings.value;
             final videos = videoSettings.videosList;
 
-            final activeList =
-                videos.isNotEmpty
-                    ? videos
-                    : [
-                      {
-                        'eyebrow': "Celebrate in style",
-                        'titlePart1': "A glimpse before",
-                        'titlePart2': "the big day.",
-                        'description':
-                            "From elegant balloon styling to personalized backdrops and thoughtful details, we create celebrations that feel joyful, memorable, and uniquely yours. Every setup is crafted to make your special day unforgettable.",
-                        'facts': [
-                          "Theme & Planning",
-                          "Production & styling",
-                          "Celebrate & Capture Memories",
-                        ],
-                        'videoAsset': "assets/videos/Birthday.mp4",
-                        'posterAsset': "assets/images/birthday.jpg",
-                      },
-                      {
-                        'eyebrow': "Experience the excitement",
-                        'titlePart1': "Balloon Blast",
-                        'titlePart2': "the perfect surprise.",
-                        'description':
-                            "A single pop transforms the atmosphere into a shower of colors, confetti, and unforgettable smiles. Designed to create the perfect reveal for birthdays, proposals, anniversaries, baby showers, and every celebration worth remembering.",
-                        'facts': [
-                          "Suspense & Countdown",
-                          "Balloon Blast Moment",
-                          "Cheers & Celebration",
-                        ],
-                        'videoAsset': "assets/videos/Balloonblast.mp4",
-                        'posterAsset': "assets/images/BaloonBlast.jpg",
-                      },
-                    ];
+            if (videos.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            final activeList = videos;
 
             return Column(
               children: List.generate(activeList.length, (index) {

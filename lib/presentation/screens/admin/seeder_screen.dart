@@ -123,7 +123,7 @@ class SeederScreen extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 // Action Buttons
-                if (!controller.isMigrating.value)
+                 if (!controller.isMigrating.value) ...[
                   ElevatedButton(
                     onPressed: () => controller.runMigration(force: true),
                     style: ElevatedButton.styleFrom(
@@ -145,6 +145,79 @@ class SeederScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: controller.runSeedCategories,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B3D31),
+                      disabledBackgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[300],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      "SEED CATEGORIES ONLY",
+                      style: AppTheme.sansBody(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFC9A77E),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: controller.runSeedServices,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B3D31),
+                      disabledBackgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[300],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      "SEED SERVICES ONLY",
+                      style: AppTheme.sansBody(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFC9A77E),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: controller.runFixRelationships,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B3D31),
+                      disabledBackgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[300],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      "FIX RELATIONSHIPS ONLY",
+                      style: AppTheme.sansBody(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFC9A77E),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: controller.runFullMigrationManual,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC9A77E),
+                      disabledBackgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[300],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      "RUN FULL MIGRATION",
+                      style: AppTheme.sansBody(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             );
           }),

@@ -17,11 +17,6 @@ class CategoryModel extends Category {
   static String sanitizeImageUrl(String slug, String url) {
     if (url.isEmpty) return '';
 
-    // Force Surprise & Proposal category to use Pyro.jpg
-    if (slug == 'proposal') {
-      return 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/Pyro.jpg';
-    }
-
     if (url.startsWith('assets/images/')) {
       final fileName = url.split('/').last;
       return 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/$fileName';

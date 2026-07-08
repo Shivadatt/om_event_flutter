@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
+import '../../../../controllers/catalog_controller.dart';
+import '../../../../../core/widgets/app_image.dart';
 
 /// Upgraded OverviewView with Emergency CMS announcements, announcement bars, and recently viewed themes.
 class OverviewView extends StatelessWidget {
@@ -180,13 +182,20 @@ class OverviewView extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               height: 140,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildThemeThumbnail("Floral Canopy Backdrop", "https://placeholder.url/floral.jpg"),
-                  _buildThemeThumbnail("Marigold Entrance Arch", "https://placeholder.url/marigold.jpg"),
-                  _buildThemeThumbnail("Minimalist Neon Stage", "https://placeholder.url/neon.jpg"),
-                ],
+              child: Builder(
+                builder: (context) {
+                  final catalogCtrl = Get.find<CatalogController>();
+                  return Obx(() {
+                    final items = catalogCtrl.rxExperiences.take(3).toList();
+                    if (items.isEmpty) {
+                      return const Center(child: Text("No themes viewed yet", style: TextStyle(color: Colors.white54, fontSize: 13)));
+                    }
+                    return ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: items.map((item) => _buildThemeThumbnail(item.name, item.imageUrl)).toList(),
+                    );
+                  });
+                }
               ),
             ),
             const SizedBox(height: 32),
@@ -281,7 +290,7 @@ class OverviewView extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeThumbnail(String title, String placeholderUrl) {
+  Widget _buildThemeThumbnail(String title, String imageUrl) {
     return Container(
       width: 140,
       margin: const EdgeInsets.only(right: 16),
@@ -294,9 +303,20 @@ class OverviewView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Container(
-              color: Colors.black26,
-              child: const Center(child: Icon(Icons.photo_outlined, color: Colors.white38)),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+              child: imageUrl.isNotEmpty
+                  ? AppImage(
+                      url: imageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    )
+                  : Container(
+                      color: Colors.black26,
+                      child: const Center(
+                        child: Icon(Icons.photo_outlined, color: Colors.white38),
+                      ),
+                    ),
             ),
           ),
           Padding(

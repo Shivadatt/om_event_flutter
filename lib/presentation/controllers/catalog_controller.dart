@@ -15,6 +15,7 @@ import '../../domain/usecases/submit_lead.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import 'customer_auth_controller.dart';
+import '../../data/datasources/database_migration_service.dart';
 /// Customer-facing catalog controller backed by Firestore realtime streams.
 ///
 /// Architecture:
@@ -72,7 +73,7 @@ class CatalogController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _correctDatabaseRelationships();
+    _checkAndRunMigration();
     _bindRealtimeStreams();
 
     // Re-apply experience filters whenever user changes any filter param.
@@ -334,64 +335,17 @@ class CatalogController extends GetxController {
     }
   }
 
-  Future<void> _correctDatabaseRelationships() async {
+  Future<void> _checkAndRunMigration() async {
     try {
-      final itemsCol = FirebaseFirestore.instance.collection(AppCollections.items);
-      final catsCol = FirebaseFirestore.instance.collection(AppCollections.categories);
-
-      // Define multi-category mapping table
-      final Map<String, List<String>> experienceCategoryMappings = {
-        'wild-one-safari': ['grand-entries', 'birthday', 'balloon--flower-decoration'],
-        'pastel-dream-birthday': ['baby', 'shrimant-sanskar', 'flower-decoration', 'balloon--flower-decoration'],
-        'ivory-vow-stage': ['chhathi-poojan', 'baby', 'flower-decoration', 'balloon--flower-decoration'],
-        'saffron-ring-ceremony': ['wedding', 'flower-decoration'],
-        'little-cloud-welcome': ['wedding', 'flower-decoration'],
-        'teddy-garden-shower': ['baby', 'balloon--flower-decoration', 'flower-decoration'],
-        'signature-brand-launch': ['grand-entries', 'wedding'],
-        'opening-day-essentials': ['wedding', 'flower-decoration', 'balloon--flower-decoration'],
-        'moonlit-marry-me': ['birthday', 'balloon--flower-decoration'],
-        'terrace-sunset-story': ['grand-entries', 'wedding'],
-        'royal-fog-entry': ['birthday', 'balloon--flower-decoration'],
-        'flower-shower-walk': ['grand-entries', 'flower-decoration'],
-      };
-
-      // Perform dynamic batch migration for multi-category support
-      for (final entry in experienceCategoryMappings.entries) {
-        final itemId = entry.key;
-        final targetCatIds = entry.value;
-
-        final itemDoc = await itemsCol.doc(itemId).get();
-        if (itemDoc.exists) {
-          final data = itemDoc.data();
-          if (data != null) {
-            final existingCatIds = data['category_ids'] != null
-                ? List<String>.from(data['category_ids'])
-                : <String>[];
-            
-            // Check if categories match exactly
-            final hasMatch = existingCatIds.length == targetCatIds.length &&
-                existingCatIds.every((id) => targetCatIds.contains(id));
-                
-            if (!hasMatch) {
-              // Ensure first category is the default category property
-              final firstCatId = targetCatIds.first;
-              final catDoc = await catsCol.doc(firstCatId).get();
-              final catName = catDoc.data()?['name'] ?? 'Category';
-              final catSlug = catDoc.data()?['slug'] ?? firstCatId;
-
-              await itemsCol.doc(itemId).update({
-                'category_id': firstCatId,
-                'category_name': catName,
-                'category_slug': catSlug,
-                'category_ids': targetCatIds,
-              });
-              print("DATABASE MIGRATION: Migrated $itemId to multiple categories $targetCatIds");
-            }
-          }
-        }
+      final migrationService = DatabaseMigrationService();
+      final isDone = await migrationService.isMigrationCompleted();
+      if (!isDone) {
+        print("DATABASE NOT SEEDED. Please run migration from Admin Seeder Screen.");
+      } else {
+        print("DATABASE MIGRATION: Already completed. Skipping startup migration.");
       }
     } catch (e) {
-      print("DATABASE MIGRATION ERROR: $e");
+      print("Startup migration check error: $e");
     }
   }
 }

@@ -39,35 +39,6 @@ class ExperienceModel extends Experience {
         json['categoryId'] ??
         '';
 
-    // Runtime sanitization to correct legacy mis-seeded Firestore categories
-    final itemId = documentId.toLowerCase();
-
-    if (itemId == 'little-cloud-welcome' && catSlug == 'baby') {
-      catId = 'wedding';
-      catName = 'Wedding & Engagement';
-      catSlug = 'wedding';
-    } else if (itemId == 'moonlit-marry-me' && catSlug == 'proposal') {
-      catId = 'birthday';
-      catName = 'Birthday Celebrations';
-      catSlug = 'birthday';
-    } else if (itemId == 'royal-fog-entry' && catSlug == 'entries') {
-      catId = 'birthday';
-      catName = 'Birthday Celebrations';
-      catSlug = 'birthday';
-    } else if (itemId == 'signature-brand-launch' && catSlug == 'corporate') {
-      catId = 'grand-entries';
-      catName = 'Grand Entries';
-      catSlug = 'grand-entries';
-    } else if (itemId == 'terrace-sunset-story' && catSlug == 'proposal') {
-      catId = 'grand-entries';
-      catName = 'Grand Entries';
-      catSlug = 'grand-entries';
-    } else if (itemId == 'opening-day-essentials' && catSlug == 'corporate') {
-      catId = 'wedding';
-      catName = 'Wedding & Engagement';
-      catSlug = 'wedding';
-    }
-
     final categoryIdsRaw = json['category_ids'] ?? json['categoryIds'];
     final List<String> categoryIds = categoryIdsRaw != null
         ? List<String>.from(categoryIdsRaw)
