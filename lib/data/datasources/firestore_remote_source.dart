@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_collections.dart';
-import 'sql_seed_data.dart';
 
 /// Low-level Firestore data access layer.
 /// All collection strings are sourced from [AppCollections].
@@ -12,14 +11,7 @@ class FirestoreRemoteSource {
 
   // ── Auto-seed ─────────────────────────────────────────────────────────────
 
-  /// Ensures the database is seeded before any catalog fetch.
-  Future<void> ensureSeeded() async {
-    final catSnap =
-        await _firestore.collection(AppCollections.categories).limit(1).get();
-    if (catSnap.docs.isEmpty) {
-      await _seedDatabase();
-    }
-  }
+
 
   // ── Categories ────────────────────────────────────────────────────────────
 
@@ -514,30 +506,4 @@ class FirestoreRemoteSource {
     await _firestore.collection(AppCollections.admin).doc(uid).delete();
   }
 
-  // ── Seeding Logic ─────────────────────────────────────────────────────────
-
-  Future<void> _seedDatabase() async {
-    final batch = _firestore.batch();
-
-    for (var cat in SqlSeedData.categories) {
-      final ref = _firestore
-          .collection(AppCollections.categories)
-          .doc(cat['slug'] as String);
-      batch.set(ref, cat);
-    }
-
-    for (var item in SqlSeedData.decorationItems) {
-      final ref = _firestore
-          .collection(AppCollections.items)
-          .doc(item['slug'] as String);
-      batch.set(ref, item);
-    }
-
-    for (var review in SqlSeedData.reviews) {
-      final ref = _firestore.collection(AppCollections.reviews).doc();
-      batch.set(ref, review);
-    }
-
-    await batch.commit();
-  }
 }

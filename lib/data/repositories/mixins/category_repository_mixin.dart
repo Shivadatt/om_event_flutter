@@ -11,7 +11,6 @@ mixin CategoryRepositoryMixin {
   /// Used by the Customer Website.
   Future<List<Category>> getCategories() async {
     try {
-      await remoteSource.ensureSeeded();
       final docs = await remoteSource.fetchCategories();
       return docs
           .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))
@@ -25,7 +24,6 @@ mixin CategoryRepositoryMixin {
   /// Used exclusively by the Admin Panel.
   Future<List<Category>> getAllCategories() async {
     try {
-      await remoteSource.ensureSeeded();
       final docs = await remoteSource.fetchAllCategories();
       return docs
           .map<Category>((doc) => CategoryModel.fromJson(doc.data(), doc.id))

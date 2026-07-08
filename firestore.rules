@@ -76,6 +76,8 @@ service cloud.firestore {
     match /activity_logs/{logId} {
       allow create: if isAuthenticated();
       allow read: if isAuthenticated() && getUserRole() == 'admin';
+    }
+
     // =========================================================================
     // CUSTOMER PORTAL COLLECTIONS
     // =========================================================================
