@@ -5,12 +5,10 @@ import '../../../core/config/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../controllers/admin_controller.dart';
 import '../../controllers/auth_controller.dart';
-import 'widgets/admin_sidebar.dart';
 import 'widgets/admin_metric_card.dart';
 import 'widgets/admin_action_button.dart';
 import 'widgets/inquiries_trend_chart.dart';
 import 'widgets/recent_inquiries_widget.dart';
-import '../../../core/extensions/extensions.dart';
 
 /// Core Dashboard landing page for administrators and managers.
 class AdminDashboardScreen extends GetView<AdminController> {
@@ -74,35 +72,14 @@ class AdminDashboardScreen extends GetView<AdminController> {
         final currentAdmin = authController.rxAdminRole.value;
         final isSuper = currentAdmin?.roleType == 'super_admin';
 
-        return Row(
-          children: [
-            // Fixed Sidebar Navigation for Desktop/Laptops (Width >= 1024)
-            if (context.isDesktop)
-              Container(
-                width: 240,
-                color: const Color(0xFF0D1915),
-                child: AdminSidebar(currentAdmin: currentAdmin),
-              ),
-
-            // Main Content Area
-            Expanded(
-              child: Scaffold(
+        return Scaffold(
                 backgroundColor: const Color(0xFF0B1714),
                 appBar: AppBar(
+                  automaticallyImplyLeading: false,
                   backgroundColor: const Color(0xFF0D1915),
                   elevation: 0,
                   iconTheme: const IconThemeData(color: Color(0xFFF4F4F4)),
-                  leading:
-                      !context.isDesktop
-                          ? Builder(
-                            builder:
-                                (context) => IconButton(
-                                  icon: const Icon(Icons.menu),
-                                  onPressed:
-                                      () => Scaffold.of(context).openDrawer(),
-                                ),
-                          )
-                          : null,
+
                   title: Row(
                     children: [
                       const Icon(
@@ -182,13 +159,7 @@ class AdminDashboardScreen extends GetView<AdminController> {
                       ),
                   ],
                 ),
-                drawer:
-                    !context.isDesktop
-                        ? AdminSidebar(
-                          currentAdmin: currentAdmin,
-                          isMobileDrawer: true,
-                        )
-                        : null,
+
                 body: RefreshIndicator(
                   onRefresh: () => controller.loadDashboardStats(),
                   child: SingleChildScrollView(
@@ -376,9 +347,6 @@ class AdminDashboardScreen extends GetView<AdminController> {
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
         );
       }),
     );

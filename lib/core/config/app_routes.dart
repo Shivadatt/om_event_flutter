@@ -6,6 +6,7 @@ import '../../presentation/screens/customer/experience_detail_screen.dart';
 import '../../presentation/screens/customer/quote_success_screen.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/admin/admin_dashboard_screen.dart';
+import '../../presentation/screens/admin/widgets/admin_layout.dart';
 import '../../presentation/screens/admin/manage_leads_screen.dart';
 import '../../presentation/screens/admin/manage_quotes_screen.dart';
 import '../../presentation/screens/admin/manage_experiences_screen.dart';
@@ -60,42 +61,42 @@ class AppRouter {
     GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
     GetPage(
       name: AppRoutes.adminDashboard,
-      page: () => const AdminDashboardScreen(),
+      page: () => const AdminLayout(child: AdminDashboardScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.manageLeads,
-      page: () => const ManageLeadsScreen(),
+      page: () => const AdminLayout(child: ManageLeadsScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.manageQuotes,
-      page: () => const ManageQuotesScreen(),
+      page: () => const AdminLayout(child: ManageQuotesScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.manageBookings,
-      page: () => const ManageBookingsScreen(),
+      page: () => const AdminLayout(child: ManageBookingsScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.manageExperiences,
-      page: () => const ManageExperiencesScreen(),
+      page: () => const AdminLayout(child: ManageExperiencesScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.manageCategories,
-      page: () => const ManageCategoriesScreen(),
+      page: () => const AdminLayout(child: ManageCategoriesScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.manageCustomers,
-      page: () => const ManageCustomersScreen(),
+      page: () => const AdminLayout(child: ManageCustomersScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.manageUsers,
-      page: () => const ManageAdminRolesScreen(),
+      page: () => const AdminLayout(child: ManageAdminRolesScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
@@ -110,25 +111,25 @@ class AppRouter {
     ),
     GetPage(
       name: AppRoutes.manageReviews,
-      page: () => const ManageReviewsScreen(),
+      page: () => const AdminLayout(child: ManageReviewsScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.adminProfile,
-      page: () => const ProfileScreen(),
+      page: () => const AdminLayout(child: ProfileScreen()),
       binding: AdminBinding(),
     ),
     GetPage(
       name: AppRoutes.customerPortalAdmin,
-      page: () => const CustomerPortalAdminDashboard(),
+      page: () => const AdminLayout(child: CustomerPortalAdminDashboard()),
     ),
     GetPage(
       name: AppRoutes.bookingCalendar,
-      page: () => const BookingCalendarScreen(),
+      page: () => const AdminLayout(child: BookingCalendarScreen()),
     ),
     GetPage(
       name: AppRoutes.adminKpis,
-      page: () => const AdminKpiDashboardScreen(),
+      page: () => const AdminLayout(child: AdminKpiDashboardScreen()),
     ),
     GetPage(name: AppRoutes.docs, page: () => const DocsScreen()),
   ];

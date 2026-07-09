@@ -13,12 +13,16 @@ class AdminSidebar extends StatelessWidget {
 
   /// Whether the navigation items are being rendered inside a mobile Drawer.
   final bool isMobileDrawer;
+  
+  /// Whether the sidebar should be rendered in a collapsed, icon-only state.
+  final bool isCollapsed;
 
   /// Creates an [AdminSidebar] widget instance.
   const AdminSidebar({
     super.key,
     required this.currentAdmin,
     this.isMobileDrawer = false,
+    this.isCollapsed = false,
   });
 
   void _navigate(String routeName) {
@@ -32,10 +36,11 @@ class AdminSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
     final isSuper = currentAdmin?.roleType == 'super_admin';
+    final currentRoute = Get.currentRoute;
 
     Widget content = Column(
       children: [
-        Container(
+        if (!isCollapsed) Container(
           padding: const EdgeInsets.all(24),
           alignment: Alignment.centerLeft,
           decoration: const BoxDecoration(
@@ -94,84 +99,102 @@ class AdminSidebar extends StatelessWidget {
               AdminSidebarItem(
                 icon: Icons.dashboard_outlined,
                 label: "Dashboard",
-                isActive: true,
-                onTap: () {
-                  if (isMobileDrawer) {
-                    Get.back();
-                  }
-                },
+                isActive: currentRoute == AppRoutes.adminDashboard,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.adminDashboard),
               ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_categories'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.category_outlined,
                   label: "Categories",
-                  onTap: () => _navigate(AppRoutes.manageCategories),
+                  isActive: currentRoute == AppRoutes.manageCategories,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageCategories),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_items'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.stars_outlined,
                   label: "Experiences",
-                  onTap: () => _navigate(AppRoutes.manageExperiences),
+                  isActive: currentRoute == AppRoutes.manageExperiences,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageExperiences),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_customers'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.people_outline,
                   label: "Customers",
-                  onTap: () => _navigate(AppRoutes.manageCustomers),
+                  isActive: currentRoute == AppRoutes.manageCustomers,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageCustomers),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_leads'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.contact_phone_outlined,
                   label: "Leads",
-                  onTap: () => _navigate(AppRoutes.manageLeads),
+                  isActive: currentRoute == AppRoutes.manageLeads,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageLeads),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_quotes'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.receipt_long_outlined,
                   label: "Quotations",
-                  onTap: () => _navigate(AppRoutes.manageQuotes),
+                  isActive: currentRoute == AppRoutes.manageQuotes,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageQuotes),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_quotes'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.bookmark_outline,
                   label: "Bookings",
-                  onTap: () => _navigate(AppRoutes.manageBookings),
+                  isActive: currentRoute == AppRoutes.manageBookings,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageBookings),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_users'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.admin_panel_settings_outlined,
                   label: "Users",
-                  onTap: () => _navigate(AppRoutes.manageUsers),
+                  isActive: currentRoute == AppRoutes.manageUsers,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageUsers),
                 ),
               AdminSidebarItem(
                 icon: Icons.rate_review_outlined,
                 label: "Reviews",
-                onTap: () => _navigate('/admin/reviews'),
+                isActive: currentRoute == AppRoutes.manageReviews || currentRoute == '/admin/reviews',
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageReviews),
               ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_settings'] ?? false)) ...[
                 AdminSidebarItem(
                   icon: Icons.business_outlined,
                   label: "Business Details",
-                  onTap: () => _navigate(AppRoutes.businessDetails),
+                  isActive: currentRoute == AppRoutes.businessDetails,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.businessDetails),
                 ),
                 AdminSidebarItem(
                   icon: Icons.settings_outlined,
                   label: "Settings",
-                  onTap: () => _navigate(AppRoutes.systemSettings),
+                  isActive: currentRoute == AppRoutes.systemSettings,
+                  isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.systemSettings),
                 ),
               ],
               const Divider(color: Color(0xFF254235), height: 32),
               AdminSidebarItem(
                 icon: Icons.logout_outlined,
                 label: "Logout",
+                isCollapsed: isCollapsed,
                 onTap: () => authController.logout(),
               ),
             ],
