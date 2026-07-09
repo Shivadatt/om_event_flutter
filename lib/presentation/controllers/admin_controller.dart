@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/constants/app_collections.dart';
 import '../../domain/entities/lead.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/repositories/lead_repository.dart';
@@ -11,8 +13,6 @@ import 'experience_controller_mixin.dart';
 import 'customer_controller_mixin.dart';
 import 'user_controller_mixin.dart';
 import 'review_controller_mixin.dart';
-import 'booking_controller_mixin.dart';
-import 'payment_controller_mixin.dart';
 
 class AdminController extends GetxController
     with
@@ -20,9 +20,7 @@ class AdminController extends GetxController
         ExperienceControllerMixin,
         CustomerControllerMixin,
         UserControllerMixin,
-        ReviewControllerMixin,
-        BookingControllerMixin,
-        PaymentControllerMixin {
+        ReviewControllerMixin {
   final LeadRepository leadRepository;
   final QuotationRepository quotationRepository;
   final CatalogRepository catalogRepository;
@@ -51,6 +49,19 @@ class AdminController extends GetxController
   @override
   void onInit() {
     super.onInit();
+    
+    // Bind real-time stream of all quotations
+    rxQuotes.bindStream(quotationRepository.streamAllQuotations());
+    
+    // Recalculate metrics reactively when quotations list changes
+    ever(rxQuotes, (quotesList) {
+      quoteCount.value = quotesList.length;
+      pipelineRevenue.value = quotesList.fold(
+        0.0,
+        (total, quote) => total + quote.grandTotal,
+      );
+    });
+
     loadDashboardStats();
     loadCategories();
     loadExperiences();
@@ -58,37 +69,16 @@ class AdminController extends GetxController
     loadUsers();
     loadAdminRoles();
     loadReviews();
-    loadBookings();
-    loadPayments();
   }
 
   Future<void> loadDashboardStats() async {
     try {
       isLoadingStats.value = true;
 
-      // Parallel fetching
-      final results = await Future.wait([
-        leadRepository.getLeads(),
-        quotationRepository.getQuotations(),
-      ]);
-
-      final leadsList = List<Lead>.from(results[0]);
-      final quotesList = List<Quotation>.from(results[1]);
-
-      // Sort descending by creation date so new records are on top
+      final leadsList = await leadRepository.getLeads();
       leadsList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      quotesList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
       rxLeads.assignAll(leadsList);
-      rxQuotes.assignAll(quotesList);
-
-      // Calculations
       leadCount.value = leadsList.length;
-      quoteCount.value = quotesList.length;
-      pipelineRevenue.value = quotesList.fold(
-        0.0,
-        (sum, quote) => sum + quote.grandTotal,
-      );
     } catch (e) {
       Get.snackbar(
         "Dashboard Error",
@@ -111,11 +101,43 @@ class AdminController extends GetxController
 
   Future<void> updateQuotation(String id, String status) async {
     try {
+      final targetStatus = QuotationStatus.fromString(status);
+      if (targetStatus == QuotationStatus.acceptedByClient || targetStatus == QuotationStatus.rejectedByClient) {
+        throw Exception("Customer acceptance or rejection must always originate from the Client Portal.");
+      }
       await quotationRepository.updateQuotationStatus(id, status);
       await loadDashboardStats();
       Get.snackbar("Status Updated", "Quotation status updated successfully.");
     } catch (e) {
       Get.snackbar("Error", e.toString());
+    }
+  }
+
+  Future<void> sendProposalMessage(String id, String message) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection(AppCollections.quotations).doc(id).update({
+        'adminMessage': message,
+      });
+      
+      final doc = await db.collection(AppCollections.quotations).doc(id).get();
+      final data = doc.data() ?? {};
+      final customerId = data['customerId'] ?? data['customer_id'] ?? '';
+      
+      if (customerId.isNotEmpty) {
+        await db.collection(AppCollections.customerNotifications).add({
+          'customerId': customerId,
+          'title': 'New Message from Studio',
+          'body': 'Admin sent a message regarding proposal ${data['public_id'] ?? id}: "$message"',
+          'type': 'message',
+          'isRead': false,
+          'createdAt': DateTime.now().toIso8601String(),
+          'branch': data['location'] ?? '',
+        });
+      }
+      Get.snackbar("Message Sent", "Proposal message sent successfully.");
+    } catch (e) {
+      Get.snackbar("Error", "Failed to send message: ${e.toString()}");
     }
   }
 }

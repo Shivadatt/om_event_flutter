@@ -28,7 +28,5 @@ class AppBuckets {
   // ==========================================
   static const String customerProfile = 'customer-profile';
   static const String customerGallery = 'customer-gallery';
-  static const String bookingDocuments = 'booking-documents';
-  static const String paymentReceipts = 'payment-receipts';
   static const String reviewImages = 'review-images';
 }

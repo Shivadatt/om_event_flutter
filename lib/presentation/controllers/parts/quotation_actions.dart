@@ -70,6 +70,13 @@ extension QuotationActions on QuotationController {
       final gstAmount = taxable * (gstPercent / 100.0);
       final grandTotal = taxable + gstAmount;
 
+      final authCtrl = Get.find<CustomerAuthController>();
+      final customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
+      if (customerId.trim().isEmpty) {
+        Get.snackbar("Authentication Required", "Customer UID not found. Cannot create quotation.");
+        throw Exception("Customer UID not found. Cannot create quotation.");
+      }
+
       final partialQuotation = Quotation(
         id: quotationId,
         publicId: publicId,
@@ -87,14 +94,15 @@ extension QuotationActions on QuotationController {
         gstAmount: gstAmount,
         grandTotal: grandTotal,
         pdfUrl: '', // Updated post upload
-        status: 'draft',
+        status: QuotationStatus.draft,
         items: quotationItems,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        customerId: customerId,
       );
 
       // Generate invoice PDF
-      final pdfBytes = await _generateInvoicePdf(partialQuotation);
+      final pdfBytes = await generateInvoicePdf(partialQuotation);
 
       // Upload to Supabase Storage
       String uploadedPdfUrl = '';
@@ -102,7 +110,7 @@ extension QuotationActions on QuotationController {
         uploadedPdfUrl = await quotationRepository.uploadQuotationPdf(
           publicId,
           pdfBytes,
-        );
+          );
       } catch (e) {
         // Fallback or log if Supabase keys not set
         AppLogger.error("Supabase upload error", e);
@@ -125,32 +133,15 @@ extension QuotationActions on QuotationController {
         gstAmount: partialQuotation.gstAmount,
         grandTotal: partialQuotation.grandTotal,
         pdfUrl: uploadedPdfUrl,
-        status: 'pending',
+        status: QuotationStatus.published,
         items: partialQuotation.items,
         createdAt: partialQuotation.createdAt,
         updatedAt: partialQuotation.updatedAt,
+        customerId: customerId,
       );
 
       // Save to Cloud Firestore
       await createQuotationUsecase(finalQuotation);
-
-      // If customer is logged in, link quotation to customer portal
-      final authCtrl = Get.find<CustomerAuthController>();
-      final customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
-      if (customerId.isNotEmpty) {
-        final customerQuoteRef = FirebaseFirestore.instance.collection(AppCollections.customerQuotes).doc(quotationId);
-        await customerQuoteRef.set({
-          'customerId': customerId,
-          'quotationNumber': publicId,
-          'date': eventDate.toIso8601String(),
-          'amount': grandTotal,
-          'status': 'pending',
-          'expiryDate': eventDate.add(const Duration(days: 7)).toIso8601String(),
-          'pdfUrl': uploadedPdfUrl,
-          'notes': notes.trim(),
-          'versionHistory': [],
-        });
-      }
 
       rxCreatedQuotation.value = finalQuotation;
 

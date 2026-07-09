@@ -1,17 +1,13 @@
 import 'dart:math';
 import 'package:get/get.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import '../../core/config/app_routes.dart';
 import '../../core/config/constants.dart';
 import '../../core/utils/validators.dart';
+import '../../core/utils/quotation_pdf_generator.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/usecases/create_quotation.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/services/business_details_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
 import 'customer_auth_controller.dart';
 import 'cart_controller.dart';
 

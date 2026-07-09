@@ -74,7 +74,7 @@ class SeederScreen extends StatelessWidget {
                 if (controller.isMigrating.value ||
                     controller.isCompleted.value) ...[
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(12),
                     child: LinearProgressIndicator(
                       value: controller.progressPercent.value,
                       backgroundColor:

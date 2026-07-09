@@ -243,13 +243,7 @@ class ProfileHeroCard extends StatelessWidget {
                     color: const Color(0xFFC8A26A),
                     width: 2.5,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFC8A26A).withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      spreadRadius: 4,
-                    ),
-                  ],
+                  
                 ),
                 child: ClipOval(
                   child:

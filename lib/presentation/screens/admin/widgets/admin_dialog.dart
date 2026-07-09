@@ -19,7 +19,7 @@ class AdminDialog extends StatelessWidget {
     return AlertDialog(
       backgroundColor: const Color(0xFF0D1915),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: Color(0x21FFFFFF), width: 1),
       ),
       title: Text(

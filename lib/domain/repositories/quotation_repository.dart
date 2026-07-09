@@ -6,4 +6,6 @@ abstract class QuotationRepository {
   Future<List<Quotation>> getQuotations();
   Future<Quotation> getQuotationByPublicId(String publicId);
   Future<void> updateQuotationStatus(String id, String status);
+  Stream<List<Quotation>> streamAllQuotations();
+  Stream<List<Quotation>> streamCustomerQuotations(String customerId);
 }

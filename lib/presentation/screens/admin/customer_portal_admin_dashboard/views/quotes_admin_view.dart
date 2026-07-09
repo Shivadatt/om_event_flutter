@@ -35,13 +35,13 @@ class QuotesAdminView extends StatelessWidget {
                   onPressed: () {
                     ExportService.exportToCsv(
                       filename: 'quotations',
-                      headers: ['ID', 'Quotation Number', 'Amount', 'Status', 'Expiry Date'],
+                      headers: ['ID', 'Quotation Number', 'Amount', 'Status', 'Event Date'],
                       rows: portalController.rxAllQuotes.map((q) => [
                         q.id,
-                        q.quotationNumber,
-                        q.amount,
+                        q.publicId,
+                        q.grandTotal,
                         q.status,
-                        q.expiryDate.toIso8601String(),
+                        q.eventDate.toIso8601String(),
                       ]).toList(),
                     );
                   },
@@ -60,20 +60,20 @@ class QuotesAdminView extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     title: Text(
-                      "Quote: ${quote.quotationNumber} (₹${quote.amount.toStringAsFixed(2)})",
+                      "Quote: ${quote.publicId} (₹${quote.grandTotal.toStringAsFixed(2)})",
                       style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFC9A77E)),
                     ),
-                    subtitle: Text("Status: ${quote.status.toUpperCase()} | Expiry: ${quote.expiryDate.toLocal().toString().split(' ')[0]}"),
+                    subtitle: Text("Status: ${quote.status.nameStr.toUpperCase()} | Event Date: ${quote.eventDate.toLocal().toString().split(' ')[0]}"),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-                          onPressed: () => portalController.adminUpdateQuotation(quote.id, {'status': 'accepted'}),
+                          onPressed: () => portalController.adminUpdateQuotation(quote.id, {'status': 'bookingConfirmed'}),
                         ),
                         IconButton(
                           icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),
-                          onPressed: () => portalController.adminDeleteQuotation(quote.id),
+                          onPressed: () => portalController.adminUpdateQuotation(quote.id, {'status': 'cancelled'}),
                         ),
                       ],
                     ),

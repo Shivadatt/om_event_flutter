@@ -51,7 +51,7 @@ extension _SettingsBusinessContactsExtension on _SystemSettingsScreenState {
               border: Border.all(
                 color: isDark ? Colors.white10 : Colors.black12,
               ),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: ReorderableListView.builder(
               shrinkWrap: true,

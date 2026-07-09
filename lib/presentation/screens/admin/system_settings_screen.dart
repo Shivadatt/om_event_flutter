@@ -9,6 +9,7 @@ import 'package:om_event/domain/entities/contact_number_entity.dart';
 import 'package:om_event/domain/repositories/settings_repository.dart';
 import 'package:om_event/core/utils/validators.dart';
 import 'widgets/admin_back_button.dart';
+import 'widgets/admin_layout.dart';
 import 'widgets/settings_notifications_tab.dart';
 
 part 'parts/settings_fields.dart';
@@ -157,55 +158,111 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color primaryAccent = const Color(0xFFD4AF37); // Metallic luxury gold
+    final Color cardColor = isDark ? const Color(0xFF2A241F) : const Color(0xFFFAF6EE); // Luxury surface
+    final Color borderColor = isDark ? const Color(0x26D4AF37) : const Color(0x1F000000);
+    final Color textColor = isDark ? const Color(0xFFF7F2EA) : const Color(0xFF0F0D0B);
+    final Color subtitleColor = isDark ? const Color(0xFFB6ADA4) : const Color(0xFF6B7280);
+
+    final bool isInsideDrawer = AdminLayoutScope.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        leading: const AdminBackButton(color: Color(0xFFC9A77E)),
+        leading: isInsideDrawer ? null : const AdminBackButton(),
+        automaticallyImplyLeading: !isInsideDrawer,
         title: Text(
-          "ENTERPRISE CMS SETTINGS PANEL",
-          style: GoogleFonts.italiana(
-            fontSize: 22,
+          "STUDIO SYSTEM SETTINGS",
+          style: AppTheme.sansBody(
+            fontSize: 12,
             fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: textColor,
           ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
+      backgroundColor: Colors.transparent,
       body: Row(
         children: [
+          // Left floating navigation rail
           Container(
-            width: 260,
-            decoration: const BoxDecoration(
-              border: Border(
-                right: BorderSide(color: Colors.white12, width: 1),
+            width: 250,
+            margin: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: borderColor, width: 1.2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final isSelected = index == _selectedIndex;
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: isSelected ? primaryAccent.withValues(alpha: 0.08) : Colors.transparent,
+                        border: Border(
+                          left: BorderSide(
+                            color: isSelected ? primaryAccent : Colors.transparent,
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        _categories[index].toUpperCase(),
+                        style: AppTheme.sansBody(
+                          fontSize: 10,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? primaryAccent : subtitleColor,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            child: ListView.builder(
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final isSelected = index == _selectedIndex;
-                return ListTile(
-                  title: Text(
-                    _categories[index],
-                    style: AppTheme.sansBody(
-                      fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                      color:
-                          isSelected ? const Color(0xFFC9A77E) : Colors.white70,
-                    ),
-                  ),
-                  selected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                );
-              },
-            ),
           ),
+          
+          // Form content area
           Expanded(
             child: Container(
+              margin: const EdgeInsets.only(top: 24, bottom: 24, right: 24),
               padding: const EdgeInsets.all(32),
-              child: SingleChildScrollView(child: _buildFormContent()),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: borderColor, width: 1.2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 16,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: _buildFormContent(),
+              ),
             ),
           ),
         ],

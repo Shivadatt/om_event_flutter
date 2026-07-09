@@ -57,7 +57,6 @@ class SeederService {
         AppCollections.leads,
         AppCollections.quotations,
         AppCollections.quotationItems,
-        AppCollections.bookings,
         AppCollections.reviews,
         AppCollections.activityLogs,
         AppCollections.settings,
@@ -248,10 +247,7 @@ class SeederService {
         AppCollections.quotationItems,
         SqlSeedData.quotationItems,
       );
-      await _insertService.insertDocuments(
-        AppCollections.bookings,
-        SqlSeedData.bookings,
-      );
+
       await _insertService.insertDocuments(
         AppCollections.reviews,
         resolvedReviews,

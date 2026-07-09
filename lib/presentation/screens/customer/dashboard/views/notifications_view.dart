@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../../core/constants/app_collections.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
@@ -20,7 +21,7 @@ class NotificationsView extends StatefulWidget {
 
 class _NotificationsViewState extends State<NotificationsView> {
   String notificationQuery = '';
-  String activeCategory = 'All'; // 'All' | 'Alert' | 'Booking' | 'Payment' | 'Announcement' | 'Archived'
+  String activeCategory = 'All'; // 'All' | 'Alert' | 'Announcement' | 'Archived'
   final searchController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -30,7 +31,13 @@ class _NotificationsViewState extends State<NotificationsView> {
           .collection(AppCollections.customerNotifications)
           .doc(docId)
           .update({'isArchived': archive});
-      Get.snackbar("Success", archive ? "Notification archived." : "Notification restored.");
+      Get.snackbar(
+        archive ? "Archived" : "Restored",
+        archive ? "Notification successfully archived." : "Notification restored to inbox.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF171411),
+        colorText: const Color(0xFFD4AF37),
+      );
     } catch (e) {
       Get.snackbar("Error", "Action failed: $e");
     }
@@ -39,45 +46,74 @@ class _NotificationsViewState extends State<NotificationsView> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Notifications Inbox", style: AppTheme.serifHeader(fontSize: 24)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "CONCIERGE MESSAGES",
+                    style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.5),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Inbox & Activity Center",
+                    style: GoogleFonts.italiana(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
+              ),
               TextButton.icon(
-                icon: const Icon(Icons.done_all, color: Color(0xFFC9A77E), size: 18),
-                label: const Text("Mark All Read", style: TextStyle(color: Color(0xFFC9A77E), fontSize: 13)),
+                icon: const Icon(Icons.done_all, color: Color(0xFFD4AF37), size: 16),
+                label: const Text("MARK ALL READ", style: TextStyle(color: Color(0xFFD4AF37), fontSize: 11, fontWeight: FontWeight.bold)),
                 onPressed: () {
                   for (var notif in widget.controller.rxNotifications) {
                     widget.controller.markNotificationRead(notif.id);
                   }
-                  Get.snackbar("Success", "All notifications marked as read.");
+                  Get.snackbar(
+                    "Inbox Updated",
+                    "All notifications marked as read successfully.",
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: const Color(0xFF171411),
+                    colorText: const Color(0xFFD4AF37),
+                  );
                 },
               )
             ],
           ),
-          const SizedBox(height: 16),
-          
+          const SizedBox(height: 24),
+
           // Search Input
           TextField(
             controller: searchController,
             style: const TextStyle(color: Colors.white, fontSize: 13),
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search, color: Color(0xFFC9A77E)),
+              prefixIcon: const Icon(Icons.search, color: Color(0xFFD4AF37), size: 20),
               hintText: "Search alerts by title or content...",
-              hintStyle: const TextStyle(color: Colors.white30),
+              hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
               filled: true,
               fillColor: Colors.black26,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.white10),
+              ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFC9A77E)),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFD4AF37)),
               ),
             ),
             onChanged: (val) {
@@ -93,8 +129,6 @@ class _NotificationsViewState extends State<NotificationsView> {
               children: [
                 'All',
                 'Alert',
-                'Booking',
-                'Payment',
                 'Announcement',
                 'Archived',
               ].map((category) {
@@ -102,10 +136,21 @@ class _NotificationsViewState extends State<NotificationsView> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: ChoiceChip(
-                    label: Text(category.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isSelected ? Colors.black : Colors.white70)),
+                    label: Text(
+                      category.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? const Color(0xFF091210) : const Color(0xFFD4AF37),
+                      ),
+                    ),
                     selected: isSelected,
-                    selectedColor: const Color(0xFFC9A77E),
-                    backgroundColor: const Color(0xFF12271F),
+                    selectedColor: const Color(0xFFD4AF37),
+                    backgroundColor: const Color(0xFF171411),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: isSelected ? 1 : 0.3)),
+                    ),
                     onSelected: (selected) {
                       if (selected) setState(() => activeCategory = category);
                     },
@@ -120,14 +165,12 @@ class _NotificationsViewState extends State<NotificationsView> {
           Expanded(
             child: Obx(() {
               var list = widget.controller.rxNotifications.where((n) {
-                // Parse optional archived flag from raw document or default false
                 final isArchived = n.isArchived;
-                
                 final matchQuery = n.title.toLowerCase().contains(notificationQuery) || n.body.toLowerCase().contains(notificationQuery);
-                
+
                 bool matchCategory = false;
                 if (activeCategory == 'All') {
-                  matchCategory = !isArchived; // Don't show archived in general list
+                  matchCategory = !isArchived;
                 } else if (activeCategory == 'Archived') {
                   matchCategory = isArchived;
                 } else {
@@ -138,62 +181,105 @@ class _NotificationsViewState extends State<NotificationsView> {
               }).toList();
 
               if (list.isEmpty) {
-                return const Center(child: Text("No notifications matching current filters."));
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.inbox_outlined, color: Colors.white24, size: 48),
+                      const SizedBox(height: 16),
+                      Text("No messages in this folder.", style: AppTheme.sansBody(fontSize: 13, color: Colors.white54)),
+                    ],
+                  ),
+                );
               }
 
               return ListView.builder(
+                physics: const BouncingScrollPhysics(),
                 itemCount: list.length,
                 itemBuilder: (context, index) {
                   final notif = list[index];
                   final priority = notif.priority;
                   final expiresAtStr = notif.expiresAt;
-                  
+
                   // Check expiry
                   if (expiresAtStr != null) {
                     try {
                       final expiry = DateTime.parse(expiresAtStr);
                       if (expiry.isBefore(DateTime.now())) {
-                        return const SizedBox.shrink(); // Hide expired notification
+                        return const SizedBox.shrink();
                       }
                     } catch (_) {}
                   }
 
-                  Color priorityColor = Colors.grey;
-                  if (priority == 'high') priorityColor = Colors.redAccent;
-                  if (priority == 'low') priorityColor = Colors.green;
+                  Color priorityColor = const Color(0xFFE6C98D);
+                  if (priority == 'high') priorityColor = const Color(0xFFC95C5C);
 
-                  return Card(
-                    color: notif.isRead ? const Color(0xFF12271F).withAlpha(128) : const Color(0xFF12271F),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: notif.isRead ? const Color(0x99171411) : const Color(0xFF171411),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: notif.isRead ? const Color(0x0AD4AF37) : const Color(0x33D4AF37),
+                        width: 1.2,
+                      ),
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
+                    ),
                     child: ListTile(
-                      leading: Icon(
-                        notif.isRead ? Icons.mark_email_read_outlined : Icons.mark_email_unread_outlined,
-                        color: const Color(0xFFC9A77E),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: notif.isRead ? Colors.transparent : const Color(0x1AD4AF37),
+                        ),
+                        child: Icon(
+                          notif.isRead ? Icons.mark_email_read_outlined : Icons.mark_email_unread_outlined,
+                          color: const Color(0xFFD4AF37),
+                          size: 20,
+                        ),
                       ),
                       title: Row(
                         children: [
                           Expanded(
-                            child: Text(notif.title, style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: notif.isRead ? FontWeight.normal : FontWeight.bold)),
+                            child: Text(
+                              notif.title,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: notif.isRead ? FontWeight.normal : FontWeight.bold,
+                              ),
+                            ),
                           ),
                           if (priority == 'high')
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: priorityColor.withAlpha(51),
+                                color: priorityColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: priorityColor.withValues(alpha: 0.3)),
                               ),
-                              child: Text("HIGH PRIORITY", style: TextStyle(color: priorityColor, fontSize: 8, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                "HIGH PRIORITY",
+                                style: TextStyle(color: priorityColor, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                              ),
                             ),
                         ],
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 4),
-                          Text(notif.body, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                          const SizedBox(height: 6),
+                          Text(
+                            notif.body,
+                            style: TextStyle(
+                              color: notif.isRead ? Colors.white54 : Colors.white70,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
                           if (expiresAtStr != null) ...[
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text("Expires: $expiresAtStr", style: const TextStyle(color: Colors.white24, fontSize: 9)),
                           ]
                         ],

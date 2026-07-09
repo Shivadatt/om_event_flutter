@@ -1,20 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../domain/entities/customer_lead.dart';
-import '../../domain/entities/customer_booking.dart';
-import '../../domain/entities/customer_quotation.dart';
-import '../../domain/entities/booking_timeline.dart';
-import '../../domain/entities/customer_payment.dart';
 import '../../domain/entities/customer_notification.dart';
 import '../../domain/entities/customer_document.dart';
-import '../../domain/entities/booking_gallery.dart';
 import '../../domain/entities/customer_wishlist.dart';
-import '../../domain/entities/rebook_request.dart';
 import '../../domain/entities/offer.dart';
 import '../../domain/entities/customer_activity.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
 import '../models/customer_lead_model.dart';
-import '../models/customer_booking_model.dart';
 import '../models/customer_portal_models.dart';
 
 class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
@@ -54,88 +47,17 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
   }
 
   @override
-  Stream<List<CustomerBooking>> streamCustomerBookings(String customerId) {
-    return _firestore
-        .collection(AppCollections.customerBookings)
-        .where('customerId', isEqualTo: customerId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CustomerBookingModel.fromJson(doc.data(), doc.id))
-            .toList());
-  }
-
-  @override
   Future<void> submitCustomerReview(
-      String customerId, String bookingId, String reviewText, double rating) async {
+      String customerId, String quotationId, String reviewText, double rating) async {
     final docRef = _firestore.collection(AppCollections.customerReviews).doc();
     await docRef.set({
       'customerId': customerId,
-      'bookingId': bookingId,
+      'quotationId': quotationId,
       'reviewText': reviewText,
       'rating': rating,
       'status': 'Pending',
       'createdAt': DateTime.now().toIso8601String(),
     });
-  }
-
-  @override
-  Stream<List<CustomerQuotation>> streamCustomerQuotations(String customerId) {
-    return _firestore
-        .collection(AppCollections.customerQuotes)
-        .where('customerId', isEqualTo: customerId)
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => CustomerQuotationModel.fromJson(doc.data(), doc.id))
-            .toList());
-  }
-
-  @override
-  Future<void> updateQuotationStatus(String id, String status) async {
-    await _firestore
-        .collection(AppCollections.customerQuotes)
-        .doc(id)
-        .update({'status': status});
-  }
-
-  @override
-  Stream<List<BookingTimeline>> streamBookingTimeline(String bookingId) {
-    return _firestore
-        .collection(AppCollections.bookingTimelines)
-        .where('bookingId', isEqualTo: bookingId)
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => BookingTimelineModel.fromJson(doc.data(), doc.id))
-            .toList());
-  }
-
-  @override
-  Stream<List<CustomerPayment>> streamCustomerPayments(String customerId) {
-    return _firestore
-        .collection(AppCollections.customerPayments)
-        .where('customerId', isEqualTo: customerId)
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => CustomerPaymentModel.fromJson(doc.data(), doc.id))
-            .toList());
-  }
-
-  @override
-  Future<void> submitOfflinePayment(CustomerPayment payment) async {
-    final model = CustomerPaymentModel(
-      id: payment.id,
-      customerId: payment.customerId,
-      bookingId: payment.bookingId,
-      amount: payment.amount,
-      status: payment.status,
-      method: payment.method,
-      receiptUrl: payment.receiptUrl,
-      invoiceUrl: payment.invoiceUrl,
-      paymentDate: payment.paymentDate,
-    );
-    await _firestore
-        .collection(AppCollections.customerPayments)
-        .doc(payment.id.isEmpty ? null : payment.id)
-        .set(model.toJson());
   }
 
   @override
@@ -165,17 +87,6 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => CustomerDocumentModel.fromJson(doc.data(), doc.id))
-            .toList());
-  }
-
-  @override
-  Stream<List<BookingGallery>> streamBookingGallery(String bookingId) {
-    return _firestore
-        .collection(AppCollections.bookingGallery)
-        .where('bookingId', isEqualTo: bookingId)
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => BookingGalleryModel.fromJson(doc.data(), doc.id))
             .toList());
   }
 
@@ -210,22 +121,6 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
         .collection(AppCollections.customerWishlist)
         .doc(wishlistId)
         .delete();
-  }
-
-  @override
-  Future<void> submitRebookRequest(RebookRequest request) async {
-    final model = RebookRequestModel(
-      id: request.id,
-      customerId: request.customerId,
-      previousBookingId: request.previousBookingId,
-      newDate: request.newDate,
-      status: request.status,
-      createdAt: request.createdAt,
-    );
-    await _firestore
-        .collection(AppCollections.rebookRequests)
-        .doc(request.id.isEmpty ? null : request.id)
-        .set(model.toJson());
   }
 
   @override

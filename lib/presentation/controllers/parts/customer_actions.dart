@@ -102,7 +102,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
   Future<void> acceptQuotation(String quoteId) async {
     try {
       isLoading.value = true;
-      await _portalRepo.updateQuotationStatus(quoteId, 'accepted');
+      await _quotationRepo.updateQuotationStatus(quoteId, 'acceptedByClient');
       await logActivity('Quotation', 'Accepted quotation ID: $quoteId');
       Get.snackbar("Success", "Quotation accepted.");
     } catch (e) {
@@ -115,7 +115,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
   Future<void> rejectQuotation(String quoteId) async {
     try {
       isLoading.value = true;
-      await _portalRepo.updateQuotationStatus(quoteId, 'rejected');
+      await _quotationRepo.updateQuotationStatus(quoteId, 'rejectedByClient');
       await logActivity('Quotation', 'Rejected quotation ID: $quoteId');
       Get.snackbar("Success", "Quotation rejected.");
     } catch (e) {
@@ -128,7 +128,13 @@ extension CustomerActionsExtension on CustomerDashboardController {
   Future<void> requestRevision(String quoteId, String revisionNotes) async {
     try {
       isLoading.value = true;
-      await _portalRepo.updateQuotationStatus(quoteId, 'revision_requested');
+      final db = FirebaseFirestore.instance;
+      // Pre-save revision fields so repository status transitions can capture them in history snapshots
+      await db.collection(AppCollections.quotations).doc(quoteId).update({
+        'revisionReason': revisionNotes,
+        'revisionMessage': revisionNotes,
+      });
+      await _quotationRepo.updateQuotationStatus(quoteId, 'revisionRequested');
       await logActivity('Quotation', 'Requested revision for quote: $quoteId. Notes: $revisionNotes');
       Get.snackbar("Success", "Revision request submitted.");
     } catch (e) {
@@ -138,38 +144,13 @@ extension CustomerActionsExtension on CustomerDashboardController {
     }
   }
 
-  // Payments Management
-  Future<void> payOffline({
-    required String bookingId,
-    required double amount,
-    required String method,
-    required String receiptUrl,
-  }) async {
+  Future<void> viewQuotation(String quoteId, String currentStatus) async {
     try {
-      isLoading.value = true;
-      final profile = rxProfile.value;
-      if (profile == null) return;
-
-      final payment = CustomerPayment(
-        id: '',
-        customerId: profile.id,
-        bookingId: bookingId,
-        amount: amount,
-        status: 'pending',
-        method: method,
-        receiptUrl: receiptUrl,
-        invoiceUrl: '',
-        paymentDate: DateTime.now(),
-      );
-
-      await _portalRepo.submitOfflinePayment(payment);
-      await logActivity('Payment', 'Submitted offline payment of ₹$amount via $method.');
-      Get.snackbar("Success", "Payment receipt uploaded. Admin review pending.");
-    } catch (e) {
-      Get.snackbar("Error", "Failed to upload payment receipt: $e");
-    } finally {
-      isLoading.value = false;
-    }
+      final status = QuotationStatus.fromString(currentStatus);
+      if (status == QuotationStatus.published || status == QuotationStatus.republished) {
+        await _quotationRepo.updateQuotationStatus(quoteId, 'viewed');
+      }
+    } catch (_) {}
   }
 
   // Wishlist Actions
@@ -197,32 +178,6 @@ extension CustomerActionsExtension on CustomerDashboardController {
       Get.snackbar("Removed", "Item removed from wishlist.");
     } catch (e) {
       Get.snackbar("Error", e.toString());
-    }
-  }
-
-  // Rebooking
-  Future<void> requestRebook(String bookingId, DateTime newDate) async {
-    try {
-      isLoading.value = true;
-      final profile = rxProfile.value;
-      if (profile == null) return;
-
-      final request = RebookRequest(
-        id: '',
-        customerId: profile.id,
-        previousBookingId: bookingId,
-        newDate: newDate,
-        status: 'Pending',
-        createdAt: DateTime.now(),
-      );
-
-      await _portalRepo.submitRebookRequest(request);
-      await logActivity('Rebook', 'Submitted a rebooking request for date: ${newDate.toLocal()}');
-      Get.snackbar("Success", "Rebooking request submitted.");
-    } catch (e) {
-      Get.snackbar("Error", e.toString());
-    } finally {
-      isLoading.value = false;
     }
   }
 

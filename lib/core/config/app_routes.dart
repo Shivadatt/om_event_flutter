@@ -19,14 +19,12 @@ import '../../presentation/screens/admin/profile_screen.dart';
 import '../../presentation/screens/docs/docs_screen.dart';
 import '../../presentation/bindings/catalog_binding.dart';
 import '../../presentation/bindings/admin_binding.dart';
-import '../../presentation/screens/admin/manage_bookings_screen.dart';
 import '../../presentation/screens/admin/business_details_screen.dart';
 import '../../presentation/bindings/business_details_binding.dart';
 import '../constants/app_routes.dart';
 import '../../presentation/screens/customer/auth/customer_auth_screen.dart';
 import '../../presentation/screens/customer/dashboard/customer_dashboard_screen.dart';
 import '../../presentation/screens/admin/customer_portal_admin_dashboard.dart';
-import '../../presentation/screens/admin/booking_calendar_screen.dart';
 import '../../presentation/screens/admin/admin_kpi_dashboard_screen.dart';
 export '../constants/app_routes.dart';
 
@@ -57,6 +55,7 @@ class AppRouter {
     GetPage(
       name: AppRoutes.customerDashboard,
       page: () => const CustomerDashboardScreen(),
+      binding: CatalogBinding(),
     ),
     GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
     GetPage(
@@ -74,11 +73,7 @@ class AppRouter {
       page: () => const AdminLayout(child: ManageQuotesScreen()),
       binding: AdminBinding(),
     ),
-    GetPage(
-      name: AppRoutes.manageBookings,
-      page: () => const AdminLayout(child: ManageBookingsScreen()),
-      binding: AdminBinding(),
-    ),
+
     GetPage(
       name: AppRoutes.manageExperiences,
       page: () => const AdminLayout(child: ManageExperiencesScreen()),
@@ -123,10 +118,7 @@ class AppRouter {
       name: AppRoutes.customerPortalAdmin,
       page: () => const AdminLayout(child: CustomerPortalAdminDashboard()),
     ),
-    GetPage(
-      name: AppRoutes.bookingCalendar,
-      page: () => const AdminLayout(child: BookingCalendarScreen()),
-    ),
+
     GetPage(
       name: AppRoutes.adminKpis,
       page: () => const AdminLayout(child: AdminKpiDashboardScreen()),

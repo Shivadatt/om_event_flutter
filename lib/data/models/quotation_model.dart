@@ -64,6 +64,18 @@ class QuotationModel extends Quotation {
     required List<QuotationItemModel> super.items,
     required super.createdAt,
     required super.updatedAt,
+    required super.customerId,
+    super.versionHistory = const [],
+    super.version = 1,
+    super.publishedAt,
+    super.publishedBy,
+    super.revisionReason,
+    super.revisionMessage,
+    super.adminMessage,
+    super.customerAction,
+    super.customerActionAt,
+    super.customerViewedAt,
+    super.lastPublishedAt,
   });
 
   factory QuotationModel.fromJson(
@@ -105,10 +117,22 @@ class QuotationModel extends Quotation {
           (json['grand_total'] ?? json['grandTotal'] as num?)?.toDouble() ??
           0.0,
       pdfUrl: json['pdf_url'] ?? json['pdfUrl'] ?? '',
-      status: json['status'] ?? 'draft',
+      status: QuotationStatus.fromString(json['status'] ?? 'draft'),
       items: itemsList,
       createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
       updatedAt: DateParser.parse(json['updated_at'] ?? json['updatedAt']),
+      customerId: json['customerId'] ?? json['customer_id'] ?? 'unmigrated_legacy_id',
+      versionHistory: List<String>.from(json['versionHistory'] ?? json['version_history'] ?? []),
+      version: json['version'] ?? 1,
+      publishedAt: json['publishedAt'] != null ? DateParser.parse(json['publishedAt']) : null,
+      publishedBy: json['publishedBy'],
+      revisionReason: json['revisionReason'],
+      revisionMessage: json['revisionMessage'],
+      adminMessage: json['adminMessage'],
+      customerAction: json['customerAction'],
+      customerActionAt: json['customerActionAt'] != null ? DateParser.parse(json['customerActionAt']) : null,
+      customerViewedAt: json['customerViewedAt'] != null ? DateParser.parse(json['customerViewedAt']) : null,
+      lastPublishedAt: json['lastPublishedAt'] != null ? DateParser.parse(json['lastPublishedAt']) : null,
     );
   }
 
@@ -129,10 +153,22 @@ class QuotationModel extends Quotation {
       'gst_amount': gstAmount,
       'grand_total': grandTotal,
       'pdf_url': pdfUrl,
-      'status': status,
+      'status': status.nameStr,
       'items': items.map((e) => (e as QuotationItemModel).toJson()).toList(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'customerId': customerId,
+      'versionHistory': versionHistory,
+      'version': version,
+      'publishedAt': publishedAt?.toIso8601String(),
+      'publishedBy': publishedBy,
+      'revisionReason': revisionReason,
+      'revisionMessage': revisionMessage,
+      'adminMessage': adminMessage,
+      'customerAction': customerAction,
+      'customerActionAt': customerActionAt?.toIso8601String(),
+      'customerViewedAt': customerViewedAt?.toIso8601String(),
+      'lastPublishedAt': lastPublishedAt?.toIso8601String(),
     };
   }
 }

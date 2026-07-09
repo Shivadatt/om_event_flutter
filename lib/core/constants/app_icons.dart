@@ -42,9 +42,7 @@ class AppIcons {
   static const IconData customer = Icons.people_outline_rounded;
   static const IconData lead = Icons.contact_phone_outlined;
   static const IconData quotation = Icons.receipt_long_outlined;
-  static const IconData booking = Icons.event_outlined;
   static const IconData review = Icons.star_outline_rounded;
-  static const IconData payment = Icons.payments_outlined;
   static const IconData phone = Icons.phone_outlined;
   static const IconData email = Icons.email_outlined;
   static const IconData location = Icons.location_on_outlined;

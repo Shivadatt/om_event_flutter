@@ -13,7 +13,7 @@ class AdminFilters extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF0D1915),
         border: Border.all(color: const Color(0x21FFFFFF), width: 1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Wrap(
         spacing: 16,

@@ -109,7 +109,7 @@ class RecentInquiriesWidget extends StatelessWidget {
                           color: _getStatusColor(
                             lead.status,
                           ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           lead.status.toUpperCase(),

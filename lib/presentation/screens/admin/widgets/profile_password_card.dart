@@ -253,7 +253,7 @@ class _ProfilePasswordCardState extends State<ProfilePasswordCard> {
                             i < filledCount
                                 ? _passwordStrengthColor
                                 : const Color(0xFF1E3028),
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   );

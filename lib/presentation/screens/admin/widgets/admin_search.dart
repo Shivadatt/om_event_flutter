@@ -1,58 +1,72 @@
 import 'package:flutter/material.dart';
 import '../../../../core/config/app_theme.dart';
 
-/// Reusable Admin Search bar widget.
+/// Custom search text input box styled with a premium glass surface and Champagne Gold accents.
 class AdminSearch extends StatelessWidget {
-  final String placeholder;
   final TextEditingController controller;
+  final String placeholder;
   final ValueChanged<String>? onChanged;
-  final VoidCallback? onClear;
+  final VoidCallback onClear;
 
   const AdminSearch({
     super.key,
-    required this.placeholder,
     required this.controller,
+    required this.placeholder,
     this.onChanged,
-    this.onClear,
+    required this.onClear,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final Color bgColor = isDark ? const Color(0x9E11141A) : const Color(0xB5FFFFFF);
+    final Color borderColor = isDark ? const Color(0x1AFFFFFF) : const Color(0x1F000000);
+    final Color textColor = isDark ? Colors.white : const Color(0xFF090A0D);
+    final Color hintColor = isDark ? const Color(0xFFAAB4AE) : const Color(0xFF6B7280);
+    final Color iconColor = const Color(0xFFDFBA73); // Champagne Gold
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1915),
-        border: Border.all(color: const Color(0x21FFFFFF), width: 1),
-        borderRadius: BorderRadius.circular(4),
+        color: bgColor,
+        border: Border.all(color: borderColor, width: 1),
+        borderRadius: BorderRadius.circular(12),
+        
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: AppTheme.sansBody(fontSize: 14, color: Colors.white),
+        style: AppTheme.sansBody(fontSize: 14, color: textColor),
         decoration: InputDecoration(
           hintText: placeholder,
           hintStyle: AppTheme.sansBody(
             fontSize: 14,
-            color: const Color(0xFFAAB4AE),
+            color: hintColor,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search_rounded,
             size: 20,
-            color: Color(0xFFC8A26A),
+            color: iconColor,
           ),
-          suffixIcon:
-              controller.text.isNotEmpty
-                  ? IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                    onPressed: onClear,
-                  )
-                  : null,
+          suffixIcon: controller.text.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: textColor.withValues(alpha: 0.6),
+                  ),
+                  onPressed: onClear,
+                )
+              : null,
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: iconColor, width: 1.5),
+          ),
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
+            horizontal: 16,
             vertical: 14,
           ),
         ),

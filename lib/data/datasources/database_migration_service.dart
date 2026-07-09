@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
+import '../../domain/entities/quotation.dart';
 import 'seeds/migration_seed.dart';
 
 class DatabaseMigrationService {
@@ -27,6 +28,7 @@ class DatabaseMigrationService {
     await correctDatabaseRelationships();
     await seedCategoriesOnly();
     await insertNewServices();
+    await migrateQuotationsCustomerId();
     await markMigrationCompleted();
   }
 
@@ -171,5 +173,118 @@ class DatabaseMigrationService {
       print("INSERT SERVICES ERROR: $e");
       rethrow;
     }
+  }
+
+  Future<Map<String, int>> migrateQuotationsCustomerId() async {
+    int scanned = 0;
+    int updated = 0;
+    int skipped = 0;
+    int failed = 0;
+
+    try {
+      final querySnapshot = await _firestore.collection(AppCollections.quotations).get();
+      final profilesSnapshot = await _firestore.collection(AppCollections.customerProfiles).get();
+      final profiles = profilesSnapshot.docs;
+
+      for (final doc in querySnapshot.docs) {
+        scanned++;
+        final data = doc.data();
+        final String? existingCustomerId = data['customerId'];
+        final String? legacyCustomerId = data['customer_id'];
+        final int? version = data['version'];
+        final String? currentStatus = data['status'];
+
+        final updateMap = <String, dynamic>{};
+
+        // 1. Resolve customerId if missing
+        if (existingCustomerId == null || existingCustomerId.trim().isEmpty || existingCustomerId == 'unmigrated_legacy_id') {
+          String? resolvedUid;
+          if (legacyCustomerId != null && legacyCustomerId.trim().isNotEmpty && legacyCustomerId != 'unmigrated_legacy_id') {
+            resolvedUid = legacyCustomerId;
+          } else {
+            final customerPhone = data['customer_phone'] ?? data['customerPhone'] ?? '';
+            final customerName = data['customer_name'] ?? data['customerName'] ?? '';
+
+            if (customerPhone.isNotEmpty) {
+              final normalizedPhone = customerPhone.replaceAll(RegExp(r'\D'), '');
+              final tenDigitPhone = normalizedPhone.length >= 10 
+                  ? normalizedPhone.substring(normalizedPhone.length - 10) 
+                  : normalizedPhone;
+
+              final phoneVariations = {
+                customerPhone,
+                normalizedPhone,
+                tenDigitPhone,
+                if (tenDigitPhone.length == 10) "+91$tenDigitPhone",
+                if (tenDigitPhone.length == 10) "91$tenDigitPhone",
+                if (tenDigitPhone.length == 10) "0$tenDigitPhone",
+              };
+
+              for (final profDoc in profiles) {
+                final profData = profDoc.data();
+                final profPhone = profData['phone'] ?? '';
+                if (profPhone.isNotEmpty) {
+                  final normalizedProfPhone = profPhone.replaceAll(RegExp(r'\D'), '');
+                  final tenDigitProfPhone = normalizedProfPhone.length >= 10 
+                      ? normalizedProfPhone.substring(normalizedProfPhone.length - 10) 
+                      : normalizedProfPhone;
+                  if (phoneVariations.contains(profPhone) || phoneVariations.contains(normalizedProfPhone) || phoneVariations.contains(tenDigitProfPhone)) {
+                    resolvedUid = profDoc.id;
+                    break;
+                  }
+                }
+              }
+            }
+
+            if (resolvedUid == null && customerName.isNotEmpty) {
+              for (final profDoc in profiles) {
+                final profData = profDoc.data();
+                final fullName = profData['full_name'] ?? profData['fullName'] ?? '';
+                if (fullName.toLowerCase() == customerName.toLowerCase()) {
+                  resolvedUid = profDoc.id;
+                  break;
+                }
+              }
+            }
+          }
+
+          if (resolvedUid != null && resolvedUid.isNotEmpty) {
+            updateMap['customerId'] = resolvedUid;
+          } else {
+            updateMap['customerId'] = 'unmigrated_legacy_id';
+          }
+        }
+
+        // 2. Map legacy statuses for backward compatibility
+        if (currentStatus == 'pending') {
+          updateMap['status'] = QuotationStatus.published.nameStr;
+        } else if (currentStatus == 'declinedByClient') {
+          updateMap['status'] = QuotationStatus.rejectedByClient.nameStr;
+        }
+
+        // 3. Populate default version
+        if (version == null) {
+          updateMap['version'] = 1;
+        }
+
+        if (updateMap.isNotEmpty) {
+          await _firestore.collection(AppCollections.quotations).doc(doc.id).update(updateMap);
+          updated++;
+        } else {
+          skipped++;
+        }
+      }
+
+      print("DATABASE MIGRATION SUMMARY: Scanned: $scanned, Updated: $updated, Skipped: $skipped, Failed: $failed");
+    } catch (e) {
+      print("DATABASE MIGRATION ERROR: $e");
+    }
+
+    return {
+      'scanned': scanned,
+      'updated': updated,
+      'skipped': skipped,
+      'failed': failed,
+    };
   }
 }

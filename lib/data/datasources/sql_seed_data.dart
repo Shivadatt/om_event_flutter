@@ -2,8 +2,7 @@ import 'seeds/category_seed.dart';
 import 'seeds/items_seed.dart';
 import 'seeds/review_seed.dart';
 import 'seeds/settings_seed.dart';
-import 'seeds/booking_seed.dart';
-import 'seeds/payment_seed.dart';
+import 'seeds/quotation_seed.dart';
 
 /// Legacy Seed Data gateway forwarding queries to modular, domain-specific seed files.
 class SqlSeedData {
@@ -27,14 +26,11 @@ class SqlSeedData {
   static List<Map<String, dynamic>> get leads => SettingsSeed.leads;
 
   /// Event proposals and quotations.
-  static List<Map<String, dynamic>> get quotations => PaymentSeed.quotations;
+  static List<Map<String, dynamic>> get quotations => QuotationSeed.quotations;
 
   /// Quotation line item details.
   static List<Map<String, dynamic>> get quotationItems =>
-      PaymentSeed.quotationItems;
-
-  /// Studio venue bookings.
-  static List<Map<String, dynamic>> get bookings => BookingSeed.bookings;
+      QuotationSeed.quotationItems;
 
   /// Published review list.
   static List<Map<String, dynamic>> get reviews => ReviewSeed.reviews;

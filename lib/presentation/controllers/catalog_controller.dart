@@ -181,6 +181,9 @@ class CatalogController extends GetxController {
   Future<void> _checkAndRunMigration() async {
     try {
       final migrationService = DatabaseMigrationService();
+      // Execute mandatory customerId migration on startup to reconcile legacy quotation documents
+      await migrationService.migrateQuotationsCustomerId();
+
       final isDone = await migrationService.isMigrationCompleted();
       if (!isDone) {
         print("DATABASE NOT SEEDED. Please run migration from Admin Seeder Screen.");

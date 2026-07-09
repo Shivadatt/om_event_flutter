@@ -10,7 +10,7 @@ import '../../../../core/widgets/custom_input.dart';
 import '../../../controllers/catalog_controller.dart';
 import '../../../controllers/quotation_controller.dart';
 
-part 'parts/booking_dialogs.dart';
+part 'parts/inquiry_dialogs.dart';
 part 'parts/billing_dialogs.dart';
 
 /// Helper class for launching Customer portal interactive dialog sheets and modals.
@@ -18,11 +18,11 @@ class CustomerDialogHelper {
   CustomerDialogHelper._();
 
   static void openLeadDialog(BuildContext context) {
-    CustomerBookingDialogs.openLeadDialog(context);
+    CustomerInquiryDialogs.openLeadDialog(context);
   }
 
   static void openQuoteDialog(BuildContext context, QuotationController quoteController) {
-    CustomerBookingDialogs.openQuoteDialog(context, quoteController);
+    CustomerInquiryDialogs.openQuoteDialog(context, quoteController);
   }
 
   static Future<void> launchWhatsApp(BuildContext context) async {

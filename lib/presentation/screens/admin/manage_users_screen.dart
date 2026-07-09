@@ -1,39 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../data/models/user_model.dart';
 import 'widgets/admin_back_button.dart';
+import 'widgets/admin_layout.dart';
 
 class ManageUsersScreen extends GetView<AdminController> {
   const ManageUsersScreen({super.key});
+
+  int _getCrossAxisCount(double width) {
+    if (width > 1100) return 3; // Desktop
+    if (width > 700) return 2;  // Laptop/Tablet
+    return 1;                   // Mobile
+  }
+
+  double _getChildAspectRatio(int crossAxisCount, double width) {
+    final double cardWidth = (width - 64 - (crossAxisCount - 1) * 24) / crossAxisCount;
+    return cardWidth / 195; // Aspect ratio for team cards
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final Color primaryAccent = AppColors.primaryAccent;
+    final Color cardColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
+    final Color borderColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+    final Color textColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final Color subtitleColor = isDark ? AppColors.darkMuted : AppColors.lightMuted;
+
+    final bool isInsideDrawer = AdminLayoutScope.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        leading: const AdminBackButton(),
+        leading: isInsideDrawer ? null : const AdminBackButton(),
+        automaticallyImplyLeading: !isInsideDrawer,
         title: Text(
-          "MANAGE USERS",
+          "STUDIO TEAM",
           style: AppTheme.sansBody(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
-            color: Colors.white,
+            color: textColor,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_moderator),
+            icon: Icon(Icons.add_moderator_rounded, size: 24, color: primaryAccent),
             onPressed: () => _showAddUserDialog(context),
           ),
+          const SizedBox(width: 12),
         ],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
+      backgroundColor: Colors.transparent,
       body: Obx(() {
         if (controller.isLoadingUsers.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator(color: AppColors.primaryAccent));
         }
 
         final users = controller.rxUsers;
@@ -41,133 +67,181 @@ class ManageUsersScreen extends GetView<AdminController> {
           return const Center(child: Text("No user profiles found."));
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(18),
-          itemCount: users.length,
-          itemBuilder: (context, index) {
-            final user = users[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 14),
-              color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(2),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = _getCrossAxisCount(constraints.maxWidth);
+            final aspect = _getChildAspectRatio(crossAxisCount, constraints.maxWidth);
+
+            return GridView.builder(
+              padding: const EdgeInsets.all(32),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 24,
+                mainAxisSpacing: 24,
+                childAspectRatio: aspect > 0 ? aspect : 1.5,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor:
-                          user.role == 'admin'
-                              ? const Color(0xFFC9A77E)
-                              : Colors.grey.shade800,
-                      child: Text(
-                        user.name.isNotEmpty
-                            ? user.name.substring(0, 1).toUpperCase()
-                            : 'U',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+              itemCount: users.length,
+              itemBuilder: (context, index) {
+                final user = users[index];
+                
+                // Color badges based on roles
+                Color roleColor = AppColors.secondaryAccent;
+                if (user.role == 'admin') roleColor = AppColors.primaryAccent;
+                if (user.role == 'staff') roleColor = AppColors.highlight;
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: borderColor, width: 1.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.name,
-                            style: AppTheme.serifHeader(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            user.email,
-                            style: AppTheme.sansBody(
-                              fontSize: 11,
-                              color:
-                                  isDark
-                                      ? AppTheme.darkMuted
-                                      : AppTheme.lightMuted,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  user.role == 'admin'
-                                      ? Colors.redAccent.withValues(alpha: 0.2)
-                                      : Colors.blue.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              user.role.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    user.role == 'admin'
-                                        ? Colors.redAccent
-                                        : Colors.blue,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.all(22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            const Text(
-                              "Active",
-                              style: TextStyle(fontSize: 10),
+                            // Avatar
+                            CircleAvatar(
+                              backgroundColor: roleColor.withValues(alpha: 0.1),
+                              radius: 22,
+                              child: Text(
+                                user.name.isNotEmpty
+                                    ? user.name.substring(0, 1).toUpperCase()
+                                    : 'U',
+                                style: AppTheme.serifHeader(
+                                  color: roleColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
-                            Switch(
-                              value: user.isActive,
-                              onChanged: (val) {
-                                final updated = UserModel(
-                                  id: user.id,
-                                  name: user.name,
-                                  email: user.email,
-                                  role: user.role,
-                                  isActive: val,
-                                  createdAt: user.createdAt,
-                                );
-                                controller.saveUser(updated, isEdit: true);
-                              },
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.name,
+                                    style: AppTheme.serifHeader(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    user.email,
+                                    style: AppTheme.sansBody(
+                                      fontSize: 11,
+                                      color: subtitleColor,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Role Badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: roleColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: roleColor.withValues(alpha: 0.35)),
+                              ),
+                              child: Text(
+                                user.role.toUpperCase(),
+                                style: AppTheme.sansBody(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: roleColor,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            // Active status switch
+                            Row(
+                              children: [
+                                Text(
+                                  "Active",
+                                  style: AppTheme.sansBody(
+                                    fontSize: 11,
+                                    color: subtitleColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                SizedBox(
+                                  height: 20,
+                                  width: 32,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Switch(
+                                      value: user.isActive,
+                                      activeColor: AppColors.success,
+                                      onChanged: (val) {
+                                        final updated = UserModel(
+                                          id: user.id,
+                                          name: user.name,
+                                          email: user.email,
+                                          role: user.role,
+                                          isActive: val,
+                                          createdAt: user.createdAt,
+                                        );
+                                        controller.saveUser(updated, isEdit: true);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              onPressed:
-                                  () => _showEditUserDialog(context, user),
+                              icon: Icon(Icons.edit_note_rounded, size: 20, color: textColor),
+                              onPressed: () => _showEditUserDialog(context, user),
+                              tooltip: "Edit Team Member",
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                             ),
+                            const SizedBox(width: 14),
                             IconButton(
                               icon: const Icon(
-                                Icons.delete_outline,
-                                size: 18,
-                                color: Colors.redAccent,
+                                Icons.delete_sweep_outlined,
+                                size: 20,
+                                color: AppColors.error,
                               ),
                               onPressed: () => _confirmDelete(user.id),
+                              tooltip: "Delete Team Member",
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -185,7 +259,7 @@ class ManageUsersScreen extends GetView<AdminController> {
         actions: [
           TextButton(child: const Text("Cancel"), onPressed: () => Get.back()),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text("Delete"),
             onPressed: () {
               Get.back();
@@ -241,6 +315,7 @@ class ManageUsersScreen extends GetView<AdminController> {
                 onPressed: () => Get.back(),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryAccent),
                 child: const Text("Save"),
                 onPressed: () {
                   final updated = UserModel(
@@ -320,6 +395,7 @@ class ManageUsersScreen extends GetView<AdminController> {
                 onPressed: () => Get.back(),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryAccent),
                 child: const Text("Create"),
                 onPressed: () {
                   if (uidCtrl.text.isEmpty ||

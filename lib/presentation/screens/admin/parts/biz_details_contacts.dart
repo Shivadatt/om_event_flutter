@@ -140,7 +140,7 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xFFC9A77E),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Text(
                               "Primary",

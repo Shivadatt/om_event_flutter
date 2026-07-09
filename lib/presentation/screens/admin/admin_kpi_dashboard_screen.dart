@@ -54,16 +54,12 @@ class _AdminKpiDashboardScreenState extends State<AdminKpiDashboardScreen> {
               children: [
                 Expanded(child: _buildKpiCard("Today's Revenue", "₹1,25,000", Icons.monetization_on, Colors.green)),
                 const SizedBox(width: 16),
-                Expanded(child: _buildKpiCard("Today's Bookings", "4", Icons.event_available, const Color(0xFFC9A77E))),
-                const SizedBox(width: 16),
                 Expanded(child: _buildKpiCard("Today's Leads", "12", Icons.assignment_outlined, Colors.orange)),
               ],
             ),
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _buildKpiCard("Pending Payments", "3", Icons.receipt_long, Colors.redAccent)),
-                const SizedBox(width: 16),
                 Expanded(child: _buildKpiCard("Pending Quotes", "8", Icons.description_outlined, Colors.blue)),
                 const SizedBox(width: 16),
                 Expanded(child: _buildKpiCard("Pending Reviews", "6", Icons.rate_review_outlined, Colors.purple)),
@@ -156,7 +152,7 @@ class _AdminKpiDashboardScreenState extends State<AdminKpiDashboardScreen> {
           height: height,
           decoration: BoxDecoration(
             color: const Color(0xFFC9A77E),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
         const SizedBox(height: 8),

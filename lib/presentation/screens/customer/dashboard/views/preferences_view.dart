@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../../core/constants/app_collections.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
@@ -118,8 +119,8 @@ class _PreferencesViewState extends State<PreferencesView> {
         "Preferences Saved",
         "Your notification channel configurations have been updated.",
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF12271F),
-        colorText: const Color(0xFFC9A77E),
+        backgroundColor: const Color(0xFF171411),
+        colorText: const Color(0xFFD4AF37),
       );
     } catch (e) {
       Get.snackbar("Error", "Failed to save: $e");
@@ -131,71 +132,88 @@ class _PreferencesViewState extends State<PreferencesView> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFC9A77E)));
+      return const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)));
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Notification Preferences", style: AppTheme.serifHeader(fontSize: 24)),
-          const SizedBox(height: 8),
-          Text("Granular control over delivery channels, transactional alerts, and quiet hours.", style: AppTheme.sansBody(fontSize: 13, color: Colors.white54)),
-          const SizedBox(height: 24),
-
-          // 1. Channel Controls
-          _buildCard(
-            title: "DELIVERY CHANNELS TABS",
+          // Header
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SwitchListTile(
-                title: const Text("Push Notifications", style: TextStyle(color: Colors.white, fontSize: 13)),
-                subtitle: const Text("Receive direct device and browser alerts", style: TextStyle(color: Colors.white54, fontSize: 11)),
+              Text(
+                "COMMUNICATION KEYS",
+                style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.5),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Notification Preferences",
+                style: GoogleFonts.italiana(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          // 1. Channel Controls Card
+          _buildCard(
+            title: "DELIVERY CHANNELS & FEEDS",
+            children: [
+              _buildSwitchListTile(
+                title: "Push Notifications",
+                subtitle: "Receive direct device and browser alerts",
                 value: pushEnabled,
-                activeColor: const Color(0xFFC9A77E),
                 onChanged: (val) => setState(() => pushEnabled = val),
               ),
-              SwitchListTile(
-                title: const Text("Email Messages", style: TextStyle(color: Colors.white, fontSize: 13)),
-                subtitle: const Text("Receive custom HTML proposals and receipt copies", style: TextStyle(color: Colors.white54, fontSize: 11)),
+              _buildSwitchListTile(
+                title: "Email Messages",
+                subtitle: "Receive custom HTML proposals and contract details",
                 value: emailEnabled,
-                activeColor: const Color(0xFFC9A77E),
                 onChanged: (val) => setState(() => emailEnabled = val),
               ),
-              SwitchListTile(
-                title: const Text("WhatsApp Alerts", style: TextStyle(color: Colors.white, fontSize: 13)),
-                subtitle: const Text("Receive official Meta template updates to your registered phone", style: TextStyle(color: Colors.white54, fontSize: 11)),
+              _buildSwitchListTile(
+                title: "WhatsApp Alerts",
+                subtitle: "Receive Meta template updates to your registered phone",
                 value: whatsappEnabled,
-                activeColor: const Color(0xFFC9A77E),
                 onChanged: (val) => setState(() => whatsappEnabled = val),
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          // 2. Quiet Hours (DND) Panel
+          // 2. Quiet Hours Card
           _buildCard(
             title: "QUIET HOURS (DO NOT DISTURB)",
             children: [
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text("Enable Quiet Hours (DND)", style: TextStyle(color: Colors.white, fontSize: 13)),
-                subtitle: const Text("Queue low-priority alerts during quiet hours", style: TextStyle(color: Colors.white54, fontSize: 11)),
+              _buildSwitchListTile(
+                title: "Enable Quiet Hours (DND)",
+                subtitle: "Queue low-priority alerts during quiet hours",
                 value: dndEnabled,
-                activeColor: const Color(0xFFC9A77E),
                 onChanged: (val) => setState(() => dndEnabled = val),
               ),
               if (dndEnabled) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        dropdownColor: const Color(0xFF12271F),
+                        dropdownColor: const Color(0xFF171411),
                         value: quietHoursStart,
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
                           labelText: "DND Quiet Hours Start",
-                          labelStyle: TextStyle(color: Color(0xFFC9A77E), fontSize: 11),
+                          labelStyle: const TextStyle(color: Color(0xFFD4AF37), fontSize: 11),
+                          filled: true,
+                          fillColor: Colors.black26,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                         ),
                         items: const [
                           DropdownMenuItem(value: '20:00', child: Text("8:00 PM")),
@@ -211,11 +229,15 @@ class _PreferencesViewState extends State<PreferencesView> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        dropdownColor: const Color(0xFF12271F),
+                        dropdownColor: const Color(0xFF171411),
                         value: quietHoursEnd,
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
                           labelText: "DND Quiet Hours End",
-                          labelStyle: TextStyle(color: Color(0xFFC9A77E), fontSize: 11),
+                          labelStyle: const TextStyle(color: Color(0xFFD4AF37), fontSize: 11),
+                          filled: true,
+                          fillColor: Colors.black26,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                         ),
                         items: const [
                           DropdownMenuItem(value: '06:00', child: Text("6:00 AM")),
@@ -230,44 +252,46 @@ class _PreferencesViewState extends State<PreferencesView> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
               ],
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text("Receive Daily Digest Summaries", style: TextStyle(color: Colors.white, fontSize: 13)),
-                subtitle: const Text("Batch low-priority inquiries into a single daily briefing", style: TextStyle(color: Colors.white54, fontSize: 11)),
+              _buildSwitchListTile(
+                title: "Receive Daily Digest Summaries",
+                subtitle: "Batch low-priority inquiries into a single daily briefing",
                 value: dailyDigestEnabled,
-                activeColor: const Color(0xFFC9A77E),
                 onChanged: (val) => setState(() => dailyDigestEnabled = val),
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          // 3. Event Toggles
+          // 3. Event Toggles Card
           _buildCard(
-            title: "CRM TRANSACTION EVENTS",
+            title: "TRANSACTION ALERTS & CATEGORIES",
             children: [
-              _buildCheckboxTile("Booking Status Updates", bookingEnabled, (val) => setState(() => bookingEnabled = val!)),
-              _buildCheckboxTile("Payment Verifications", paymentEnabled, (val) => setState(() => paymentEnabled = val!)),
-              _buildCheckboxTile("Quotation Proposal Toggles", quotationEnabled, (val) => setState(() => quotationEnabled = val!)),
-              _buildCheckboxTile("Support Ticket Reply Notifications", supportEnabled, (val) => setState(() => supportEnabled = val!)),
-              _buildCheckboxTile("Review Requests", reviewEnabled, (val) => setState(() => reviewEnabled = val!)),
-              _buildCheckboxTile("Dynamic Booking Reminders", reminderEnabled, (val) => setState(() => reminderEnabled = val!)),
-              _buildCheckboxTile("Exclusive Offers & Promos", offerEnabled, (val) => setState(() => offerEnabled = val!)),
-              _buildCheckboxTile("Marketing Campaigns", marketingEnabled, (val) => setState(() => marketingEnabled = val!)),
-              _buildCheckboxTile("Newsletter Digests", newsletterEnabled, (val) => setState(() => newsletterEnabled = val!)),
+              _buildCheckboxTile("Quotation Proposal Updates", quotationEnabled, (val) => setState(() => quotationEnabled = val!)),
+              _buildCheckboxTile("Support Ticket Replies", supportEnabled, (val) => setState(() => supportEnabled = val!)),
+              _buildCheckboxTile("Design Review Requests", reviewEnabled, (val) => setState(() => reviewEnabled = val!)),
+              _buildCheckboxTile("Exclusive Campaigns & Promos", offerEnabled, (val) => setState(() => offerEnabled = val!)),
+              _buildCheckboxTile("Studio Newsletters", newsletterEnabled, (val) => setState(() => newsletterEnabled = val!)),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
 
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFC9A77E),
-              foregroundColor: const Color(0xFF091210),
-              minimumSize: const Size(200, 50),
+          // Submit Button
+          Center(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.check_circle_outline, size: 16),
+              label: const Text("SAVE NOTIFICATION SETTINGS"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD4AF37),
+                foregroundColor: const Color(0xFF091210),
+                minimumSize: const Size(280, 52),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                textStyle: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                elevation: 4,
+              ),
+              onPressed: _savePreferences,
             ),
-            onPressed: _savePreferences,
-            child: const Text("Save Preferences"),
           ),
         ],
       ),
@@ -276,31 +300,49 @@ class _PreferencesViewState extends State<PreferencesView> {
 
   Widget _buildCard({required String title, required List<Widget> children}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: const Color(0xFF12271F),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withAlpha(13)),
+        color: const Color(0xFF171411),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0x1AD4AF37)),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC9A77E), letterSpacing: 1.5)),
-          const SizedBox(height: 16),
+          Text(title, style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.5)),
+          const SizedBox(height: 20),
           ...children,
         ],
       ),
     );
   }
 
-  Widget _buildCheckboxTile(String label, bool value, ValueChanged<bool?> onChanged) {
-    return CheckboxListTile(
-      title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
-      value: value,
-      activeColor: const Color(0xFFC9A77E),
-      checkColor: const Color(0xFF091210),
+  Widget _buildSwitchListTile({required String title, required String subtitle, required bool value, required ValueChanged<bool> onChanged}) {
+    return SwitchListTile(
       contentPadding: EdgeInsets.zero,
+      title: Text(title, style: AppTheme.sansBody(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70)),
+      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white30, fontSize: 11)),
+      value: value,
+      activeColor: const Color(0xFFD4AF37),
+      activeTrackColor: const Color(0xFF3A2B18),
+      inactiveThumbColor: Colors.grey,
+      inactiveTrackColor: Colors.white12,
       onChanged: onChanged,
+    );
+  }
+
+  Widget _buildCheckboxTile(String label, bool value, ValueChanged<bool?> onChanged) {
+    return Theme(
+      data: ThemeData(unselectedWidgetColor: const Color(0x33D4AF37)),
+      child: CheckboxListTile(
+        title: Text(label, style: AppTheme.sansBody(fontSize: 13, color: Colors.white70)),
+        value: value,
+        activeColor: const Color(0xFFD4AF37),
+        checkColor: const Color(0xFF091210),
+        contentPadding: EdgeInsets.zero,
+        onChanged: onChanged,
+      ),
     );
   }
 }

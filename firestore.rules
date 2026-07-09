@@ -49,12 +49,20 @@ service cloud.firestore {
       allow read, update, delete: if isAdminOrStaff();
     }
 
-    // Quotations: Reading a specific quote is public via publicId (for client proposals)
-    // Writing new quotes is public, updating/deleting requires staff access
+    // Quotations: Access control and client field validation rules
     match /quotations/{quotationId} {
       allow create: if true;
-      allow read: if true; // Allow client view of their proposal PDF link
-      allow update, delete: if isAdminOrStaff();
+      allow read: if isAdminOrStaff() || (isAuthenticated() && resource.data.customerId == request.auth.uid);
+      allow update: if isAdminOrStaff() || (
+        isAuthenticated() && 
+        resource.data.customerId == request.auth.uid && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'updated_at', 'updatedAt', 
+          'customerAction', 'customerActionAt', 'customerViewedAt', 
+          'revisionReason', 'revisionMessage'
+        ])
+      );
+      allow delete: if isAdminOrStaff();
     }
 
     // Bookings & Payments: Access restricted entirely to logged-in admin/staff members

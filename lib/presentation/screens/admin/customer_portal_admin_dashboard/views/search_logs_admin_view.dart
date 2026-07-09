@@ -46,10 +46,6 @@ class _SearchLogsAdminViewState extends State<SearchLogsAdminView> {
               final matchingQuotes = widget.portalController.rxAllQuotes
                   .where((q) => q.quotationNumber.toLowerCase().contains(globalSearchQuery))
                   .toList();
-              final matchingPayments = widget.portalController.rxAllPayments
-                  .where((p) => p.method.toLowerCase().contains(globalSearchQuery) || p.status.toLowerCase().contains(globalSearchQuery))
-                  .toList();
-
               return ListView(
                 children: [
                   if (matchingQuotes.isNotEmpty) ...[
@@ -59,17 +55,6 @@ class _SearchLogsAdminViewState extends State<SearchLogsAdminView> {
                       leading: const Icon(Icons.description, color: Colors.white70),
                       title: Text(q.quotationNumber),
                       subtitle: Text("Amount: ₹${q.amount} | Status: ${q.status}"),
-                    )),
-                    const SizedBox(height: 24),
-                  ],
-
-                  if (matchingPayments.isNotEmpty) ...[
-                    const Text("Matching Payments", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFC9A77E))),
-                    const SizedBox(height: 8),
-                    ...matchingPayments.map((p) => ListTile(
-                      leading: const Icon(Icons.payment, color: Colors.white70),
-                      title: Text("Amount: ₹${p.amount} via ${p.method}"),
-                      subtitle: Text("Status: ${p.status}"),
                     )),
                     const SizedBox(height: 24),
                   ],

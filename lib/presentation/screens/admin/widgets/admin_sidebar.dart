@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/config/app_routes.dart';
 import '../../../../core/config/app_theme.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../domain/entities/admin_role.dart';
 import '../../../controllers/auth_controller.dart';
 import 'admin_sidebar_item.dart';
@@ -38,31 +39,40 @@ class AdminSidebar extends StatelessWidget {
     final isSuper = currentAdmin?.roleType == 'super_admin';
     final currentRoute = Get.currentRoute;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     Widget content = Column(
       children: [
         if (!isCollapsed) Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           alignment: Alignment.centerLeft,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: Color(0xFF254235), width: 1),
+              bottom: BorderSide(
+                color: isDark ? AppColors.darkLine : AppColors.lightLine,
+                width: 1,
+              ),
             ),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF162822),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFFC8A26A), width: 1),
+                  color: isDark ? AppColors.darkForestSecondary : AppColors.lightForestSecondary,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.primaryAccent.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
                 ),
-                child: Text(
+                child: const Text(
                   "OE",
-                  style: AppTheme.serifHeader(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFC8A26A),
+                    color: AppColors.primaryAccent,
+                    fontFamily: 'serif',
                   ),
                 ),
               ),
@@ -74,7 +84,7 @@ class AdminSidebar extends StatelessWidget {
                     "OM EVENTS",
                     style: AppTheme.sansBody(
                       fontSize: 12,
-                      color: const Color(0xFFF4F4F4),
+                      color: isDark ? AppColors.darkInk : AppColors.lightInk,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.5,
                     ),
@@ -83,7 +93,7 @@ class AdminSidebar extends StatelessWidget {
                     "STUDIO ADMIN",
                     style: AppTheme.sansBody(
                       fontSize: 9,
-                      color: const Color(0xFFA4A9A7),
+                      color: isDark ? AppColors.darkMuted : AppColors.lightMuted,
                       letterSpacing: 1,
                     ),
                   ),
@@ -94,7 +104,7 @@ class AdminSidebar extends StatelessWidget {
         ),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 14),
             children: [
               AdminSidebarItem(
                 icon: Icons.dashboard_outlined,
@@ -149,15 +159,6 @@ class AdminSidebar extends StatelessWidget {
                 onTap: () => _navigate(AppRoutes.manageQuotes),
                 ),
               if (isSuper ||
-                  (currentAdmin?.permissions['can_manage_quotes'] ?? false))
-                AdminSidebarItem(
-                  icon: Icons.bookmark_outline,
-                  label: "Bookings",
-                  isActive: currentRoute == AppRoutes.manageBookings,
-                  isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.manageBookings),
-                ),
-              if (isSuper ||
                   (currentAdmin?.permissions['can_manage_users'] ?? false))
                 AdminSidebarItem(
                   icon: Icons.admin_panel_settings_outlined,
@@ -180,22 +181,25 @@ class AdminSidebar extends StatelessWidget {
                   label: "Business Details",
                   isActive: currentRoute == AppRoutes.businessDetails,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.businessDetails),
+                  onTap: () => _navigate(AppRoutes.businessDetails),
                 ),
                 AdminSidebarItem(
                   icon: Icons.settings_outlined,
                   label: "Settings",
                   isActive: currentRoute == AppRoutes.systemSettings,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.systemSettings),
+                  onTap: () => _navigate(AppRoutes.systemSettings),
                 ),
               ],
-              const Divider(color: Color(0xFF254235), height: 32),
+              Divider(
+                color: isDark ? AppColors.darkLine : AppColors.lightLine,
+                height: 32,
+              ),
               AdminSidebarItem(
                 icon: Icons.logout_outlined,
                 label: "Logout",
                 isCollapsed: isCollapsed,
-                onTap: () => authController.logout(),
+                onTap: () => _showLogoutDialog(context, authController),
               ),
             ],
           ),
@@ -205,10 +209,79 @@ class AdminSidebar extends StatelessWidget {
 
     if (isMobileDrawer) {
       return Drawer(
-        child: Container(color: const Color(0xFF0D1915), child: content),
+        child: Container(
+          color: isDark ? AppColors.darkCream : AppColors.lightCream,
+          child: content,
+        ),
       );
     }
 
     return content;
+  }
+
+  void _showLogoutDialog(BuildContext context, AuthController authController) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF141A18) : const Color(0xFFFBF9F4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: const Color(0xFFC9A77E).withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+        ),
+        title: Text(
+          "LOG OUT",
+          style: AppTheme.serifHeader(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
+            letterSpacing: 1.5,
+          ),
+        ),
+        content: Text(
+          "Are you sure you want to log out of OM Events CMS?",
+          style: AppTheme.sansBody(
+            fontSize: 14,
+            color: isDark ? Colors.white70 : Colors.black87,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              "CANCEL",
+              style: AppTheme.sansBody(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC9A77E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            onPressed: () {
+              Get.back();
+              authController.logout();
+            },
+            child: Text(
+              "CONFIRM",
+              style: AppTheme.sansBody(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF091210),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

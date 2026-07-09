@@ -68,9 +68,10 @@ class CatalogBinding extends Bindings {
         getExperiences: Get.find<GetExperiences>(),
         submitLead: Get.find<SubmitLead>(),
       ),
+      fenix: true,
     );
 
-    Get.lazyPut<CartController>(() => CartController(Get.find()));
+    Get.lazyPut<CartController>(() => CartController(Get.find()), fenix: true);
 
     Get.lazyPut<QuotationController>(
       () => QuotationController(
@@ -78,6 +79,7 @@ class CatalogBinding extends Bindings {
         quotationRepository: Get.find<QuotationRepository>(),
         cartController: Get.find<CartController>(),
       ),
+      fenix: true,
     );
   }
 }

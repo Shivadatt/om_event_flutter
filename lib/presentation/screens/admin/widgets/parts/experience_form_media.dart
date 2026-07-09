@@ -2,16 +2,23 @@ part of '../experience_form_dialog.dart';
 
 extension _ExperienceFormMedia on _ExperienceFormDialogState {
   Widget _buildMediaUploads(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color primaryAccent = AppColors.primaryAccent;
+    final Color textColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final Color inputFillColor = isDark ? const Color(0xFF1A1715) : const Color(0xFFFAF8F5);
+    final Color borderColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 16),
         Text(
-          "Experience Image Preview",
+          "DISPLAY IMAGE PREVIEW",
           style: AppTheme.sansBody(
-            fontSize: 11,
+            fontSize: 9,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
+            color: primaryAccent,
+            letterSpacing: 1.0,
           ),
         ),
         const SizedBox(height: 8),
@@ -22,30 +29,30 @@ extension _ExperienceFormMedia on _ExperienceFormDialogState {
             child: Container(
               height: 160,
               decoration: BoxDecoration(
-                color: Colors.grey.shade900,
-                borderRadius: BorderRadius.circular(4),
+                color: inputFillColor,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.grey.shade800,
-                  width: 1,
+                  color: borderColor,
+                  width: 1.2,
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(16),
                 child: isUploadingImage
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(
+                            const CircularProgressIndicator(
                               strokeWidth: 2,
                               color: Color(0xFFC79B61),
                             ),
-                            SizedBox(height: 12),
+                            const SizedBox(height: 12),
                             Text(
                               "Uploading image to Supabase...",
-                              style: TextStyle(
+                              style: AppTheme.sansBody(
                                 fontSize: 11,
-                                color: Colors.grey,
+                                color: textColor.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -73,19 +80,19 @@ extension _ExperienceFormMedia on _ExperienceFormDialogState {
                               Container(
                                 color: Colors.black45,
                               ),
-                              const Center(
+                              Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.cloud_upload_outlined,
                                       color: Colors.white,
                                       size: 32,
                                     ),
-                                    SizedBox(height: 8),
+                                    const SizedBox(height: 8),
                                     Text(
                                       "Click to Change Image",
-                                      style: TextStyle(
+                                      style: AppTheme.sansBody(
                                         color: Colors.white,
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
@@ -96,29 +103,29 @@ extension _ExperienceFormMedia on _ExperienceFormDialogState {
                               ),
                             ],
                           )
-                        : const Center(
+                        : Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.cloud_upload_outlined,
-                                  color: Colors.grey,
+                                  color: primaryAccent.withValues(alpha: 0.4),
                                   size: 36,
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
-                                  "Click to Upload Experience Image",
-                                  style: TextStyle(
-                                    color: Colors.grey,
+                                  "Upload Experience Image",
+                                  style: AppTheme.sansBody(
+                                    color: textColor,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   "(Saves to Supabase gallery/images)",
-                                  style: TextStyle(
-                                    color: Colors.grey,
+                                  style: AppTheme.sansBody(
+                                    color: textColor.withValues(alpha: 0.5),
                                     fontSize: 10,
                                   ),
                                 ),
@@ -129,13 +136,14 @@ extension _ExperienceFormMedia on _ExperienceFormDialogState {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         Text(
-          "Experience Video Preview",
+          "CINEMATIC VIDEO SHOWCASE",
           style: AppTheme.sansBody(
-            fontSize: 11,
+            fontSize: 9,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
+            color: primaryAccent,
+            letterSpacing: 1.0,
           ),
         ),
         const SizedBox(height: 8),
@@ -146,30 +154,30 @@ extension _ExperienceFormMedia on _ExperienceFormDialogState {
             child: Container(
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.grey.shade900,
-                borderRadius: BorderRadius.circular(4),
+                color: inputFillColor,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.grey.shade800,
-                  width: 1,
+                  color: borderColor,
+                  width: 1.2,
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(16),
                 child: isUploadingVideo
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(
+                            const CircularProgressIndicator(
                               strokeWidth: 2,
                               color: Color(0xFFC79B61),
                             ),
-                            SizedBox(height: 12),
+                            const SizedBox(height: 12),
                             Text(
                               "Uploading video to Supabase...",
-                              style: TextStyle(
+                              style: AppTheme.sansBody(
                                 fontSize: 11,
-                                color: Colors.grey,
+                                color: textColor.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -196,17 +204,17 @@ extension _ExperienceFormMedia on _ExperienceFormDialogState {
                                       vidCtrl.text.split('/').last,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: AppTheme.sansBody(
                                         color: Colors.white,
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    const Text(
+                                    Text(
                                       "Click to Change Video",
-                                      style: TextStyle(
-                                        color: Colors.grey,
+                                      style: AppTheme.sansBody(
+                                        color: textColor.withValues(alpha: 0.5),
                                         fontSize: 10,
                                       ),
                                     ),
@@ -215,29 +223,29 @@ extension _ExperienceFormMedia on _ExperienceFormDialogState {
                               ),
                             ],
                           )
-                        : const Center(
+                        : Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.video_call_outlined,
-                                  color: Colors.grey,
+                                  color: primaryAccent.withValues(alpha: 0.4),
                                   size: 36,
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
-                                  "Click to Upload Experience Video",
-                                  style: TextStyle(
-                                    color: Colors.grey,
+                                  "Upload Experience Video",
+                                  style: AppTheme.sansBody(
+                                    color: textColor,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   "(Saves to Supabase gallery/Video)",
-                                  style: TextStyle(
-                                    color: Colors.grey,
+                                  style: AppTheme.sansBody(
+                                    color: textColor.withValues(alpha: 0.5),
                                     fontSize: 10,
                                   ),
                                 ),

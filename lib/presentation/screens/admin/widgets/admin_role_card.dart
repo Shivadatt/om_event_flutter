@@ -35,7 +35,7 @@ class AdminRoleCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       color: isDark ? AppTheme.darkPaper : AppTheme.lightPaper,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -91,7 +91,7 @@ class AdminRoleCard extends StatelessWidget {
                                   isAdminSuper
                                       ? Colors.redAccent.withValues(alpha: 0.2)
                                       : Colors.blue.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               admin.roleType.replaceAll('_', ' ').toUpperCase(),

@@ -10,7 +10,10 @@ import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/repositories/customer_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/datasources/supabase_storage_source.dart';
+import '../../domain/usecases/create_quotation.dart';
 import '../controllers/admin_controller.dart';
+import '../controllers/cart_controller.dart';
+import '../controllers/quotation_controller.dart';
 
 class AdminBinding extends Bindings {
   @override
@@ -43,6 +46,25 @@ class AdminBinding extends Bindings {
 
     Get.lazyPut<CustomerRepository>(
       () => CustomerRepositoryImpl(Get.find<FirestoreRemoteSource>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<CreateQuotation>(
+      () => CreateQuotation(Get.find<QuotationRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<CartController>(
+      () => CartController(Get.find()),
+      fenix: true,
+    );
+
+    Get.lazyPut<QuotationController>(
+      () => QuotationController(
+        createQuotationUsecase: Get.find<CreateQuotation>(),
+        quotationRepository: Get.find<QuotationRepository>(),
+        cartController: Get.find<CartController>(),
+      ),
       fenix: true,
     );
 

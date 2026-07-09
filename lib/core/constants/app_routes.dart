@@ -12,7 +12,6 @@ class AppRoutes {
   static const String adminDashboard = '/admin-dashboard';
   static const String manageLeads = '/admin/leads';
   static const String manageQuotes = '/admin/quotes';
-  static const String manageBookings = '/admin/bookings';
   static const String manageExperiences = '/admin/experiences';
   static const String manageCategories = '/admin/categories';
   static const String manageCustomers = '/admin/customers';
@@ -25,6 +24,5 @@ class AppRoutes {
   static const String customerLogin = '/client-login';
   static const String customerDashboard = '/dashboard';
   static const String customerPortalAdmin = '/admin/customer-portal';
-  static const String bookingCalendar = '/admin/calendar';
   static const String adminKpis = '/admin/kpis';
 }

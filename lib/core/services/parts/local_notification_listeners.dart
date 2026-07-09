@@ -3,54 +3,6 @@ part of '../local_notification_trigger_service.dart';
 extension LocalNotificationListenersExtension on LocalNotificationTriggerService {
   /// 1. Trigger outbox queue tasks when core records change
   void startLocalListeners() {
-    _firestore.collection(AppCollections.bookings).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final data = change.doc.data();
-          if (data != null) {
-            _queueAdminNotification(
-              eventType: 'Booking Created',
-              description: 'New booking submitted by {{customer_name}}.',
-              params: {'customer_name': data['customer_name'] ?? 'Customer'},
-            );
-
-            _scheduleEventDayReminders(change.doc.id, data);
-          }
-        } else if (change.type == DocumentChangeType.modified) {
-          final data = change.doc.data();
-          if (data != null) {
-            final status = data['status'] ?? 'pending';
-            final customerId = data['customerId'] ?? '';
-            final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
-            final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
-
-            if (status == 'confirmed' || status == 'approved') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Booking Approved!',
-                body: 'Your event booking request {{booking_number}} has been approved.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'booking_approved',
-                whatsappParams: [data['booking_number'] ?? ''],
-                variables: {'booking_number': data['booking_number'] ?? ''},
-              );
-            } else if (status == 'cancelled' || status == 'rejected') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Booking Cancelled',
-                body: 'Your event booking {{booking_number}} has been updated to: CANCELLED.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'booking_rejected',
-                whatsappParams: [data['booking_number'] ?? ''],
-                variables: {'booking_number': data['booking_number'] ?? ''},
-              );
-            }
-          }
-        }
-      }
-    });
 
     _firestore.collection(AppCollections.leads).snapshots().listen((snap) {
       for (var change in snap.docChanges) {
@@ -67,41 +19,7 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
       }
     });
 
-    _firestore.collection(AppCollections.payments).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final data = change.doc.data();
-          if (data != null) {
-            _queueAdminNotification(
-              eventType: 'Payment Uploaded',
-              description: 'Payment receipt uploaded: ₹{{amount}}.',
-              params: {'amount': (data['amount'] ?? 0.0).toString()},
-            );
-          }
-        } else if (change.type == DocumentChangeType.modified) {
-          final data = change.doc.data();
-          if (data != null) {
-            final status = data['status'] ?? 'pending';
-            final customerId = data['customerId'] ?? '';
-            final amount = (data['amount'] ?? 0.0).toString();
-            final phone = data['customer_phone'] ?? '';
 
-            if (status == 'approved' || status == 'verified') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Payment Verification Approved',
-                body: 'Receipt verified successfully for ₹{{amount}}.',
-                email: 'customer@gmail.com',
-                phone: phone,
-                whatsappTemplate: 'payment_approved',
-                whatsappParams: [amount],
-                variables: {'amount': amount},
-              );
-            }
-          }
-        }
-      }
-    });
 
     _firestore.collection(AppCollections.quotations).snapshots().listen((snap) {
       for (var change in snap.docChanges) {
@@ -115,7 +33,7 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
             final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
             final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
 
-            if (status == 'approved' || status == 'accepted' || status == 'booked') {
+            if (status == 'acceptedByClient' || status == 'bookingConfirmed') {
               // Notify Admin
               _queueAdminNotification(
                 eventType: 'Quotation Approved',
@@ -137,7 +55,7 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
                 whatsappParams: [publicId],
                 variables: {'public_id': publicId},
               );
-            } else if (status == 'rejected') {
+            } else if (status == 'declinedByClient') {
               _queueCustomerNotification(
                 customerId: customerId,
                 title: 'Quotation Rejected',
@@ -155,40 +73,7 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
     });
   }
 
-  void _scheduleEventDayReminders(String bookingId, Map<String, dynamic> bookingData) {
-    final customerId = bookingData['customerId'] ?? '';
-    final email = bookingData['customer_email'] ?? bookingData['customerEmail'] ?? 'customer@gmail.com';
-    final dateStr = bookingData['event_date'] ?? bookingData['eventDate'] ?? '';
 
-    if (dateStr.isEmpty) return;
-
-    try {
-      final eventDate = DateTime.parse(dateStr);
-      final list = [
-        {'days': 30, 'label': '30 Days Event Reminder'},
-        {'days': 7, 'label': '7 Days Prep Reminder'},
-        {'days': 1, 'label': '1 Day Out Briefing'},
-      ];
-
-      for (var item in list) {
-        final days = item['days'] as int;
-        final triggerAt = eventDate.subtract(Duration(days: days));
-
-        _firestore.collection(AppCollections.scheduledNotifications).add({
-          'eventId': bookingId,
-          'eventType': 'Booking Event Reminder',
-          'recipient': email,
-          'recipientId': customerId,
-          'triggerAt': Timestamp.fromDate(triggerAt.isAfter(DateTime.now()) ? triggerAt : DateTime.now().add(const Duration(seconds: 40))),
-          'title': '${item['label']}: Om Events',
-          'body': 'Your event scheduled on $dateStr is coming up in $days days!',
-          'channel': 'email',
-          'status': 'pending',
-          'priority': 'normal',
-        });
-      }
-    } catch (_) {}
-  }
 
   void _queueAdminNotification({
     required String eventType,

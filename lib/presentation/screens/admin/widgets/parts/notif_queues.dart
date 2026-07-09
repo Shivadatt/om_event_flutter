@@ -65,7 +65,7 @@ extension _NotifQueuesExtension on _SettingsNotificationsTabState {
                         color: isSent
                             ? Colors.green.withAlpha(26)
                             : Colors.orange.withAlpha(26),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isSent
                               ? Colors.green.withAlpha(102)
@@ -193,7 +193,7 @@ extension _NotifQueuesExtension on _SettingsNotificationsTabState {
                           ),
                           decoration: BoxDecoration(
                             color: statusColor.withAlpha(26),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: statusColor.withAlpha(102),
                             ),
@@ -457,7 +457,7 @@ extension _NotifQueuesExtension on _SettingsNotificationsTabState {
                           ),
                           decoration: BoxDecoration(
                             color: statusColor.withAlpha(26),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: statusColor.withAlpha(102),
                             ),

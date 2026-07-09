@@ -117,16 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
               },
             ),
           ),
-          const SizedBox(height: 24),
-          Center(
-            child: Text(
-              "Seed: omeventsanddecorators@gmail.com / Admin@gmail.com",
-              style: AppTheme.sansBody(
-                fontSize: 11,
-                color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
-              ),
-            ),
-          ),
         ],
       ),
     );

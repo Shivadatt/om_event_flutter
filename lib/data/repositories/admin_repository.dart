@@ -3,8 +3,6 @@ import '../../core/constants/app_collections.dart';
 import '../../core/constants/app_status.dart';
 import '../../core/constants/app_strings.dart';
 import '../models/review_model.dart';
-import '../models/booking_model.dart';
-import '../models/payment_model.dart';
 
 /// Manages application-wide business records from Firestore (reviews, bookings, payments, settings).
 class AdminRepository {
@@ -47,73 +45,7 @@ class AdminRepository {
     await _firestore.collection(AppCollections.reviews).doc(id).delete();
   }
 
-  // ── Bookings ──────────────────────────────────────────────────────────────
 
-  /// Retrieve all studio bookings ordered by creation date descending.
-  Future<List<BookingModel>> getBookings() async {
-    final snap =
-        await _firestore
-            .collection(AppCollections.bookings)
-            .orderBy(AppStrings.fieldCreatedAt, descending: true)
-            .get();
-    return snap.docs
-        .map((doc) => BookingModel.fromJson(doc.data(), doc.id))
-        .toList();
-  }
-
-  /// Save or update a booking record.
-  Future<void> saveBooking(BookingModel booking, {required bool isEdit}) async {
-    if (isEdit) {
-      await _firestore
-          .collection(AppCollections.bookings)
-          .doc(booking.id)
-          .update(booking.toJson());
-    } else {
-      await _firestore
-          .collection(AppCollections.bookings)
-          .doc(booking.id)
-          .set(booking.toJson());
-    }
-  }
-
-  /// Delete a booking record by document ID.
-  Future<void> deleteBooking(String id) async {
-    await _firestore.collection(AppCollections.bookings).doc(id).delete();
-  }
-
-  // ── Payments ──────────────────────────────────────────────────────────────
-
-  /// Retrieve all payment records ordered by creation date descending.
-  Future<List<PaymentModel>> getPayments() async {
-    final snap =
-        await _firestore
-            .collection(AppCollections.payments)
-            .orderBy(AppStrings.fieldCreatedAt, descending: true)
-            .get();
-    return snap.docs
-        .map((doc) => PaymentModel.fromJson(doc.data(), doc.id))
-        .toList();
-  }
-
-  /// Save or update a payment record.
-  Future<void> savePayment(PaymentModel payment, {required bool isEdit}) async {
-    if (isEdit) {
-      await _firestore
-          .collection(AppCollections.payments)
-          .doc(payment.id)
-          .update(payment.toJson());
-    } else {
-      await _firestore
-          .collection(AppCollections.payments)
-          .doc(payment.id)
-          .set(payment.toJson());
-    }
-  }
-
-  /// Delete a payment record by document ID.
-  Future<void> deletePayment(String id) async {
-    await _firestore.collection(AppCollections.payments).doc(id).delete();
-  }
 
   // ── Settings ──────────────────────────────────────────────────────────────
 

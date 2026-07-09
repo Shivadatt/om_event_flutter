@@ -167,7 +167,7 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
     return AlertDialog(
       backgroundColor: const Color(0xFF162822),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(12),
         side: const BorderSide(color: Color(0xFF254235)),
       ),
       title: Text(

@@ -27,9 +27,6 @@ class AppCollections {
   /// Quotation line items.
   static const String quotationItems = 'quotation_items';
 
-  /// Studio bookings.
-  static const String bookings = 'bookings';
-
   /// Published customer reviews.
   static const String reviews = 'reviews';
 
@@ -42,19 +39,14 @@ class AppCollections {
   /// Registered app users.
   static const String users = 'users';
 
-  /// Payment records.
-  static const String payments = 'payments';
-
   // ==========================================
   // CUSTOMER PORTAL COLLECTIONS
   // ==========================================
   static const String customerProfiles = 'customer_profiles';
   static const String customerLeads = 'customer_leads';
   static const String customerQuotes = 'customer_quotes';
-  static const String customerBookings = 'customer_bookings';
   static const String customerNotifications = 'customer_notifications';
   static const String customerReviews = 'customer_reviews';
-  static const String customerPayments = 'customer_payments';
   static const String customerWishlist = 'customer_wishlist';
   static const String customerGallery = 'customer_gallery';
   static const String customerActivity = 'customer_activity';

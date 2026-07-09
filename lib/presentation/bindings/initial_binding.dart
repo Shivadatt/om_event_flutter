@@ -37,6 +37,9 @@ import '../../domain/repositories/customer_portal_repository.dart';
 import '../../data/repositories/customer_portal_repository_impl.dart';
 import '../controllers/customer_dashboard_controller.dart';
 import '../controllers/admin_customer_portal_controller.dart';
+import '../../data/datasources/firestore_remote_source.dart';
+import '../../data/repositories/quotation_repository_impl.dart';
+import '../../domain/repositories/quotation_repository.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -159,6 +162,19 @@ class InitialBinding extends Bindings {
       fenix: true,
     );
 
+    Get.lazyPut<FirestoreRemoteSource>(
+      () => FirestoreRemoteSource(Get.find<FirebaseFirestore>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<QuotationRepository>(
+      () => QuotationRepositoryImpl(
+        firestoreSource: Get.find<FirestoreRemoteSource>(),
+        supabaseSource: Get.find<SupabaseStorageSource>(),
+      ),
+      fenix: true,
+    );
+
     Get.lazyPut<CustomerPortalRepository>(
       () => CustomerPortalRepositoryImpl(Get.find<FirebaseFirestore>()),
       fenix: true,
@@ -169,6 +185,7 @@ class InitialBinding extends Bindings {
         Get.find<CustomerPortalRepository>(),
         Get.find<CustomerAuthRepository>(),
         Get.find<CustomerAuthController>(),
+        Get.find<QuotationRepository>(),
       ),
       fenix: true,
     );

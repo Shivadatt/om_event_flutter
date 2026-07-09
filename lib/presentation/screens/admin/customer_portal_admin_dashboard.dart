@@ -4,17 +4,12 @@ import '../../../core/config/app_theme.dart';
 import '../../controllers/admin_customer_portal_controller.dart';
 import '../../controllers/admin_controller.dart';
 import 'customer_portal_admin_dashboard/views/quotes_admin_view.dart';
-import 'customer_portal_admin_dashboard/views/payments_admin_view.dart';
-import 'customer_portal_admin_dashboard/views/timelines_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/notifications_admin_view.dart';
-import 'customer_portal_admin_dashboard/views/rebooks_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/offers_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/search_logs_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/homepage_builder_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/coordinators_admin_view.dart';
-import 'customer_portal_admin_dashboard/views/reschedules_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/inventory_cms_view.dart';
-import 'customer_portal_admin_dashboard/views/staff_finance_view.dart';
 
 /// Unified control panel orchestrator for portal administration.
 class CustomerPortalAdminDashboard extends StatefulWidget {
@@ -43,7 +38,7 @@ class _CustomerPortalAdminDashboardState extends State<CustomerPortalAdminDashbo
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 12, vsync: this);
+    tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -67,17 +62,12 @@ class _CustomerPortalAdminDashboardState extends State<CustomerPortalAdminDashbo
           indicatorColor: const Color(0xFFC9A77E),
           tabs: const [
             Tab(text: "Quotes Management"),
-            Tab(text: "Payments Verification"),
-            Tab(text: "Booking Timelines"),
             Tab(text: "Notification Broadcasts"),
-            Tab(text: "Rebook Requests"),
             Tab(text: "Offers CMS"),
             Tab(text: "Global Search & Logs"),
             Tab(text: "Homepage Builder"),
             Tab(text: "Coordinator CMS"),
-            Tab(text: "Reschedule Requests"),
             Tab(text: "Inventory CMS"),
-            Tab(text: "Staff & Finances"),
           ],
         ),
       ),
@@ -85,17 +75,12 @@ class _CustomerPortalAdminDashboardState extends State<CustomerPortalAdminDashbo
         controller: tabController,
         children: [
           QuotesAdminView(portalController: portalController),
-          PaymentsAdminView(portalController: portalController),
-          TimelinesAdminView(portalController: portalController),
           NotificationsAdminView(portalController: portalController),
-          RebooksAdminView(portalController: portalController),
           OffersAdminView(portalController: portalController),
           SearchLogsAdminView(portalController: portalController),
           HomepageBuilderAdminView(enabledSections: enabledSections),
           CoordinatorsAdminView(portalController: portalController),
-          ReschedulesAdminView(portalController: portalController),
           InventoryCmsView(portalController: portalController),
-          StaffFinanceView(portalController: portalController),
         ],
       ),
     );
