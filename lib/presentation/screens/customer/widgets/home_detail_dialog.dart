@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:om_event/core/config/app_theme.dart';
+import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/utils/formatters.dart';
 import 'package:om_event/domain/entities/experience.dart';
 import 'package:om_event/presentation/controllers/cart_controller.dart';
@@ -90,6 +91,15 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
     final height = MediaQuery.of(context).size.height;
     final isDesktop = width >= 800;
 
+    // Resolve dynamic colors based on current theme brightness
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final creamColor = isDark ? AppColors.darkCream : AppColors.lightCream;
+    final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
+    final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final mutedColor = isDark ? AppColors.darkMuted : AppColors.lightMuted;
+    final lineColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+    final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
+
     final dialogWidth = (width * 0.9).clamp(320.0, 940.0);
     final dialogMaxHeight = height * 0.92;
 
@@ -103,100 +113,167 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
 
     Widget rightPanel = SingleChildScrollView(
       padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 32 : 20,
-        vertical: 28,
+        horizontal: isDesktop ? 36 : 20,
+        vertical: 32,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (!isDesktop) ...[
+            AspectRatio(
+              aspectRatio: 1.4,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _buildImage(
+                  item.imageUrl,
+                  item.name,
+                  item.categorySlug,
+                  item.categoryName,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           Text(
             "${item.categoryName.toUpperCase()} · CUSTOMIZABLE",
             style: AppTheme.sansBody(
-              fontSize: 9,
-              color: const Color(0xFFAA7C4B),
+              fontSize: 10,
+              color: goldColor,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Text(
             item.name,
             style: GoogleFonts.italiana(
-              fontSize: isDesktop ? 42 : 30,
-              color: const Color(0xFF17201E),
-              height: 1.05,
+              fontSize: isDesktop ? 40 : 28,
+              color: inkColor,
+              height: 1.1,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             item.description,
             style: AppTheme.sansBody(
               fontSize: 13,
-              color: const Color(0xFF6D746F),
+              color: inkColor.withValues(alpha: 0.7),
               height: 1.6,
             ),
           ),
           const SizedBox(height: 20),
-          if (hasDiscount) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  AppFormatters.formatCurrency(item.price),
-                  style: AppTheme.sansBody(
-                    fontSize: 14,
-                    color: const Color(0xFF6D746F),
-                  ).copyWith(decoration: TextDecoration.lineThrough),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  "$discountPct% OFF",
-                  style: AppTheme.sansBody(
-                    fontSize: 12,
-                    color: const Color(0xFFAA7C4B),
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
-                  ),
+          
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: paperColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: lineColor, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-          ],
-          Text(
-            AppFormatters.formatCurrency(item.effectivePrice),
-            style: GoogleFonts.italiana(
-              fontSize: 34,
-              color: const Color(0xFF17201E),
-              height: 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      "STARTING PRICE",
+                      style: AppTheme.sansBody(
+                        fontSize: 9,
+                        color: mutedColor,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    if (hasDiscount) ...[
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: goldColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "$discountPct% OFF",
+                          style: AppTheme.sansBody(
+                            fontSize: 10,
+                            color: goldColor,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      AppFormatters.formatCurrency(item.effectivePrice),
+                      style: GoogleFonts.italiana(
+                        fontSize: 34,
+                        color: inkColor,
+                        fontWeight: FontWeight.w600,
+                        height: 1,
+                      ),
+                    ),
+                    if (hasDiscount) ...[
+                      const SizedBox(width: 12),
+                      Text(
+                        AppFormatters.formatCurrency(item.price),
+                        style: AppTheme.sansBody(
+                          fontSize: 15,
+                          color: mutedColor,
+                        ).copyWith(
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (hasDiscount) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        size: 14,
+                        color: AppColors.success,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        "You Save ${AppFormatters.formatCurrency(savedAmount)}",
+                        style: AppTheme.sansBody(
+                          fontSize: 11,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ),
           ),
-          if (hasDiscount) ...[
-            const SizedBox(height: 4),
-            Text(
-              "You Save ${AppFormatters.formatCurrency(savedAmount)}",
-              style: AppTheme.sansBody(
-                fontSize: 12,
-                color: const Color(0xFF3A7A5A),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-          const SizedBox(height: 4),
-          Text(
-            "Starting Price",
-            style: AppTheme.sansBody(
-              fontSize: 11,
-              color: const Color(0xFF17201E),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          
           const SizedBox(height: 24),
           if (item.colors.isNotEmpty) ...[
             Text(
               "COLOR STORY",
               style: AppTheme.sansBody(
                 fontSize: 9,
-                color: const Color(0xFF17201E),
+                color: inkColor,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.3,
               ),
@@ -214,7 +291,7 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
               "DESIGN MOOD",
               style: AppTheme.sansBody(
                 fontSize: 9,
-                color: const Color(0xFF17201E),
+                color: inkColor,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.3,
               ),
@@ -231,47 +308,62 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
             "YOUR NOTE",
             style: AppTheme.sansBody(
               fontSize: 9,
-              color: const Color(0xFF17201E),
+              color: inkColor,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.3,
             ),
           ),
           const SizedBox(height: 6),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: const Color(0xFF17201E).withValues(alpha: 0.2),
-              ),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            style: AppTheme.sansBody(
+              fontSize: 13,
+              color: inkColor,
             ),
-            child: TextField(
-              controller: _notesController,
-              maxLines: 3,
-              style: AppTheme.sansBody(
-                fontSize: 13,
-                color: const Color(0xFF17201E),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: paperColor,
+              hintText: "Names, venue details or a specific idea…",
+              hintStyle: AppTheme.sansBody(
+                fontSize: 12,
+                color: mutedColor,
               ),
-              decoration: InputDecoration(
-                hintText: "Names, venue details or a specific idea…",
-                hintStyle: AppTheme.sansBody(
-                  fontSize: 12,
-                  color: const Color(0xFF6D746F),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: lineColor,
+                  width: 1.5,
                 ),
-                contentPadding: const EdgeInsets.all(12),
-                border: InputBorder.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: lineColor,
+                  width: 1.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: goldColor,
+                  width: 1.5,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 20),
           Wrap(
-            spacing: 14,
-            runSpacing: 6,
+            spacing: 10,
+            runSpacing: 8,
             children: const [
               _InclusionChip("Styling & installation"),
               _InclusionChip("Teardown"),
               _InclusionChip("Dedicated coordinator"),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -288,29 +380,39 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
                   "Added to Canvas",
                   "${item.name} added to your selection.",
                   snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: paperColor,
+                  colorText: inkColor,
+                  margin: const EdgeInsets.all(16),
+                  boxShadows: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 );
               },
               icon: const Icon(Icons.add, size: 16, color: Colors.white),
               label: Text(
                 "ADD TO MY SELECTION",
                 style: AppTheme.sansBody(
-                  fontSize: 11,
+                  fontSize: 12,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFAA7C4B),
+                backgroundColor: goldColor,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -327,46 +429,55 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
           maxHeight: dialogMaxHeight,
         ),
         child: Material(
-          color: const Color(0xFFFBF9F4),
-          borderRadius: BorderRadius.zero,
+          color: creamColor,
+          borderRadius: BorderRadius.circular(20),
+          clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
               isDesktop
                   ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        width: dialogWidth * 0.47,
-                        child: _buildImage(
-                          item.imageUrl,
-                          item.name,
-                          item.categorySlug,
-                          item.categoryName,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(
+                          width: dialogWidth * 0.47,
+                          child: _buildImage(
+                            item.imageUrl,
+                            item.name,
+                            item.categorySlug,
+                            item.categoryName,
+                          ),
                         ),
-                      ),
-                      Expanded(child: rightPanel),
-                    ],
-                  )
+                        Expanded(child: rightPanel),
+                      ],
+                    )
                   : rightPanel,
               Positioned(
-                top: 12,
-                right: 12,
+                top: 16,
+                right: 16,
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   child: Container(
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFBF9F4),
-                      border: Border.all(
-                        color: const Color(0xFF17201E).withValues(alpha: 0.2),
-                      ),
+                      color: paperColor,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: lineColor,
+                        width: 1,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Color(0xFF17201E),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: inkColor,
                     ),
                   ),
                 ),
@@ -392,11 +503,21 @@ class _ModalDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
+    final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final lineColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+    final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 48,
       decoration: BoxDecoration(
+        color: paperColor,
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFF17201E).withValues(alpha: 0.2),
+          color: lineColor,
+          width: 1.5,
         ),
       ),
       child: DropdownButtonHideUnderline(
@@ -404,10 +525,17 @@ class _ModalDropdown extends StatelessWidget {
           isExpanded: true,
           value: value,
           style: AppTheme.sansBody(
-            fontSize: 13,
-            color: const Color(0xFF17201E),
+            fontSize: 14,
+            color: inkColor,
+            fontWeight: FontWeight.w500,
           ),
-          iconEnabledColor: const Color(0xFF17201E),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: goldColor,
+            size: 22,
+          ),
+          dropdownColor: paperColor,
+          borderRadius: BorderRadius.circular(10),
           items:
               items
                   .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -427,20 +555,39 @@ class _InclusionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.check, size: 12, color: Color(0xFFAA7C4B)),
-        const SizedBox(width: 5),
-        Text(
-          label,
-          style: AppTheme.sansBody(
-            fontSize: 11,
-            color: const Color(0xFF6D746F),
-            fontWeight: FontWeight.w600,
-          ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
+    final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: goldColor.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: goldColor.withValues(alpha: 0.15),
+          width: 1,
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.check_circle_rounded,
+            size: 14,
+            color: goldColor,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: AppTheme.sansBody(
+              fontSize: 11,
+              color: inkColor.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

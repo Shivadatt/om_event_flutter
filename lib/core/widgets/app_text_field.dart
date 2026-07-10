@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/config/app_theme.dart';
+import '../../core/constants/app_colors.dart';
 
 /// Centralized Text Form Input component.
 class AppTextField extends StatelessWidget {
@@ -12,6 +13,7 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final String? Function(String?)? validator;
+  final double borderRadius;
 
   const AppTextField({
     super.key,
@@ -24,12 +26,20 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.validator,
+    this.borderRadius = 10,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    // Resolve dynamic colors based on theme context
+    final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final mutedColor = isDark ? AppColors.darkMuted : AppColors.lightMuted;
+    final lineColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+    final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
+    final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -41,7 +51,7 @@ class AppTextField extends StatelessWidget {
             style: AppTheme.sansBody(
               fontSize: 9,
               fontWeight: FontWeight.bold,
-              color: isDark ? AppTheme.darkGold : AppTheme.lightGold,
+              color: goldColor,
               letterSpacing: 1.3,
             ),
           ),
@@ -56,47 +66,47 @@ class AppTextField extends StatelessWidget {
             validator: validator,
             style: AppTheme.sansBody(
               fontSize: 14,
-              color: isDark ? AppTheme.darkInk : AppTheme.lightInk,
+              color: inkColor,
             ),
             decoration: InputDecoration(
               hintText: placeholder,
               hintStyle: AppTheme.sansBody(
                 fontSize: 14,
-                color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                color: mutedColor,
               ),
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
+                horizontal: 16,
                 vertical: 14,
               ),
               filled: true,
-              fillColor: Colors.transparent,
+              fillColor: paperColor,
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
-                  width: 1,
+                  color: lineColor,
+                  width: 1.5,
                 ),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(borderRadius),
               ),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: isDark ? AppTheme.darkGold : AppTheme.lightGold,
-                  width: 1,
+                  color: goldColor,
+                  width: 1.5,
                 ),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(borderRadius),
               ),
               errorBorder: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: theme.colorScheme.error,
-                  width: 1,
+                  width: 1.5,
                 ),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(borderRadius),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: theme.colorScheme.error,
-                  width: 1.5,
+                  width: 2,
                 ),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(borderRadius),
               ),
             ),
           ),

@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/config/app_theme.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../controllers/cart_controller.dart';
@@ -24,9 +26,18 @@ class CartDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Resolve dynamic colors based on current theme brightness
+    final creamColor = isDark ? AppColors.darkCream : AppColors.lightCream;
+    final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
+    final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final mutedColor = isDark ? AppColors.darkMuted : AppColors.lightMuted;
+    final lineColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+    final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
 
     return Drawer(
       width: math.min(480, MediaQuery.of(context).size.width * 0.85),
+      backgroundColor: creamColor,
       child: SafeArea(
         child: Obx(() {
           final items = cartController.rxCartItems;
@@ -46,23 +57,49 @@ class CartDrawer extends StatelessWidget {
                         Text(
                           "YOUR EVENT CANVAS",
                           style: AppTheme.sansBody(
-                            fontSize: 8,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
+                            color: goldColor,
                             letterSpacing: 1.5,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
                           "Selection (${items.length})",
                           style: AppTheme.serifHeader(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            color: inkColor,
                           ),
                         ),
                       ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: paperColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: lineColor,
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: inkColor,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -82,10 +119,7 @@ class CartDrawer extends StatelessWidget {
                             "✦",
                             style: AppTheme.serifHeader(
                               fontSize: 34,
-                              color:
-                                  isDark
-                                      ? AppTheme.darkGold
-                                      : AppTheme.lightGold,
+                              color: goldColor,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -94,6 +128,7 @@ class CartDrawer extends StatelessWidget {
                             style: AppTheme.serifHeader(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              color: inkColor,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -102,10 +137,7 @@ class CartDrawer extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: AppTheme.sansBody(
                               fontSize: 12,
-                              color:
-                                  isDark
-                                      ? AppTheme.darkMuted
-                                      : AppTheme.lightMuted,
+                              color: mutedColor,
                             ),
                           ),
                         ],
@@ -130,36 +162,50 @@ class CartDrawer extends StatelessWidget {
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color:
-                                  isDark
-                                      ? AppTheme.darkLine
-                                      : AppTheme.lightLine,
+                              color: lineColor,
                             ),
                           ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Thumbnail
+                            // Thumbnail with rounded corners & shadow/border
                             Container(
-                              width: 60,
-                              height: 60,
-                              color: Colors.grey.shade800,
-                              child:
-                                  item.experience.imageUrl.startsWith('assets/')
-                                      ? Image.asset(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: paperColor,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: lineColor,
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(7),
+                                child: item.experience.imageUrl.startsWith('assets/')
+                                    ? Image.asset(
                                         item.experience.imageUrl,
                                         fit: BoxFit.cover,
                                       )
-                                      : Image.network(
+                                    : Image.network(
                                         item.experience.imageUrl,
                                         fit: BoxFit.cover,
                                         errorBuilder:
-                                            (_, __, ___) => const Icon(
+                                            (_, __, ___) => Icon(
                                               Icons.image,
                                               size: 20,
+                                              color: mutedColor,
                                             ),
                                       ),
+                              ),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -171,18 +217,17 @@ class CartDrawer extends StatelessWidget {
                                     style: AppTheme.serifHeader(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
+                                      color: inkColor,
                                     ),
                                   ),
+                                  const SizedBox(height: 4),
                                   Text(
                                     customization.isEmpty
                                         ? "Customizable"
                                         : customization,
                                     style: AppTheme.sansBody(
-                                      fontSize: 10,
-                                      color:
-                                          isDark
-                                              ? AppTheme.darkMuted
-                                              : AppTheme.lightMuted,
+                                      fontSize: 11,
+                                      color: mutedColor,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -192,8 +237,9 @@ class CartDrawer extends StatelessWidget {
                                           item.quantity,
                                     ),
                                     style: AppTheme.sansBody(
-                                      fontSize: 13,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.bold,
+                                      color: inkColor,
                                     ),
                                   ),
                                 ],
@@ -202,71 +248,71 @@ class CartDrawer extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    size: 18,
-                                    color: Colors.redAccent,
+                                // Styled circular Delete Button
+                                GestureDetector(
+                                  onTap: () => cartController.removeFromCart(index),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.redAccent.withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 16,
+                                      color: Colors.redAccent,
+                                    ),
                                   ),
-                                  onPressed:
-                                      () =>
-                                          cartController.removeFromCart(index),
                                 ),
-                                // Quantity selector
-                                Row(
-                                  children: [
-                                    GestureDetector(
-                                      onTap:
-                                          () => cartController.changeQuantity(
-                                            index,
-                                            -1,
-                                          ),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color:
-                                                isDark
-                                                    ? AppTheme.darkLine
-                                                    : AppTheme.lightLine,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.remove,
-                                          size: 12,
-                                        ),
-                                      ),
+                                const SizedBox(height: 14),
+                                // Styled cohesive Pill-shaped Quantity selector
+                                Container(
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: paperColor,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: lineColor,
+                                      width: 1.5,
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () => cartController.changeQuantity(index, -1),
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          child: Icon(
+                                            Icons.remove_rounded,
+                                            size: 12,
+                                            color: inkColor,
+                                          ),
+                                        ),
                                       ),
-                                      child: Text(
+                                      Text(
                                         '${item.quantity}',
-                                        style: const TextStyle(fontSize: 11),
+                                        style: AppTheme.sansBody(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: inkColor,
+                                        ),
                                       ),
-                                    ),
-                                    GestureDetector(
-                                      onTap:
-                                          () => cartController.changeQuantity(
-                                            index,
-                                            1,
-                                          ),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color:
-                                                isDark
-                                                    ? AppTheme.darkLine
-                                                    : AppTheme.lightLine,
+                                      GestureDetector(
+                                        onTap: () => cartController.changeQuantity(index, 1),
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          child: Icon(
+                                            Icons.add_rounded,
+                                            size: 12,
+                                            color: inkColor,
                                           ),
                                         ),
-                                        child: const Icon(Icons.add, size: 12),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -287,51 +333,89 @@ class CartDrawer extends StatelessWidget {
                       _summaryRow(
                         "Subtotal",
                         AppFormatters.formatCurrency(cartController.subtotal),
+                        labelColor: mutedColor,
+                        color: inkColor,
                       ),
                       _summaryRow(
                         "Celebration discount",
                         cartController.volumeDiscount > 0
                             ? "- ${AppFormatters.formatCurrency(cartController.volumeDiscount)}"
                             : "Unlock at ₹50k",
+                        labelColor: mutedColor,
                         color:
                             cartController.volumeDiscount > 0
-                                ? Colors.green
-                                : Colors.grey,
+                                ? AppColors.success
+                                : mutedColor,
                       ),
                       _summaryRow(
                         "Delivery Charge",
                         AppFormatters.formatCurrency(
                           cartController.deliveryCharge,
                         ),
+                        labelColor: mutedColor,
+                        color: inkColor,
                       ),
                       _summaryRow(
                         "GST (${AppConstants.gstPercent.toStringAsFixed(0)}%)",
                         AppFormatters.formatCurrency(cartController.gstAmount),
+                        labelColor: mutedColor,
+                        color: inkColor,
                       ),
                       if (AppConstants.enableClientFeeWaiver)
                         _summaryRow(
                           "Extra Discount!!",
                           "- ${AppFormatters.formatCurrency(cartController.clientWaiverDiscount)}",
-                          color: Colors.green,
+                          labelColor: mutedColor,
+                          color: AppColors.success,
                         ),
-                      const Divider(height: 16),
-                      _summaryRow(
-                        "Estimated Total",
-                        AppFormatters.formatCurrency(cartController.grandTotal),
-                        isBold: true,
-                        fontSize: 18,
+                      const SizedBox(height: 14),
+                      // Estimated Total Row highlights inside a container
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: paperColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: lineColor,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Estimated Total",
+                              style: AppTheme.sansBody(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: inkColor,
+                              ),
+                            ),
+                            Text(
+                              AppFormatters.formatCurrency(cartController.grandTotal),
+                              style: GoogleFonts.italiana(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: inkColor,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 18),
-                      CustomButton(
-                        text: "Create my quotation",
-                        onPressed: () {
-                          // Close drawer and open Quotation dialog
-                          Navigator.of(context).pop();
-                          CustomerDialogHelper.openQuoteDialog(
-                            context,
-                            quoteController,
-                          );
-                        },
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomButton(
+                          text: "Create my quotation",
+                          onPressed: () {
+                            // Close drawer and open Quotation dialog
+                            Navigator.of(context).pop();
+                            CustomerDialogHelper.openQuoteDialog(
+                              context,
+                              quoteController,
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -350,9 +434,10 @@ class CartDrawer extends StatelessWidget {
     bool isBold = false,
     double fontSize = 12,
     Color? color,
+    Color? labelColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -360,6 +445,7 @@ class CartDrawer extends StatelessWidget {
             label,
             style: AppTheme.sansBody(
               fontSize: fontSize,
+              color: labelColor,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),

@@ -14,9 +14,18 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
       context: context,
       builder: (context) {
         final catalogController = Get.find<CatalogController>();
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        // Resolve dynamic colors based on current theme brightness
+        final creamColor = isDark ? AppColors.darkCream : AppColors.lightCream;
+        final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+        final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
+        final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
 
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+          backgroundColor: creamColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          clipBehavior: Clip.antiAlias,
           insetPadding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -31,16 +40,19 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                     Text(
                       "LET'S TALK",
                       style: AppTheme.sansBody(
-                        fontSize: 8,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
+                        color: goldColor,
                         letterSpacing: 1.5,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       "Tell us about the occasion.",
                       style: AppTheme.serifHeader(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: inkColor,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -68,7 +80,32 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                             label: "Event Date",
                             placeholder: "YYYY-MM-DD",
                             controller: dateController,
-                            keyboardType: TextInputType.datetime,
+                            readOnly: true,
+                            onTap: () async {
+                              final DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now().add(const Duration(days: 7)),
+                                firstDate: DateTime.now().add(const Duration(days: 7)),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: ColorScheme.dark(
+                                        primary: goldColor,
+                                        onPrimary: creamColor,
+                                        surface: paperColor,
+                                        onSurface: inkColor,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                dateController.text =
+                                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                              }
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -90,23 +127,26 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                     ),
                     const SizedBox(height: 20),
                     Obx(
-                      () => CustomButton(
-                        text: "Request a callback",
-                        isLoading: catalogController.isSubmittingLead.value,
-                        onPressed: () async {
-                          if (formKey.currentState?.validate() == true) {
-                            final success = await catalogController.requestCallback(
-                              name: nameController.text,
-                              phone: phoneController.text,
-                              dateStr: dateController.text,
-                              budgetStr: budgetController.text,
-                              requirements: reqsController.text,
-                            );
-                            if (success) {
-                              Get.back();
+                      () => SizedBox(
+                        width: double.infinity,
+                        child: CustomButton(
+                          text: "Request a callback",
+                          isLoading: catalogController.isSubmittingLead.value,
+                          onPressed: () async {
+                            if (formKey.currentState?.validate() == true) {
+                              final success = await catalogController.requestCallback(
+                                name: nameController.text,
+                                phone: phoneController.text,
+                                dateStr: dateController.text,
+                                budgetStr: budgetController.text,
+                                requirements: reqsController.text,
+                              );
+                              if (success) {
+                                Get.back();
+                              }
                             }
-                          }
-                        },
+                          },
+                        ),
                       ),
                     ),
                   ],
@@ -135,8 +175,19 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
     showDialog(
       context: context,
       builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        // Resolve dynamic colors based on current theme brightness
+        final creamColor = isDark ? AppColors.darkCream : AppColors.lightCream;
+        final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
+        final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+        final lineColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+        final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
+
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+          backgroundColor: creamColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          clipBehavior: Clip.antiAlias,
           insetPadding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -151,16 +202,19 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                     Text(
                       "ALMOST THERE",
                       style: AppTheme.sansBody(
-                        fontSize: 8,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
+                        color: goldColor,
                         letterSpacing: 1.5,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       "Where should we bring the wonder?",
                       style: AppTheme.serifHeader(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: inkColor,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -198,11 +252,11 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                                 builder: (context, child) {
                                   return Theme(
                                     data: Theme.of(context).copyWith(
-                                      colorScheme: const ColorScheme.dark(
-                                        primary: Color(0xFFC9A77E),
-                                        onPrimary: Color(0xFF091210),
-                                        surface: Color(0xFF12271F),
-                                        onSurface: Colors.white,
+                                      colorScheme: ColorScheme.dark(
+                                        primary: goldColor,
+                                        onPrimary: creamColor,
+                                        surface: paperColor,
+                                        onSurface: inkColor,
                                       ),
                                     ),
                                     child: child!,
@@ -236,11 +290,11 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                                 builder: (context, child) {
                                   return Theme(
                                     data: Theme.of(context).copyWith(
-                                      colorScheme: const ColorScheme.dark(
-                                        primary: Color(0xFFC9A77E),
-                                        onPrimary: Color(0xFF091210),
-                                        surface: Color(0xFF12271F),
-                                        onSurface: Colors.white,
+                                      colorScheme: ColorScheme.dark(
+                                        primary: goldColor,
+                                        onPrimary: creamColor,
+                                        surface: paperColor,
+                                        onSurface: inkColor,
                                       ),
                                     ),
                                     child: child!,
@@ -296,14 +350,15 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                         return Align(
                           alignment: Alignment.topLeft,
                           child: Material(
-                            color: const Color(0xFF12271F),
+                            color: paperColor,
                             elevation: 4,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                              side: BorderSide(color: const Color(0xFFC9A77E).withValues(alpha: 0.3)),
+                              borderRadius: BorderRadius.circular(10),
+                              side: BorderSide(color: lineColor, width: 1.5),
                             ),
-                            child: SizedBox(
+                            child: Container(
                               width: 440,
+                              constraints: const BoxConstraints(maxHeight: 220),
                               child: ListView.builder(
                                 padding: EdgeInsets.zero,
                                 shrinkWrap: true,
@@ -311,8 +366,14 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                                 itemBuilder: (BuildContext context, int index) {
                                   final String option = options.elementAt(index);
                                   return ListTile(
-                                    hoverColor: Colors.white12,
-                                    title: Text(option, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                                    hoverColor: lineColor.withValues(alpha: 0.15),
+                                    title: Text(
+                                      option, 
+                                      style: AppTheme.sansBody(
+                                        color: inkColor.withValues(alpha: 0.9), 
+                                        fontSize: 13,
+                                      ),
+                                    ),
                                     onTap: () => onSelected(option),
                                   );
                                 },
@@ -330,24 +391,27 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                     ),
                     const SizedBox(height: 20),
                     Obx(
-                      () => CustomButton(
-                        text: "Generate quotation",
-                        isLoading: quoteController.isGeneratingQuote.value,
-                        onPressed: () async {
-                          if (formKey.currentState?.validate() == true) {
-                            final success = await quoteController.submitQuotationRequest(
-                              name: nameController.text,
-                              phone: phoneController.text,
-                              dateStr: dateController.text,
-                              timeStr: timeController.text,
-                              location: locController.text,
-                              notes: notesController.text,
-                            );
-                            if (success) {
-                              Get.back();
+                      () => SizedBox(
+                        width: double.infinity,
+                        child: CustomButton(
+                          text: "Generate quotation",
+                          isLoading: quoteController.isGeneratingQuote.value,
+                          onPressed: () async {
+                            if (formKey.currentState?.validate() == true) {
+                              final success = await quoteController.submitQuotationRequest(
+                                name: nameController.text,
+                                phone: phoneController.text,
+                                dateStr: dateController.text,
+                                timeStr: timeController.text,
+                                location: locController.text,
+                                notes: notesController.text,
+                              );
+                              if (success) {
+                                Get.back();
+                              }
                             }
-                          }
-                        },
+                          },
+                        ),
                       ),
                     ),
                   ],

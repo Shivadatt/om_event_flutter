@@ -196,6 +196,14 @@ class QuotationRepositoryImpl implements QuotationRepository {
 
       // Build updated quotation object to pass to PDF generator
       final mergedData = Map<String, dynamic>.from(data)..addAll(updateData);
+      
+      // Clean up FieldValue.delete() values for local model parsing
+      mergedData.forEach((key, value) {
+        if (value is FieldValue) {
+          mergedData[key] = null;
+        }
+      });
+
       final updatedQuotation = QuotationModel.fromJson(mergedData, id);
 
       // Regenerate the PDF bytes automatically if publishing/republishing

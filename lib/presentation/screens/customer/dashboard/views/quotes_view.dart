@@ -35,9 +35,9 @@ class _QuotesViewState extends State<QuotesView> {
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Obx(() {
-        final quotations = widget.controller.rxQuotations;
+        final rawQuotations = widget.controller.rxQuotations;
 
-        if (quotations.isEmpty) {
+        if (rawQuotations.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -49,6 +49,10 @@ class _QuotesViewState extends State<QuotesView> {
             ),
           );
         }
+
+        // Sort quotations: latest created date on top
+        final quotations = List<Quotation>.from(rawQuotations)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
         // Set default selected quote if null
         if (rxSelectedQuoteId.value == null && quotations.isNotEmpty) {

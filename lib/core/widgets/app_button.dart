@@ -8,6 +8,7 @@ class AppButton extends StatefulWidget {
   final bool isPrimary;
   final bool isLoading;
   final IconData? icon;
+  final double borderRadius;
 
   const AppButton({
     super.key,
@@ -16,6 +17,7 @@ class AppButton extends StatefulWidget {
     this.isPrimary = true,
     this.isLoading = false,
     this.icon,
+    this.borderRadius = 10,
   });
 
   @override
@@ -83,7 +85,7 @@ class _AppButtonState extends State<AppButton> {
                   color: borderColor,
                   width: _isFocused ? 2 : 1,
                 ),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(widget.borderRadius),
                 boxShadow:
                     _isFocused
                         ? [

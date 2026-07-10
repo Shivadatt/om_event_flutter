@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/services/export_service.dart';
+import '../../../../../domain/entities/quotation.dart';
 import '../../../../controllers/admin_customer_portal_controller.dart';
 
 /// Admin sub-view for managing customer quotations.
@@ -15,9 +16,15 @@ class QuotesAdminView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (portalController.rxAllQuotes.isEmpty) {
+      final rawQuotes = portalController.rxAllQuotes;
+      if (rawQuotes.isEmpty) {
         return const Center(child: Text("No customer quotations logged."));
       }
+
+      // Sort quotations by createdAt descending (latest created on top)
+      final quotations = List<Quotation>.from(rawQuotes)
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
       return Column(
         children: [
           Padding(
@@ -36,7 +43,7 @@ class QuotesAdminView extends StatelessWidget {
                     ExportService.exportToCsv(
                       filename: 'quotations',
                       headers: ['ID', 'Quotation Number', 'Amount', 'Status', 'Event Date'],
-                      rows: portalController.rxAllQuotes.map((q) => [
+                      rows: quotations.map((q) => [
                         q.id,
                         q.publicId,
                         q.grandTotal,
@@ -52,9 +59,9 @@ class QuotesAdminView extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              itemCount: portalController.rxAllQuotes.length,
+              itemCount: quotations.length,
               itemBuilder: (context, index) {
-                final quote = portalController.rxAllQuotes[index];
+                final quote = quotations[index];
                 return Card(
                   color: const Color(0xFF12271F),
                   margin: const EdgeInsets.only(bottom: 12),

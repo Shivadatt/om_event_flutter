@@ -54,10 +54,14 @@ class ManageQuotesScreen extends GetView<AdminController> {
       ),
       backgroundColor: Colors.transparent,
       body: Obx(() {
-        final quotes = controller.rxQuotes;
-        if (quotes.isEmpty) {
+        final rawQuotes = controller.rxQuotes;
+        if (rawQuotes.isEmpty) {
           return const Center(child: Text("No quotations generated yet."));
         }
+
+        // Sort quotes: latest created date on top
+        final quotes = List<Quotation>.from(rawQuotes)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -140,7 +144,7 @@ class ManageQuotesScreen extends GetView<AdminController> {
                                   value: quote.status.nameStr,
                                   icon: const Icon(Icons.arrow_drop_down_rounded, size: 20),
                                   items: QuotationStatus.values
-                                      .where((s) => s != QuotationStatus.acceptedByClient && s != QuotationStatus.rejectedByClient)
+                                      .where((s) => s == quote.status || (s != QuotationStatus.acceptedByClient && s != QuotationStatus.rejectedByClient))
                                       .map((s) => DropdownMenuItem(
                                     value: s.nameStr,
                                     child: Text(s.nameStr.toUpperCase()),
