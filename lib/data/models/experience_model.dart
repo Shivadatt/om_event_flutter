@@ -44,6 +44,14 @@ class ExperienceModel extends Experience {
         ? List<String>.from(categoryIdsRaw)
         : (catId.isNotEmpty ? [catId] : []);
 
+    double? parseDouble(dynamic val1, [dynamic val2]) {
+      final val = val1 ?? val2;
+      if (val == null) return null;
+      if (val is num) return val.toDouble();
+      if (val is String) return double.tryParse(val);
+      return null;
+    }
+
     return ExperienceModel(
       id: documentId,
       categoryId: catId,
@@ -53,15 +61,11 @@ class ExperienceModel extends Experience {
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'] ?? '',
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      offerPrice:
-          (json['offer_price'] ?? json['offerPrice'] as num?)?.toDouble(),
-      durationHours:
-          (json['duration_hours'] ?? json['durationHours'] as num?)
-              ?.toDouble() ??
-          3.0,
+      price: parseDouble(json['price']) ?? 0.0,
+      offerPrice: parseDouble(json['offer_price'], json['offerPrice']),
+      durationHours: parseDouble(json['duration_hours'], json['durationHours']) ?? 3.0,
       popularity: json['popularity'] ?? 0,
-      rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
+      rating: parseDouble(json['rating']) ?? 5.0,
       reviewCount: json['review_count'] ?? json['reviewCount'] ?? 0,
       availability: json['availability'] ?? 'available',
       tags: List<String>.from(json['tags'] ?? []),

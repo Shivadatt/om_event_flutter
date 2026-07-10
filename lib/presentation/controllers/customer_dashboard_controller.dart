@@ -76,19 +76,24 @@ class CustomerDashboardController extends GetxController {
 
 
   void _bindStreams(String customerId, String branch, String phone) {
-    rxLeads.bindStream(_portalRepo.streamCustomerLeads(customerId).handleError(_logErr));
-    
-    // Bind unified quotations stream directly by customerId
-    rxQuotations.bindStream(_quotationRepo.streamCustomerQuotations(customerId).handleError(_logErr));
-    
-    rxNotifications.bindStream(_portalRepo.streamCustomerNotifications(customerId).handleError(_logErr));
-    rxDocuments.bindStream(_portalRepo.streamCustomerDocuments(customerId).handleError(_logErr));
-    rxWishlist.bindStream(_portalRepo.streamCustomerWishlist(customerId).handleError(_logErr));
-    rxOffers.bindStream(_portalRepo.streamOffers(branch).handleError(_logErr));
-    rxActivity.bindStream(_portalRepo.streamCustomerActivity(customerId).handleError(_logErr));
+    final startTime = DateTime.now();
+
+    void logFetch(String name, dynamic data) {
+      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+      final length = (data is Iterable) ? data.length : (data != null ? 1 : 0);
+      debugPrint("TIME_LOG [$name]: Fetched $length records in ${elapsed}ms");
+    }
+
+    rxLeads.bindStream(_portalRepo.streamCustomerLeads(customerId).handleError(_logErr).map((d) { logFetch('leads', d); return d; }));
+    rxQuotations.bindStream(_quotationRepo.streamCustomerQuotations(customerId).handleError(_logErr).map((d) { logFetch('quotations', d); return d; }));
+    rxNotifications.bindStream(_portalRepo.streamCustomerNotifications(customerId).handleError(_logErr).map((d) { logFetch('notifications', d); return d; }));
+    rxDocuments.bindStream(_portalRepo.streamCustomerDocuments(customerId).handleError(_logErr).map((d) { logFetch('documents', d); return d; }));
+    rxWishlist.bindStream(_portalRepo.streamCustomerWishlist(customerId).handleError(_logErr).map((d) { logFetch('wishlist', d); return d; }));
+    rxOffers.bindStream(_portalRepo.streamOffers(branch).handleError(_logErr).map((d) { logFetch('offers', d); return d; }));
+    rxActivity.bindStream(_portalRepo.streamCustomerActivity(customerId).handleError(_logErr).map((d) { logFetch('activity', d); return d; }));
   }
 
-  void _logErr(e) => debugPrint("CustomerDashboard stream error: $e");
+  void _logErr(e) => debugPrint("CustomerDashboard stream ERROR: $e");
 
   void _clearAll() {
     rxLeads.clear();

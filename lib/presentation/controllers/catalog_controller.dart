@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/errors/failures.dart';
@@ -12,7 +13,7 @@ import '../../domain/usecases/get_categories.dart';
 import '../../domain/usecases/get_experiences.dart';
 import '../../domain/usecases/get_reviews.dart';
 import '../../domain/usecases/submit_lead.dart';
-import '../../core/services/listener_registry_service.dart';
+
 import 'customer_auth_controller.dart';
 
 part 'parts/catalog_filter.dart';
@@ -79,49 +80,62 @@ class CatalogController extends GetxController {
 
   @override
   void onClose() {
-    if (Get.isRegistered<ListenerRegistryService>()) {
-      ListenerRegistryService.to.disposeListener('catalog_categories');
-      ListenerRegistryService.to.disposeListener('catalog_experiences');
-      ListenerRegistryService.to.disposeListener('catalog_reviews');
-    }
+    _categoriesSub?.cancel();
+    _experiencesSub?.cancel();
+    _reviewsSub?.cancel();
     super.onClose();
   }
+
+  StreamSubscription? _categoriesSub;
+  StreamSubscription? _experiencesSub;
+  StreamSubscription? _reviewsSub;
 
   // ── Realtime stream binding ────────────────────────────────────────────────
   void _bindRealtimeStreams() {
     final getReviews = Get.find<GetReviews>();
-    final registry = ListenerRegistryService.to;
+    final startTime = DateTime.now();
 
     // 1. Categories
     isLoadingCategories.value = true;
-    registry.registerAndListen<List<Category>>(
-      'catalog_categories',
-      getCategories.executeStream(),
+    _categoriesSub?.cancel();
+    _categoriesSub = getCategories.executeStream().listen(
       (cats) {
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        debugPrint("TIME_LOG [categories]: Fetched ${cats.length} categories in ${elapsed}ms");
         rxCategories.assignAll(cats);
         isLoadingCategories.value = false;
       },
+      onError: (e, s) {
+        debugPrint("CATALOG ERROR: Categories failed to load: $e");
+        isLoadingCategories.value = false;
+      }
     );
 
     // 2. Experiences
     isLoadingExperiences.value = true;
-    registry.registerAndListen<List<Experience>>(
-      'catalog_experiences',
-      getExperiences.executeStream(),
+    _experiencesSub?.cancel();
+    _experiencesSub = getExperiences.executeStream().listen(
       (experiences) {
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        debugPrint("TIME_LOG [items]: Fetched ${experiences.length} experiences in ${elapsed}ms");
         _allActiveExperiences
           ..clear()
           ..addAll(experiences);
         applyExperienceFilters();
         isLoadingExperiences.value = false;
       },
+      onError: (e, s) {
+        debugPrint("CATALOG ERROR: Experiences failed to load: $e");
+        isLoadingExperiences.value = false;
+      }
     );
 
     // 3. Reviews
-    registry.registerAndListen<List<Review>>(
-      'catalog_reviews',
-      getReviews.executeStream(),
+    _reviewsSub?.cancel();
+    _reviewsSub = getReviews.executeStream().listen(
       (reviews) {
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        debugPrint("TIME_LOG [reviews]: Fetched ${reviews.length} reviews in ${elapsed}ms");
         rxReviews.assignAll(reviews);
       },
     );
@@ -129,11 +143,6 @@ class CatalogController extends GetxController {
 
   // ── Public API (UI compatibility) ──────────────────────────────────────────
   Future<void> refreshCatalog() async {
-    if (Get.isRegistered<ListenerRegistryService>()) {
-      ListenerRegistryService.to.disposeListener('catalog_categories');
-      ListenerRegistryService.to.disposeListener('catalog_experiences');
-      ListenerRegistryService.to.disposeListener('catalog_reviews');
-    }
     _bindRealtimeStreams();
   }
 

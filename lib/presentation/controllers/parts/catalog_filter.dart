@@ -9,8 +9,6 @@ extension CatalogFilterExtension on CatalogController {
     final catFilter = selectedCategorySlug.value;
     final selectedCat = rxCategories.firstWhereOrNull((c) => c.slug == catFilter);
     final selectedId = selectedCat?.id ?? '';
-    final selectedName = selectedCat?.name ?? (catFilter.isEmpty ? 'All' : 'Unknown');
-    final selectedSlug = selectedCat?.slug ?? (catFilter.isEmpty ? 'N/A' : catFilter);
 
     // Cascade filter using category IDs
     final activeIds = rxCategories.map((c) => c.id).toSet();
@@ -53,27 +51,6 @@ extension CatalogFilterExtension on CatalogController {
         // 'popular' and 'latest' both sort by popularity
         list.sort((a, b) => b.popularity.compareTo(a.popularity));
     }
-
-    // Temporary debug logs for filter investigation
-    print("Selected Category: $selectedName");
-    print("ID: ${selectedId.isEmpty ? 'N/A' : selectedId}");
-    print("Slug: $selectedSlug");
-    print("Name: $selectedName");
-
-    for (final e in _allActiveExperiences) {
-      final relationExists = e.categoryIds.any((id) => rxCategories.any((c) => c.id == id));
-      final matchesSelected = selectedId.isEmpty || e.categoryIds.contains(selectedId);
-      print("Experience: ${e.name}");
-      print("Category ID: ${e.categoryId}");
-      print("Category Name: ${e.categoryName}");
-      print("Category Slug: ${e.categorySlug}");
-      print("Relation Loaded: ${relationExists ? 'YES' : 'NO'}");
-      print("Matches Selected Category: ${matchesSelected ? 'YES' : 'NO'}");
-    }
-
-    print("Total Experiences Loaded: ${_allActiveExperiences.length}");
-    print("Filtered Experiences: ${list.length}");
-    print("IDs Returned: ${list.map((e) => e.id).join(', ')}");
 
     rxExperiences.assignAll(list);
   }

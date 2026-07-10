@@ -17,12 +17,15 @@ class ListenerRegistryService extends GetxService {
   final Map<String, StreamSubscription> _activeSubscriptions = {};
 
   /// Attaches a stream listener, registering it under a specific key to handle lifecycle tracking automatically.
-  void registerAndListen<T>(String key, Stream<T> stream, void Function(T) onData) {
+  void registerAndListen<T>(String key, Stream<T> stream, void Function(T) onData, {void Function(Object e, StackTrace s)? onError}) {
     _activeSubscriptions[key]?.cancel();
     final sub = stream.listen(
       onData,
       onError: (e, stack) {
         debugPrint("LISTENER REGISTRY ERROR [$key]: $e");
+        if (onError != null) {
+          onError(e, stack);
+        }
       },
     );
     _activeSubscriptions[key] = sub;
