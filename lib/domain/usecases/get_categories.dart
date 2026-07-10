@@ -8,4 +8,8 @@ class GetCategories {
   Future<List<Category>> call() async {
     return await repository.getCategories();
   }
+
+  Stream<List<Category>> executeStream() {
+    return repository.streamCategories();
+  }
 }

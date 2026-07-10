@@ -3,9 +3,8 @@ import 'package:get/get.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../core/config/app_routes.dart';
+import '../../core/services/bootstrap_service.dart';
 import '../../core/services/fcm_notification_service.dart';
-import '../../core/services/notification_handler_service.dart';
-import '../../core/services/fcm/fcm_module.dart';
 
 class CustomerAuthController extends GetxController {
   final CustomerAuthRepository _authRepository;
@@ -20,7 +19,15 @@ class CustomerAuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    checkAuthStatus();
+    // React to BootstrapService state to avoid race conditions
+    ever(BootstrapService.to.rxIsApplicationReady, (isReady) {
+      if (isReady) {
+        checkAuthStatus();
+      }
+    });
+    if (BootstrapService.to.rxIsApplicationReady.value) {
+      checkAuthStatus();
+    }
   }
 
   Future<void> checkAuthStatus() async {
@@ -31,16 +38,7 @@ class CustomerAuthController extends GetxController {
       if (uid != null) {
         final profile = await _authRepository.getCustomerProfile(uid);
         rxCustomerProfile.value = profile;
-        // New FCM module — initialize permission + token + listeners
-        FcmService.to.initialize(
-          userId: uid,
-          role: 'customer',
-        );
-        // Legacy FCM (backwards compatibility — kept until fully migrated)
-        if (!Get.isRegistered<NotificationHandlerService>()) {
-          Get.find<NotificationHandlerService>();
-        }
-        FcmNotificationService.to.initializeUserFcm(uid, role: 'customer');
+        // FCM Initialization is strictly orchestrated by BootstrapService now.
       }
     } else {
       rxCustomerProfile.value = null;

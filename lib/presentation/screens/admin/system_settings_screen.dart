@@ -11,6 +11,8 @@ import 'package:om_event/core/utils/validators.dart';
 import 'widgets/admin_back_button.dart';
 import 'widgets/admin_layout.dart';
 import 'widgets/settings_notifications_tab.dart';
+import 'maintenance_center_screen.dart';
+import 'scheduler_health_screen.dart';
 
 part 'parts/settings_fields.dart';
 part 'parts/settings_saves.dart';
@@ -108,6 +110,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
     "Reviews Filter",
     "Statistics Metrics",
     "FAQ Accordions",
+    "Maintenance Center",
   ];
 
   @override
@@ -334,6 +337,54 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
         return _buildStatisticsForm();
       case 30:
         return _buildFaqAccordionsForm();
+      case 31:
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final Color primaryAccentColor = const Color(0xFFD4AF37);
+        final Color txtColor = isDark ? const Color(0xFFF7F2EA) : const Color(0xFF0F0D0B);
+        final Color subColor = isDark ? const Color(0xFFB6ADA4) : const Color(0xFF6B7280);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "System Maintenance Center",
+              style: AppTheme.sansBody(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Access migrations, database seeders, relationship repairs, dry runs, and validation checks from a centralized administrator dashboard.",
+              style: AppTheme.sansBody(fontSize: 14, color: subColor),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryAccentColor,
+                foregroundColor: txtColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () => Get.to(() => const MaintenanceCenterScreen()),
+              child: const Text(
+                "Open Maintenance Center",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: primaryAccentColor,
+                side: BorderSide(color: primaryAccentColor.withValues(alpha: 0.6)),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.schedule_rounded, size: 18),
+              onPressed: () => Get.to(() => const SchedulerHealthScreen()),
+              label: const Text(
+                "Scheduler Health Dashboard",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
       default:
         return Center(
           child: Text(

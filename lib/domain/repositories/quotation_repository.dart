@@ -8,4 +8,9 @@ abstract class QuotationRepository {
   Future<void> updateQuotationStatus(String id, String status);
   Stream<List<Quotation>> streamAllQuotations();
   Stream<List<Quotation>> streamCustomerQuotations(String customerId);
+  Future<void> saveQuotationDraft(Quotation quotation);
+  Future<Quotation?> getQuotationDraft(String id);
+  Future<void> deleteQuotationDraft(String id);
+  Future<void> publishQuotationRevision(Quotation quotation);
+  Future<void> unlockQuotation(String id, String superAdminName);
 }

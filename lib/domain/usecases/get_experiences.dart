@@ -20,4 +20,8 @@ class GetExperiences {
       sortBy: sortBy,
     );
   }
+
+  Stream<List<Experience>> executeStream() {
+    return repository.streamAllActiveExperiences();
+  }
 }

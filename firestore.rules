@@ -65,6 +65,31 @@ service cloud.firestore {
       allow delete: if isAdminOrStaff();
     }
 
+    // Quotation drafts: Admin and staff only
+    match /quotation_drafts/{draftId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    // Quotation versions: Read for owner client or admin/staff; write for admin/staff only
+    match /quotation_versions/{versionId} {
+      allow read: if isAdminOrStaff() || (isAuthenticated() && resource.data.customerId == request.auth.uid);
+      allow write: if isAdminOrStaff();
+    }
+
+    // Quotation Messages: Read/write for participants (admin or the matching client)
+    match /quotation_messages/{messageId} {
+      allow read: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(resource.data.quotationId)).data.customerId == request.auth.uid);
+      allow create: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)).data.customerId == request.auth.uid);
+      allow update: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(resource.data.quotationId)).data.customerId == request.auth.uid);
+      allow delete: if isAdminOrStaff();
+    }
+
+    // Quotation Attachments: Read/write for participants
+    match /quotation_attachments/{attachmentId} {
+      allow read: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(resource.data.quotationId)).data.customerId == request.auth.uid);
+      allow write: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)).data.customerId == request.auth.uid);
+    }
+
     // Bookings & Payments: Access restricted entirely to logged-in admin/staff members
     match /bookings/{bookingId} {
       allow read, write: if isAdminOrStaff();
@@ -76,9 +101,19 @@ service cloud.firestore {
 
     // Users (Auth mappings): Users can read/write their own profiles; admins can manage all
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && (request.auth.uid == userId || getUserRole() == 'admin');
-    }
+
+  allow read: if isAuthenticated() &&
+      (
+        request.auth.uid == userId ||
+        isAdminOrStaff()
+      );
+
+  allow write: if isAuthenticated() &&
+      (
+        request.auth.uid == userId ||
+        getUserRole() == 'admin'
+      );
+}
 
     // Activity Logs: Write is allowed for authenticated sessions; reading requires admin role
     match /activity_logs/{logId} {
@@ -86,6 +121,20 @@ service cloud.firestore {
       allow read: if isAuthenticated() && getUserRole() == 'admin';
     }
 
+    // Admin Role Mapping
+  match /admin/{adminId} {
+
+  // Owner apna admin profile read kar sakta hai
+  // Admin/Staff sab read kar sakte hain
+  allow read: if isAuthenticated() &&
+      (
+        request.auth.uid == adminId ||
+        isAdminOrStaff()
+      );
+
+  // Sirf admin/staff write kar sakte hain
+  allow write: if isAdminOrStaff();
+}
     // =========================================================================
     // CUSTOMER PORTAL COLLECTIONS
     // =========================================================================
@@ -150,6 +199,31 @@ service cloud.firestore {
       allow read: if isCustomerOwner() || isAdminOrStaff();
       allow create: if isCustomerCreator();
       allow update, delete: if isAdminOrStaff();
+    }
+
+    // Enterprise Automation Collections
+    match /quotation_automation_logs/{logId} {
+      allow read: if isAdminOrStaff();
+      allow write: if false; // Only written by Server-side SDK
+    }
+
+    match /quotation_reminders/{reminderId} {
+      allow read: if isAdminOrStaff();
+      allow write: if false; // Only written by Server-side SDK
+    }
+
+    match /automation_settings/{settingsId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    // App Settings (configuration documents)
+    match /settings/data/public/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /settings/data/admin/{doc} {
+      allow read, write: if isAdminOrStaff();
     }
   }
 }

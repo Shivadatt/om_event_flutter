@@ -3,6 +3,7 @@ import '../../core/constants/app_collections.dart';
 import '../../core/constants/app_status.dart';
 import '../../core/constants/app_strings.dart';
 import '../models/review_model.dart';
+import '../../core/services/supabase_edge_functions.dart';
 
 /// Manages application-wide business records from Firestore (reviews, bookings, payments, settings).
 class AdminRepository {
@@ -37,6 +38,7 @@ class AdminRepository {
           .collection(AppCollections.reviews)
           .doc(review.id)
           .set(review.toJson());
+      SupabaseEdgeFunctions.to.invoke('review-created', {'reviewId': review.id});
     }
   }
 

@@ -57,6 +57,55 @@ class _SettingsNotificationsTabState extends State<SettingsNotificationsTab> {
   bool isEmailEnabled = true;
   bool isWhatsappEnabled = true;
 
+  bool isAutomationEnabled = true;
+  final expiryDaysCtrl = TextEditingController(text: '7');
+  final reminderHoursCtrl = TextEditingController(text: '24');
+  final followUpDaysCtrl = TextEditingController(text: '3');
+  bool isSettingsLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutomationSettings();
+  }
+
+  Future<void> _loadAutomationSettings() async {
+    try {
+      updateState(() => isSettingsLoading = true);
+      final doc = await _firestore.collection(AppCollections.automationSettings).doc('global_config').get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        updateState(() {
+          isAutomationEnabled = data['isEnabled'] ?? true;
+          expiryDaysCtrl.text = (data['expiryDurationDays'] ?? 7).toString();
+          reminderHoursCtrl.text = (data['reminderTimingHours'] ?? 24).toString();
+          followUpDaysCtrl.text = (data['followUpIntervalDays'] ?? 3).toString();
+        });
+      }
+    } catch (_) {} finally {
+      updateState(() => isSettingsLoading = false);
+    }
+  }
+
+  Future<void> _saveAutomationSettings() async {
+    try {
+      updateState(() => isSettingsLoading = true);
+      await _firestore.collection(AppCollections.automationSettings).doc('global_config').set({
+        'isEnabled': isAutomationEnabled,
+        'expiryDurationDays': int.tryParse(expiryDaysCtrl.text) ?? 7,
+        'reminderTimingHours': int.tryParse(reminderHoursCtrl.text) ?? 24,
+        'followUpIntervalDays': int.tryParse(followUpDaysCtrl.text) ?? 3,
+        'bookingReminderDays': [7, 3, 1],
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      Get.snackbar("Success", "Automation settings updated successfully.");
+    } catch (e) {
+      Get.snackbar("Error", "Failed to update settings: $e");
+    } finally {
+      updateState(() => isSettingsLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     resendKeyCtrl.dispose();
@@ -75,6 +124,9 @@ class _SettingsNotificationsTabState extends State<SettingsNotificationsTab> {
     testWaParamsCtrl.dispose();
     broadcastTitleCtrl.dispose();
     broadcastBodyCtrl.dispose();
+    expiryDaysCtrl.dispose();
+    reminderHoursCtrl.dispose();
+    followUpDaysCtrl.dispose();
     super.dispose();
   }
 
@@ -215,8 +267,62 @@ class _SettingsNotificationsTabState extends State<SettingsNotificationsTab> {
           const SizedBox(height: 24),
 
           _buildNotificationSystemAuditLogs(),
+          const SizedBox(height: 24),
+
+          _buildQuotationAutomationSettingsPanel(),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuotationAutomationSettingsPanel() {
+    if (isSettingsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return _buildCard(
+      title: "QUOTATION AUTOMATION & SCHEDULER SETTINGS",
+      children: [
+        const Text(
+          "Manage automatic quotation expiry windows, pre-expiry reminders, and customer follow-up alerts.",
+          style: TextStyle(color: Colors.white54, fontSize: 12),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Enable Scheduler Automation",
+              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            Switch(
+              value: isAutomationEnabled,
+              activeColor: Colors.amber,
+              onChanged: (val) {
+                updateState(() => isAutomationEnabled = val);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _buildTextField("Expiry Duration (Days)", expiryDaysCtrl),
+        const SizedBox(height: 12),
+        _buildTextField("Pre-Expiry Reminder Interval (Hours)", reminderHoursCtrl),
+        const SizedBox(height: 12),
+        _buildTextField("Inactivity Follow-Up Interval (Days)", followUpDaysCtrl),
+        const SizedBox(height: 20),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber,
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+          icon: const Icon(Icons.save_rounded),
+          label: const Text("Save Automation Rules", style: TextStyle(fontWeight: FontWeight.bold)),
+          onPressed: _saveAutomationSettings,
+        ),
+      ],
     );
   }
 }

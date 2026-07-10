@@ -76,4 +76,7 @@ class AppCollections {
   static const String scheduledNotifications = 'scheduled_notifications';
   static const String notificationDeliveryEvents = 'notification_delivery_events';
   static const String notificationWebhookLogs = 'notification_webhook_logs';
+  static const String automationSettings = 'automation_settings';
+  static const String quotationAutomationLogs = 'quotation_automation_logs';
+  static const String quotationReminders = 'quotation_reminders';
 }

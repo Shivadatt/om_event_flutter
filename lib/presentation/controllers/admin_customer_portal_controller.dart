@@ -70,7 +70,7 @@ class AdminCustomerPortalController extends GetxController {
       createdAt: quote.createdAt,
       updatedAt: quote.updatedAt,
       customerId: quote.customerId,
-      versionHistory: quote.versionHistory,
+      versions: quote.versions,
     );
     await _firestore.collection(AppCollections.quotations).add(model.toJson());
   }
@@ -80,6 +80,16 @@ class AdminCustomerPortalController extends GetxController {
       final targetStatus = QuotationStatus.fromString(data['status']);
       if (targetStatus == QuotationStatus.acceptedByClient || targetStatus == QuotationStatus.rejectedByClient) {
         throw Exception("Customer acceptance or rejection must always originate from the Client Portal.");
+      }
+      if (targetStatus == QuotationStatus.bookingConfirmed) {
+        final snap = await _firestore.collection(AppCollections.quotations).doc(id).get();
+        if (snap.exists) {
+          final currentStatus = QuotationStatus.fromString(snap.data()?['status'] ?? 'draft');
+          final acceptedAt = snap.data()?['acceptedAt'];
+          if (currentStatus != QuotationStatus.acceptedByClient || acceptedAt == null) {
+            throw Exception("Booking can only be confirmed after client has legally accepted the proposal with digital consent.");
+          }
+        }
       }
     }
     await _firestore.collection(AppCollections.quotations).doc(id).update(data);

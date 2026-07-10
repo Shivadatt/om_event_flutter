@@ -1,13 +1,11 @@
 part of '../settings_repository_impl.dart';
 
 mixin SettingsOperations {
-  FirebaseFirestore get _firestore;
+  DocumentReference<Map<String, dynamic>> _getDocRef(String docId);
   Future<void> _saveToDraft(String docId, Map<String, dynamic> draftData);
 
   Stream<PricingSettings> streamPricing() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('pricing')
+    return _getDocRef('pricing')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return PricingSettings.defaultVal();
@@ -25,9 +23,7 @@ mixin SettingsOperations {
   }
 
   Stream<BookingSettings> streamBooking() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('booking')
+    return _getDocRef('booking')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return BookingSettings.defaultVal();
@@ -44,9 +40,7 @@ mixin SettingsOperations {
   }
 
   Stream<NotificationsSettings> streamNotifications() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('notifications')
+    return _getDocRef('notifications')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return NotificationsSettings.defaultVal();
@@ -67,9 +61,7 @@ mixin SettingsOperations {
   }
 
   Stream<PDFSettings> streamPDF() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('pdf')
+    return _getDocRef('pdf')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return PDFSettings.defaultVal();
@@ -87,9 +79,7 @@ mixin SettingsOperations {
   }
 
   Stream<StatisticsSettings> streamStatistics() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('statistics')
+    return _getDocRef('statistics')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return StatisticsSettings.defaultVal();
@@ -105,9 +95,7 @@ mixin SettingsOperations {
   }
 
   Stream<FeatureFlagsSettings> streamFeatureFlags() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('feature_flags')
+    return _getDocRef('feature_flags')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return FeatureFlagsSettings.defaultVal();
@@ -126,9 +114,7 @@ mixin SettingsOperations {
   }
 
   Stream<MaintenanceSettings> streamMaintenance() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('maintenance')
+    return _getDocRef('maintenance')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return MaintenanceSettings.defaultVal();
@@ -143,9 +129,7 @@ mixin SettingsOperations {
   }
 
   Stream<AppSettings> streamApp() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('app')
+    return _getDocRef('app')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return AppSettings.defaultVal();
@@ -160,9 +144,7 @@ mixin SettingsOperations {
   }
 
   Stream<EmailTemplatesSettings> streamEmailTemplates() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('email_templates')
+    return _getDocRef('email_templates')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return EmailTemplatesSettings.defaultVal();
@@ -173,9 +155,7 @@ mixin SettingsOperations {
   }
 
   Stream<SmsTemplatesSettings> streamSmsTemplates() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('sms_templates')
+    return _getDocRef('sms_templates')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return SmsTemplatesSettings.defaultVal();
@@ -186,9 +166,7 @@ mixin SettingsOperations {
   }
 
   Stream<InvoiceSettings> streamInvoice() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('invoice')
+    return _getDocRef('invoice')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return InvoiceSettings.defaultVal();
@@ -202,9 +180,7 @@ mixin SettingsOperations {
   }
 
   Stream<AnalyticsSettings> streamAnalytics() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('analytics')
+    return _getDocRef('analytics')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return AnalyticsSettings.defaultVal();
@@ -218,9 +194,7 @@ mixin SettingsOperations {
   }
 
   Stream<DashboardSettings> streamDashboard() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('dashboard')
+    return _getDocRef('dashboard')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return DashboardSettings.defaultVal();
@@ -234,9 +208,7 @@ mixin SettingsOperations {
   }
 
   Stream<WorkingHoursSettings> streamWorkingHours() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('working_hours')
+    return _getDocRef('working_hours')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return WorkingHoursSettings.defaultVal();
@@ -250,9 +222,7 @@ mixin SettingsOperations {
   }
 
   Stream<PoliciesSettings> streamPolicies() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('policies')
+    return _getDocRef('policies')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return PoliciesSettings.defaultVal();
@@ -267,9 +237,7 @@ mixin SettingsOperations {
   }
 
   Stream<ValidationSettings> streamValidation() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('validation')
+    return _getDocRef('validation')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return ValidationSettings.defaultVal();
@@ -282,9 +250,7 @@ mixin SettingsOperations {
   }
 
   Stream<MessagesSettings> streamMessages() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('messages')
+    return _getDocRef('messages')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return MessagesSettings.defaultVal();
@@ -297,9 +263,7 @@ mixin SettingsOperations {
   }
 
   Stream<GallerySettings> streamGallerySettings() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('gallery_settings')
+    return _getDocRef('gallery_settings')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return GallerySettings.defaultVal();
@@ -313,9 +277,7 @@ mixin SettingsOperations {
   }
 
   Stream<VideoSettings> streamVideoSettings() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('video_settings')
+    return _getDocRef('video_settings')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return VideoSettings.defaultVal();
@@ -326,9 +288,7 @@ mixin SettingsOperations {
   }
 
   Stream<ReviewSettings> streamReviewSettings() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('review_settings')
+    return _getDocRef('review_settings')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return ReviewSettings.defaultVal();
@@ -342,9 +302,7 @@ mixin SettingsOperations {
   }
 
   Stream<FaqSettings> streamFaqSettings() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('faq_settings')
+    return _getDocRef('faq_settings')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return FaqSettings.defaultVal();

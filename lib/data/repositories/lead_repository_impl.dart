@@ -3,6 +3,7 @@ import '../../domain/entities/lead.dart';
 import '../../domain/repositories/lead_repository.dart';
 import '../datasources/firestore_remote_source.dart';
 import '../models/lead_model.dart';
+import '../../core/services/supabase_edge_functions.dart';
 
 class LeadRepositoryImpl implements LeadRepository {
   final FirestoreRemoteSource firestoreSource;
@@ -27,7 +28,7 @@ class LeadRepositoryImpl implements LeadRepository {
       );
 
       final docRef = await firestoreSource.submitLead(model.toJson());
-      // Return a new model with the generated document ID
+      SupabaseEdgeFunctions.to.invoke('lead-created', {'leadId': docRef.id});
       return LeadModel(
         id: docRef.id,
         name: model.name,

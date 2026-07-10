@@ -76,7 +76,18 @@ class QuotesAdminView extends StatelessWidget {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-                          onPressed: () => portalController.adminUpdateQuotation(quote.id, {'status': 'bookingConfirmed'}),
+                          onPressed: () {
+                            if (quote.status != QuotationStatus.acceptedByClient) {
+                              Get.snackbar(
+                                "Consent Required",
+                                "Booking can only be confirmed after the client has legally accepted the proposal with digital consent.",
+                                backgroundColor: const Color(0xFFC95C5C),
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+                            portalController.adminUpdateQuotation(quote.id, {'status': 'bookingConfirmed'});
+                          },
                         ),
                         IconButton(
                           icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),

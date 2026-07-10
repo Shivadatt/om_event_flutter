@@ -15,13 +15,37 @@ part 'parts/settings_operations.dart';
 class SettingsRepositoryImpl
     with SettingsBusiness, SettingsMarketing, SettingsOperations
     implements SettingsRepository {
-  @override
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  bool _isAdminDoc(String docId) {
+    const adminDocs = {
+      'migrations',
+      'analytics',
+      'dashboard',
+      'invoice',
+      'email_templates',
+      'sms_templates',
+      'notifications',
+      'automation',
+      'feature_flags',
+    };
+    return adminDocs.contains(docId);
+  }
+
+  @override
+  DocumentReference<Map<String, dynamic>> _getDocRef(String docId) {
+    final type = _isAdminDoc(docId) ? 'admin' : 'public';
+    return _firestore
+        .collection(AppCollections.settings)
+        .doc('data')
+        .collection(type)
+        .doc(docId);
+  }
 
   // Publish / Rollback
   @override
   Future<void> publishSettings(String docId) async {
-    final docRef = _firestore.collection(AppCollections.settings).doc(docId);
+    final docRef = _getDocRef(docId);
     final snap = await docRef.get();
     if (!snap.exists) return;
 
@@ -62,9 +86,7 @@ class SettingsRepositoryImpl
   @override
   Future<List<Map<String, dynamic>>> getVersionHistory(String docId) async {
     final snap =
-        await _firestore
-            .collection(AppCollections.settings)
-            .doc(docId)
+        await _getDocRef(docId)
             .collection('history')
             .orderBy('meta.version', descending: true)
             .get();
@@ -73,7 +95,7 @@ class SettingsRepositoryImpl
 
   @override
   Future<void> rollbackToVersion(String docId, int version) async {
-    final docRef = _firestore.collection(AppCollections.settings).doc(docId);
+    final docRef = _getDocRef(docId);
     final historyDoc =
         await docRef.collection('history').doc(version.toString()).get();
     if (!historyDoc.exists) return;
@@ -100,7 +122,7 @@ class SettingsRepositoryImpl
     String docId,
     Map<String, dynamic> draftData,
   ) async {
-    final docRef = _firestore.collection(AppCollections.settings).doc(docId);
+    final docRef = _getDocRef(docId);
     final snap = await docRef.get();
     final currentMeta =
         snap.exists

@@ -1,79 +1,83 @@
 part of '../local_notification_trigger_service.dart';
 
 extension LocalNotificationListenersExtension on LocalNotificationTriggerService {
-  /// 1. Trigger outbox queue tasks when core records change
-  void startLocalListeners() {
+  /// Receives leads updates from ListenerRegistryService.
+  void handleLeadsSnapshot(QuerySnapshot<Map<String, dynamic>> snap) {
+    if (!kDebugMode) return;
+    for (var change in snap.docChanges) {
+      if (change.type == DocumentChangeType.added) {
+        final data = change.doc.data();
+        if (data != null) {
+          _queueAdminNotification(
+            eventType: 'Lead Created',
+            description: 'New customer lead generated from {{customer_name}}.',
+            params: {'customer_name': data['name'] ?? 'Customer'},
+          );
+        }
+      }
+    }
+  }
 
-    _firestore.collection(AppCollections.leads).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final data = change.doc.data();
-          if (data != null) {
+  /// Receives quotations updates from ListenerRegistryService.
+  void handleQuotationsSnapshot(QuerySnapshot<Map<String, dynamic>> snap) {
+    _processQuotationChanges(snap);
+  }
+
+  /// Receives queue updates from ListenerRegistryService.
+  void handleQueueSnapshot(QuerySnapshot<Map<String, dynamic>> snap) {
+    processQueueSnapshot(snap);
+  }
+
+  void _processQuotationChanges(QuerySnapshot<Map<String, dynamic>> snap) {
+    for (var change in snap.docChanges) {
+      if (change.type == DocumentChangeType.modified) {
+        final data = change.doc.data();
+        if (data != null) {
+          final status = data['status'] ?? 'pending';
+          final customerId = data['customerId'] ?? '';
+          final customerName = data['customer_name'] ?? data['customerName'] ?? 'Customer';
+          final publicId = data['public_id'] ?? data['publicId'] ?? change.doc.id;
+          final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
+          final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
+
+          if (status == 'acceptedByClient' || status == 'bookingConfirmed') {
+            // Notify Admin
             _queueAdminNotification(
-              eventType: 'Lead Created',
-              description: 'New customer lead generated from {{customer_name}}.',
-              params: {'customer_name': data['name'] ?? 'Customer'},
+              eventType: 'Quotation Approved',
+              description: 'Quotation {{public_id}} has been approved/booked by {{customer_name}}.',
+              params: {
+                'public_id': publicId,
+                'customer_name': customerName,
+              },
+            );
+
+            // Notify Customer
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Quotation Approved',
+              body: 'Your quotation {{public_id}} has been booked successfully.',
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'quotation_approved',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
+            );
+          } else if (status == 'declinedByClient') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Quotation Rejected',
+              body: 'Your quotation {{public_id}} has been rejected.',
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'quotation_rejected',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
             );
           }
         }
       }
-    });
-
-
-
-    _firestore.collection(AppCollections.quotations).snapshots().listen((snap) {
-      for (var change in snap.docChanges) {
-        if (change.type == DocumentChangeType.modified) {
-          final data = change.doc.data();
-          if (data != null) {
-            final status = data['status'] ?? 'pending';
-            final customerId = data['customerId'] ?? '';
-            final customerName = data['customer_name'] ?? data['customerName'] ?? 'Customer';
-            final publicId = data['public_id'] ?? data['publicId'] ?? change.doc.id;
-            final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
-            final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
-
-            if (status == 'acceptedByClient' || status == 'bookingConfirmed') {
-              // Notify Admin
-              _queueAdminNotification(
-                eventType: 'Quotation Approved',
-                description: 'Quotation {{public_id}} has been approved/booked by {{customer_name}}.',
-                params: {
-                  'public_id': publicId,
-                  'customer_name': customerName,
-                },
-              );
-
-              // Notify Customer
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Quotation Approved',
-                body: 'Your quotation {{public_id}} has been booked successfully.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'quotation_approved',
-                whatsappParams: [publicId],
-                variables: {'public_id': publicId},
-              );
-            } else if (status == 'declinedByClient') {
-              _queueCustomerNotification(
-                customerId: customerId,
-                title: 'Quotation Rejected',
-                body: 'Your quotation {{public_id}} has been rejected.',
-                email: email,
-                phone: phone,
-                whatsappTemplate: 'quotation_rejected',
-                whatsappParams: [publicId],
-                variables: {'public_id': publicId},
-              );
-            }
-          }
-        }
-      }
-    });
+    }
   }
-
-
 
   void _queueAdminNotification({
     required String eventType,

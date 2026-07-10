@@ -1,6 +1,4 @@
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_collections.dart';
 import '../../domain/entities/lead.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/repositories/lead_repository.dart';
@@ -13,6 +11,7 @@ import 'experience_controller_mixin.dart';
 import 'customer_controller_mixin.dart';
 import 'user_controller_mixin.dart';
 import 'review_controller_mixin.dart';
+import 'quotation_controller_mixin.dart';
 
 class AdminController extends GetxController
     with
@@ -20,8 +19,11 @@ class AdminController extends GetxController
         ExperienceControllerMixin,
         CustomerControllerMixin,
         UserControllerMixin,
-        ReviewControllerMixin {
+        ReviewControllerMixin,
+        QuotationControllerMixin {
+  @override
   final LeadRepository leadRepository;
+  @override
   final QuotationRepository quotationRepository;
   final CatalogRepository catalogRepository;
   final CustomerRepository customerRepository;
@@ -71,6 +73,7 @@ class AdminController extends GetxController
     loadReviews();
   }
 
+  @override
   Future<void> loadDashboardStats() async {
     try {
       isLoadingStats.value = true;
@@ -96,48 +99,6 @@ class AdminController extends GetxController
       Get.snackbar("Status Updated", "Lead status updated successfully.");
     } catch (e) {
       Get.snackbar("Error", e.toString());
-    }
-  }
-
-  Future<void> updateQuotation(String id, String status) async {
-    try {
-      final targetStatus = QuotationStatus.fromString(status);
-      if (targetStatus == QuotationStatus.acceptedByClient || targetStatus == QuotationStatus.rejectedByClient) {
-        throw Exception("Customer acceptance or rejection must always originate from the Client Portal.");
-      }
-      await quotationRepository.updateQuotationStatus(id, status);
-      await loadDashboardStats();
-      Get.snackbar("Status Updated", "Quotation status updated successfully.");
-    } catch (e) {
-      Get.snackbar("Error", e.toString());
-    }
-  }
-
-  Future<void> sendProposalMessage(String id, String message) async {
-    try {
-      final db = FirebaseFirestore.instance;
-      await db.collection(AppCollections.quotations).doc(id).update({
-        'adminMessage': message,
-      });
-      
-      final doc = await db.collection(AppCollections.quotations).doc(id).get();
-      final data = doc.data() ?? {};
-      final customerId = data['customerId'] ?? data['customer_id'] ?? '';
-      
-      if (customerId.isNotEmpty) {
-        await db.collection(AppCollections.customerNotifications).add({
-          'customerId': customerId,
-          'title': 'New Message from Studio',
-          'body': 'Admin sent a message regarding proposal ${data['public_id'] ?? id}: "$message"',
-          'type': 'message',
-          'isRead': false,
-          'createdAt': DateTime.now().toIso8601String(),
-          'branch': data['location'] ?? '',
-        });
-      }
-      Get.snackbar("Message Sent", "Proposal message sent successfully.");
-    } catch (e) {
-      Get.snackbar("Error", "Failed to send message: ${e.toString()}");
     }
   }
 }

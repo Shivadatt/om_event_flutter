@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
 import '../../controllers/admin_customer_portal_controller.dart';
 import '../../controllers/admin_controller.dart';
+import '../../../core/constants/app_colors.dart';
 import 'customer_portal_admin_dashboard/views/quotes_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/notifications_admin_view.dart';
 import 'customer_portal_admin_dashboard/views/offers_admin_view.dart';
@@ -60,14 +61,40 @@ class _CustomerPortalAdminDashboardState extends State<CustomerPortalAdminDashbo
           labelColor: const Color(0xFFC9A77E),
           unselectedLabelColor: Colors.white60,
           indicatorColor: const Color(0xFFC9A77E),
-          tabs: const [
-            Tab(text: "Quotes Management"),
-            Tab(text: "Notification Broadcasts"),
-            Tab(text: "Offers CMS"),
-            Tab(text: "Global Search & Logs"),
-            Tab(text: "Homepage Builder"),
-            Tab(text: "Coordinator CMS"),
-            Tab(text: "Inventory CMS"),
+          tabs: [
+            const Tab(text: "Quotes Management"),
+            Tab(
+              child: Obx(() {
+                final unread = portalController.rxAllNotifications
+                    .where((n) => !n.isRead && n.customerId == 'admin')
+                    .length;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text("Notification Broadcasts"),
+                    if (unread > 0) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "$unread",
+                          style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              }),
+            ),
+            const Tab(text: "Offers CMS"),
+            const Tab(text: "Global Search & Logs"),
+            const Tab(text: "Homepage Builder"),
+            const Tab(text: "Coordinator CMS"),
+            const Tab(text: "Inventory CMS"),
           ],
         ),
       ),

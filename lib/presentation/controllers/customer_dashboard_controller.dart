@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
@@ -75,17 +76,19 @@ class CustomerDashboardController extends GetxController {
 
 
   void _bindStreams(String customerId, String branch, String phone) {
-    rxLeads.bindStream(_portalRepo.streamCustomerLeads(customerId));
+    rxLeads.bindStream(_portalRepo.streamCustomerLeads(customerId).handleError(_logErr));
     
     // Bind unified quotations stream directly by customerId
-    rxQuotations.bindStream(_quotationRepo.streamCustomerQuotations(customerId));
+    rxQuotations.bindStream(_quotationRepo.streamCustomerQuotations(customerId).handleError(_logErr));
     
-    rxNotifications.bindStream(_portalRepo.streamCustomerNotifications(customerId));
-    rxDocuments.bindStream(_portalRepo.streamCustomerDocuments(customerId));
-    rxWishlist.bindStream(_portalRepo.streamCustomerWishlist(customerId));
-    rxOffers.bindStream(_portalRepo.streamOffers(branch));
-    rxActivity.bindStream(_portalRepo.streamCustomerActivity(customerId));
+    rxNotifications.bindStream(_portalRepo.streamCustomerNotifications(customerId).handleError(_logErr));
+    rxDocuments.bindStream(_portalRepo.streamCustomerDocuments(customerId).handleError(_logErr));
+    rxWishlist.bindStream(_portalRepo.streamCustomerWishlist(customerId).handleError(_logErr));
+    rxOffers.bindStream(_portalRepo.streamOffers(branch).handleError(_logErr));
+    rxActivity.bindStream(_portalRepo.streamCustomerActivity(customerId).handleError(_logErr));
   }
+
+  void _logErr(e) => debugPrint("CustomerDashboard stream error: $e");
 
   void _clearAll() {
     rxLeads.clear();

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +7,11 @@ import '../../../../../core/constants/app_collections.dart';
 import '../../../../../domain/entities/quotation.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 import '../../../../../core/widgets/app_image.dart';
+import '../../../../../core/utils/formatters.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../controllers/quotation_collaboration_controller.dart';
+import '../../../../../domain/entities/quotation_message.dart';
+import '../../../../widgets/reusable/version_comparison_sheet.dart';
 
 /// Quotations management tab view for customers.
 class QuotesView extends StatefulWidget {
@@ -259,46 +263,146 @@ class _QuotesViewState extends State<QuotesView> {
                           ),
                         ),
                       ],
-                      if (activeQuote.versionHistory.isNotEmpty) ...[
+                      const SizedBox(height: 32),
+                      _buildChatSection(activeQuote),
+                      if (activeQuote.timeline.isNotEmpty) ...[
                         const SizedBox(height: 24),
-                        Theme(
-                          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                          child: ExpansionTile(
-                            title: Text(
-                              "REVISION HISTORY (v${activeQuote.version})",
-                              style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "PROPOSAL LIFECYCLE",
+                              style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.5),
                             ),
-                            iconColor: const Color(0xFFD4AF37),
-                            collapsedIconColor: const Color(0xFFD4AF37),
-                            children: activeQuote.versionHistory.map((histStr) {
-                              try {
-                                final hist = jsonDecode(histStr) as Map<String, dynamic>;
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.03),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            if (activeQuote.versions.isNotEmpty)
+                              TextButton.icon(
+                                icon: const Icon(Icons.compare_arrows_rounded, size: 14, color: Color(0xFFD4AF37)),
+                                label: Text(
+                                  "Compare Revisions",
+                                  style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37)),
+                                ),
+                                onPressed: () => VersionComparisonSheet.show(context, activeQuote),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.02),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: List.generate(activeQuote.timeline.length, (idx) {
+                              final event = activeQuote.timeline[idx];
+                              final isLast = idx == activeQuote.timeline.length - 1;
+                              
+                              Color dotColor = const Color(0xFFD4AF37);
+                              IconData dotIcon = Icons.radio_button_checked_rounded;
+
+                              if (event.status == QuotationStatus.draft) {
+                                dotColor = Colors.white30;
+                                dotIcon = Icons.note_add_outlined;
+                              } else if (event.status == QuotationStatus.published) {
+                                dotColor = const Color(0xFFD4AF37);
+                                dotIcon = Icons.send_rounded;
+                              } else if (event.status == QuotationStatus.viewed) {
+                                dotColor = const Color(0xFFD4AF37);
+                                dotIcon = Icons.visibility_outlined;
+                              } else if (event.status == QuotationStatus.revisionRequested) {
+                                dotColor = const Color(0xFFC95C5C);
+                                dotIcon = Icons.edit_note_rounded;
+                              } else if (event.status == QuotationStatus.underRevision) {
+                                dotColor = const Color(0xFFE6C98D);
+                                dotIcon = Icons.build_rounded;
+                              } else if (event.status == QuotationStatus.republished) {
+                                dotColor = const Color(0xFFD4AF37);
+                                dotIcon = Icons.published_with_changes_rounded;
+                              } else if (event.status == QuotationStatus.acceptedByClient) {
+                                dotColor = const Color(0xFF4CAF50);
+                                dotIcon = Icons.check_circle_rounded;
+                              } else if (event.status == QuotationStatus.bookingConfirmed) {
+                                dotColor = const Color(0xFF4CAF50);
+                                dotIcon = Icons.celebration_rounded;
+                              } else if (event.status == QuotationStatus.completed) {
+                                dotColor = const Color(0xFF4CAF50);
+                                dotIcon = Icons.done_all_rounded;
+                              } else if (event.status == QuotationStatus.cancelled) {
+                                dotColor = const Color(0xFFC95C5C);
+                                dotIcon = Icons.cancel_rounded;
+                              } else if (event.status == QuotationStatus.expired) {
+                                dotColor = const Color(0xFFC95C5C);
+                                dotIcon = Icons.timer_off_rounded;
+                              } else if (event.status == QuotationStatus.archived) {
+                                dotColor = Colors.white38;
+                                dotIcon = Icons.archive_rounded;
+                              }
+
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Column(
                                     children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text("Version ${hist['version'] ?? '?'}", style: const TextStyle(color: Color(0xFFC9A77E), fontWeight: FontWeight.bold, fontSize: 12)),
-                                          const SizedBox(height: 4),
-                                          Text("Reason: ${hist['reason'] ?? 'Revision'}", style: const TextStyle(color: Colors.white54, fontSize: 11)),
-                                        ],
+                                      Container(
+                                        width: 28,
+                                        height: 28,
+                                        decoration: BoxDecoration(
+                                          color: dotColor.withValues(alpha: 0.1),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: dotColor.withValues(alpha: 0.8), width: 1.5),
+                                        ),
+                                        child: Icon(dotIcon, size: 14, color: dotColor),
                                       ),
-                                      Text("₹${(hist['grand_total'] ?? 0).toStringAsFixed(0)}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                      if (!isLast)
+                                        Container(
+                                          width: 1.5,
+                                          height: 40,
+                                          color: Colors.white.withValues(alpha: 0.08),
+                                        ),
                                     ],
                                   ),
-                                );
-                              } catch (_) {
-                                return const SizedBox.shrink();
-                              }
-                            }).toList(),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              event.title,
+                                              style: AppTheme.sansBody(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            Text(
+                                              AppFormatters.formatShortDate(event.timestamp),
+                                              style: AppTheme.sansBody(
+                                                fontSize: 9,
+                                                color: Colors.white38,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          event.description,
+                                          style: AppTheme.sansBody(
+                                            fontSize: 11,
+                                            color: Colors.white60,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
                           ),
                         ),
                       ],
@@ -380,7 +484,7 @@ class _QuotesViewState extends State<QuotesView> {
                                 shadowColor: const Color(0x33D4AF37),
                               ),
                               onPressed: () {
-                                widget.controller.acceptQuotation(activeQuote.id);
+                                _showDigitalConsentDialog(activeQuote);
                               },
                               child: const Text("ACCEPT & BOOK PROPOSAL"),
                             ),
@@ -608,6 +712,7 @@ class _QuotesViewState extends State<QuotesView> {
       case QuotationStatus.republished:
       case QuotationStatus.viewed:
       case QuotationStatus.revisionRequested:
+      case QuotationStatus.underRevision:
         return const Color(0xFFE6C98D);
       case QuotationStatus.rejectedByClient:
       case QuotationStatus.cancelled:
@@ -617,7 +722,466 @@ class _QuotesViewState extends State<QuotesView> {
         return const Color(0xFF7CB6D6);
       case QuotationStatus.draft:
         return Colors.white54;
+      case QuotationStatus.archived:
+        return Colors.white24;
     }
+  }
+
+  Widget _buildChatSection(Quotation activeQuote) {
+    final chatController = Get.put(
+      QuotationCollaborationController(
+        quotationId: activeQuote.id,
+        senderId: activeQuote.customerId.isNotEmpty ? activeQuote.customerId : 'client_user',
+        senderName: activeQuote.customerName.isNotEmpty ? activeQuote.customerName : 'Client',
+        senderRole: 'client',
+      ),
+      tag: activeQuote.id,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        Text(
+          "COLLABORATION & DISCUSSIONS",
+          style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.5),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 400,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.02),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              Expanded(
+                child: Obx(() {
+                  final messages = chatController.rxMessages;
+                  if (messages.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white24, size: 36),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Start a discussion with our design coordinators.",
+                            style: AppTheme.sansBody(fontSize: 11, color: Colors.white30),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    controller: chatController.scrollController,
+                    padding: const EdgeInsets.all(16),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: messages.length,
+                    itemBuilder: (context, idx) {
+                      final msg = messages[idx];
+                      final isMe = msg.senderRole == 'client';
+                      return _buildMessageBubble(msg, isMe);
+                    },
+                  );
+                }),
+              ),
+              Obx(() {
+                if (chatController.isUploading.value) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: Colors.black26,
+                    child: const Row(
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFD4AF37)),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          "Uploading attachment...",
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  color: Colors.black26,
+                  border: Border(top: BorderSide(color: Colors.white10)),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.attach_file_rounded, color: Color(0xFFD4AF37), size: 20),
+                      onPressed: () => chatController.pickAndUploadAttachment(),
+                      tooltip: "Upload Attachment",
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: chatController.textController,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: "Ask a question, request modifications...",
+                          hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
+                          filled: true,
+                          fillColor: Colors.black12,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onSubmitted: (_) => chatController.sendTextMessage(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Obx(() {
+                      return chatController.isSending.value
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFD4AF37)),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.send_rounded, color: Color(0xFFD4AF37), size: 20),
+                              onPressed: () => chatController.sendTextMessage(),
+                            );
+                    }),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMessageBubble(QuotationMessage msg, bool isMe) {
+    if (msg.type == 'system' || msg.type == 'priceChange' || msg.type == 'revision') {
+      Color bannerColor = const Color(0xFFD4AF37).withValues(alpha: 0.1);
+      Color textColor = const Color(0xFFD4AF37);
+      IconData icon = Icons.info_outline_rounded;
+
+      if (msg.type == 'priceChange') {
+        bannerColor = const Color(0xFF4CAF50).withValues(alpha: 0.1);
+        textColor = const Color(0xFF81C784);
+        icon = Icons.monetization_on_outlined;
+      } else if (msg.type == 'revision') {
+        bannerColor = const Color(0xFFE57373).withValues(alpha: 0.1);
+        textColor = const Color(0xFFEF9A9A);
+        icon = Icons.published_with_changes_rounded;
+      }
+
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: bannerColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: textColor.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: textColor),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                msg.content,
+                style: TextStyle(color: textColor.withValues(alpha: 0.9), fontSize: 11, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final aligns = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final bubbleColor = isMe 
+        ? const Color(0xFFD4AF37).withValues(alpha: 0.15) 
+        : Colors.white.withValues(alpha: 0.05);
+    final borderColor = isMe 
+        ? const Color(0xFFD4AF37).withValues(alpha: 0.3) 
+        : Colors.white.withValues(alpha: 0.1);
+
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: aligns,
+        children: [
+          GestureDetector(
+            onTap: (msg.type == 'image' || msg.type == 'pdf' || msg.type == 'document')
+                ? () async {
+                    try {
+                      final uri = Uri.parse(msg.content);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      }
+                    } catch (_) {}
+                  }
+                : null,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              constraints: const BoxConstraints(maxWidth: 320),
+              decoration: BoxDecoration(
+                color: bubbleColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: borderColor),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isMe)
+                    Text(
+                      msg.senderName.toUpperCase(),
+                      style: const TextStyle(color: Color(0xFFD4AF37), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
+                  if (!isMe) const SizedBox(height: 4),
+                  if (msg.type == 'text')
+                    Text(msg.content, style: const TextStyle(color: Colors.white, fontSize: 12.5)),
+                  if (msg.type == 'image')
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(msg.content, fit: BoxFit.cover),
+                    ),
+                  if (msg.type == 'pdf' || msg.type == 'document')
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          msg.type == 'pdf' ? Icons.picture_as_pdf_rounded : Icons.insert_drive_file_rounded,
+                          color: const Color(0xFFD4AF37),
+                          size: 24,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            msg.attachments.isNotEmpty ? msg.attachments.first.fileName : "View Attachment",
+                            style: const TextStyle(color: Colors.white, fontSize: 12, decoration: TextDecoration.underline),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "${msg.timestamp.hour.toString().padLeft(2, '0')}:${msg.timestamp.minute.toString().padLeft(2, '0')}",
+                  style: const TextStyle(color: Colors.white24, fontSize: 9),
+                ),
+                if (isMe) const SizedBox(width: 4),
+                if (isMe)
+                  Icon(
+                    msg.isReadByAdmin ? Icons.done_all_rounded : Icons.done_rounded,
+                    size: 11,
+                    color: msg.isReadByAdmin ? const Color(0xFFD4AF37) : Colors.white24,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDigitalConsentDialog(Quotation activeQuote) {
+    bool isAgreed = false;
+    final nameCtrl = TextEditingController(text: activeQuote.customerName);
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF171411),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: Color(0x33D4AF37)),
+              ),
+              title: Row(
+                children: [
+                  const Icon(Icons.gavel_outlined, color: Color(0xFFD4AF37), size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Digital Consent & Confirmation",
+                    style: AppTheme.serifHeader(fontSize: 16, color: Colors.white),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Please review and sign the legal confirmation for this proposal.",
+                        style: AppTheme.sansBody(fontSize: 12, color: Colors.white70),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.02),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildConsentDetailRow("Quotation No", activeQuote.publicId),
+                            _buildConsentDetailRow("Version", "v${activeQuote.version}"),
+                            _buildConsentDetailRow("Grand Total", AppFormatters.formatCurrency(activeQuote.grandTotal)),
+                            _buildConsentDetailRow("Validity Until", AppFormatters.formatShortDate(activeQuote.createdAt.add(const Duration(days: 7)))),
+                            _buildConsentDetailRow("Customer Name", activeQuote.customerName),
+                            _buildConsentDetailRow("Event Date", AppFormatters.formatShortDate(activeQuote.eventDate)),
+                            _buildConsentDetailRow("Event Location", activeQuote.location),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "LEGAL AGREEMENT",
+                        style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.0),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "\"I confirm that I have reviewed this quotation and agree with the pricing, services and terms.\"",
+                        style: AppTheme.sansBody(fontSize: 12, color: Colors.white).copyWith(fontStyle: FontStyle.italic),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: nameCtrl,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          labelText: "SIGNATORY FULL NAME",
+                          labelStyle: AppTheme.sansBody(fontSize: 11, color: const Color(0xFFD4AF37)),
+                          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                          focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFD4AF37))),
+                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return "Full name signature is required.";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Checkbox(
+                              value: isAgreed,
+                              activeColor: const Color(0xFFD4AF37),
+                              checkColor: Colors.black,
+                              side: const BorderSide(color: Colors.white54),
+                              onChanged: (val) {
+                                setDialogState(() {
+                                  isAgreed = val ?? false;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              "I explicitly agree to sign this contract with legal digital consent.",
+                              style: AppTheme.sansBody(fontSize: 11, color: Colors.white70),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text("CANCEL", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD4AF37),
+                    foregroundColor: const Color(0xFF091210),
+                    disabledBackgroundColor: Colors.white12,
+                    disabledForegroundColor: Colors.white30,
+                  ),
+                  onPressed: !isAgreed
+                      ? null
+                      : () async {
+                          if (formKey.currentState?.validate() == true) {
+                            Navigator.pop(dialogCtx);
+                            
+                            // Detect Device Info
+                            String devInfo = _getDeviceInfo();
+
+                            await widget.controller.acceptQuotationWithConsent(
+                              activeQuote.id,
+                              acceptedBy: nameCtrl.text.trim(),
+                              acceptedDevice: devInfo,
+                              acceptedIp: "127.0.0.1",
+                              consentTextVersion: "v1",
+                              acceptedAmount: activeQuote.grandTotal,
+                              acceptedVersion: activeQuote.version,
+                            );
+                          }
+                        },
+                  child: const Text("ACCEPT & SIGN", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _getDeviceInfo() {
+    if (GetPlatform.isWeb) return 'Web Browser';
+    if (GetPlatform.isAndroid) return 'Android Device';
+    if (GetPlatform.isIOS) return 'iOS Device';
+    if (GetPlatform.isWindows) return 'Windows PC';
+    if (GetPlatform.isMacOS) return 'macOS PC';
+    if (GetPlatform.isLinux) return 'Linux PC';
+    return 'Unknown Device';
+  }
+
+  Widget _buildConsentDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTheme.sansBody(fontSize: 11, color: Colors.white54)),
+          Text(value, style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+        ],
+      ),
+    );
   }
 }
 
@@ -760,4 +1324,5 @@ class QuotationItemCard extends StatelessWidget {
       ),
     );
   }
+
 }

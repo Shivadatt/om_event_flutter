@@ -28,7 +28,7 @@ class QuotationPdfGenerator {
                 ),
               ),
               pw.Text(
-                "CELEBRATION PROPOSAL (v${quote.versionHistory.length + 1})",
+                "CELEBRATION PROPOSAL (v${quote.version})",
                 style: pw.TextStyle(
                   fontSize: 14,
                   fontWeight: pw.FontWeight.bold,

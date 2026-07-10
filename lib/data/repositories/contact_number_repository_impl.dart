@@ -13,6 +13,8 @@ class ContactNumberRepositoryImpl implements ContactNumberRepository {
   Stream<List<ContactNumberEntity>> streamContactNumbers() {
     return _firestore
         .collection(AppCollections.settings)
+        .doc('data')
+        .collection('public')
         .doc('business')
         .snapshots()
         .map((doc) {
@@ -31,7 +33,11 @@ class ContactNumberRepositoryImpl implements ContactNumberRepository {
 
   @override
   Future<void> saveContactNumbers(List<ContactNumberEntity> numbers) async {
-    final docRef = _firestore.collection(AppCollections.settings).doc('business');
+    final docRef = _firestore
+        .collection(AppCollections.settings)
+        .doc('data')
+        .collection('public')
+        .doc('business');
     final snap = await docRef.get();
     final currentData = snap.exists ? snap.data()! : {};
     final draft = Map<String, dynamic>.from(currentData['draft'] ?? {});

@@ -1,12 +1,10 @@
 part of '../settings_repository_impl.dart';
 
 mixin SettingsBusiness {
-  FirebaseFirestore get _firestore;
+  DocumentReference<Map<String, dynamic>> _getDocRef(String docId);
 
   Stream<BusinessProfile> streamBusiness() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('business')
+    return _getDocRef('business')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return BusinessProfile.defaultVal();

@@ -11,6 +11,7 @@ import '../../domain/repositories/quotation_repository.dart';
 import '../../domain/usecases/create_quotation.dart';
 import '../../domain/usecases/get_categories.dart';
 import '../../domain/usecases/get_experiences.dart';
+import '../../domain/usecases/get_reviews.dart';
 import '../../domain/usecases/submit_lead.dart';
 import '../controllers/cart_controller.dart';
 import '../controllers/catalog_controller.dart';
@@ -20,28 +21,36 @@ class CatalogBinding extends Bindings {
   @override
   void dependencies() {
     // Sources & Repositories
-    Get.lazyPut<FirestoreRemoteSource>(
-      () => FirestoreRemoteSource(Get.find<FirebaseFirestore>()),
-      fenix: true,
-    );
+    if (!Get.isRegistered<FirestoreRemoteSource>()) {
+      Get.lazyPut<FirestoreRemoteSource>(
+        () => FirestoreRemoteSource(Get.find<FirebaseFirestore>()),
+        fenix: true,
+      );
+    }
 
-    Get.lazyPut<CatalogRepository>(
-      () => CatalogRepositoryImpl(Get.find<FirestoreRemoteSource>()),
-      fenix: true,
-    );
+    if (!Get.isRegistered<CatalogRepository>()) {
+      Get.lazyPut<CatalogRepository>(
+        () => CatalogRepositoryImpl(Get.find<FirestoreRemoteSource>()),
+        fenix: true,
+      );
+    }
 
-    Get.lazyPut<QuotationRepository>(
-      () => QuotationRepositoryImpl(
-        firestoreSource: Get.find<FirestoreRemoteSource>(),
-        supabaseSource: Get.find<SupabaseStorageSource>(),
-      ),
-      fenix: true,
-    );
+    if (!Get.isRegistered<QuotationRepository>()) {
+      Get.lazyPut<QuotationRepository>(
+        () => QuotationRepositoryImpl(
+          firestoreSource: Get.find<FirestoreRemoteSource>(),
+          supabaseSource: Get.find<SupabaseStorageSource>(),
+        ),
+        fenix: true,
+      );
+    }
 
-    Get.lazyPut<LeadRepository>(
-      () => LeadRepositoryImpl(Get.find<FirestoreRemoteSource>()),
-      fenix: true,
-    );
+    if (!Get.isRegistered<LeadRepository>()) {
+      Get.lazyPut<LeadRepository>(
+        () => LeadRepositoryImpl(Get.find<FirestoreRemoteSource>()),
+        fenix: true,
+      );
+    }
 
     // Usecases
     Get.lazyPut<GetCategories>(
@@ -50,6 +59,10 @@ class CatalogBinding extends Bindings {
     );
     Get.lazyPut<GetExperiences>(
       () => GetExperiences(Get.find<CatalogRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<GetReviews>(
+      () => GetReviews(Get.find<CatalogRepository>()),
       fenix: true,
     );
     Get.lazyPut<CreateQuotation>(

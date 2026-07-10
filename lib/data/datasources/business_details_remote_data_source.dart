@@ -13,8 +13,11 @@ class BusinessDetailsRemoteDataSourceImpl implements BusinessDetailsRemoteDataSo
 
   @override
   Stream<BusinessDetailsEntity> streamBusinessDetails() {
+    // Restructured settings collection path: settings/data/public/business
     return _firestore
         .collection('settings')
+        .doc('data')
+        .collection('public')
         .doc('business')
         .snapshots()
         .map((snapshot) {
@@ -34,7 +37,13 @@ class BusinessDetailsRemoteDataSourceImpl implements BusinessDetailsRemoteDataSo
   Future<void> saveBusinessDetails(BusinessDetailsEntity details) async {
     final Map<String, dynamic> data = BusinessDetailsModel.toJson(details);
     
-    final docRef = _firestore.collection('settings').doc('business');
+    // Restructured settings collection path: settings/data/public/business
+    final docRef = _firestore
+        .collection('settings')
+        .doc('data')
+        .collection('public')
+        .doc('business');
+        
     final snap = await docRef.get();
     final currentMeta =
         snap.exists

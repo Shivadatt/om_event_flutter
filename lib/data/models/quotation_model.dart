@@ -1,3 +1,4 @@
+import '../../domain/entities/quotation_version.dart';
 import '../../core/utils/date_parser.dart';
 import '../../domain/entities/quotation.dart';
 
@@ -20,11 +21,11 @@ class QuotationItemModel extends QuotationItem {
           json['experienceId'] ??
           '',
       name: json['name'] ?? '',
-      quantity: json['quantity'] ?? 1,
+      quantity: json['quantity'] as int? ?? 1,
       unitPrice:
           (json['unit_price'] ?? json['unitPrice'] as num?)?.toDouble() ?? 0.0,
-      color: json['color'] ?? '',
-      theme: json['theme'] ?? '',
+      color: json['color'] ?? 'As shown',
+      theme: json['theme'] ?? 'As shown',
       notes: json['notes'] ?? '',
     );
   }
@@ -43,6 +44,8 @@ class QuotationItemModel extends QuotationItem {
 }
 
 class QuotationModel extends Quotation {
+  final List<String> legacyVersionHistory;
+
   const QuotationModel({
     required super.id,
     required super.publicId,
@@ -65,7 +68,8 @@ class QuotationModel extends Quotation {
     required super.createdAt,
     required super.updatedAt,
     required super.customerId,
-    super.versionHistory = const [],
+    super.versions = const [],
+    this.legacyVersionHistory = const [],
     super.version = 1,
     super.publishedAt,
     super.publishedBy,
@@ -76,12 +80,28 @@ class QuotationModel extends Quotation {
     super.customerActionAt,
     super.customerViewedAt,
     super.lastPublishedAt,
+    super.internalNotes,
+    super.isFinancialLocked = false,
+    super.isPermanentlyLocked = false,
+    super.operationalNotes,
+    super.bookingDetails,
+    super.staffAssignment,
+    super.logistics,
+    super.acceptedAt,
+    super.acceptedVersion,
+    super.acceptedAmount,
+    super.acceptedBy,
+    super.acceptedDevice,
+    super.acceptedIp,
+    super.consentTextVersion,
+    super.sentReminders = const [],
   });
 
   factory QuotationModel.fromJson(
     Map<String, dynamic> json,
-    String documentId,
-  ) {
+    String documentId, {
+    List<QuotationVersion> versions = const [],
+  }) {
     final rawItems = json['items'] as List? ?? [];
     final itemsList =
         rawItems
@@ -122,7 +142,8 @@ class QuotationModel extends Quotation {
       createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
       updatedAt: DateParser.parse(json['updated_at'] ?? json['updatedAt']),
       customerId: json['customerId'] ?? json['customer_id'] ?? 'unmigrated_legacy_id',
-      versionHistory: List<String>.from(json['versionHistory'] ?? json['version_history'] ?? []),
+      versions: versions,
+      legacyVersionHistory: List<String>.from(json['versionHistory'] ?? json['version_history'] ?? []),
       version: json['version'] ?? 1,
       publishedAt: json['publishedAt'] != null ? DateParser.parse(json['publishedAt']) : null,
       publishedBy: json['publishedBy'],
@@ -133,6 +154,21 @@ class QuotationModel extends Quotation {
       customerActionAt: json['customerActionAt'] != null ? DateParser.parse(json['customerActionAt']) : null,
       customerViewedAt: json['customerViewedAt'] != null ? DateParser.parse(json['customerViewedAt']) : null,
       lastPublishedAt: json['lastPublishedAt'] != null ? DateParser.parse(json['lastPublishedAt']) : null,
+      internalNotes: json['internalNotes'] ?? json['internal_notes'],
+      isFinancialLocked: json['isFinancialLocked'] ?? json['is_financial_locked'] ?? false,
+      isPermanentlyLocked: json['isPermanentlyLocked'] ?? json['is_permanently_locked'] ?? false,
+      operationalNotes: json['operationalNotes'] ?? json['operational_notes'],
+      bookingDetails: json['bookingDetails'] ?? json['booking_details'],
+      staffAssignment: json['staffAssignment'] ?? json['staff_assignment'],
+      logistics: json['logistics'] ?? json['logistics'],
+      acceptedAt: json['acceptedAt'] != null ? DateParser.parse(json['acceptedAt']) : null,
+      acceptedVersion: json['acceptedVersion'] as int?,
+      acceptedAmount: (json['acceptedAmount'] as num?)?.toDouble(),
+      acceptedBy: json['acceptedBy'],
+      acceptedDevice: json['acceptedDevice'],
+      acceptedIp: json['acceptedIp'],
+      consentTextVersion: json['consentTextVersion'],
+      sentReminders: List<String>.from(json['sentReminders'] ?? json['sent_reminders'] ?? []),
     );
   }
 
@@ -158,7 +194,7 @@ class QuotationModel extends Quotation {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'customerId': customerId,
-      'versionHistory': versionHistory,
+      'versionHistory': legacyVersionHistory,
       'version': version,
       'publishedAt': publishedAt?.toIso8601String(),
       'publishedBy': publishedBy,
@@ -169,6 +205,21 @@ class QuotationModel extends Quotation {
       'customerActionAt': customerActionAt?.toIso8601String(),
       'customerViewedAt': customerViewedAt?.toIso8601String(),
       'lastPublishedAt': lastPublishedAt?.toIso8601String(),
+      'internalNotes': internalNotes,
+      'isFinancialLocked': isFinancialLocked,
+      'isPermanentlyLocked': isPermanentlyLocked,
+      'operationalNotes': operationalNotes,
+      'bookingDetails': bookingDetails,
+      'staffAssignment': staffAssignment,
+      'logistics': logistics,
+      'acceptedAt': acceptedAt?.toIso8601String(),
+      'acceptedVersion': acceptedVersion,
+      'acceptedAmount': acceptedAmount,
+      'acceptedBy': acceptedBy,
+      'acceptedDevice': acceptedDevice,
+      'acceptedIp': acceptedIp,
+      'consentTextVersion': consentTextVersion,
+      'sentReminders': sentReminders,
     };
   }
 }

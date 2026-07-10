@@ -355,7 +355,16 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                 _SidebarTile(title: "Quotations", icon: Icons.description_outlined, isActive: selectedIndex == 2, onTap: () => setState(() => selectedIndex = 2)),
                 _SidebarTile(title: "Event Gallery", icon: Icons.photo_library_outlined, isActive: selectedIndex == 5, onTap: () => setState(() => selectedIndex = 5)),
                 _SidebarTile(title: "Wishlist", icon: Icons.favorite_border, isActive: selectedIndex == 6, onTap: () => setState(() => selectedIndex = 6)),
-                _SidebarTile(title: "Notifications", icon: Icons.notifications_none_outlined, isActive: selectedIndex == 7, onTap: () => setState(() => selectedIndex = 7)),
+                Obx(() {
+                  final unread = controller.rxNotifications.where((n) => !n.isRead).length;
+                  return _SidebarTile(
+                    title: "Notifications",
+                    icon: Icons.notifications_none_outlined,
+                    isActive: selectedIndex == 7,
+                    badgeCount: unread > 0 ? unread : null,
+                    onTap: () => setState(() => selectedIndex = 7),
+                  );
+                }),
                 _SidebarTile(title: "Profile Settings", icon: Icons.person_outline, isActive: selectedIndex == 8, onTap: () => setState(() => selectedIndex = 8)),
                 _SidebarTile(title: "Concierge Support", icon: Icons.contact_support_outlined, isActive: selectedIndex == 9, onTap: () => setState(() => selectedIndex = 9)),
                 _SidebarTile(title: "Office Maps & Legal", icon: Icons.gavel_outlined, isActive: selectedIndex == 10, onTap: () => setState(() => selectedIndex = 10)),
@@ -781,12 +790,14 @@ class _SidebarTile extends StatelessWidget {
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
+  final int? badgeCount;
 
   const _SidebarTile({
     required this.title,
     required this.icon,
     required this.isActive,
     required this.onTap,
+    this.badgeCount,
   });
 
   @override
@@ -819,6 +830,19 @@ class _SidebarTile extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
+        trailing: badgeCount != null && badgeCount! > 0
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD4AF37),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "$badgeCount",
+                  style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              )
+            : null,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         onTap: onTap,
       ),

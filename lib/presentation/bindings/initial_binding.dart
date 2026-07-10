@@ -26,6 +26,9 @@ import '../../core/services/notification_gateway_service.dart';
 import '../../core/services/local_notification_trigger_service.dart';
 import '../../core/services/business_details_cache_service.dart';
 import '../../core/services/business_details_service.dart';
+import '../../core/services/bootstrap_service.dart';
+import '../../core/services/listener_registry_service.dart';
+import '../../core/services/supabase_edge_functions.dart';
 import '../../core/services/token_service.dart';
 import '../../core/services/notification_handler_service.dart';
 // FCM module — clean architecture sub-services
@@ -40,6 +43,8 @@ import '../controllers/admin_customer_portal_controller.dart';
 import '../../data/datasources/firestore_remote_source.dart';
 import '../../data/repositories/quotation_repository_impl.dart';
 import '../../domain/repositories/quotation_repository.dart';
+import '../../domain/repositories/quotation_collaboration_repository.dart';
+import '../../data/repositories/quotation_collaboration_repository_impl.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -89,6 +94,9 @@ class InitialBinding extends Bindings {
       () => NotificationHandler(), fenix: true);
     Get.lazyPut<FcmService>(() => FcmService(), fenix: true);
 
+    Get.put<ListenerRegistryService>(ListenerRegistryService(), permanent: true);
+    Get.put<BootstrapService>(BootstrapService(), permanent: true);
+
     // ─── Legacy notification services (kept for backwards compatibility) ───
     Get.lazyPut<TokenService>(() => TokenService(), fenix: true);
     Get.lazyPut<NotificationHandlerService>(() => NotificationHandlerService(), fenix: true);
@@ -102,6 +110,13 @@ class InitialBinding extends Bindings {
       () => SupabaseStorageSource(
         projectUrl: 'https://kwegyvbgdaednljyhcgm.supabase.co',
         apiKey: 'sb_publishable_bN91Or0DGzltjdDFB3b4zw_oosYJUa8',
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<SupabaseEdgeFunctions>(
+      () => SupabaseEdgeFunctions(
+        projectUrl: 'https://kwegyvbgdaednljyhcgm.supabase.co',
       ),
       fenix: true,
     );
@@ -171,6 +186,14 @@ class InitialBinding extends Bindings {
       () => QuotationRepositoryImpl(
         firestoreSource: Get.find<FirestoreRemoteSource>(),
         supabaseSource: Get.find<SupabaseStorageSource>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<QuotationCollaborationRepository>(
+      () => QuotationCollaborationRepositoryImpl(
+        firestore: Get.find<FirebaseFirestore>(),
+        storageSource: Get.find<SupabaseStorageSource>(),
       ),
       fenix: true,
     );

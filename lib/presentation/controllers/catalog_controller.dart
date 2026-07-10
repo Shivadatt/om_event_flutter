@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,17 +8,18 @@ import '../../domain/entities/category.dart';
 import '../../domain/entities/experience.dart';
 import '../../domain/entities/lead.dart';
 import '../../domain/entities/review.dart';
-import '../../domain/repositories/catalog_repository.dart';
 import '../../domain/usecases/get_categories.dart';
 import '../../domain/usecases/get_experiences.dart';
+import '../../domain/usecases/get_reviews.dart';
 import '../../domain/usecases/submit_lead.dart';
-import '../../data/datasources/database_migration_service.dart';
+import '../../core/services/listener_registry_service.dart';
 import 'customer_auth_controller.dart';
 
 part 'parts/catalog_filter.dart';
 part 'parts/catalog_lead.dart';
 
-/// Customer-facing catalog controller backed by Firestore realtime streams.
+/// Customer-facing catalog controller backed by Firestore realtime streams via UseCases.
+/// Crucial: Zero direct CatalogRepository calls. Zero direct snapshot listens.
 class CatalogController extends GetxController {
   final GetCategories getCategories;
   final GetExperiences getExperiences;
@@ -57,16 +57,9 @@ class CatalogController extends GetxController {
     rxVisibleCount.value = 6;
   }
 
-  /// Active Firestore stream subscriptions — cancelled in [onClose].
-  StreamSubscription<List<Category>>? _categoriesSub;
-  StreamSubscription<List<Experience>>? _experiencesSub;
-  StreamSubscription<List<Review>>? _reviewsSub;
-
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
   @override
   void onInit() {
     super.onInit();
-    _checkAndRunMigration();
     _bindRealtimeStreams();
 
     // Re-apply experience filters whenever user changes any filter param.
@@ -86,31 +79,35 @@ class CatalogController extends GetxController {
 
   @override
   void onClose() {
-    _categoriesSub?.cancel();
-    _experiencesSub?.cancel();
-    _reviewsSub?.cancel();
+    if (Get.isRegistered<ListenerRegistryService>()) {
+      ListenerRegistryService.to.disposeListener('catalog_categories');
+      ListenerRegistryService.to.disposeListener('catalog_experiences');
+      ListenerRegistryService.to.disposeListener('catalog_reviews');
+    }
     super.onClose();
   }
 
   // ── Realtime stream binding ────────────────────────────────────────────────
   void _bindRealtimeStreams() {
-    final repo = Get.find<CatalogRepository>();
+    final getReviews = Get.find<GetReviews>();
+    final registry = ListenerRegistryService.to;
 
     // 1. Categories
     isLoadingCategories.value = true;
-    _categoriesSub = repo.streamCategories().listen(
+    registry.registerAndListen<List<Category>>(
+      'catalog_categories',
+      getCategories.executeStream(),
       (cats) {
         rxCategories.assignAll(cats);
-        isLoadingCategories.value = false;
-      },
-      onError: (_) {
         isLoadingCategories.value = false;
       },
     );
 
     // 2. Experiences
     isLoadingExperiences.value = true;
-    _experiencesSub = repo.streamAllActiveExperiences().listen(
+    registry.registerAndListen<List<Experience>>(
+      'catalog_experiences',
+      getExperiences.executeStream(),
       (experiences) {
         _allActiveExperiences
           ..clear()
@@ -118,23 +115,25 @@ class CatalogController extends GetxController {
         applyExperienceFilters();
         isLoadingExperiences.value = false;
       },
-      onError: (_) {
-        isLoadingExperiences.value = false;
-      },
     );
 
     // 3. Reviews
-    _reviewsSub = repo.streamPublishedReviews().listen(
-      (reviews) => rxReviews.assignAll(reviews),
-      onError: (_) {},
+    registry.registerAndListen<List<Review>>(
+      'catalog_reviews',
+      getReviews.executeStream(),
+      (reviews) {
+        rxReviews.assignAll(reviews);
+      },
     );
   }
 
   // ── Public API (UI compatibility) ──────────────────────────────────────────
   Future<void> refreshCatalog() async {
-    _categoriesSub?.cancel();
-    _experiencesSub?.cancel();
-    _reviewsSub?.cancel();
+    if (Get.isRegistered<ListenerRegistryService>()) {
+      ListenerRegistryService.to.disposeListener('catalog_categories');
+      ListenerRegistryService.to.disposeListener('catalog_experiences');
+      ListenerRegistryService.to.disposeListener('catalog_reviews');
+    }
     _bindRealtimeStreams();
   }
 
@@ -176,22 +175,5 @@ class CatalogController extends GetxController {
       budgetStr: budgetStr,
       requirements: requirements,
     );
-  }
-
-  Future<void> _checkAndRunMigration() async {
-    try {
-      final migrationService = DatabaseMigrationService();
-      // Execute mandatory customerId migration on startup to reconcile legacy quotation documents
-      await migrationService.migrateQuotationsCustomerId();
-
-      final isDone = await migrationService.isMigrationCompleted();
-      if (!isDone) {
-        print("DATABASE NOT SEEDED. Please run migration from Admin Seeder Screen.");
-      } else {
-        print("DATABASE MIGRATION: Already completed. Skipping startup migration.");
-      }
-    } catch (e) {
-      print("Startup migration check error: $e");
-    }
   }
 }

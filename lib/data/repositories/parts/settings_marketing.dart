@@ -1,13 +1,11 @@
 part of '../settings_repository_impl.dart';
 
 mixin SettingsMarketing {
-  FirebaseFirestore get _firestore;
+  DocumentReference<Map<String, dynamic>> _getDocRef(String docId);
   Future<void> _saveToDraft(String docId, Map<String, dynamic> draftData);
 
   Stream<HomepageSettings> streamHomepage() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('homepage')
+    return _getDocRef('homepage')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return HomepageSettings.defaultVal();
@@ -43,9 +41,7 @@ mixin SettingsMarketing {
   }
 
   Stream<ThemeSettings> streamTheme() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('theme')
+    return _getDocRef('theme')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return ThemeSettings.defaultVal();
@@ -67,9 +63,7 @@ mixin SettingsMarketing {
   }
 
   Stream<SEOSettings> streamSEO() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('seo')
+    return _getDocRef('seo')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return SEOSettings.defaultVal();
@@ -90,9 +84,7 @@ mixin SettingsMarketing {
   }
 
   Stream<FooterSettings> streamFooter() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('footer')
+    return _getDocRef('footer')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return FooterSettings.defaultVal();
@@ -111,9 +103,7 @@ mixin SettingsMarketing {
   }
 
   Stream<ContactSettings> streamContact() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('contact')
+    return _getDocRef('contact')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return ContactSettings.defaultVal();
@@ -131,9 +121,7 @@ mixin SettingsMarketing {
   }
 
   Stream<AboutSettings> streamAbout() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('about')
+    return _getDocRef('about')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return AboutSettings.defaultVal();
@@ -149,9 +137,7 @@ mixin SettingsMarketing {
   }
 
   Stream<CtaSettings> streamCta() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('cta')
+    return _getDocRef('cta')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return CtaSettings.defaultVal();
@@ -165,9 +151,7 @@ mixin SettingsMarketing {
   }
 
   Stream<HomeSectionsSettings> streamHomeSections() {
-    return _firestore
-        .collection(AppCollections.settings)
-        .doc('home_sections')
+    return _getDocRef('home_sections')
         .snapshots()
         .map((doc) {
           if (!doc.exists) return HomeSectionsSettings.defaultVal();

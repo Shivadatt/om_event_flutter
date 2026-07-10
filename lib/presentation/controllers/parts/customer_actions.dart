@@ -112,6 +112,57 @@ extension CustomerActionsExtension on CustomerDashboardController {
     }
   }
 
+  Future<void> acceptQuotationWithConsent(
+    String quoteId, {
+    required String acceptedBy,
+    required String acceptedDevice,
+    required String acceptedIp,
+    required String consentTextVersion,
+    required double acceptedAmount,
+    required int acceptedVersion,
+  }) async {
+    try {
+      isLoading.value = true;
+      final db = FirebaseFirestore.instance;
+
+      // Security check: must not accept already accepted or outdated versions
+      final quoteSnap = await db.collection(AppCollections.quotations).doc(quoteId).get();
+      if (!quoteSnap.exists) {
+        throw Exception("Quotation not found.");
+      }
+      final data = quoteSnap.data()!;
+      final currentStatus = data['status'] ?? 'draft';
+      final currentVersion = data['version'] ?? 1;
+
+      if (currentStatus == 'acceptedByClient' || currentStatus == 'bookingConfirmed') {
+        throw Exception("This quotation has already been accepted.");
+      }
+
+      if (acceptedVersion != currentVersion) {
+        throw Exception("Cannot accept outdated version v$acceptedVersion. Current version is v$currentVersion. Please reload.");
+      }
+
+      await db.collection(AppCollections.quotations).doc(quoteId).update({
+        'acceptedAt': DateTime.now().toIso8601String(),
+        'acceptedVersion': acceptedVersion,
+        'acceptedAmount': acceptedAmount,
+        'acceptedBy': acceptedBy,
+        'acceptedDevice': acceptedDevice,
+        'acceptedIp': acceptedIp,
+        'consentTextVersion': consentTextVersion,
+      });
+
+      await _quotationRepo.updateQuotationStatus(quoteId, 'acceptedByClient');
+      await logActivity('Quotation', 'Legally accepted quotation ID: $quoteId (v$acceptedVersion) signed by $acceptedBy.');
+      Get.snackbar("Success", "Proposal signed and accepted successfully.");
+    } catch (e) {
+      Get.snackbar("Consent Error", e.toString());
+      rethrow;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<void> rejectQuotation(String quoteId) async {
     try {
       isLoading.value = true;
