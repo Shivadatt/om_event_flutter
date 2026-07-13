@@ -95,22 +95,10 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      background: radial-gradient(circle at center, #171411 0%, #0F0D0B 100%);
+      background: #0F0D0B;
       z-index:9999;
       transition:opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
-    }
-    
-    #flutter-loading-screen::before {
-      content: '';
-      position: absolute;
-      width: 350px;
-      height: 350px;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0) 70%);
-      border-radius: 50%;
-      animation: pulse-glow 6s ease-in-out infinite alternate;
-      pointer-events: none;
-      z-index: 2;
     }
     
     /* Background video elements */
@@ -120,72 +108,20 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      z-index: 3;
-      opacity: 0;
-      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    video#splash-video.loaded {
-      opacity: 1; /* Shows the full original colors of the video */
-    }
-    .video-overlay {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at center, transparent 40%, rgba(15,13,11,0.5) 100%);
-      z-index: 4;
-      pointer-events: none;
+      z-index: 1;
+      opacity: 1; /* Shows the video directly and immediately */
     }
 
     #flutter-loading-screen.hidden{opacity:0;pointer-events:none}
-    
-    /* Sleek premium loading line positioned at the bottom */
-    .oe-progress-container {
-      position: absolute;
-      bottom: 8%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 180px;
-      height: 2px;
-      background: rgba(212, 175, 55, 0.2);
-      border-radius: 1px;
-      overflow: hidden;
-      opacity: 0;
-      z-index: 10;
-      animation: fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
-    }
-    .oe-progress-bar {
-      position: absolute;
-      height: 100%;
-      width: 70px;
-      background: linear-gradient(90deg, transparent, #D4AF37, transparent);
-      animation: loading-flow 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-    
-    @keyframes pulse-glow {
-      0% { transform: scale(0.95); opacity: 0.5; }
-      100% { transform: scale(1.1); opacity: 0.9; }
-    }
-    @keyframes fade-in {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-    @keyframes loading-flow {
-      0% { left: -70px; }
-      100% { left: 180px; }
-    }
   </style>
 </head>
 <body>
   <!-- Native splash shown immediately — zero flicker, no blank white -->
   <div id="flutter-loading-screen" aria-label="Loading Om Events…" role="progressbar">
     <!-- Video background -->
-    <video id="splash-video" autoplay muted playsinline onplaying="this.classList.add('loaded')">
-      <source src="https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/splash_screen.mp4" type="video/mp4">
+    <video id="splash-video" autoplay muted playsinline preload="auto">
+      <source src="splash_screen.mp4" type="video/mp4">
     </video>
-    <div class="video-overlay"></div>
-    
-    <div class="oe-progress-container">
-      <div class="oe-progress-bar"></div>
-    </div>
   </div>
 
   <script>
@@ -210,19 +146,22 @@
       removeSplash();
     });
 
-    // When the video ends, fade it out to show the gold glow loader underneath (if Flutter is not ready yet)
+    // Start the 10-second timer ONLY when the video actually starts playing
     var video = document.getElementById('splash-video');
     if (video) {
-      video.addEventListener('ended', function() {
-        video.classList.remove('loaded');
+      video.addEventListener('playing', function() {
+        setTimeout(function() {
+          isMinTimePassed = true;
+          removeSplash();
+        }, 10000); // 10 seconds of actual video play time
       });
+    } else {
+      // Fallback if video is missing
+      setTimeout(function() {
+        isMinTimePassed = true;
+        removeSplash();
+      }, 10000);
     }
-
-    // Set minimum display time to exactly 10 seconds
-    setTimeout(function() {
-      isMinTimePassed = true;
-      removeSplash();
-    }, 10000);
   </script>
 
   <!-- Register Firebase Messaging Service Worker for background push notifications -->
