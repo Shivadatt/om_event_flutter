@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
@@ -111,7 +112,11 @@ class _ProfileViewState extends State<ProfileView> {
                           radius: 48,
                           backgroundColor: const Color(0xFF2A241F),
                           backgroundImage: profile.profileImageUrl.isNotEmpty == true
-                              ? NetworkImage(profile.profileImageUrl)
+                              ? CachedNetworkImageProvider(
+                                  profile.profileImageUrl,
+                                  maxWidth: 192, // 96 * 2 (radius 48 * 2 for pixel ratio)
+                                  maxHeight: 192,
+                                )
                               : null,
                           child: profile.profileImageUrl.isEmpty == true
                               ? const Icon(Icons.person_outline, size: 48, color: Color(0xFFD4AF37))

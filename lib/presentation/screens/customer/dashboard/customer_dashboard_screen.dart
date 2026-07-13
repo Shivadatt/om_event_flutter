@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/config/app_theme.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
@@ -312,7 +313,11 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       radius: 40,
                       backgroundColor: const Color(0xFF2A241F),
                       backgroundImage: profile?.profileImageUrl.isNotEmpty == true
-                          ? NetworkImage(profile!.profileImageUrl)
+                          ? CachedNetworkImageProvider(
+                              profile!.profileImageUrl,
+                              maxWidth: 160, // 80 * 2 (radius 40 * 2 for pixel ratio)
+                              maxHeight: 160,
+                            )
                           : null,
                       child: profile?.profileImageUrl.isEmpty == true
                           ? const Icon(Icons.person_outline, size: 40, color: Color(0xFFD4AF37))

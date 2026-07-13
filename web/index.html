@@ -23,7 +23,7 @@
   <meta name="keywords" content="om events, event planner gujarat, wedding decorator ahmedabad, balloon decoration kadi, stage decoration Thangadh, live quotes">
   <meta name="author" content="Om Events Team">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#15211e">
+  <meta name="theme-color" content="#0A0A0A">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
@@ -87,59 +87,142 @@
   <!-- Inline critical CSS for splash: zero external requests, renders instantly -->
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{width:100%;height:100%;background:#15211e;overflow:hidden}
+    html,body{width:100%;height:100%;background:#0F0D0B;overflow:hidden}
     #flutter-loading-screen{
-      position:fixed;inset:0;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      background:#15211e;
+      position:fixed;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(circle at center, #171411 0%, #0F0D0B 100%);
       z-index:9999;
-      transition:opacity .4s ease;
+      transition:opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
     }
+    
+    #flutter-loading-screen::before {
+      content: '';
+      position: absolute;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0) 70%);
+      border-radius: 50%;
+      animation: pulse-glow 6s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 2;
+    }
+    
+    /* Background video elements */
+    video#splash-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 3;
+      opacity: 0;
+      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    video#splash-video.loaded {
+      opacity: 1; /* Shows the full original colors of the video */
+    }
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 40%, rgba(15,13,11,0.5) 100%);
+      z-index: 4;
+      pointer-events: none;
+    }
+
     #flutter-loading-screen.hidden{opacity:0;pointer-events:none}
-    .oe-logo{
-      font-family:'Georgia',serif;
-      font-size:52px;
-      color:#c9a77e;
-      letter-spacing:6px;
-      line-height:1;
-      margin-bottom:8px;
+    
+    /* Sleek premium loading line positioned at the bottom */
+    .oe-progress-container {
+      position: absolute;
+      bottom: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 2px;
+      background: rgba(212, 175, 55, 0.2);
+      border-radius: 1px;
+      overflow: hidden;
+      opacity: 0;
+      z-index: 10;
+      animation: fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
     }
-    .oe-tagline{
-      font-family:'Georgia',serif;
-      font-size:12px;
-      color:rgba(201,167,126,.55);
-      letter-spacing:3px;
-      text-transform:uppercase;
-      margin-bottom:48px;
+    .oe-progress-bar {
+      position: absolute;
+      height: 100%;
+      width: 70px;
+      background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+      animation: loading-flow 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
-    .oe-spinner{
-      width:36px;height:36px;
-      border:2px solid rgba(201,167,126,.2);
-      border-top-color:#c9a77e;
-      border-radius:50%;
-      animation:oe-spin .9s linear infinite;
+    
+    @keyframes pulse-glow {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      100% { transform: scale(1.1); opacity: 0.9; }
     }
-    @keyframes oe-spin{to{transform:rotate(360deg)}}
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes loading-flow {
+      0% { left: -70px; }
+      100% { left: 180px; }
+    }
   </style>
 </head>
 <body>
   <!-- Native splash shown immediately — zero flicker, no blank white -->
   <div id="flutter-loading-screen" aria-label="Loading Om Events…" role="progressbar">
-    <div class="oe-logo">OE</div>
-    <div class="oe-tagline">Celebrations, thoughtfully composed</div>
-    <div class="oe-spinner"></div>
+    <!-- Video background -->
+    <video id="splash-video" autoplay muted playsinline onplaying="this.classList.add('loaded')">
+      <source src="https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/splash_screen.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+    
+    <div class="oe-progress-container">
+      <div class="oe-progress-bar"></div>
+    </div>
   </div>
 
   <script>
-    // Remove splash once Flutter engine signals it is ready
-    window.addEventListener('flutter-first-frame', function () {
-      var splash = document.getElementById('flutter-loading-screen');
-      if (splash) {
-        splash.classList.add('hidden');
-        setTimeout(function () { splash.remove(); }, 450);
+    var isFlutterReady = false;
+    var isMinTimePassed = false;
+    var splashRemoved = false;
+
+    function removeSplash() {
+      if (isFlutterReady && isMinTimePassed && !splashRemoved) {
+        splashRemoved = true;
+        var splash = document.getElementById('flutter-loading-screen');
+        if (splash) {
+          splash.classList.add('hidden');
+          setTimeout(function () { splash.remove(); }, 600);
+        }
       }
+    }
+
+    // Remove splash once Flutter engine signals it is ready
+    window.addEventListener('flutter-first-frame', function() {
+      isFlutterReady = true;
+      removeSplash();
     });
+
+    // When the video ends, fade it out to show the gold glow loader underneath (if Flutter is not ready yet)
+    var video = document.getElementById('splash-video');
+    if (video) {
+      video.addEventListener('ended', function() {
+        video.classList.remove('loaded');
+      });
+    }
+
+    // Set minimum display time to exactly 10 seconds
+    setTimeout(function() {
+      isMinTimePassed = true;
+      removeSplash();
+    }, 10000);
   </script>
 
   <!-- Register Firebase Messaging Service Worker for background push notifications -->

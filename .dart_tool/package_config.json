@@ -542,6 +542,12 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "shimmer",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/shimmer-3.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "sky_engine",
       "rootUri": "file:///C:/Users/ASUS/fvm/versions/3.29.0/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
@@ -764,7 +770,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2026-07-10T12:44:55.918624Z",
+  "generated": "2026-07-13T04:58:00.454801Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///C:/Users/ASUS/fvm/versions/3.29.0",

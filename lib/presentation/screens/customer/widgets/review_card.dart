@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/config/app_theme.dart';
 import '../../../../domain/entities/review.dart';
 import 'rating_widget.dart';
@@ -123,7 +124,13 @@ class _ReviewCardState extends State<ReviewCard> {
                       child: CircleAvatar(
                         radius: 17,
                         backgroundColor: const Color(0xFF091210),
-                        backgroundImage: hasImage ? NetworkImage(widget.review.imageUrl) : null,
+                        backgroundImage: hasImage
+                            ? CachedNetworkImageProvider(
+                                widget.review.imageUrl,
+                                maxWidth: 68, // 34 * 2 (radius 17 * 2 for pixel ratio)
+                                maxHeight: 68,
+                              )
+                            : null,
                         child: !hasImage
                             ? Text(
                                 initials,

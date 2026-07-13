@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/config/app_theme.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../controllers/admin_controller.dart';
@@ -111,7 +112,11 @@ class ReviewListTile extends StatelessWidget {
                   backgroundColor: activeColor.withValues(alpha: 0.1),
                   radius: 22,
                   backgroundImage: review.imageUrl.isNotEmpty
-                      ? NetworkImage(review.imageUrl)
+                      ? CachedNetworkImageProvider(
+                          review.imageUrl,
+                          maxWidth: 88, // 44 * 2 (radius 22 * 2 for pixel ratio)
+                          maxHeight: 88,
+                        )
                       : null,
                   child: review.imageUrl.isEmpty
                       ? Text(
