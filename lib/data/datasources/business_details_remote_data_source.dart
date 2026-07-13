@@ -13,19 +13,16 @@ class BusinessDetailsRemoteDataSourceImpl implements BusinessDetailsRemoteDataSo
 
   @override
   Stream<BusinessDetailsEntity> streamBusinessDetails() {
-    // Restructured settings collection path: settings/data/public/business
     return _firestore
         .collection('settings')
-        .doc('data')
-        .collection('public')
-        .doc('business')
+        .doc('business_info')
         .snapshots()
         .map((snapshot) {
           if (!snapshot.exists || snapshot.data() == null) {
             return BusinessDetailsEntity.defaultVal();
           }
           final data = snapshot.data()!;
-          final source = data['published'] ?? data['draft'] ?? {};
+          final source = data['published'] ?? data['draft'] ?? data;
           if (source.isEmpty) {
             return BusinessDetailsEntity.defaultVal();
           }
@@ -37,12 +34,9 @@ class BusinessDetailsRemoteDataSourceImpl implements BusinessDetailsRemoteDataSo
   Future<void> saveBusinessDetails(BusinessDetailsEntity details) async {
     final Map<String, dynamic> data = BusinessDetailsModel.toJson(details);
     
-    // Restructured settings collection path: settings/data/public/business
     final docRef = _firestore
         .collection('settings')
-        .doc('data')
-        .collection('public')
-        .doc('business');
+        .doc('business_info');
         
     final snap = await docRef.get();
     final currentMeta =

@@ -59,7 +59,10 @@ extension HomeTabNavigation on HomeScreen {
           itemBuilder: (context) {
             return activeNumbers.map((cn) {
               final labelSuffix = cn.isPrimary ? " (Primary)" : "";
-              String cleanLabel = cn.label.replaceAll(RegExp(r'\s*WhatsApp\s*$', caseSensitive: false), '');
+              String cleanLabel = cn.label.replaceAll(RegExp(r'\s*WhatsApp\s*$', caseSensitive: false), '').trim();
+              if (cleanLabel.isEmpty) {
+                cleanLabel = "WhatsApp";
+              }
               final cleanVal = cn.value.replaceAll(RegExp(r'\D'), '');
               final displayVal = cleanVal.length == 10
                   ? '+91 $cleanVal'

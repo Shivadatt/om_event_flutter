@@ -1,4 +1,4 @@
-part of '../home_catalog_section.dart';
+﻿part of '../home_catalog_section.dart';
 
 class ExperienceCard extends StatefulWidget {
   final Experience item;
@@ -66,90 +66,166 @@ class _ExperienceCardState extends State<ExperienceCard> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1.12,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: AnimatedScale(
-                        scale: _isHovered ? 1.04 : 1.0,
-                        duration: const Duration(milliseconds: 350),
-                        curve: Curves.easeOut,
-                        child: _buildImage(
-                          widget.item.imageUrl,
-                          widget.item.name,
-                          widget.item.categorySlug,
-                          widget.item.categoryName,
-                        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          transform: Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _isHovered ? AppColors.secondaryAccent.withValues(alpha: 0.6) : AppColors.primaryAccent.withValues(alpha: 0.18),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _isHovered ? 0.50 : 0.25),
+                blurRadius: _isHovered ? 24 : 12,
+                offset: Offset(0, _isHovered ? 10 : 4),
+              ),
+              if (_isHovered)
+                BoxShadow(
+                  color: AppColors.secondaryAccent.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  spreadRadius: -2,
+                ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18.8),
+            child: Stack(
+              children: [
+                // Base background color (card body is glassmorphic)
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18.8),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        color: const Color(0xFF1B2D27).withValues(alpha: 0.65), // Card Background
                       ),
                     ),
-                    if (widget.item.isFeatured)
-                      Positioned(
-                        left: 14,
-                        top: 14,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 6,
-                          ),
-                          color: const Color(0xEBFAF5EE),
-                          child: Text(
-                            "MOST LOVED",
-                            style: AppTheme.sansBody(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF28322E),
-                              letterSpacing: 1.5,
-                            ),
-                          ),
+                  ),
+                ),
+
+                // Card content Column
+                ClipRect(
+                  child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1.25,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(18.8),
+                          topRight: Radius.circular(18.8),
                         ),
-                      ),
-                    Positioned(
-                      right: 14,
-                      bottom: 14,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: widget.onQuickAdd,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color:
-                                  _isHovered
-                                      ? const Color(0xFFC79B61)
-                                      : const Color(0xE6192320),
-                            ),
-                            alignment: Alignment.center,
-                            child: AnimatedRotation(
-                              turns: _isHovered ? 0.25 : 0.0,
-                              duration: const Duration(milliseconds: 250),
-                              child: const Text(
-                                "+",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.normal,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: AnimatedScale(
+                                scale: _isHovered ? 1.06 : 1.0,
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeOut,
+                                child: _buildImage(
+                                  widget.item.imageUrl,
+                                  widget.item.name,
+                                  widget.item.categorySlug,
+                                  widget.item.categoryName,
                                 ),
                               ),
                             ),
+                            // Vignette overlay
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.4),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (widget.item.isFeatured)
+                              Positioned(
+                                left: 14,
+                                top: 14,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0F1B18).withValues(alpha: 0.8), // Primary Background
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: AppColors.secondaryAccent.withValues(alpha: 0.35),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    "MOST LOVED",
+                                    style: AppTheme.sansBody(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.secondaryAccent,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    _ExperienceCardDetails(item: widget.item, isDark: isDark),
+                  ],
+                  ),
+                ),
+
+                // Floating Circular Add Button on top-right of details
+                Positioned(
+                  right: 14,
+                  top: 14,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: GestureDetector(
+                        onTap: widget.onQuickAdd,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _isHovered ? AppColors.secondaryAccent : Colors.black.withValues(alpha: 0.45),
+                            border: Border.all(
+                              color: _isHovered ? Colors.transparent : AppColors.secondaryAccent.withValues(alpha: 0.3),
+                              width: 1.2,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: AnimatedRotation(
+                            turns: _isHovered ? 0.25 : 0.0,
+                            duration: const Duration(milliseconds: 250),
+                            child: Icon(
+                              Icons.add,
+                              size: 18,
+                              color: _isHovered ? const Color(0xFF0F1B18) : Colors.white,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-            _ExperienceCardDetails(item: widget.item, isDark: isDark),
-          ],
+          ),
         ),
       ),
     );
@@ -165,7 +241,7 @@ class _ExperienceCardDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -173,41 +249,43 @@ class _ExperienceCardDetails extends StatelessWidget {
             "${item.categoryName.toUpperCase()} · ${item.durationHours.toStringAsFixed(0)} HRS",
             style: AppTheme.sansBody(
               fontSize: 9,
-              color: const Color(0xFFAA7C4B),
+              color: AppColors.secondaryAccent,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
+              letterSpacing: 1.8,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 12),
           Text(
             item.name,
             style: GoogleFonts.italiana(
-              fontSize: 25,
-              fontWeight: FontWeight.normal,
-              color: isDark ? Colors.white : const Color(0xFF17201E),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
               height: 1.1,
+              letterSpacing: 0.5,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           SizedBox(
-            height: 38,
+            height: 44,
             child: Text(
               item.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.sansBody(
                 fontSize: 12,
-                color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                color: AppColors.muted.withValues(alpha: 0.8),
                 height: 1.6,
               ),
             ),
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.max,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -216,9 +294,9 @@ class _ExperienceCardDetails extends StatelessWidget {
                   Text(
                     AppFormatters.formatCurrency(item.effectivePrice),
                     style: AppTheme.sansBody(
-                      fontSize: 17,
+                      fontSize: 16.5,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF17201E),
+                      color: Colors.white,
                     ),
                   ),
                   if (item.offerPrice != null && item.offerPrice! < item.price) ...[
@@ -227,17 +305,17 @@ class _ExperienceCardDetails extends StatelessWidget {
                       AppFormatters.formatCurrency(item.price),
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                        color: AppColors.muted.withValues(alpha: 0.7),
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
                   ],
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   Text(
-                    "starting price",
+                    "onwards",
                     style: AppTheme.sansBody(
-                      fontSize: 11,
-                      color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+                      fontSize: 10,
+                      color: AppColors.muted.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -247,7 +325,7 @@ class _ExperienceCardDetails extends StatelessWidget {
                   const Icon(
                     Icons.star,
                     size: 12,
-                    color: Color(0xFFC79B61),
+                    color: AppColors.secondaryAccent,
                   ),
                   const SizedBox(width: 3),
                   Text(
@@ -255,7 +333,7 @@ class _ExperienceCardDetails extends StatelessWidget {
                     style: AppTheme.sansBody(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white70 : Colors.black87,
+                      color: Colors.white,
                     ),
                   ),
                 ],

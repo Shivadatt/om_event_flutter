@@ -52,7 +52,44 @@ class HomepageSettings {
       heroVideo: "",
       heroBadge: "Ivory Vow",
       statistics: [],
-      benefits: [],
+      benefits: [
+        {
+          'icon': '◇',
+          'title': 'Personal Design',
+          'desc':
+              'A concept shaped around your story, venue and budget — never a fixed package.',
+        },
+        {
+          'icon': '†',
+          'title': 'Clear Live Pricing',
+          'desc':
+              'Build your wishlist and see every charge before you send an enquiry.',
+        },
+        {
+          'icon': '○',
+          'title': 'One Accountable Team',
+          'desc':
+              'Design, production & collection — one team that stays with you end-to-end.',
+        },
+        {
+          'icon': '✓',
+          'title': 'Venue-Ready Planning',
+          'desc':
+              'Timelines, layouts, permit and installation details — you stay well in advance.',
+        },
+        {
+          'icon': '+',
+          'title': 'Premium Execution',
+          'desc':
+              'Proposal to install, careful finishing and a crew that respects the space.',
+        },
+        {
+          'icon': '◎',
+          'title': 'Calm on Event Day',
+          'desc':
+              'A dedicated coordinator keeps the moving parts invisible to you.',
+        },
+      ],
       about: "",
       cta: "",
       whyChooseUs: "",
@@ -61,7 +98,28 @@ class HomepageSettings {
       faqHeader: "",
       sectionVisibility: {},
       sectionOrder: [],
-      faqs: [],
+      faqs: [
+        {
+          'question': 'How far in advance should I book?',
+          'answer':
+              'We recommend booking 3 to 6 months in advance to secure your date and allow ample time for personalized design and planning.',
+        },
+        {
+          'question': 'Can I change the colors and materials?',
+          'answer':
+              'Yes, our designs are completely customizable. We work with you to align the color palettes and materials with your vision.',
+        },
+        {
+          'question': 'What does the starting price include?',
+          'answer':
+              'The starting price covers basic decor setup, design consultation, and essential elements. Premium props, lighting, and custom requests are priced accordingly.',
+        },
+        {
+          'question': 'Do you visit the venue before the event?',
+          'answer':
+              'Absolutely. We perform venue walkthroughs to inspect measurements, logistics, and planning parameters.',
+        },
+      ],
     );
   }
 }

@@ -86,6 +86,8 @@ extension _SettingsDisposeExtension on _SystemSettingsScreenState {
     _reviewsMinStars.dispose();
     _statEvents.dispose();
     _statClients.dispose();
+    _statCities.dispose();
+    _statYears.dispose();
     _faqTitle.dispose();
     _emailTemplatesJson.dispose();
     _smsTemplatesJson.dispose();

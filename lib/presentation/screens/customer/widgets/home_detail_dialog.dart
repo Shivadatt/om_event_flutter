@@ -91,9 +91,7 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
     final height = MediaQuery.of(context).size.height;
     final isDesktop = width >= 800;
 
-    // Resolve dynamic colors based on current theme brightness
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final creamColor = isDark ? AppColors.darkCream : AppColors.lightCream;
     final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
     final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
     final mutedColor = isDark ? AppColors.darkMuted : AppColors.lightMuted;
@@ -429,9 +427,15 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
           maxHeight: dialogMaxHeight,
         ),
         child: Material(
-          color: creamColor,
-          borderRadius: BorderRadius.circular(20),
+          color: const Color(0xFF0D1915),
           clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: AppColors.secondaryAccent.withValues(alpha: 0.18),
+              width: 1,
+            ),
+          ),
           child: Stack(
             children: [
               isDesktop

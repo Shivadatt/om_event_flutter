@@ -23,8 +23,14 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
         final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
 
         return Dialog(
-          backgroundColor: creamColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: const Color(0xFF0D1915),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: AppColors.secondaryAccent.withValues(alpha: 0.18),
+              width: 1,
+            ),
+          ),
           clipBehavior: Clip.antiAlias,
           insetPadding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
@@ -185,8 +191,14 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
         final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
 
         return Dialog(
-          backgroundColor: creamColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: const Color(0xFF0D1915),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: AppColors.secondaryAccent.withValues(alpha: 0.18),
+              width: 1,
+            ),
+          ),
           clipBehavior: Clip.antiAlias,
           insetPadding: const EdgeInsets.all(20),
           child: SingleChildScrollView(

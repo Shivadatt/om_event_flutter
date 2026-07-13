@@ -145,7 +145,34 @@ class VideoSettings {
   final List<dynamic> videosList;
   const VideoSettings({required this.videosList});
   factory VideoSettings.defaultVal() {
-    return const VideoSettings(videosList: []);
+    return const VideoSettings(videosList: [
+      {
+        'eyebrow': 'LIVE FROM THE SETUP',
+        'titlePart1': 'A Glimpse Before',
+        'titlePart2': 'the big day.',
+        'description': 'A raw snapshot of the layout and styling details as we ready a celebration. No filters, no edits — just an honest look at how our crew sets up.',
+        'facts': [
+          'Balloon decor setup walk',
+          'Luxury hotel setting',
+          'Pre-event quality inspection'
+        ],
+        'videoAsset': 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/Birthday.mp4',
+        'posterAsset': 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/birthday.jpg',
+      },
+      {
+        'eyebrow': 'MOMENTS IN MOTION',
+        'titlePart1': 'Balloon Blast',
+        'titlePart2': 'the perfect surprise.',
+        'description': 'A high-energy moment captured as hundreds of vibrant balloons take flight. Designed for maximum visual impact during key entry or milestone moments.',
+        'facts': [
+          'Hundreds of floating balloons',
+          'Synchronized release system',
+          'Joyous outdoor celebration'
+        ],
+        'videoAsset': 'assets/videos/Balloonblast.mp4',
+        'posterAsset': 'assets/images/BaloonBlast.jpg',
+      }
+    ]);
   }
 }
 

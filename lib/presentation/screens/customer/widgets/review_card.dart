@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:om_event/core/constants/app_colors.dart';
 import '../../../../core/config/app_theme.dart';
 import '../../../../domain/entities/review.dart';
 import 'rating_widget.dart';
@@ -27,6 +28,9 @@ class _ReviewCardState extends State<ReviewCard> {
         ? 'C'
         : widget.review.customerName[0].toUpperCase();
 
+    final borderActive = AppColors.secondaryAccent.withValues(alpha: 0.4);
+    final borderInactive = AppColors.primaryAccent.withValues(alpha: 0.12);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -40,21 +44,19 @@ class _ReviewCardState extends State<ReviewCard> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: _isHovered
-                ? [const Color(0xFF163228), const Color(0xFF0D1C18)]
-                : [const Color(0xFF12271F), const Color(0xFF091210)],
+                ? [const Color(0xFF213830), const Color(0xFF1B2D27)] // Elevated Card -> Card Background
+                : [const Color(0xFF1B2D27), const Color(0xFF0F1B18)], // Card Background -> Primary Background
           ),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isHovered
-                ? const Color.fromRGBO(201, 167, 126, 0.4)
-                : const Color.fromRGBO(201, 167, 126, 0.12),
+            color: _isHovered ? borderActive : borderInactive,
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? const Color.fromRGBO(201, 167, 126, 0.08)
-                  : const Color.fromRGBO(0, 0, 0, 0.3),
+                  ? AppColors.secondaryAccent.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.3),
               blurRadius: _isHovered ? 20 : 10,
               offset: _isHovered ? const Offset(0, 6) : const Offset(0, 3),
             ),
@@ -70,7 +72,7 @@ class _ReviewCardState extends State<ReviewCard> {
                 opacity: _isHovered ? 0.12 : 0.06,
                 child: const Icon(
                   Icons.format_quote,
-                  color: Color(0xFFC9A77E),
+                  color: AppColors.secondaryAccent,
                   size: 48,
                 ),
               ),
@@ -95,7 +97,7 @@ class _ReviewCardState extends State<ReviewCard> {
                       widget.review.comment,
                       style: AppTheme.sansBody(
                         fontSize: 13,
-                        color: const Color.fromRGBO(255, 255, 255, 0.85),
+                        color: AppColors.muted.withValues(alpha: 0.9),
                         height: 1.5,
                       ).copyWith(
                         fontStyle: FontStyle.italic,
@@ -107,7 +109,7 @@ class _ReviewCardState extends State<ReviewCard> {
                 // Divider line
                 Container(
                   height: 1,
-                  color: const Color.fromRGBO(201, 167, 126, 0.12),
+                  color: AppColors.primaryAccent.withValues(alpha: 0.12),
                 ),
                 const SizedBox(height: 10),
                 // Customer Profile Details
@@ -117,17 +119,17 @@ class _ReviewCardState extends State<ReviewCard> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color.fromRGBO(201, 167, 126, 0.25),
+                          color: AppColors.secondaryAccent.withValues(alpha: 0.25),
                           width: 1.2,
                         ),
                       ),
                       child: CircleAvatar(
                         radius: 17,
-                        backgroundColor: const Color(0xFF091210),
+                        backgroundColor: const Color(0xFF0F1B18), // Primary Background
                         backgroundImage: hasImage
                             ? CachedNetworkImageProvider(
                                 widget.review.imageUrl,
-                                maxWidth: 68, // 34 * 2 (radius 17 * 2 for pixel ratio)
+                                maxWidth: 68,
                                 maxHeight: 68,
                               )
                             : null,
@@ -136,7 +138,7 @@ class _ReviewCardState extends State<ReviewCard> {
                                 initials,
                                 style: AppTheme.sansBody(
                                   fontSize: 12,
-                                  color: const Color(0xFFC9A77E),
+                                  color: AppColors.secondaryAccent,
                                   fontWeight: FontWeight.bold,
                                 ),
                               )
@@ -167,10 +169,10 @@ class _ReviewCardState extends State<ReviewCard> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                                   decoration: BoxDecoration(
-                                    color: const Color.fromRGBO(201, 167, 126, 0.08),
+                                    color: AppColors.secondaryAccent.withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(2),
                                     border: Border.all(
-                                      color: const Color.fromRGBO(201, 167, 126, 0.35),
+                                      color: AppColors.secondaryAccent.withValues(alpha: 0.35),
                                       width: 0.5,
                                     ),
                                   ),
@@ -178,7 +180,7 @@ class _ReviewCardState extends State<ReviewCard> {
                                     "FEATURED",
                                     style: AppTheme.sansBody(
                                       fontSize: 6.5,
-                                      color: const Color(0xFFC9A77E),
+                                      color: AppColors.secondaryAccent,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 0.5,
                                     ),
@@ -192,7 +194,7 @@ class _ReviewCardState extends State<ReviewCard> {
                             widget.review.eventName,
                             style: AppTheme.sansBody(
                               fontSize: 10.5,
-                              color: const Color(0xFFA4A9A7),
+                              color: AppColors.muted.withValues(alpha: 0.7),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

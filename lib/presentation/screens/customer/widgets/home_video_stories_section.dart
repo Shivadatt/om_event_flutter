@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 import 'package:om_event/core/config/app_theme.dart';
+import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/utils/app_logger.dart';
 import 'package:om_event/core/widgets/custom_button.dart';
 import 'package:om_event/core/services/app_config_service.dart';
+import 'package:om_event/domain/entities/settings_entities.dart';
 
 class VideoStoriesSection extends StatelessWidget {
   final GlobalKey storiesKey;
@@ -24,17 +26,19 @@ class VideoStoriesSection extends StatelessWidget {
     return Container(
       key: storiesKey,
       width: double.infinity,
-      color: const Color(0xFF16201D),
+      color: const Color(0xFF152621), // Secondary Background
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 64.0 : 24.0,
-        vertical: isDesktop ? 100.0 : 60.0,
+        vertical: isDesktop ? 72.0 : 48.0,
       ),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Obx(() {
             final videoSettings = AppConfigService.to.rxVideoSettings.value;
-            final videos = videoSettings.videosList;
+            final videos = videoSettings.videosList.isNotEmpty
+                ? videoSettings.videosList
+                : VideoSettings.defaultVal().videosList;
 
             if (videos.isEmpty) {
               return const SizedBox.shrink();
@@ -49,7 +53,7 @@ class VideoStoriesSection extends StatelessWidget {
                   padding: EdgeInsets.only(
                     bottom:
                         index < activeList.length - 1
-                            ? (isDesktop ? 100 : 60)
+                            ? (isDesktop ? 72 : 48)
                             : 0,
                   ),
                   child: _VideoStoryRow(
@@ -118,9 +122,9 @@ class _VideoStoryRow extends StatelessWidget {
           eyebrow.toUpperCase(),
           style: AppTheme.sansBody(
             fontSize: 10,
-            color: const Color(0xFFD6B080),
+            color: AppColors.secondaryAccent, // Champagne Gold
             fontWeight: FontWeight.bold,
-            letterSpacing: 2,
+            letterSpacing: 2.2,
           ),
         ),
         const SizedBox(height: 14),
@@ -137,7 +141,7 @@ class _VideoStoryRow extends StatelessWidget {
                 text: titlePart2,
                 style: GoogleFonts.italiana(
                   fontStyle: FontStyle.italic,
-                  color: const Color(0xFFD6B080),
+                  color: AppColors.secondaryAccent, // Champagne Gold
                 ),
               ),
             ],
@@ -147,52 +151,44 @@ class _VideoStoryRow extends StatelessWidget {
         Text(
           description,
           style: AppTheme.sansBody(
-            fontSize: 14,
-            color: const Color(0xFFF4F0E8).withValues(alpha: 0.65),
-            height: 1.65,
+            fontSize: 14.5,
+            color: AppColors.muted,
+            height: 1.7,
           ),
         ),
         const SizedBox(height: 28),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: List.generate(facts.length, (index) {
-            final numStr = "0${index + 1}";
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+        // Stated facts
+        ...facts.map((fact) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    width: 32,
-                    child: Text(
-                      numStr,
-                      style: AppTheme.sansBody(
-                        fontSize: 10,
-                        color: const Color(0xFFD6B080),
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.4,
-                      ),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4.0),
+                    child: Icon(
+                      Icons.star_border,
+                      size: 14,
+                      color: AppColors.secondaryAccent,
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      facts[index].toUpperCase(),
+                      fact,
                       style: AppTheme.sansBody(
-                        fontSize: 10,
-                        color: const Color(0xFFF4F0E8),
-                        fontWeight: FontWeight.normal,
-                        letterSpacing: 1.4,
+                        fontSize: 13,
+                        color: AppColors.muted.withValues(alpha: 0.9),
+                        height: 1.5,
                       ),
                     ),
                   ),
                 ],
               ),
-            );
-          }),
-        ),
-        const SizedBox(height: 32),
+            )),
+        const SizedBox(height: 36),
         CustomButton(
-          text: "Build your celebration ↗",
-          isPrimary: false,
+          text: "EXPLORE DESIGN COLLECTION",
+          isPrimary: true,
           onPressed: onCtaPressed,
         ),
       ],
@@ -236,6 +232,7 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
   bool _isInitialized = false;
   bool _isPlaying = false;
   bool _isHovered = false;
+  bool _hasStarted = false;
 
   @override
   void initState() {
@@ -280,6 +277,7 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
       } else {
         _controller!.play();
         _isPlaying = true;
+        _hasStarted = true;
       }
     });
   }
@@ -291,7 +289,10 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
         setState(() => _isHovered = true);
         if (_isInitialized && !_isPlaying) {
           _controller!.play();
-          setState(() => _isPlaying = true);
+          setState(() {
+            _isPlaying = true;
+            _hasStarted = true;
+          });
         }
       },
       onExit: (_) {
@@ -320,24 +321,24 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
                 Positioned.fill(
                   child: ClipRect(
                     child:
-                        _isInitialized && _isPlaying
+                        _isInitialized && _hasStarted
                             ? FittedBox(
-                              fit: BoxFit.cover,
-                              child: SizedBox(
-                                width: _controller!.value.size.width,
-                                height: _controller!.value.size.height,
-                                child: VideoPlayer(_controller!),
-                              ),
-                            )
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: _controller!.value.size.width > 0 ? _controller!.value.size.width : 1600,
+                                  height: _controller!.value.size.height > 0 ? _controller!.value.size.height : 1000,
+                                  child: VideoPlayer(_controller!),
+                                ),
+                              )
                             : (widget.posterAsset.startsWith('http')
                                 ? Image.network(
-                                  widget.posterAsset,
-                                  fit: BoxFit.cover,
-                                )
+                                    widget.posterAsset,
+                                    fit: BoxFit.cover,
+                                  )
                                 : Image.asset(
-                                  widget.posterAsset,
-                                  fit: BoxFit.cover,
-                                )),
+                                    widget.posterAsset,
+                                    fit: BoxFit.cover,
+                                  )),
                   ),
                 ),
                 Positioned(
@@ -348,7 +349,7 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
                       horizontal: 10,
                       vertical: 7,
                     ),
-                    color: const Color(0xC70F1815),
+                    color: const Color(0xFF0F1B18).withValues(alpha: 0.8), // Primary Background Glass
                     child: Text(
                       "SAMPLE EVENT FILM · HD",
                       style: AppTheme.sansBody(

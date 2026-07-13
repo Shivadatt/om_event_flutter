@@ -72,7 +72,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
   final _galleryColumns = TextEditingController();
   bool _galleryGridEnable = true;
   final _reviewsMinStars = TextEditingController();
-  final _statEvents = TextEditingController(), _statClients = TextEditingController();
+  final _statEvents = TextEditingController(), _statClients = TextEditingController(), _statCities = TextEditingController(), _statYears = TextEditingController();
   final _faqTitle = TextEditingController();
   bool _faqAccordionEnable = true;
 

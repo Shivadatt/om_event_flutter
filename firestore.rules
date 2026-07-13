@@ -217,13 +217,9 @@ service cloud.firestore {
     }
 
     // App Settings (configuration documents)
-    match /settings/data/public/{doc} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    match /settings/data/admin/{doc} {
-      allow read, write: if isAdminOrStaff();
+    match /settings/{doc} {
+      allow read: if isAdminOrStaff() || !(doc in ['notifications', 'feature_flags', 'email_templates', 'sms_templates', 'invoice', 'analytics', 'dashboard']);
+      allow write: if isAdminOrStaff();
     }
   }
 }

@@ -60,6 +60,7 @@ class HomeScreen extends GetView<CatalogController> {
     }
 
     final isDark = context.isDarkMode;
+    final isScrolled = ValueNotifier<bool>(false);
 
     return Scaffold(
       key: scaffoldKey,
@@ -75,24 +76,34 @@ class HomeScreen extends GetView<CatalogController> {
         cartController: cartController,
         quoteController: quoteController,
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: AnnouncementBanner(isDesktop: isDesktop)),
-          HomeSliverAppBar(
-            scaffoldKey: scaffoldKey,
-            cartController: cartController,
-            authCtrl: authCtrl,
-            isDesktop: isDesktop,
-            isDark: isDark,
-            categoriesKey: categoriesKey,
-            catalogKey: catalogKey,
-            storiesKey: storiesKey,
-            contactKey: contactKey,
-            scrollToSection: scrollToSection,
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification.metrics.pixels > 50) {
+            if (!isScrolled.value) isScrolled.value = true;
+          } else {
+            if (isScrolled.value) isScrolled.value = false;
+          }
+          return false;
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: AnnouncementBanner(isDesktop: isDesktop)),
+            HomeSliverAppBar(
+              scaffoldKey: scaffoldKey,
+              cartController: cartController,
+              authCtrl: authCtrl,
+              isDesktop: isDesktop,
+              isDark: isDark,
+              categoriesKey: categoriesKey,
+              catalogKey: catalogKey,
+              storiesKey: storiesKey,
+              contactKey: contactKey,
+              scrollToSection: scrollToSection,
+              isScrolled: isScrolled,
+            ),
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 HeroSection(scaffoldKey: scaffoldKey, isDesktop: isDesktop),
                 const MarqueeRibbon(),
@@ -133,6 +144,7 @@ class HomeScreen extends GetView<CatalogController> {
             ),
           ),
         ],
+      ),
       ),
       floatingActionButton: _buildWhatsAppFab(context),
     );

@@ -100,8 +100,6 @@ class LocalNotificationTriggerService extends GetxService {
     try {
       final settingsSnap = await _firestore
           .collection(AppCollections.settings)
-          .doc('data')
-          .collection('admin')
           .doc('automation')
           .get();
 

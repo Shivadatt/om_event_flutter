@@ -1,4 +1,4 @@
-part of '../home_catalog_section.dart';
+﻿part of '../home_catalog_section.dart';
 
 extension _CatalogToolbarExtension on ExperiencesCatalogSection {
   Widget _buildChip({
@@ -7,41 +7,7 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
     required VoidCallback onTap,
     required bool isDark,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
-          decoration: BoxDecoration(
-            color:
-                isActive
-                    ? (isDark ? Colors.white : const Color(0xFF1E2B27))
-                    : Colors.transparent,
-            border: Border.all(
-              color:
-                  isActive
-                      ? Colors.transparent
-                      : (isDark ? Colors.white24 : Colors.black12),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Text(
-            label,
-            style: AppTheme.sansBody(
-              fontSize: 11,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color:
-                  isActive
-                      ? (isDark ? const Color(0xFF17201E) : Colors.white)
-                      : (isDark ? Colors.white70 : Colors.black87),
-            ),
-          ),
-        ),
-      ),
-    );
+    return _ToolbarChip(label: label, isActive: isActive, onTap: onTap);
   }
 
   Widget _buildToolbar({
@@ -59,96 +25,114 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
           style: AppTheme.sansBody(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: const Color(0xFFAA7C4B),
+            letterSpacing: 3.5,
+            color: AppColors.primaryAccent,
           ),
         ),
-        const SizedBox(height: 8),
-        RichText(
-          text: TextSpan(
-            style: GoogleFonts.italiana(
-              fontSize: titleSize,
-              fontWeight: FontWeight.normal,
-              color: isDark ? Colors.white : const Color(0xFF17201E),
-              height: 0.98,
-            ),
-            children: [
-              const TextSpan(text: "Designed to leave\n"),
-              const TextSpan(text: "a "),
-              TextSpan(
-                text: "beautiful echo.",
-                style: GoogleFonts.italiana(
-                  fontStyle: FontStyle.italic,
-                  color: const Color(0xFFAA7C4B),
-                ),
+        const SizedBox(height: 12),
+        ShaderMask(
+          shaderCallback: (bounds) {
+            return const LinearGradient(
+              colors: [Colors.white, Color(0xFFE6C55A), Color(0xFFD4AF37)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds);
+          },
+          child: RichText(
+            text: TextSpan(
+              style: GoogleFonts.italiana(
+                fontSize: titleSize,
+                fontWeight: FontWeight.normal,
+                color: Colors.white,
+                height: 1.0,
+                letterSpacing: 1.2,
               ),
-            ],
+              children: [
+                const TextSpan(text: "DESIGNED TO LEAVE\n"),
+                const TextSpan(text: "A "),
+                TextSpan(
+                  text: "BEAUTIFUL ECHO.",
+                  style: GoogleFonts.italiana(
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
 
     final descWidget = Container(
-      constraints: const BoxConstraints(maxWidth: 400),
+      constraints: const BoxConstraints(maxWidth: 450),
       child: Text(
         "Explore signature concepts, see an honest starting price, then tune every color, material and detail.",
         style: AppTheme.sansBody(
-          fontSize: 14,
-          color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+          fontSize: 14.5,
+          color: AppColors.muted,
           height: 1.8,
         ),
       ),
     );
 
-    final headerRow =
-        isWide
-            ? Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                headingWidget,
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5.0),
-                  child: descWidget,
-                ),
-              ],
-            )
-            : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [headingWidget, const SizedBox(height: 22), descWidget],
-            );
+    final headerRow = isWide
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              headingWidget,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6.0),
+                child: descWidget,
+              ),
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              headingWidget,
+              const SizedBox(height: 24),
+              descWidget,
+            ],
+          );
 
     final searchWidget = Container(
-      height: 46,
+      height: 44,
       width: isWide ? 280 : double.infinity,
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? Colors.white24 : Colors.black12,
-            width: 1,
-          ),
+        color: const Color(0xFF1B2D27).withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.secondaryAccent.withValues(alpha: 0.25),
+          width: 1.2,
         ),
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.search,
-            size: 18,
-            color: isDark ? Colors.white54 : Colors.black45,
+            size: 16,
+            color: AppColors.secondaryAccent,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               onChanged: (val) => controller.updateSearchQuery(val),
               style: AppTheme.sansBody(
                 fontSize: 13,
-                color: isDark ? Colors.white : const Color(0xFF17201E),
+                color: Colors.white,
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: "Search a mood, theme or event…",
-                hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 isDense: true,
               ),
             ),
@@ -158,46 +142,49 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
     );
 
     final sortWidget = Container(
-      height: 46,
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? Colors.white24 : Colors.black12,
-            width: 1,
-          ),
+        color: const Color(0xFF1B2D27).withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.secondaryAccent.withValues(alpha: 0.25),
+          width: 1.2,
         ),
       ),
       child: Obx(
         () => DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: controller.sortBy.value,
-            dropdownColor: isDark ? const Color(0xFF1B2320) : Colors.white,
-            icon: Padding(
-              padding: const EdgeInsets.only(left: 6.0),
+            dropdownColor: const Color(0xFF1B2D27),
+            icon: const Padding(
+              padding: EdgeInsets.only(left: 6.0),
               child: Icon(
                 Icons.keyboard_arrow_down,
                 size: 16,
-                color: isDark ? Colors.white70 : Colors.black87,
+                color: AppColors.secondaryAccent,
               ),
             ),
             items: const [
-              DropdownMenuItem(value: 'popular', child: Text("Most loved")),
-              DropdownMenuItem(value: 'latest', child: Text("Latest")),
+              DropdownMenuItem(value: 'popular', child: Text("MOST LOVED")),
+              DropdownMenuItem(value: 'latest', child: Text("LATEST")),
               DropdownMenuItem(
                 value: 'price_low',
-                child: Text("Price: low to high"),
+                child: Text("PRICE: LOW TO HIGH"),
               ),
               DropdownMenuItem(
                 value: 'price_high',
-                child: Text("Price: high to low"),
+                child: Text("PRICE: HIGH TO LOW"),
               ),
             ],
             onChanged: (val) {
               if (val != null) controller.updateSort(val);
             },
             style: AppTheme.sansBody(
-              fontSize: 12,
-              color: isDark ? Colors.white : const Color(0xFF17201E),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withValues(alpha: 0.9),
+              letterSpacing: 1.2,
             ),
           ),
         ),
@@ -205,7 +192,7 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
     );
 
     final chipsWidget = SizedBox(
-      height: 46,
+      height: 48,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -220,23 +207,21 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
                 isDark: isDark,
               );
             }),
-            const SizedBox(width: 7),
+            const SizedBox(width: 8),
             Obx(
               () => Row(
-                children:
-                    controller.rxCategories.map((cat) {
-                      final isActive =
-                          controller.selectedCategorySlug.value == cat.slug;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 7.0),
-                        child: _buildChip(
-                          label: cat.name.replaceFirst(" Celebrations", ""),
-                          isActive: isActive,
-                          onTap: () => controller.selectCategory(cat.slug),
-                          isDark: isDark,
-                        ),
-                      );
-                    }).toList(),
+                children: controller.rxCategories.map((cat) {
+                  final isActive = controller.selectedCategorySlug.value == cat.slug;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: _buildChip(
+                      label: cat.name.replaceFirst(" Celebrations", ""),
+                      isActive: isActive,
+                      onTap: () => controller.selectCategory(cat.slug),
+                      isDark: isDark,
+                    ),
+                  );
+                }).toList(),
               ),
             ),
           ],
@@ -244,35 +229,104 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
       ),
     );
 
-    final toolbar =
-        isWide
-            ? Row(
-              children: [
-                searchWidget,
-                const SizedBox(width: 14),
-                Expanded(child: chipsWidget),
-                const SizedBox(width: 14),
-                sortWidget,
-              ],
-            )
-            : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                searchWidget,
-                const SizedBox(height: 14),
-                chipsWidget,
-                const SizedBox(height: 14),
-                Align(alignment: Alignment.centerLeft, child: sortWidget),
-              ],
-            );
+    final toolbar = isWide
+        ? Row(
+            children: [
+              searchWidget,
+              const SizedBox(width: 20),
+              Expanded(child: chipsWidget),
+              const SizedBox(width: 20),
+              sortWidget,
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              searchWidget,
+              const SizedBox(height: 16),
+              chipsWidget,
+              const SizedBox(height: 16),
+              Align(alignment: Alignment.centerLeft, child: sortWidget),
+            ],
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         headerRow,
-        const SizedBox(height: 62),
+        const SizedBox(height: 60),
         toolbar,
       ],
+    );
+  }
+}
+
+class _ToolbarChip extends StatefulWidget {
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _ToolbarChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  State<_ToolbarChip> createState() => _ToolbarChipState();
+}
+
+class _ToolbarChipState extends State<_ToolbarChip> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeGradient = const LinearGradient(
+      colors: [AppColors.highlight, AppColors.secondaryAccent, AppColors.primaryAccent],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: widget.isActive ? activeGradient : null,
+            color: widget.isActive ? null : Colors.transparent,
+            border: Border.all(
+              color: widget.isActive
+                  ? Colors.transparent
+                  : (_isHovered ? AppColors.primaryAccent : AppColors.primaryAccent.withValues(alpha: 0.2)),
+              width: 1.2,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: widget.isActive && _isHovered
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryAccent.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    )
+                  ]
+                : null,
+          ),
+          child: Text(
+            widget.label.toUpperCase(),
+            style: AppTheme.sansBody(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: widget.isActive ? const Color(0xFF0F1B18) : AppColors.muted,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

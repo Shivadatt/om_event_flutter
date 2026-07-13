@@ -74,10 +74,10 @@ class NavDrawer extends StatelessWidget {
                 curve: Curves.easeInOut,
               );
             }),
-            _drawerTile("Developer API", () {
-              Navigator.pop(context);
-              Get.toNamed(AppRoutes.docs);
-            }),
+            // _drawerTile("Developer API", () {
+            //   Navigator.pop(context);
+            //   Get.toNamed(AppRoutes.docs);
+            // }),
             _drawerTile("Team Studio", () {
               Navigator.pop(context);
               Get.toNamed(AppRoutes.login);

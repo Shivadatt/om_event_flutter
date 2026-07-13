@@ -1,7 +1,10 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:om_event/core/config/app_routes.dart';
 import 'package:om_event/core/config/app_theme.dart';
+import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/presentation/controllers/cart_controller.dart';
 import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
 import '../auth/widgets/customer_auth_box.dart';
@@ -18,6 +21,8 @@ class HomeSliverAppBar extends StatelessWidget {
   final GlobalKey contactKey;
   final void Function(GlobalKey) scrollToSection;
 
+  final ValueNotifier<bool> isScrolled;
+
   const HomeSliverAppBar({
     super.key,
     required this.scaffoldKey,
@@ -30,117 +35,144 @@ class HomeSliverAppBar extends StatelessWidget {
     required this.storiesKey,
     required this.contactKey,
     required this.scrollToSection,
+    required this.isScrolled,
   });
-
-  Widget _navLink(BuildContext context, String label, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: InkWell(
-        onTap: onTap,
-        child: Text(
-          label,
-          style: AppTheme.sansBody(
-            fontSize: 10,
-            color: isDark ? Colors.white70 : const Color(0xFF17201E),
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    return SliverAppBar(
-      floating: true,
-      pinned: true,
-      toolbarHeight: 76,
-      backgroundColor: isDark ? const Color(0xFF101C18) : const Color(0xFFFAF8F5),
+    return ValueListenableBuilder<bool>(
+      valueListenable: isScrolled,
+      builder: (context, scrolled, child) {
+        return SliverAppBar(
+          floating: true,
+          pinned: true,
+          toolbarHeight: 84,
+          backgroundColor: scrolled
+              ? Colors.black
+              : const Color(0xFF0F1B18).withValues(alpha: 0.45),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            color: Colors.transparent,
+          ),
+        ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1.5),
+        child: Container(
+          height: 1.5,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primaryAccent.withValues(alpha: 0.0),
+                AppColors.primaryAccent.withValues(alpha: 0.35),
+                AppColors.secondaryAccent.withValues(alpha: 0.35),
+                AppColors.primaryAccent.withValues(alpha: 0.0),
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
+      ),
       leading: isDesktop
           ? null
           : IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.menu,
-                color: isDark ? Colors.white : const Color(0xFF17201E),
+                color: Colors.white,
               ),
               onPressed: () => scaffoldKey.currentState?.openDrawer(),
             ),
       title: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isDark ? Colors.white : const Color(0xFF17201E),
-                width: 1,
+                color: AppColors.primaryAccent,
+                width: 1.2,
               ),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primaryAccent.withValues(alpha: 0.18),
+                  Colors.transparent,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryAccent.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                )
+              ]
             ),
             child: Center(
               child: Text(
                 "OE",
-                style: AppTheme.serifHeader(
-                  fontSize: 13,
-                  color: isDark ? Colors.white : const Color(0xFF17201E),
+                style: GoogleFonts.italiana(
+                  fontSize: 14,
+                  color: AppColors.primaryAccent,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "OM EVENTS",
-                style: AppTheme.serifHeader(
-                  fontSize: 14,
-                  color: isDark ? Colors.white : const Color(0xFF17201E),
+                style: GoogleFonts.italiana(
+                  fontSize: 17,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+                  letterSpacing: 4,
                 ),
               ),
+              const SizedBox(height: 3),
               Text(
-                "MAKE IT MEMORABLE",
+                "CELEBRATIONS, THOUGHTFULLY COMPOSED",
                 style: AppTheme.sansBody(
-                  fontSize: 6,
-                  color: isDark ? Colors.white70 : const Color(0xFF1E2B27),
+                  fontSize: 6.8,
+                  color: AppColors.primaryAccent,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+                  letterSpacing: 2.0,
                 ),
               ),
             ],
           ),
           if (isDesktop) ...[
             const Spacer(),
-            _navLink(
-              context,
-              "Collections",
-              () => scrollToSection(categoriesKey),
+            _NavHoverLink(
+              label: "Collections",
+              onTap: () => scrollToSection(categoriesKey),
             ),
-            _navLink(
-              context,
-              "Experiences",
-              () => scrollToSection(catalogKey),
+            _NavHoverLink(
+              label: "Experiences",
+              onTap: () => scrollToSection(catalogKey),
             ),
-            _navLink(
-              context,
-              "Stories",
-              () => scrollToSection(storiesKey),
+            _NavHoverLink(
+              label: "Stories",
+              onTap: () => scrollToSection(storiesKey),
             ),
-            _navLink(
-              context,
-              "Contact",
-              () => scrollToSection(contactKey),
+            _NavHoverLink(
+              label: "Contact",
+              onTap: () => scrollToSection(contactKey),
             ),
-            _navLink(
-              context,
-              "Developer API",
-              () => Get.toNamed(AppRoutes.docs),
-            ),
+            // _NavHoverLink(
+            //   label: "Developer API",
+            //   onTap: () => Get.toNamed(AppRoutes.docs),
+            // ),
           ],
         ],
       ),
@@ -148,62 +180,17 @@ class HomeSliverAppBar extends StatelessWidget {
         const SizedBox(width: 8),
         Obx(() {
           final count = cartController.rxCartItems.length;
-          return MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: () => scaffoldKey.currentState?.openEndDrawer(),
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.25)
-                        : Colors.black.withValues(alpha: 0.15),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Selection",
-                      style: AppTheme.sansBody(
-                        fontSize: 12,
-                        color: isDark ? Colors.white : const Color(0xFF17201E),
-                        fontWeight: FontWeight.normal,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white : const Color(0xFF1E2B27),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '$count',
-                        style: AppTheme.sansBody(
-                          fontSize: 10,
-                          color: isDark ? const Color(0xFF1B2925) : Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          return _SelectionPill(
+            count: count,
+            onTap: () => scaffoldKey.currentState?.openEndDrawer(),
           );
         }),
-        const SizedBox(width: 14),
+        const SizedBox(width: 16),
         Obx(() {
           final isLoggedIn = authCtrl.rxIsLoggedIn.value;
           if (isDesktop) {
-            return TextButton(
+            return _TextHoverButton(
+              label: isLoggedIn ? "CLIENT PORTAL" : "CLIENT LOGIN",
               onPressed: () {
                 if (isLoggedIn) {
                   Get.toNamed(AppRoutes.customerDashboard);
@@ -216,21 +203,12 @@ class HomeSliverAppBar extends StatelessWidget {
                   );
                 }
               },
-              child: Text(
-                isLoggedIn ? "CLIENT PORTAL" : "CLIENT LOGIN",
-                style: AppTheme.sansBody(
-                  fontSize: 10,
-                  color: const Color(0xFFD3AD7B),
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
             );
           } else {
             return IconButton(
               icon: Icon(
                 isLoggedIn ? Icons.dashboard_outlined : Icons.person_outline,
-                color: isDark ? Colors.white : const Color(0xFF17201E),
+                color: AppColors.primaryAccent,
               ),
               onPressed: () {
                 if (isLoggedIn) {
@@ -247,30 +225,214 @@ class HomeSliverAppBar extends StatelessWidget {
             );
           }
         }),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         if (isDesktop)
-          TextButton(
+          _TextHoverButton(
+            label: "TEAM STUDIO",
             onPressed: () => Get.toNamed(AppRoutes.login),
-            child: Text(
-              "TEAM STUDIO",
-              style: AppTheme.sansBody(
-                fontSize: 10,
-                color: const Color(0xFFD3AD7B),
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
-            ),
           )
         else
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.admin_panel_settings_outlined,
-              color: isDark ? Colors.white : const Color(0xFF17201E),
+              color: AppColors.primaryAccent,
             ),
             onPressed: () => Get.toNamed(AppRoutes.login),
           ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 24),
       ],
+    );
+  },
+);
+  }
+}
+
+class _NavHoverLink extends StatefulWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _NavHoverLink({required this.label, required this.onTap});
+
+  @override
+  State<_NavHoverLink> createState() => _NavHoverLinkState();
+}
+
+class _NavHoverLinkState extends State<_NavHoverLink> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.label.toUpperCase(),
+                style: AppTheme.sansBody(
+                  fontSize: 10,
+                  color: _isHovered ? AppColors.primaryAccent : Colors.white.withValues(alpha: 0.85),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2.0,
+                ).copyWith(
+                  shadows: _isHovered
+                      ? [
+                          Shadow(
+                            color: AppColors.primaryAccent.withValues(alpha: 0.5),
+                            blurRadius: 8,
+                          )
+                        ]
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 5),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                height: 1.5,
+                width: _isHovered ? 28 : 0,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryAccent,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryAccent.withValues(alpha: 0.8),
+                      blurRadius: 4,
+                    )
+                  ]
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectionPill extends StatefulWidget {
+  final int count;
+  final VoidCallback onTap;
+  const _SelectionPill({required this.count, required this.onTap});
+
+  @override
+  State<_SelectionPill> createState() => _SelectionPillState();
+}
+
+class _SelectionPillState extends State<_SelectionPill> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 42,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            color: _isHovered ? AppColors.primaryAccent.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.02),
+            border: Border.all(
+              color: _isHovered ? AppColors.primaryAccent : AppColors.primaryAccent.withValues(alpha: 0.25),
+              width: 1.2,
+            ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryAccent.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      spreadRadius: -1,
+                    )
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "SELECTION",
+                style: AppTheme.sansBody(
+                  fontSize: 11,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.8,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 22,
+                height: 22,
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryAccent,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${widget.count}',
+                  style: AppTheme.sansBody(
+                    fontSize: 10,
+                    color: const Color(0xFF0F1B18),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TextHoverButton extends StatefulWidget {
+  final String label;
+  final VoidCallback onPressed;
+  const _TextHoverButton({required this.label, required this.onPressed});
+
+  @override
+  State<_TextHoverButton> createState() => _TextHoverButtonState();
+}
+
+class _TextHoverButtonState extends State<_TextHoverButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: TextButton(
+        onPressed: widget.onPressed,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          style: AppTheme.sansBody(
+            fontSize: 10,
+            color: _isHovered ? Colors.white : AppColors.primaryAccent,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2.0,
+          ).copyWith(
+            shadows: _isHovered
+                ? [
+                    Shadow(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                    )
+                  ]
+                : null,
+          ),
+          child: Text(widget.label),
+        ),
+      ),
     );
   }
 }

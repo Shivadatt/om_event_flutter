@@ -70,10 +70,10 @@ class StatisticsSettings {
 
   factory StatisticsSettings.defaultVal() {
     return const StatisticsSettings(
-      completedEvents: 0,
-      happyClients: 0,
-      cities: 0,
-      years: 0,
+      completedEvents: 500,
+      happyClients: 480,
+      cities: 12,
+      years: 8,
     );
   }
 }

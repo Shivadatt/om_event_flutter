@@ -151,6 +151,8 @@ extension _SettingsSavesExtension on _SystemSettingsScreenState {
     final stats = AppConfigService.to.rxStatisticsSettings.value;
     _statEvents.text = stats.completedEvents.toString();
     _statClients.text = stats.happyClients.toString();
+    _statCities.text = stats.cities.toString();
+    _statYears.text = stats.years.toString();
 
     final faq = AppConfigService.to.rxFaqSettings.value;
     _faqTitle.text = faq.title;

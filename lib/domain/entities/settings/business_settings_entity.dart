@@ -42,22 +42,22 @@ class OfficeBranch {
   factory OfficeBranch.fromMap(String id, Map<dynamic, dynamic> map) {
     return OfficeBranch(
       id: id,
-      branchName: map['branchName'] ?? '',
-      address: map['address'] ?? '',
+      branchName: map['branchName'] ?? map['name'] ?? '',
+      address: map['address'] ?? map['address_line'] ?? '',
       city: map['city'] ?? '',
       state: map['state'] ?? '',
       country: map['country'] ?? '',
-      pincode: map['pincode'] ?? '',
-      googleMapUrl: map['googleMapUrl'] ?? '',
+      pincode: map['pincode'] ?? map['pin_code'] ?? '',
+      googleMapUrl: map['googleMapUrl'] ?? map['googleMaps'] ?? '',
       latitude: map['latitude'] ?? '',
       longitude: map['longitude'] ?? '',
-      phone1: map['phone1'] ?? '',
+      phone1: map['phone1'] ?? map['phone'] ?? '',
       phone2: map['phone2'] ?? '',
-      whatsapp: map['whatsapp'] ?? '',
+      whatsapp: map['whatsapp'] ?? map['whatsapp_number'] ?? '',
       email: map['email'] ?? '',
-      instagram: map['instagram'] ?? '',
+      instagram: map['instagram'] ?? map['instagram_url'] ?? '',
       businessHours: map['businessHours'] ?? '',
-      isPrimary: map['isPrimary'] ?? false,
+      isPrimary: map['isPrimary'] ?? (map['display_order'] == 0) ?? false,
     );
   }
 

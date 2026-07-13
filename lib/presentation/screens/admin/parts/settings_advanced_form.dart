@@ -222,6 +222,8 @@ extension _SettingsAdvancedFormExtension on _SystemSettingsScreenState {
         const SizedBox(height: 24),
         _field("Completed Events Count", _statEvents),
         _field("Happy Clients Count", _statClients),
+        _field("Cities Reached Count", _statCities),
+        _field("Years of Curation Count", _statYears),
         const SizedBox(height: 24),
         ElevatedButton(
           onPressed:
@@ -234,8 +236,8 @@ extension _SettingsAdvancedFormExtension on _SystemSettingsScreenState {
                         current.completedEvents,
                     happyClients:
                         int.tryParse(_statClients.text) ?? current.happyClients,
-                    cities: current.cities,
-                    years: current.years,
+                    cities: int.tryParse(_statCities.text) ?? current.cities,
+                    years: int.tryParse(_statYears.text) ?? current.years,
                   ),
                 );
               }),

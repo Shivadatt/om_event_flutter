@@ -17,28 +17,12 @@ class SettingsRepositoryImpl
     implements SettingsRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  bool _isAdminDoc(String docId) {
-    const adminDocs = {
-      'migrations',
-      'analytics',
-      'dashboard',
-      'invoice',
-      'email_templates',
-      'sms_templates',
-      'notifications',
-      'automation',
-      'feature_flags',
-    };
-    return adminDocs.contains(docId);
-  }
+
 
   @override
   DocumentReference<Map<String, dynamic>> _getDocRef(String docId) {
-    final type = _isAdminDoc(docId) ? 'admin' : 'public';
     return _firestore
         .collection(AppCollections.settings)
-        .doc('data')
-        .collection(type)
         .doc(docId);
   }
 

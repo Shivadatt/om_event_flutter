@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class RatingWidget extends StatelessWidget {
   final int rating;
@@ -17,7 +18,7 @@ class RatingWidget extends StatelessWidget {
       children: List.generate(5, (index) {
         return Icon(
           index < rating ? Icons.star : Icons.star_border,
-          color: const Color(0xFFC9A77E),
+          color: AppColors.secondaryAccent,
           size: size,
         );
       }),

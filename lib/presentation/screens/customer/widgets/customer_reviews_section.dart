@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:om_event/core/constants/app_colors.dart';
 import '../../../../core/config/app_theme.dart';
 import '../../../controllers/catalog_controller.dart';
 import 'review_slider.dart';
@@ -21,30 +23,50 @@ class CustomerReviewsSection extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isDesktop ? 80 : 20,
-          vertical: 64,
+          vertical: isDesktop ? 72 : 48,
         ),
         decoration: const BoxDecoration(
-          color: Color(0xFF0B1714),
+          color: Color(0xFF152621), // Secondary Background
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Section Header
+            // Section Header (Luxury style)
             Text(
-              "What Our Customers Say",
-              style: AppTheme.serifHeader(
-                fontSize: isDesktop ? 32 : 24,
-                color: Colors.white,
+              "HEARD FROM CLIENTS",
+              style: AppTheme.sansBody(
+                fontSize: 10,
+                color: AppColors.secondaryAccent,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 3.5,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            ShaderMask(
+              shaderCallback: (bounds) {
+                return const LinearGradient(
+                  colors: [Colors.white, Color(0xFFFFE8A3), Color(0xFFF3D37A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds);
+              },
+              child: Text(
+                "WHAT OUR CUSTOMERS SAY.",
+                style: GoogleFonts.italiana(
+                  fontSize: isDesktop ? 34 : 26,
+                  color: Colors.white,
+                  fontWeight: FontWeight.normal,
+                  letterSpacing: 1.2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 12),
             Text(
               "Real experiences shared by our happy clients.",
               style: AppTheme.sansBody(
                 fontSize: 14,
-                color: const Color(0xFFA4A9A7),
+                color: AppColors.muted,
               ),
               textAlign: TextAlign.center,
             ),

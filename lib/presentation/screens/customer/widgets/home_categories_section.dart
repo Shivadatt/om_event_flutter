@@ -1,41 +1,114 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:om_event/core/config/app_theme.dart';
+import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/domain/entities/category.dart';
 import 'package:om_event/presentation/controllers/catalog_controller.dart';
 
-class ConcentricCirclesPainter extends CustomPainter {
-  const ConcentricCirclesPainter();
+class _CategoriesMeshPainter extends CustomPainter {
+  final double animValue;
+  const _CategoriesMeshPainter({required this.animValue});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final paint1 =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.18)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1;
+    final bgPaint = Paint()..color = const Color(0xFF152621); // Secondary Background
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    final paint2 =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.025)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 24;
+    final double radians = animValue * 2 * math.pi;
 
-    final paint3 =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.018)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 50;
+    // Ambient color leak: Champagne Gold
+    final goldOffset = Offset(
+      size.width * 0.2 + math.sin(radians) * 80,
+      size.height * 0.7 + math.cos(radians) * 60,
+    );
+    final goldPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        goldOffset,
+        size.width * 0.45,
+        [
+          AppColors.secondaryAccent.withValues(alpha: 0.1),
+          Colors.transparent,
+        ],
+      )
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 35);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), goldPaint);
 
-    canvas.drawCircle(center, 120.0 + 25.0, paint3);
-    canvas.drawCircle(center, 120.0 + 12.0, paint2);
-    canvas.drawCircle(center, 120.0, paint1);
+    // Ambient color leak: Deep Emerald
+    final emeraldOffset = Offset(
+      size.width * 0.8 - math.cos(radians) * 70,
+      size.height * 0.3 + math.sin(radians) * 50,
+    );
+    final emeraldPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        emeraldOffset,
+        size.width * 0.40,
+        [
+          const Color(0xFF183129).withValues(alpha: 0.35),
+          Colors.transparent,
+        ],
+      )
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), emeraldPaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CategoriesMeshPainter oldDelegate) =>
+      oldDelegate.animValue != animValue;
+}
+
+class CategoriesSectionBackground extends StatefulWidget {
+  final Widget child;
+  const CategoriesSectionBackground({super.key, required this.child});
+
+  @override
+  State<CategoriesSectionBackground> createState() => _CategoriesSectionBackgroundState();
+}
+
+class _CategoriesSectionBackgroundState extends State<CategoriesSectionBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 18),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: _CategoriesMeshPainter(animValue: _controller.value),
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+/// Parses a hex color string like "#75c9a6" or "75c9a6" into a [Color].
+Color _parseHexColor(String hex) {
+  final cleaned = hex.replaceAll('#', '').trim();
+  if (cleaned.length == 6) {
+    return Color(int.parse('FF$cleaned', radix: 16));
+  } else if (cleaned.length == 8) {
+    return Color(int.parse(cleaned, radix: 16));
+  }
+  return const Color(0xFFC8A96E); // Fallback warm gold
 }
 
 class CategoryCard extends StatefulWidget {
@@ -53,15 +126,19 @@ class _CategoryCardState extends State<CategoryCard> {
 
   @override
   Widget build(BuildContext context) {
-    Color catColor;
-    try {
-      catColor = Color(
-        int.parse(widget.category.color.replaceFirst('#', '0xFF')),
-      );
-    } catch (_) {
-      catColor = const Color(0xFFC79B61);
-    }
-    const cardBackground = Color(0xFF1C2724);
+    final hasImage = widget.category.imageUrl.isNotEmpty;
+    final baseColor = _parseHexColor(widget.category.color);
+
+    // Slightly darken/lighten the base color for the radial gradient center
+    final lighterColor = Color.lerp(baseColor, Colors.white, 0.22) ?? baseColor;
+    final darkerColor = Color.lerp(baseColor, Colors.black, 0.18) ?? baseColor;
+
+    // Text color: choose dark or light based on perceived brightness of baseColor
+    final luminance = baseColor.computeLuminance();
+    final textColor = luminance > 0.42 ? const Color(0xFF1A2B25) : Colors.white;
+    final subtextColor = luminance > 0.42
+        ? const Color(0xFF1A2B25).withValues(alpha: 0.6)
+        : Colors.white.withValues(alpha: 0.75);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -69,192 +146,193 @@ class _CategoryCardState extends State<CategoryCard> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: _isHovered ? 1.025 : 1.0,
-          duration: const Duration(milliseconds: 250),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            transform: Matrix4.identity()..translate(0.0, _isHovered ? -8.0 : 0.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: catColor.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: _isHovered ? 0.30 : 0.15),
-                  blurRadius: _isHovered ? 24 : 12,
-                  offset: Offset(0, _isHovered ? 12 : 6),
-                ),
-              ],
+          transform: Matrix4.identity()..translate(0.0, _isHovered ? -8.0 : 0.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: RadialGradient(
+              center: const Alignment(-0.5, -0.5),
+              radius: 1.4,
+              colors: [lighterColor, darkerColor],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22.5),
-              child: Stack(
-                children: [
-                  // Gradient Background using the card's signature color
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            catColor.withValues(alpha: 0.55),
-                            cardBackground,
-                          ],
-                        ),
+            boxShadow: [
+              BoxShadow(
+                color: baseColor.withValues(alpha: _isHovered ? 0.55 : 0.35),
+                blurRadius: _isHovered ? 28 : 16,
+                offset: Offset(0, _isHovered ? 12 : 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22.8),
+            child: Stack(
+              children: [
+                // Subtle radial glow overlay for depth
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(-0.6, -0.6),
+                        radius: 1.0,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.18),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
+                ),
 
-                  // Concentric Circles Painter
-                  Positioned(
-                    right: -60,
-                    top: -70,
-                    child: const CustomPaint(
-                      size: Size(240, 240),
-                      painter: ConcentricCirclesPainter(),
+                // Bottom-right ambient circle decoration
+                Positioned(
+                  right: -40,
+                  bottom: -40,
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.06),
                     ),
                   ),
+                ),
+                Positioned(
+                  right: -10,
+                  bottom: -10,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.05),
+                    ),
+                  ),
+                ),
 
-                  // Content Layout
-                  Padding(
-                    padding: const EdgeInsets.all(28.0),
+                // Main content: image top, text bottom — Positioned.fill so Spacer works
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 18, 54, 18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Small Category Image / Icon Preview
-                        if (widget.category.imageUrl.isNotEmpty)
-                          Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                width: 1.2,
-                              ),
+                      mainAxisSize: MainAxisSize.max,
+                    children: [
+                      // Larger thumbnail image
+                      if (hasImage)
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.40),
+                              width: 1.5,
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.network(
-                                widget.category.imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Center(
-                                  child: Text(
-                                    widget.category.icon.isNotEmpty
-                                        ? widget.category.icon
-                                        : '✦',
-                                    style: const TextStyle(fontSize: 24),
-                                  ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.22),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14.5),
+                            child: Image.network(
+                              widget.category.imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: Colors.white.withValues(alpha: 0.12),
+                                child: Icon(
+                                  Icons.celebration_outlined,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  size: 30,
                                 ),
                               ),
                             ),
-                          )
-                        else
-                          Text(
-                            widget.category.icon.isNotEmpty
-                                ? widget.category.icon
-                                : '✦',
-                            style: const TextStyle(fontSize: 34),
                           ),
+                        ),
 
-                        // Title & Subtitle Info
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "${widget.category.itemCount} SIGNATURE EXPERIENCES",
-                              style: AppTheme.sansBody(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold,
-                                color: catColor.withValues(alpha: 0.95),
-                                letterSpacing: 2,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              widget.category.name,
-                              style: GoogleFonts.italiana(
-                                fontSize: 30,
-                                fontWeight: FontWeight.normal,
-                                color: Colors.white,
-                                height: 1.1,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.category.description,
-                              style: AppTheme.sansBody(
-                                fontSize: 12.5,
-                                color: Colors.white.withValues(alpha: 0.75),
-                                height: 1.5,
-                                letterSpacing: 0.2,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                      const Spacer(),
+
+                      // Count badge
+                      Text(
+                        "${widget.category.itemCount} SIGNATURE EXPERIENCE${widget.category.itemCount == 1 ? '' : 'S'}",
+                        style: AppTheme.sansBody(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.bold,
+                          color: subtextColor,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Category name
+                      Text(
+                        widget.category.name,
+                        style: GoogleFonts.italiana(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                          color: textColor,
+                          height: 1.15,
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (widget.category.description.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          widget.category.description,
+                          style: AppTheme.sansBody(
+                            fontSize: 11,
+                            color: subtextColor,
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
+                    ],
                     ),
                   ),
+                ),
 
-                  // Arrow button at bottom-right
-                  Positioned(
-                    right: 24,
-                    bottom: 24,
-                    child: AnimatedScale(
-                      scale: _isHovered ? 1.12 : 1.0,
+                // Floating Action arrow (top-right)
+                Positioned(
+                  right: 14,
+                  top: 14,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isHovered
+                          ? textColor.withValues(alpha: 0.90)
+                          : Colors.white.withValues(alpha: 0.25),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: _isHovered ? 0.0 : 0.4),
+                        width: 1,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: AnimatedRotation(
+                      turns: _isHovered ? 0.125 : 0.0,
                       duration: const Duration(milliseconds: 250),
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _isHovered ? Colors.white : Colors.transparent,
-                          border: Border.all(
-                            color: _isHovered
-                                ? Colors.transparent
-                                : Colors.white.withValues(alpha: 0.35),
-                            width: 1.5,
-                          ),
-                          boxShadow: _isHovered
-                              ? [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ]
-                              : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: AnimatedRotation(
-                          turns: _isHovered ? 0.125 : 0.0,
-                          duration: const Duration(milliseconds: 250),
-                          child: Text(
-                            "↗",
-                            style: AppTheme.sansBody(
-                              fontSize: 18,
-                              color: _isHovered
-                                  ? const Color(0xFF17201E)
-                                  : Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      child: Text(
+                        "↗",
+                        style: AppTheme.sansBody(
+                          fontSize: 15,
+                          color: _isHovered ? baseColor : textColor,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -277,13 +355,11 @@ class CategoriesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final width = MediaQuery.of(context).size.width;
     final paddingHorizontal = width >= 1000 ? 64.0 : 24.0;
-
-    final double sectionPaddingVertical = (width * 0.08).clamp(85.0, 155.0);
+    final double sectionPaddingVertical = (width * 0.05).clamp(54.0, 90.0);
     final double titleSize =
-        width >= 700 ? (width * 0.05).clamp(46.0, 78.0) : 42.0;
+        width >= 700 ? (width * 0.048).clamp(42.0, 72.0) : 38.0;
     final bool isWide = width >= 800;
 
     final headingWidget = Column(
@@ -294,128 +370,141 @@ class CategoriesSection extends StatelessWidget {
           style: AppTheme.sansBody(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: const Color(0xFFAA7C4B),
+            letterSpacing: 3.5,
+            color: AppColors.secondaryAccent,
           ),
         ),
-        const SizedBox(height: 8),
-        RichText(
-          text: TextSpan(
-            style: GoogleFonts.italiana(
-              fontSize: titleSize,
-              fontWeight: FontWeight.normal,
-              color: isDark ? Colors.white : const Color(0xFF17201E),
-              height: 0.98,
-            ),
-            children: [
-              const TextSpan(text: "What are we\n"),
-              TextSpan(
-                text: "celebrating?",
-                style: GoogleFonts.italiana(
-                  fontStyle: FontStyle.italic,
-                  color: const Color(0xFFAA7C4B),
-                ),
+        const SizedBox(height: 12),
+        ShaderMask(
+          shaderCallback: (bounds) {
+            return const LinearGradient(
+              colors: [Colors.white, Color(0xFFFFE8A3), Color(0xFFF3D37A)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds);
+          },
+          child: RichText(
+            text: TextSpan(
+              style: GoogleFonts.italiana(
+                fontSize: titleSize,
+                fontWeight: FontWeight.normal,
+                color: Colors.white,
+                height: 1.0,
+                letterSpacing: 1.2,
               ),
-            ],
+              children: [
+                const TextSpan(text: "WHAT ARE WE\n"),
+                TextSpan(
+                  text: "CELEBRATING?",
+                  style: GoogleFonts.italiana(
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
 
     final descWidget = Container(
-      constraints: const BoxConstraints(maxWidth: 400),
+      constraints: const BoxConstraints(maxWidth: 450),
       child: Text(
-        "Choose a chapter and make it personal. Every collection is a starting point, never a fixed package.",
+        "Choose a chapter and make it personal. Every collection is a starting point, thoughtfully composed for luxury spaces.",
         style: AppTheme.sansBody(
-          fontSize: 14,
-          color: isDark ? AppTheme.darkMuted : AppTheme.lightMuted,
+          fontSize: 14.5,
+          color: AppColors.muted,
           height: 1.8,
         ),
       ),
     );
 
-    final headerRow =
-        isWide
-            ? Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                headingWidget,
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5.0),
-                  child: descWidget,
-                ),
-              ],
-            )
-            : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [headingWidget, const SizedBox(height: 22), descWidget],
-            );
-
-    return Container(
-      key: categoriesKey,
-      width: double.infinity,
-      color: isDark ? const Color(0xFF0B100E) : const Color(0xFFFAF8F5),
-      padding: EdgeInsets.symmetric(
-        horizontal: paddingHorizontal,
-        vertical: sectionPaddingVertical,
-      ),
-      child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
+    final headerRow = isWide
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              headingWidget,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6.0),
+                child: descWidget,
+              ),
+            ],
+          )
+        : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              headerRow,
-              const SizedBox(height: 62),
-              Obx(() {
-                if (controller.isLoadingCategories.value) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFAA7C4B)),
-                  );
-                }
-
-                if (controller.rxCategories.isEmpty) {
-                  return const SizedBox();
-                }
-
-                final gridCount = width >= 1000 ? 3 : (width >= 600 ? 2 : 1);
-                final double cardHeight = width >= 600 ? 275 : 230;
-                final double gridWidth = width - (paddingHorizontal * 2);
-                final double cardWidth =
-                    (gridWidth.clamp(0.0, 1200.0) - (gridCount - 1) * 16) /
-                    gridCount;
-                final double childAspectRatio = cardWidth / cardHeight;
-
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: gridCount,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: childAspectRatio,
-                  ),
-                  itemCount: controller.rxCategories.length,
-                  itemBuilder: (context, index) {
-                    final cat = controller.rxCategories[index];
-                    return CategoryCard(
-                      category: cat,
-                      onTap: () {
-                        controller.selectCategory(cat.slug);
-                        if (catalogKey.currentContext != null) {
-                          Scrollable.ensureVisible(
-                            catalogKey.currentContext!,
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      },
-                    );
-                  },
-                );
-              }),
+              headingWidget,
+              const SizedBox(height: 24),
+              descWidget,
             ],
+          );
+
+    return CategoriesSectionBackground(
+      child: Container(
+        key: categoriesKey,
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: paddingHorizontal,
+          vertical: sectionPaddingVertical,
+        ),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                headerRow,
+                const SizedBox(height: 60),
+                Obx(() {
+                  if (controller.isLoadingCategories.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: AppColors.secondaryAccent),
+                    );
+                  }
+
+                  if (controller.rxCategories.isEmpty) {
+                    return const SizedBox();
+                  }
+
+                  final gridCount = width >= 1000 ? 3 : (width >= 600 ? 2 : 1);
+                  final double cardHeight = width >= 600 ? 220 : 200;
+                  final double gridWidth = width - (paddingHorizontal * 2);
+                  final double cardWidth =
+                      (gridWidth.clamp(0.0, 1200.0) - (gridCount - 1) * 20) /
+                      gridCount;
+                  final double childAspectRatio = cardWidth / cardHeight;
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: gridCount,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      childAspectRatio: childAspectRatio,
+                    ),
+                    itemCount: controller.rxCategories.length,
+                    itemBuilder: (context, index) {
+                      final cat = controller.rxCategories[index];
+                      return CategoryCard(
+                        category: cat,
+                        onTap: () {
+                          controller.selectCategory(cat.slug);
+                          if (catalogKey.currentContext != null) {
+                            Scrollable.ensureVisible(
+                              catalogKey.currentContext!,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        },
+                      );
+                    },
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),

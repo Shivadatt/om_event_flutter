@@ -18,8 +18,8 @@ class BusinessDetailsService extends GetxService {
       rxDetails.value = cached;
     }
     // Bind stream from repository for real-time reactive updates
-    rxDetails.bindStream(_repository.streamBusinessDetails().handleError((e) {
-      // Silently swallow error to prevent GetX bindStream crash
+    rxDetails.bindStream(_repository.streamBusinessDetails().handleError((e, stack) {
+      Get.printError(info: "BusinessDetailsService STREAM ERROR: $e\n$stack");
     }));
     // Persist to cache automatically when Firestore reports changes
     ever(rxDetails, (BusinessDetailsEntity details) {

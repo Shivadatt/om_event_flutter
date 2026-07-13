@@ -5,18 +5,18 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
     // 1. General Profile
     final generalMap = json['general'] as Map<String, dynamic>? ?? json;
     final general = GeneralProfileEntity(
-      businessName: generalMap['businessName'] ?? generalMap['name'] ?? '',
-      companyName: generalMap['companyName'] ?? '',
-      tagline: generalMap['tagline'] ?? '',
-      description: generalMap['description'] ?? generalMap['workingHours'] ?? '',
+      businessName: generalMap['businessName'] ?? generalMap['name'] ?? generalMap['business_name'] ?? '',
+      companyName: generalMap['companyName'] ?? generalMap['business_name'] ?? '',
+      tagline: generalMap['tagline'] ?? generalMap['business_tagline'] ?? '',
+      description: generalMap['description'] ?? generalMap['workingHours'] ?? generalMap['company_description'] ?? '',
       ownerName: generalMap['ownerName'] ?? '',
       ownerDesignation: generalMap['ownerDesignation'] ?? '',
       logo: generalMap['logo'] ?? '',
       coverImage: generalMap['coverImage'] ?? generalMap['whiteLogo'] ?? '',
       favicon: generalMap['favicon'] ?? '',
       registrationNumber: generalMap['registrationNumber'] ?? '',
-      gstNumber: generalMap['gstNumber'] ?? generalMap['gst'] ?? '',
-      panNumber: generalMap['panNumber'] ?? generalMap['pan'] ?? '',
+      gstNumber: generalMap['gstNumber'] ?? generalMap['gst'] ?? generalMap['gst_number'] ?? '',
+      panNumber: generalMap['panNumber'] ?? generalMap['pan'] ?? generalMap['pan_number'] ?? '',
       licenseNumber: generalMap['licenseNumber'] ?? '',
       establishedYear: generalMap['establishedYear'] ?? '',
     );
@@ -32,17 +32,17 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
           branchName: m['branchName'] ?? m['name'] ?? '',
           branchManager: m['branchManager'] ?? '',
           phoneNumber: m['phoneNumber'] ?? m['phone'] ?? m['phone1'] ?? '',
-          whatsapp: m['whatsapp'] ?? '',
+          whatsapp: m['whatsapp'] ?? m['whatsapp_number'] ?? '',
           email: m['email'] ?? '',
-          fullAddress: m['fullAddress'] ?? m['address'] ?? '',
+          fullAddress: m['fullAddress'] ?? m['address'] ?? m['address_line'] ?? '',
           googleMapUrl: m['googleMapUrl'] ?? m['googleMaps'] ?? '',
           latitude: m['latitude'] ?? '',
           longitude: m['longitude'] ?? '',
           workingHours: m['workingHours'] ?? m['businessHours'] ?? '',
           openingDays: m['openingDays'] ?? '',
-          displayOrder: m['displayOrder'] ?? 1,
-          isActive: m['isActive'] ?? true,
-          instagram: m['instagram'] ?? '',
+          displayOrder: m['displayOrder'] ?? m['display_order'] ?? 1,
+          isActive: m['isActive'] ?? m['is_active'] ?? true,
+          instagram: m['instagram'] ?? m['instagram_url'] ?? '',
         );
       }).toList();
     }
@@ -88,19 +88,19 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
         }).toList();
       }
 
-      if (phones.isEmpty) {
-        final seenValues = <String>{};
-        String normalizePhone(String p) {
-          final clean = p.replaceAll(RegExp(r'\D'), '');
-          if (clean.length == 12 && clean.startsWith('91')) {
-            return clean.substring(2);
-          }
-          return clean;
+      final seenValues = <String>{};
+      String normalizePhone(String p) {
+        final clean = p.replaceAll(RegExp(r'\D'), '');
+        if (clean.length == 12 && clean.startsWith('91')) {
+          return clean.substring(2);
         }
+        return clean;
+      }
 
+      if (phones.isEmpty) {
         int order = 1;
         
-        final primaryVal = json['phone']?.toString();
+        final primaryVal = json['phone']?.toString() ?? json['primary_phone']?.toString();
         if (primaryVal != null && primaryVal.isNotEmpty) {
           final primaryNorm = normalizePhone(primaryVal);
           seenValues.add(primaryNorm);
@@ -123,6 +123,22 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
           ));
         }
 
+        final secondaryVal = json['secondary_phone']?.toString();
+        if (secondaryVal != null && secondaryVal.isNotEmpty) {
+          final secNorm = normalizePhone(secondaryVal);
+          if (!seenValues.contains(secNorm)) {
+            seenValues.add(secNorm);
+            phones.add(ContactItemEntity(
+              id: 'p_${order++}',
+              label: 'Secondary',
+              value: secondaryVal,
+              isPrimary: false,
+              isActive: true,
+              displayOrder: order,
+            ));
+          }
+        }
+
         for (final branch in branches) {
           final norm = normalizePhone(branch.phoneNumber);
           if (branch.phoneNumber.isNotEmpty && !seenValues.contains(norm)) {
@@ -141,17 +157,9 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
 
       if (whatsapps.isEmpty) {
         final seenWa = <String>{};
-        String normalizePhone(String p) {
-          final clean = p.replaceAll(RegExp(r'\D'), '');
-          if (clean.length == 12 && clean.startsWith('91')) {
-            return clean.substring(2);
-          }
-          return clean;
-        }
-
         int order = 1;
 
-        final legacyWa = json['whatsapp']?.toString();
+        final legacyWa = json['whatsapp']?.toString() ?? json['whatsapp_number']?.toString();
         if (legacyWa != null && legacyWa.isNotEmpty) {
           final normWa = normalizePhone(legacyWa);
           seenWa.add(normWa);
@@ -175,13 +183,14 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
         }
 
         for (final branch in branches) {
-          final norm = normalizePhone(branch.whatsapp);
-          if (branch.whatsapp.isNotEmpty && !seenWa.contains(norm)) {
+          final bWa = branch.whatsapp.isNotEmpty ? branch.whatsapp : branch.phoneNumber;
+          final norm = normalizePhone(bWa);
+          if (bWa.isNotEmpty && !seenWa.contains(norm)) {
             seenWa.add(norm);
             whatsapps.add(ContactItemEntity(
               id: 'w_${order++}',
               label: '${branch.branchName} WhatsApp',
-              value: branch.whatsapp,
+              value: bWa,
               isPrimary: false,
               isActive: true,
               displayOrder: order,
@@ -190,7 +199,7 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
         }
       }
 
-      final legacyEmail = json['email'];
+      final legacyEmail = json['email'] ?? json['support_email'];
       if (legacyEmail != null && legacyEmail.toString().isNotEmpty) {
         emails = [
           ContactItemEntity(
@@ -244,11 +253,11 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
     if (socialData is Map) {
       social = SocialMediaModel.fromJson(Map<String, dynamic>.from(socialData));
     } else {
-      final legacySocial = json['socialLinks'] as Map?;
-      String igKadi = (legacySocial?['instagram_kadi'] ?? legacySocial?['instagramKadi'] ?? '').toString();
-      String igThangadh = (legacySocial?['instagram_thangadh'] ?? legacySocial?['instagramThangadh'] ?? '').toString();
-      final website = (legacySocial?['website'] ?? '').toString();
-      final googleBusiness = (legacySocial?['google_business_profile'] ?? legacySocial?['googleBusinessProfile'] ?? '').toString();
+      final legacySocial = json['socialLinks'] as Map? ?? json;
+      String igKadi = (legacySocial['instagram_kadi'] ?? legacySocial['instagramKadi'] ?? '').toString();
+      String igThangadh = (legacySocial['instagram_thangadh'] ?? legacySocial['instagramThangadh'] ?? '').toString();
+      final website = (legacySocial['website'] ?? '').toString();
+      final googleBusiness = (legacySocial['google_business_profile'] ?? legacySocial['googleBusinessProfile'] ?? legacySocial['google_business'] ?? '').toString();
 
       if (igKadi.isEmpty || igThangadh.isEmpty) {
         for (final branch in branches) {
