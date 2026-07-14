@@ -24,10 +24,7 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: controller.branches.length,
-            onReorder: (oldIndex, newIndex) {
-              if (oldIndex < newIndex) {
-                newIndex -= 1;
-              }
+            onReorderItem: (oldIndex, newIndex) {
               final b = controller.branches.removeAt(oldIndex);
               controller.branches.insert(newIndex, b);
               for (int i = 0; i < controller.branches.length; i++) {
@@ -70,7 +67,7 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
                     children: [
                       Switch(
                         value: b.isActive,
-                        activeColor: const Color(0xFFC9A77E),
+                        activeThumbColor: const Color(0xFFC9A77E),
                         onChanged: (val) {
                           controller.branches[index] = BranchEntity(
                             id: b.id,

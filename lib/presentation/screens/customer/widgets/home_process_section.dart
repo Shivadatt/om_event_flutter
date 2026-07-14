@@ -134,7 +134,7 @@ class _StepCardState extends State<_StepCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOut,
-        transform: Matrix4.identity()..translate(0.0, _hovered ? -6.0 : 0.0),
+        transform: Matrix4.translationValues(0.0, _hovered ? -6.0 : 0.0, 0.0),
         child: Stack(
           children: [
             // Card body

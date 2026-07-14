@@ -65,7 +65,7 @@ class ReviewListTile extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Switch(
               value: value,
-              activeColor: AppColors.primaryAccent,
+              activeThumbColor: AppColors.primaryAccent,
               onChanged: onChanged,
             ),
           ),

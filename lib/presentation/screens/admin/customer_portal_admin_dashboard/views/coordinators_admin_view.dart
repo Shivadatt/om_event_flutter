@@ -77,7 +77,7 @@ class _CoordinatorsAdminViewState extends State<CoordinatorsAdminView> {
                           ),
                           Switch(
                             value: coord.status == 'Active',
-                            activeColor: const Color(0xFFC9A77E),
+                            activeThumbColor: const Color(0xFFC9A77E),
                             onChanged: (val) {
                               setState(() {
                                 coord.status = val ? 'Active' : 'Inactive';

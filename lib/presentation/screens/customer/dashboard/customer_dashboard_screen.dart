@@ -508,7 +508,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                             const SizedBox(height: 8),
                             DropdownButtonFormField<String>(
                               dropdownColor: const Color(0xFF171411),
-                              value: selectedBranch,
+                              initialValue: selectedBranch,
                               style: const TextStyle(color: Colors.white, fontSize: 14),
                               decoration: _buildInputDecoration(
                                 hint: "Select Branch",

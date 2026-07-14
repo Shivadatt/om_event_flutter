@@ -66,7 +66,7 @@ extension _NotifGatewaysExtension on _SettingsNotificationsTabState {
             style: TextStyle(color: Colors.white54, fontSize: 11),
           ),
           value: isPushEnabled,
-          activeColor: const Color(0xFFC9A77E),
+          activeThumbColor: const Color(0xFFC9A77E),
           onChanged: (val) => updateState(() => isPushEnabled = val),
         ),
         SwitchListTile(
@@ -79,7 +79,7 @@ extension _NotifGatewaysExtension on _SettingsNotificationsTabState {
             style: TextStyle(color: Colors.white54, fontSize: 11),
           ),
           value: isEmailEnabled,
-          activeColor: const Color(0xFFC9A77E),
+          activeThumbColor: const Color(0xFFC9A77E),
           onChanged: (val) => updateState(() => isEmailEnabled = val),
         ),
         SwitchListTile(
@@ -92,7 +92,7 @@ extension _NotifGatewaysExtension on _SettingsNotificationsTabState {
             style: TextStyle(color: Colors.white54, fontSize: 11),
           ),
           value: isWhatsappEnabled,
-          activeColor: const Color(0xFFC9A77E),
+          activeThumbColor: const Color(0xFFC9A77E),
           onChanged: (val) => updateState(() => isWhatsappEnabled = val),
         ),
       ],

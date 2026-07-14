@@ -297,7 +297,7 @@ class _SettingsNotificationsTabState extends State<SettingsNotificationsTab> {
             ),
             Switch(
               value: isAutomationEnabled,
-              activeColor: Colors.amber,
+              activeThumbColor: Colors.amber,
               onChanged: (val) {
                 updateState(() => isAutomationEnabled = val);
               },

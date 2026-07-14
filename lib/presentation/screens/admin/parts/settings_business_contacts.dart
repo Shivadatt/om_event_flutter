@@ -57,11 +57,8 @@ extension _SettingsBusinessContactsExtension on _SystemSettingsScreenState {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _contactNumbers.length,
-              onReorder: (oldIndex, newIndex) {
+              onReorderItem: (oldIndex, newIndex) {
                 updateState(() {
-                  if (oldIndex < newIndex) {
-                    newIndex -= 1;
-                  }
                   final item = _contactNumbers.removeAt(oldIndex);
                   _contactNumbers.insert(newIndex, item);
                   // Update displayOrder

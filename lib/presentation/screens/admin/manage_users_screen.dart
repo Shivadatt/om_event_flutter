@@ -193,7 +193,7 @@ class ManageUsersScreen extends GetView<AdminController> {
                                     fit: BoxFit.scaleDown,
                                     child: Switch(
                                       value: user.isActive,
-                                      activeColor: AppColors.success,
+                                      activeThumbColor: AppColors.success,
                                       onChanged: (val) {
                                         final updated = UserModel(
                                           id: user.id,
@@ -289,7 +289,7 @@ class ManageUsersScreen extends GetView<AdminController> {
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
-                  value: selectedRole,
+                  initialValue: selectedRole,
                   decoration: const InputDecoration(labelText: "Role"),
                   items: const [
                     DropdownMenuItem(value: 'admin', child: Text("Admin")),
@@ -368,7 +368,7 @@ class ManageUsersScreen extends GetView<AdminController> {
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<String>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     decoration: const InputDecoration(labelText: "Role"),
                     items: const [
                       DropdownMenuItem(value: 'admin', child: Text("Admin")),

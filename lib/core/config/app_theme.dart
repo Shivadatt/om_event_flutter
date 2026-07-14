@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
@@ -101,7 +101,7 @@ class AppTheme {
         centerTitle: false,
       ),
       dividerColor: AppColors.lightLine,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.lightPaper,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -109,7 +109,7 @@ class AppTheme {
           side: const BorderSide(color: AppColors.lightLine, width: 1.2),
         ),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.lightForest,
         elevation: 20,
         shape: RoundedRectangleBorder(
@@ -216,7 +216,7 @@ class AppTheme {
         centerTitle: false,
       ),
       dividerColor: AppColors.darkLine,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.darkPaper,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -224,7 +224,7 @@ class AppTheme {
           side: const BorderSide(color: AppColors.darkLine, width: 1.2),
         ),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.darkForest,
         elevation: 20,
         shape: RoundedRectangleBorder(

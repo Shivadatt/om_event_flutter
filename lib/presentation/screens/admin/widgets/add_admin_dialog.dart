@@ -66,7 +66,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
-              value: _selectedRoleType,
+              initialValue: _selectedRoleType,
               decoration: const InputDecoration(labelText: "Role Type"),
               items: const [
                 DropdownMenuItem(

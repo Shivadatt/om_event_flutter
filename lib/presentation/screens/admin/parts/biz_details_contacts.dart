@@ -105,10 +105,7 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: list.length,
-                onReorder: (oldIndex, newIndex) {
-                  if (oldIndex < newIndex) {
-                    newIndex -= 1;
-                  }
+                onReorderItem: (oldIndex, newIndex) {
                   final item = list.removeAt(oldIndex);
                   list.insert(newIndex, item);
                   for (int i = 0; i < list.length; i++) {
@@ -162,7 +159,7 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
                       children: [
                         Switch(
                           value: item.isActive,
-                          activeColor: const Color(0xFFC9A77E),
+                          activeThumbColor: const Color(0xFFC9A77E),
                           onChanged: (val) {
                             list[index] = ContactItemEntity(
                               id: item.id,

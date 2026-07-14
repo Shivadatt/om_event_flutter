@@ -27,7 +27,7 @@ class HomepageBuilderAdminView extends StatelessWidget {
                 children: enabledSections.keys.map((section) {
                   final isActive = enabledSections[section]!;
                   return SwitchListTile(
-                    activeColor: const Color(0xFFC9A77E),
+                    activeThumbColor: const Color(0xFFC9A77E),
                     title: Text(section, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     subtitle: Text(isActive ? "Visible on landing page" : "Hidden from landing page"),
                     value: isActive,

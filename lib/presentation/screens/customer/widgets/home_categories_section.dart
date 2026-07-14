@@ -149,7 +149,7 @@ class _CategoryCardState extends State<CategoryCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
-          transform: Matrix4.identity()..translate(0.0, _isHovered ? -8.0 : 0.0),
+          transform: Matrix4.translationValues(0.0, _isHovered ? -8.0 : 0.0, 0.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             gradient: RadialGradient(

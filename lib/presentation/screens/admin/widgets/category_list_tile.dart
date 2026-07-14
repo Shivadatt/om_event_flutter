@@ -43,7 +43,7 @@ class _CategoryListTileState extends State<CategoryListTile> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
-        transform: _isHovered ? (Matrix4.identity()..translate(0, -8, 0)) : Matrix4.identity(),
+        transform: _isHovered ? Matrix4.translationValues(0, -8, 0) : Matrix4.identity(),
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(28),
@@ -210,7 +210,7 @@ class _CategoryListTileState extends State<CategoryListTile> {
                                   fit: BoxFit.scaleDown,
                                   child: Switch(
                                     value: isActive,
-                                    activeColor: AppColors.success,
+                                    activeThumbColor: AppColors.success,
                                     onChanged: (val) {
                                       widget.controller.toggleCategoryStatus(
                                         cat.slug,

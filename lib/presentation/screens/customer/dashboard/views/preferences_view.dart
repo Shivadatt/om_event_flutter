@@ -206,7 +206,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         dropdownColor: const Color(0xFF171411),
-                        value: quietHoursStart,
+                        initialValue: quietHoursStart,
                         style: const TextStyle(color: Colors.white, fontSize: 13),
                         decoration: InputDecoration(
                           labelText: "DND Quiet Hours Start",
@@ -230,7 +230,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         dropdownColor: const Color(0xFF171411),
-                        value: quietHoursEnd,
+                        initialValue: quietHoursEnd,
                         style: const TextStyle(color: Colors.white, fontSize: 13),
                         decoration: InputDecoration(
                           labelText: "DND Quiet Hours End",
@@ -324,7 +324,7 @@ class _PreferencesViewState extends State<PreferencesView> {
       title: Text(title, style: AppTheme.sansBody(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70)),
       subtitle: Text(subtitle, style: const TextStyle(color: Colors.white30, fontSize: 11)),
       value: value,
-      activeColor: const Color(0xFFD4AF37),
+      activeThumbColor: const Color(0xFFD4AF37),
       activeTrackColor: const Color(0xFF3A2B18),
       inactiveThumbColor: Colors.grey,
       inactiveTrackColor: Colors.white12,

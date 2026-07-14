@@ -261,7 +261,7 @@ class AdminRoleCard extends StatelessWidget {
                   children: [
                     if (canEdit) ...[
                       DropdownButtonFormField<String>(
-                        value: selectedRoleType,
+                        initialValue: selectedRoleType,
                         decoration: const InputDecoration(
                           labelText: "Role Type",
                         ),

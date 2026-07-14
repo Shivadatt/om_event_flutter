@@ -146,7 +146,7 @@ extension _ExperienceFormFields on _ExperienceFormDialogState {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: availability,
+                      initialValue: availability,
                       style: AppTheme.sansBody(fontSize: 14, color: textColor),
                       dropdownColor: cardColor,
                       decoration: InputDecoration(

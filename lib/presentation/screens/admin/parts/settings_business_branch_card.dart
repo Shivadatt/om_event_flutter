@@ -55,7 +55,7 @@ extension _SettingsBusinessBranchCardExtension on _SystemSettingsScreenState {
                       ),
                     ),
                     value: isPrimary,
-                    activeColor: const Color(0xFFC9A77E),
+                    activeThumbColor: const Color(0xFFC9A77E),
                     onChanged: onPrimaryChanged,
                   ),
                   const SizedBox(height: 16),

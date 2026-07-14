@@ -1,4 +1,4 @@
-﻿part of '../home_catalog_section.dart';
+part of '../home_catalog_section.dart';
 
 class ExperienceCard extends StatefulWidget {
   final Experience item;
@@ -69,7 +69,7 @@ class _ExperienceCardState extends State<ExperienceCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
-          transform: Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0),
+          transform: Matrix4.translationValues(0.0, _isHovered ? -6.0 : 0.0, 0.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(

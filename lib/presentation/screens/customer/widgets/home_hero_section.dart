@@ -214,7 +214,7 @@ class _CinematicButtonState extends State<_CinematicButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          transform: Matrix4.identity()..translate(0.0, _hovered ? -3.0 : 0.0),
+          transform: Matrix4.translationValues(0.0, _hovered ? -3.0 : 0.0, 0.0),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
