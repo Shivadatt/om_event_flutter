@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import '../../core/utils/app_logger.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SchedulerHealthController
 // Reads cron_health_summary and recent cron_health_logs from Firestore.
 // Updated in real-time via snapshot streams.
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class CronJobSummary {
   final String jobName;
@@ -125,7 +125,7 @@ class SchedulerHealthController extends GetxController {
     }, onError: (e) {
       rxError.value = e.toString();
       rxIsLoading.value = false;
-      if (kDebugMode) debugPrint('SchedulerHealthController: $e');
+      AppLogger.errorDetailed('SchedulerHealthController summaries error', error: e, layer: LogLayer.controller, className: 'SchedulerHealthController', methodName: '_bindStreams');
     });
 
     _firestore
@@ -138,7 +138,7 @@ class SchedulerHealthController extends GetxController {
           .map((d) => CronJobLog.fromMap(d.id, d.data()))
           .toList();
     }, onError: (e) {
-      if (kDebugMode) debugPrint('SchedulerHealthController logs: $e');
+      AppLogger.errorDetailed('SchedulerHealthController logs error', error: e, layer: LogLayer.controller, className: 'SchedulerHealthController', methodName: '_bindStreams');
     });
   }
 

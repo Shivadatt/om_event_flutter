@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/quotation.dart';
 import '../../data/models/quotation_model.dart';
 import 'notification_gateway_service.dart';
@@ -32,7 +33,7 @@ class LocalNotificationTriggerService extends GetxService {
   /// Triggered exclusively by ListenerRegistryService/BootstrapService.
   void initForUser(String uid, String role) {
     teardown();
-    debugPrint("LocalNotificationTriggerService: Initializing trigger tasks for UID: $uid, Role: $role");
+    AppLogger.info("LocalNotificationTriggerService: Initializing trigger tasks for UID: $uid, Role: $role", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "initForUser");
     
     if (role == 'admin' || role == 'staff' || role == 'demo_admin' || role == 'super_admin') {
       if (kDebugMode) {
@@ -45,13 +46,13 @@ class LocalNotificationTriggerService extends GetxService {
   void teardown() {
     _schedulerTimer?.cancel();
     _schedulerTimer = null;
-    debugPrint("LocalNotificationTriggerService: Terminated trigger services and simulator timers.");
+    AppLogger.info("LocalNotificationTriggerService: Terminated trigger services and simulator timers.", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "teardown");
   }
 
   /// 3. Cron Scheduler Simulator (Debug Mode Only)
   void _startLocalSchedulerSimulator() {
     if (!kDebugMode) {
-      debugPrint("LocalNotificationTriggerService: Local Scheduler Simulator disabled in Release build.");
+      AppLogger.info("LocalNotificationTriggerService: Local Scheduler Simulator disabled in Release build.", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "_startLocalSchedulerSimulator");
       return;
     }
     _schedulerTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {

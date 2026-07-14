@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import '../../core/errors/failures.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/quotation_message.dart';
 import '../../domain/entities/quotation_attachment.dart';
 import '../../domain/repositories/quotation_collaboration_repository.dart';
@@ -33,7 +33,7 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
   @override
   Future<void> sendMessage(QuotationMessage message) async {
     try {
-      debugPrint("-> [COLLAB] sendMessage: Starting for quotationId=${message.quotationId}");
+      AppLogger.info("sendMessage: Starting for quotationId=${message.quotationId}", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "sendMessage");
       final docRef = _firestore.collection('quotation_messages').doc();
       final model = QuotationMessageModel(
         id: docRef.id,
@@ -60,15 +60,15 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
             .toList(),
       );
 
-      debugPrint("-> [COLLAB] sendMessage: Writing message doc...");
+      AppLogger.info("sendMessage: Writing message doc...", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "sendMessage");
       await docRef.set(model.toJson());
-      debugPrint("-> [COLLAB] sendMessage: Message doc written successfully.");
+      AppLogger.success("sendMessage: Message doc written successfully.", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "sendMessage");
 
       // Fire-and-forget: run audit log and notification in background
       // Do NOT await these — they must NOT block isSending from resetting
       _postSendSideEffects(message);
-    } catch (e) {
-      debugPrint("-> [COLLAB] sendMessage Exception: $e");
+    } catch (e, stack) {
+      AppLogger.errorDetailed("sendMessage Exception", error: e, stack: stack, layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "sendMessage");
       throw ServerFailure("Failed to send message: ${e.toString()}");
     }
   }
@@ -78,10 +78,10 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
   void _postSendSideEffects(QuotationMessage message) {
     Future(() async {
       try {
-        debugPrint("-> [COLLAB] _postSendSideEffects: Fetching quotation doc...");
+        AppLogger.info("_postSendSideEffects: Fetching quotation doc...", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");
         final quoteSnap = await _firestore.collection('quotations').doc(message.quotationId).get();
         if (!quoteSnap.exists) {
-          debugPrint("-> [COLLAB] _postSendSideEffects: Quotation doc not found, skipping.");
+          AppLogger.warning("_postSendSideEffects: Quotation doc not found, skipping.", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");
           return;
         }
 
@@ -97,7 +97,7 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
             : 'Sent message: ${message.content}';
 
         // 1. Audit Log
-        debugPrint("-> [COLLAB] _postSendSideEffects: Writing activity_log...");
+        AppLogger.info("_postSendSideEffects: Writing activity_log...", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");
         await _firestore.collection('activity_logs').add({
           'action': action,
           'user': message.senderName,
@@ -107,7 +107,7 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
           'quotationId': message.quotationId,
           'details': details,
         });
-        debugPrint("-> [COLLAB] _postSendSideEffects: activity_log written.");
+        AppLogger.success("_postSendSideEffects: activity_log written.", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");
 
         // 2. Notification
         final isFromAdmin = message.senderRole == 'admin';
@@ -122,7 +122,7 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
             : '${message.senderName}: ${message.content}';
 
         if (targetCustomerId.isNotEmpty) {
-          debugPrint("-> [COLLAB] _postSendSideEffects: Writing customer_notification for $targetCustomerId...");
+          AppLogger.info("_postSendSideEffects: Writing customer_notification for $targetCustomerId...", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");
           await _firestore.collection('customer_notifications').add({
             'customerId': targetCustomerId,
             'title': notifTitle,
@@ -133,10 +133,10 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
             'branch': location,
             'quotationId': message.quotationId,
           });
-          debugPrint("-> [COLLAB] _postSendSideEffects: customer_notification written.");
+          AppLogger.success("_postSendSideEffects: customer_notification written.", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");
         }
-      } catch (e) {
-        debugPrint("-> [COLLAB] _postSendSideEffects Error (non-blocking): $e");
+      } catch (e, stack) {
+        AppLogger.errorDetailed("_postSendSideEffects Error (non-blocking)", error: e, stack: stack, layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");
       }
     });
   }

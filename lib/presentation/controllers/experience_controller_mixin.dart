@@ -2,6 +2,7 @@
 import 'package:get/get.dart';
 import '../../domain/entities/experience.dart';
 import '../../domain/repositories/catalog_repository.dart';
+import '../../core/utils/app_logger.dart';
 
 /// Mixin containing Experience management state and logic for AdminController.
 mixin ExperienceControllerMixin on GetxController {
@@ -32,7 +33,7 @@ mixin ExperienceControllerMixin on GetxController {
       final catalogRepository = Get.find<CatalogRepository>();
       if (isEdit) {
         await catalogRepository.updateExperience(experience);
-        print("Firestore update success");
+        AppLogger.success("Firestore update success", layer: LogLayer.controller, className: "ExperienceControllerMixin", methodName: "saveExperience");
       } else {
         await catalogRepository.createExperience(experience);
       }

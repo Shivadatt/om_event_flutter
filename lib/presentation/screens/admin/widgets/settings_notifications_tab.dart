@@ -22,7 +22,7 @@ class SettingsNotificationsTab extends StatefulWidget {
 }
 
 class _SettingsNotificationsTabState extends State<SettingsNotificationsTab> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => Get.find<FirebaseFirestore>();
 
   final resendKeyCtrl = TextEditingController(text: 're_1234567890'),
       whatsappTokenCtrl = TextEditingController(text: 'EAABw...'),

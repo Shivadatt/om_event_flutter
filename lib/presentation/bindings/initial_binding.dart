@@ -38,6 +38,8 @@ import '../../data/repositories/customer_auth_repository_impl.dart';
 import '../controllers/customer_auth_controller.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
 import '../../data/repositories/customer_portal_repository_impl.dart';
+import '../../domain/repositories/notification_repository.dart';
+import '../../data/repositories/notification_repository_impl.dart';
 import '../controllers/customer_dashboard_controller.dart';
 import '../controllers/admin_customer_portal_controller.dart';
 import '../../data/datasources/firestore_remote_source.dart';
@@ -104,19 +106,27 @@ class InitialBinding extends Bindings {
     Get.lazyPut<NotificationGatewayService>(() => NotificationGatewayService(), fenix: true);
     Get.lazyPut<LocalNotificationTriggerService>(() => LocalNotificationTriggerService(), fenix: true);
 
+    const supabaseUrl = String.fromEnvironment(
+      'SUPABASE_URL',
+      defaultValue: 'https://kwegyvbgdaednljyhcgm.supabase.co',
+    );
+    const supabaseKey = String.fromEnvironment(
+      'SUPABASE_KEY',
+      defaultValue: 'sb_publishable_bN91Or0DGzltjdDFB3b4zw_oosYJUa8',
+    );
+
     // Supabase Storage Source
-    // Note: We use placeholder credentials which are replaced by .env values at runtime
     Get.lazyPut<SupabaseStorageSource>(
       () => SupabaseStorageSource(
-        projectUrl: 'https://kwegyvbgdaednljyhcgm.supabase.co',
-        apiKey: 'sb_publishable_bN91Or0DGzltjdDFB3b4zw_oosYJUa8',
+        projectUrl: supabaseUrl,
+        apiKey: supabaseKey,
       ),
       fenix: true,
     );
 
     Get.lazyPut<SupabaseEdgeFunctions>(
       () => SupabaseEdgeFunctions(
-        projectUrl: 'https://kwegyvbgdaednljyhcgm.supabase.co',
+        projectUrl: supabaseUrl,
       ),
       fenix: true,
     );
@@ -195,6 +205,11 @@ class InitialBinding extends Bindings {
         firestore: Get.find<FirebaseFirestore>(),
         storageSource: Get.find<SupabaseStorageSource>(),
       ),
+      fenix: true,
+    );
+
+    Get.lazyPut<NotificationRepository>(
+      () => NotificationRepositoryImpl(Get.find<FirebaseFirestore>()),
       fenix: true,
     );
 

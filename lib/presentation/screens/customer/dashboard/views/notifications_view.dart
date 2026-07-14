@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/config/app_theme.dart';
-import '../../../../../core/constants/app_collections.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
 /// Notifications center panel rendering for customers.
@@ -23,25 +21,6 @@ class _NotificationsViewState extends State<NotificationsView> {
   String notificationQuery = '';
   String activeCategory = 'All'; // 'All' | 'Alert' | 'Announcement' | 'Archived'
   final searchController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  Future<void> _archiveNotification(String docId, bool archive) async {
-    try {
-      await _firestore
-          .collection(AppCollections.customerNotifications)
-          .doc(docId)
-          .update({'isArchived': archive});
-      Get.snackbar(
-        archive ? "Archived" : "Restored",
-        archive ? "Notification successfully archived." : "Notification restored to inbox.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF171411),
-        colorText: const Color(0xFFD4AF37),
-      );
-    } catch (e) {
-      Get.snackbar("Error", "Action failed: $e");
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -290,7 +269,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                           color: Colors.white38,
                           size: 20,
                         ),
-                        onPressed: () => _archiveNotification(notif.id, activeCategory != 'Archived'),
+                        onPressed: () => widget.controller.archiveNotification(notif.id, activeCategory != 'Archived'),
                       ),
                       onTap: () => widget.controller.markNotificationRead(notif.id),
                     ),

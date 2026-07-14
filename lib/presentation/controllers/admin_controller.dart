@@ -12,6 +12,7 @@ import 'customer_controller_mixin.dart';
 import 'user_controller_mixin.dart';
 import 'review_controller_mixin.dart';
 import 'quotation_controller_mixin.dart';
+import 'quotation_editor_state_mixin.dart';
 import '../../core/services/bootstrap_service.dart';
 
 class AdminController extends GetxController
@@ -21,6 +22,7 @@ class AdminController extends GetxController
         CustomerControllerMixin,
         UserControllerMixin,
         ReviewControllerMixin,
+        QuotationEditorStateMixin,
         QuotationControllerMixin {
   @override
   final LeadRepository leadRepository;

@@ -81,8 +81,8 @@ class _CustomerDetailsDialogState extends State<CustomerDetailsDialog> with Sing
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        width: 680,
-        height: 520,
+        width: (MediaQuery.of(context).size.width * 0.9).clamp(320.0, 680.0),
+        height: (MediaQuery.of(context).size.height * 0.9).clamp(360.0, 520.0),
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(28),

@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/errors/failures.dart';
 import '../../core/utils/validators.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/constants/app_collections.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/experience.dart';
@@ -32,7 +32,7 @@ class CatalogController extends GetxController {
     required this.submitLead,
   });
 
-  // ── Public Rx state ────────────────────────────────────────────────────────
+  // â”€â”€ Public Rx state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   final rxCategories = <Category>[].obs;
   final rxExperiences = <Experience>[].obs;
   final rxReviews = <Review>[].obs;
@@ -90,7 +90,7 @@ class CatalogController extends GetxController {
   StreamSubscription? _experiencesSub;
   StreamSubscription? _reviewsSub;
 
-  // ── Realtime stream binding ────────────────────────────────────────────────
+  // â”€â”€ Realtime stream binding â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _bindRealtimeStreams() {
     final getReviews = Get.find<GetReviews>();
     final startTime = DateTime.now();
@@ -101,12 +101,12 @@ class CatalogController extends GetxController {
     _categoriesSub = getCategories.executeStream().listen(
       (cats) {
         final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-        debugPrint("TIME_LOG [categories]: Fetched ${cats.length} categories in ${elapsed}ms");
+        AppLogger.info("TIME_LOG [categories]: Fetched ${cats.length} categories in ${elapsed}ms", layer: LogLayer.controller, className: "CatalogController", methodName: "_loadData");
         rxCategories.assignAll(cats);
         isLoadingCategories.value = false;
       },
       onError: (e, s) {
-        debugPrint("CATALOG ERROR: Categories failed to load: $e");
+        AppLogger.errorDetailed("CATALOG ERROR: Categories failed to load", error: e, stack: s, layer: LogLayer.controller, className: "CatalogController", methodName: "_loadData");
         isLoadingCategories.value = false;
       }
     );
@@ -117,7 +117,7 @@ class CatalogController extends GetxController {
     _experiencesSub = getExperiences.executeStream().listen(
       (experiences) {
         final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-        debugPrint("TIME_LOG [items]: Fetched ${experiences.length} experiences in ${elapsed}ms");
+        AppLogger.info("TIME_LOG [items]: Fetched ${experiences.length} experiences in ${elapsed}ms", layer: LogLayer.controller, className: "CatalogController", methodName: "_loadData");
         _allActiveExperiences
           ..clear()
           ..addAll(experiences);
@@ -125,7 +125,7 @@ class CatalogController extends GetxController {
         isLoadingExperiences.value = false;
       },
       onError: (e, s) {
-        debugPrint("CATALOG ERROR: Experiences failed to load: $e");
+        AppLogger.errorDetailed("CATALOG ERROR: Experiences failed to load", error: e, stack: s, layer: LogLayer.controller, className: "CatalogController", methodName: "_loadData");
         isLoadingExperiences.value = false;
       }
     );
@@ -135,18 +135,18 @@ class CatalogController extends GetxController {
     _reviewsSub = getReviews.executeStream().listen(
       (reviews) {
         final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-        debugPrint("TIME_LOG [reviews]: Fetched ${reviews.length} reviews in ${elapsed}ms");
+        AppLogger.info("TIME_LOG [reviews]: Fetched ${reviews.length} reviews in ${elapsed}ms", layer: LogLayer.controller, className: "CatalogController", methodName: "_loadData");
         rxReviews.assignAll(reviews);
       },
     );
   }
 
-  // ── Public API (UI compatibility) ──────────────────────────────────────────
+  // â”€â”€ Public API (UI compatibility) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> refreshCatalog() async {
     _bindRealtimeStreams();
   }
 
-  /// Kept for backward compatibility — streams handle this automatically.
+  /// Kept for backward compatibility â€” streams handle this automatically.
   Future<void> loadCategories() async {}
 
   /// Kept for backward compatibility

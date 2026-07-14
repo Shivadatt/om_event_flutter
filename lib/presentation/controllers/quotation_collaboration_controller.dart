@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../domain/entities/quotation_message.dart';
 import '../../domain/repositories/quotation_collaboration_repository.dart';
+import '../../core/utils/app_logger.dart';
 
 class QuotationCollaborationController extends GetxController {
   final String quotationId;
@@ -97,17 +98,17 @@ class QuotationCollaborationController extends GetxController {
     _scrollToBottom();
 
     try {
-      debugPrint("sendTextMessage: Setting isSending=true, text='$text'");
+      AppLogger.info("sendTextMessage: Setting isSending=true, text='$text'", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "sendTextMessage");
       isSending.value = true;
 
-      debugPrint("sendTextMessage: Calling sendMessage...");
+      AppLogger.info("sendTextMessage: Calling sendMessage...", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "sendTextMessage");
       await _collaborationRepo.sendMessage(message);
-      debugPrint("sendTextMessage: sendMessage completed successfully.");
+      AppLogger.success("sendTextMessage: sendMessage completed successfully.", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "sendTextMessage");
     } catch (e) {
-      debugPrint("sendTextMessage Exception: $e");
+      AppLogger.errorDetailed("sendTextMessage Exception", error: e, layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "sendTextMessage");
       Get.snackbar("Error", "Failed to send message: ${e.toString()}");
     } finally {
-      debugPrint("sendTextMessage: finally — removing tempId=$tempId and setting isSending=false");
+      AppLogger.info("sendTextMessage: finally — removing tempId=$tempId and setting isSending=false", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "sendTextMessage");
       pendingMessages.removeWhere((m) => m.id == tempId);
       isSending.value = false;
     }
@@ -115,7 +116,7 @@ class QuotationCollaborationController extends GetxController {
 
   Future<void> pickAndUploadAttachment() async {
     try {
-      debugPrint("pickAndUploadAttachment: Opening file picker...");
+      AppLogger.info("pickAndUploadAttachment: Opening file picker...", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
@@ -123,14 +124,14 @@ class QuotationCollaborationController extends GetxController {
       );
 
       if (result == null || result.files.isEmpty) {
-        debugPrint("pickAndUploadAttachment: File picker cancelled or no file selected.");
+        AppLogger.info("pickAndUploadAttachment: File picker cancelled or no file selected.", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
         return;
       }
 
       final file = result.files.first;
       final fileBytes = file.bytes;
       if (fileBytes == null) {
-        debugPrint("pickAndUploadAttachment: fileBytes is null — cannot read file data.");
+        AppLogger.warning("pickAndUploadAttachment: fileBytes is null — cannot read file data.", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
         Get.snackbar("Error", "Cannot read selected file data.");
         return;
       }
@@ -163,7 +164,7 @@ class QuotationCollaborationController extends GetxController {
       _scrollToBottom();
 
       // 1. Upload file attachment
-      debugPrint("pickAndUploadAttachment: Uploading attachment...");
+      AppLogger.info("pickAndUploadAttachment: Uploading attachment...", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
       final attachment = await _collaborationRepo.uploadAttachment(
         quotationId: quotationId,
         messageId: tempId,
@@ -172,7 +173,7 @@ class QuotationCollaborationController extends GetxController {
         contentType: _getContentType(ext),
         uploadedBy: senderName,
       );
-      debugPrint("pickAndUploadAttachment: Attachment uploaded. URL=${attachment.fileUrl}");
+      AppLogger.success("pickAndUploadAttachment: Attachment uploaded. URL=${attachment.fileUrl}", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
 
       // 2. Send final attachment message
       final message = QuotationMessage(
@@ -189,14 +190,14 @@ class QuotationCollaborationController extends GetxController {
         attachments: [attachment],
       );
 
-      debugPrint("pickAndUploadAttachment: Sending message with attachment...");
+      AppLogger.info("pickAndUploadAttachment: Sending message with attachment...", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
       await _collaborationRepo.sendMessage(message);
-      debugPrint("pickAndUploadAttachment: Message with attachment sent successfully.");
+      AppLogger.success("pickAndUploadAttachment: Message with attachment sent successfully.", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
     } catch (e) {
-      debugPrint("pickAndUploadAttachment Exception: $e");
+      AppLogger.errorDetailed("pickAndUploadAttachment Exception", error: e, layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
       Get.snackbar("Error", "Failed to upload file: ${e.toString()}");
     } finally {
-      debugPrint("pickAndUploadAttachment: finally — setting isUploading=false");
+      AppLogger.info("pickAndUploadAttachment: finally — setting isUploading=false", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
       pendingMessages.clear();
       isUploading.value = false;
     }

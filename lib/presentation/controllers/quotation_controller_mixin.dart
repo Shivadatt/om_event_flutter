@@ -1,32 +1,19 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../domain/entities/quotation.dart';
-import '../../domain/entities/experience.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../domain/repositories/lead_repository.dart';
+import '../../core/utils/app_logger.dart';
+import 'quotation_editor_state_mixin.dart';
 
-mixin QuotationControllerMixin on GetxController {
+/// Admin quotation CRUD operations coordinator, mixed in by GetX controller.
+mixin QuotationControllerMixin on GetxController, QuotationEditorStateMixin {
   QuotationRepository get quotationRepository;
   LeadRepository get leadRepository;
   Future<void> loadDashboardStats();
 
-  // --- Active Quotation Editor State ---
-  final rxEditingQuotation = Rxn<Quotation>();
-  final rxEditorItems = <QuotationItem>[].obs;
-  
-  final editorSubtotal = 0.0.obs;
-  final editorDiscount = 0.0.obs;
-  final editorDelivery = 0.0.obs;
-  final editorTravel = 0.0.obs;
-  final editorGstPercent = 18.0.obs;
-  final editorGstAmount = 0.0.obs;
-  final editorGrandTotal = 0.0.obs;
-  
-  final isSavingDraft = false.obs;
-  final isPublishingRevision = false.obs;
-
+  /// Updates status of a quotation.
   Future<void> updateQuotation(String id, String status) async {
     try {
       final targetStatus = QuotationStatus.fromString(status);
@@ -41,6 +28,7 @@ mixin QuotationControllerMixin on GetxController {
     }
   }
 
+  /// Sends admin custom proposal coordinator chat messages.
   Future<void> sendProposalMessage(String id, String message) async {
     try {
       final db = FirebaseFirestore.instance;
@@ -69,127 +57,35 @@ mixin QuotationControllerMixin on GetxController {
     }
   }
 
+  /// Loads active quotation models for live item curation.
   Future<void> loadQuotationForEditing(Quotation quote) async {
     try {
-      debugPrint("loadQuotationForEditing: Started for quoteId=${quote.id}, current status=${quote.status}");
+      AppLogger.info("loadQuotationForEditing: Started for quoteId=${quote.id}", layer: LogLayer.controller, className: "QuotationControllerMixin", methodName: "loadQuotationForEditing");
       if (quote.status == QuotationStatus.revisionRequested ||
           quote.status == QuotationStatus.published ||
           quote.status == QuotationStatus.viewed ||
           quote.status == QuotationStatus.republished) {
-        debugPrint("loadQuotationForEditing: Status matches revision triggers. Setting status to underRevision...");
         await quotationRepository.updateQuotationStatus(quote.id, QuotationStatus.underRevision.nameStr);
-        debugPrint("loadQuotationForEditing: Status updated to underRevision on database.");
       }
 
-      debugPrint("loadQuotationForEditing: Fetching quotation draft...");
       final draft = await quotationRepository.getQuotationDraft(quote.id);
-      if (draft != null) {
-        debugPrint("loadQuotationForEditing: Draft found. Using draft.");
-        rxEditingQuotation.value = draft;
-      } else {
-        debugPrint("loadQuotationForEditing: No draft found. Using quote.");
-        rxEditingQuotation.value = quote;
-      }
+      rxEditingQuotation.value = draft ?? quote;
       
       final activeQuote = rxEditingQuotation.value!;
-      debugPrint("loadQuotationForEditing: Assigning editor items count=${activeQuote.items.length}");
       rxEditorItems.assignAll(activeQuote.items);
       editorDiscount.value = activeQuote.discount;
       editorDelivery.value = 0.0;
       editorTravel.value = activeQuote.travelCharge;
       editorGstPercent.value = activeQuote.gstPercent;
       
-      debugPrint("loadQuotationForEditing: Recalculating totals...");
       recalculateEditorTotals();
-      debugPrint("loadQuotationForEditing: Load completed successfully.");
     } catch (e, s) {
-      debugPrint("loadQuotationForEditing Exception: $e\n$s");
-      try {
-        Get.snackbar("Error Loading Editor", e.toString());
-      } catch (e2, s2) {
-        debugPrint("loadQuotationForEditing: Snackbar exception: $e2\n$s2");
-      }
+      AppLogger.errorDetailed("loadQuotationForEditing Exception", error: e, stack: s, layer: LogLayer.controller, className: "QuotationControllerMixin", methodName: "loadQuotationForEditing");
+      Get.snackbar("Error Loading Editor", e.toString());
     }
   }
 
-  void recalculateEditorTotals() {
-    double sub = 0.0;
-    for (var item in rxEditorItems) {
-      sub += item.quantity * item.unitPrice;
-    }
-    editorSubtotal.value = sub;
-    
-    final taxable = sub - editorDiscount.value + editorDelivery.value + editorTravel.value;
-    editorGstAmount.value = taxable * (editorGstPercent.value / 100.0);
-    editorGrandTotal.value = taxable + editorGstAmount.value;
-  }
-
-  void addEditorItem(Experience experience) {
-    final existingIndex = rxEditorItems.indexWhere((item) => item.experienceId == experience.slug);
-    if (existingIndex >= 0) {
-      final existing = rxEditorItems[existingIndex];
-      rxEditorItems[existingIndex] = QuotationItem(
-        experienceId: existing.experienceId,
-        name: existing.name,
-        quantity: existing.quantity + 1,
-        unitPrice: existing.unitPrice,
-        color: existing.color,
-        theme: existing.theme,
-        notes: existing.notes,
-      );
-    } else {
-      rxEditorItems.add(QuotationItem(
-        experienceId: experience.slug,
-        name: experience.name,
-        quantity: 1,
-        unitPrice: experience.price,
-        color: "As shown",
-        theme: "As shown",
-        notes: "",
-      ));
-    }
-    recalculateEditorTotals();
-  }
-
-  void removeEditorItem(String experienceId) {
-    rxEditorItems.removeWhere((item) => item.experienceId == experienceId);
-    recalculateEditorTotals();
-  }
-
-  void updateItemQuantity(String experienceId, int qty) {
-    final idx = rxEditorItems.indexWhere((item) => item.experienceId == experienceId);
-    if (idx >= 0) {
-      final existing = rxEditorItems[idx];
-      rxEditorItems[idx] = QuotationItem(
-        experienceId: existing.experienceId,
-        name: existing.name,
-        quantity: qty > 0 ? qty : 1,
-        unitPrice: existing.unitPrice,
-        color: existing.color,
-        theme: existing.theme,
-        notes: existing.notes,
-      );
-      recalculateEditorTotals();
-    }
-  }
-
-  void updateItemUnitPrice(String experienceId, double price) {
-    final idx = rxEditorItems.indexWhere((item) => item.experienceId == experienceId);
-    if (idx >= 0) {
-      final existing = rxEditorItems[idx];
-      rxEditorItems[idx] = QuotationItem(
-        experienceId: existing.experienceId,
-        name: existing.name,
-        quantity: existing.quantity,
-        unitPrice: price >= 0.0 ? price : 0.0,
-        color: existing.color,
-        theme: existing.theme,
-        notes: existing.notes,
-      );
-      recalculateEditorTotals();
-    }
-  }
-
+  /// Saves active quotation draft edits.
   Future<bool> saveActiveDraft({
     required DateTime eventDate,
     required String eventTime,
@@ -204,12 +100,11 @@ mixin QuotationControllerMixin on GetxController {
   }) async {
     final active = rxEditingQuotation.value;
     if (active == null) {
-      print("saveActiveDraft: rxEditingQuotation is null!");
+      AppLogger.warning("rxEditingQuotation is null!", layer: LogLayer.controller, className: "QuotationControllerMixin", methodName: "saveActiveDraft");
       return false;
     }
 
     try {
-      print("saveActiveDraft: Setting isSavingDraft to true");
       isSavingDraft.value = true;
       final draftQuote = active.copyWith(
         eventDate: eventDate,
@@ -232,30 +127,20 @@ mixin QuotationControllerMixin on GetxController {
         logistics: logistics,
       );
 
-      print("saveActiveDraft: Calling saveQuotationDraft");
       await quotationRepository.saveQuotationDraft(draftQuote);
-      print("saveActiveDraft: saveQuotationDraft returned successfully");
       rxEditingQuotation.value = draftQuote;
-      try {
-        Get.snackbar("Draft Saved", "Quotation draft changes saved successfully.");
-      } catch (e, s) {
-        print("saveActiveDraft: Exception in Get.snackbar: $e\n$s");
-      }
+      Get.snackbar("Draft Saved", "Quotation draft changes saved successfully.");
       return true;
     } catch (e, stack) {
-      print("saveActiveDraft Exception: $e\n$stack");
-      try {
-        Get.snackbar("Error Saving Draft", e.toString());
-      } catch (e2, s2) {
-        print("saveActiveDraft: Exception in Get.snackbar error: $e2\n$s2");
-      }
+      AppLogger.errorDetailed("Exception saving active draft", layer: LogLayer.controller, className: "QuotationControllerMixin", methodName: "saveActiveDraft", error: e, stack: stack);
+      Get.snackbar("Error Saving Draft", e.toString());
       return false;
     } finally {
-      print("saveActiveDraft: finally - setting isSavingDraft to false");
       isSavingDraft.value = false;
     }
   }
 
+  /// Publishes draft changes as a new revision.
   Future<bool> publishActiveRevision({
     required DateTime eventDate,
     required String eventTime,
@@ -271,12 +156,11 @@ mixin QuotationControllerMixin on GetxController {
   }) async {
     final active = rxEditingQuotation.value;
     if (active == null) {
-      print("publishActiveRevision: rxEditingQuotation is null!");
+      AppLogger.warning("rxEditingQuotation is null!", layer: LogLayer.controller, className: "QuotationControllerMixin", methodName: "publishActiveRevision");
       return false;
     }
 
     try {
-      print("publishActiveRevision: Setting isPublishingRevision to true");
       isPublishingRevision.value = true;
       final updatedQuote = active.copyWith(
         eventDate: eventDate,
@@ -300,31 +184,20 @@ mixin QuotationControllerMixin on GetxController {
         logistics: logistics,
       );
 
-      print("publishActiveRevision: Calling publishQuotationRevision");
       await quotationRepository.publishQuotationRevision(updatedQuote);
-      print("publishActiveRevision: publishQuotationRevision returned successfully");
-      
       rxEditingQuotation.value = null;
-      try {
-        Get.snackbar("Proposal Published", "Quotation revision published successfully.");
-      } catch (e, s) {
-        print("publishActiveRevision: Exception in Get.snackbar: $e\n$s");
-      }
+      Get.snackbar("Proposal Published", "Quotation revision published successfully.");
       return true;
     } catch (e, stack) {
-      print("publishActiveRevision: Exception caught: $e\n$stack");
-      try {
-        Get.snackbar("Error Publishing Revision", e.toString());
-      } catch (e2, s2) {
-        print("publishActiveRevision: Exception in Get.snackbar error: $e2\n$s2");
-      }
+      AppLogger.errorDetailed("Exception publishing active revision", layer: LogLayer.controller, className: "QuotationControllerMixin", methodName: "publishActiveRevision", error: e, stack: stack);
+      Get.snackbar("Error Publishing Revision", e.toString());
       return false;
     } finally {
-      print("publishActiveRevision: finally - setting isPublishingRevision to false");
       isPublishingRevision.value = false;
     }
   }
 
+  /// Archives active quotation.
   Future<void> archiveQuotation(String id) async {
     try {
       await quotationRepository.updateQuotationStatus(id, QuotationStatus.archived.nameStr);
@@ -334,6 +207,7 @@ mixin QuotationControllerMixin on GetxController {
     }
   }
 
+  /// Marks quotation as expired.
   Future<void> expireQuotation(String id) async {
     try {
       await quotationRepository.updateQuotationStatus(id, QuotationStatus.expired.nameStr);
@@ -343,6 +217,7 @@ mixin QuotationControllerMixin on GetxController {
     }
   }
 
+  /// Converts accepted proposal into confirmed Booking.
   Future<void> convertQuotationToBooking(String id) async {
     try {
       await quotationRepository.updateQuotationStatus(id, QuotationStatus.bookingConfirmed.nameStr);
@@ -352,6 +227,7 @@ mixin QuotationControllerMixin on GetxController {
     }
   }
 
+  /// Unlocks editing pricing fields for locked proposal.
   Future<void> unlockQuotation(String id, String superAdminName) async {
     try {
       await quotationRepository.unlockQuotation(id, superAdminName);

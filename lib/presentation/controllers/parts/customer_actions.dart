@@ -251,4 +251,55 @@ extension CustomerActionsExtension on CustomerDashboardController {
   Future<void> markNotificationRead(String id) async {
     await _portalRepo.updateNotificationStatus(id, isRead: true);
   }
+
+  Future<void> loadNotificationPreferences(String userId) async {
+    try {
+      isPreferencesLoading.value = true;
+      final repo = Get.find<NotificationRepository>();
+      final prefs = await repo.getPreferences(userId);
+      if (prefs != null) {
+        rxPreferences.value = prefs;
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to load preferences: $e");
+    } finally {
+      isPreferencesLoading.value = false;
+    }
+  }
+
+  Future<void> saveNotificationPreferences(String userId, Map<String, dynamic> data) async {
+    try {
+      isPreferencesLoading.value = true;
+      final repo = Get.find<NotificationRepository>();
+      await repo.savePreferences(userId, data);
+      rxPreferences.value = data;
+      Get.snackbar(
+        "Preferences Saved",
+        "Your notification channel configurations have been updated.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF171411),
+        colorText: const Color(0xFFD4AF37),
+      );
+    } catch (e) {
+      Get.snackbar("Error", "Failed to save: $e");
+    } finally {
+      isPreferencesLoading.value = false;
+    }
+  }
+
+  Future<void> archiveNotification(String notificationId, bool archive) async {
+    try {
+      final repo = Get.find<NotificationRepository>();
+      await repo.archiveNotification(notificationId, archive);
+      Get.snackbar(
+        archive ? "Archived" : "Restored",
+        archive ? "Notification successfully archived." : "Notification restored to inbox.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF171411),
+        colorText: const Color(0xFFD4AF37),
+      );
+    } catch (e) {
+      Get.snackbar("Error", "Action failed: $e");
+    }
+  }
 }

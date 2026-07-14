@@ -115,13 +115,15 @@ class _VersionComparisonSheetState extends State<VersionComparisonSheet> {
             ),
           ] else ...[
             // Version Selector
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 10,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   "Compare past version: ",
                   style: AppTheme.sansBody(fontSize: 13, color: textColor, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
@@ -147,7 +149,6 @@ class _VersionComparisonSheetState extends State<VersionComparisonSheet> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
                 Text(
                   "➔  Current Version (v${widget.quotation.version})",
                   style: AppTheme.sansBody(fontSize: 13, color: AppColors.primaryAccent, fontWeight: FontWeight.bold),

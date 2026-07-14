@@ -139,86 +139,89 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child:
               isDesktop
-                  ? Container(
-                    constraints: const BoxConstraints(maxWidth: 1100),
-                    height: 600,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Left Column: Art Pane (login-art)
-                        Expanded(
-                          flex: 11,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors:
-                                    isDark
-                                        ? [
-                                          const Color(0xFF0F1815),
-                                          const Color(0xFF1E2E2A),
-                                        ]
-                                        : [
-                                          const Color(0xFF1D2A26),
-                                          const Color(0xFF2F413B),
-                                        ],
+                  ? SingleChildScrollView(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        height: 600,
+                        margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isDark ? AppTheme.darkLine : AppTheme.lightLine,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Left Column: Art Pane (login-art)
+                            Expanded(
+                              flex: 11,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors:
+                                        isDark
+                                            ? [
+                                              const Color(0xFF0F1815),
+                                              const Color(0xFF1E2E2A),
+                                            ]
+                                            : [
+                                              const Color(0xFF1D2A26),
+                                              const Color(0xFF2F413B),
+                                            ],
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(48),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "OE",
+                                      style: AppTheme.serifHeader(
+                                        fontSize: 24,
+                                        color:
+                                            isDark
+                                                ? AppTheme.darkGold
+                                                : AppTheme.lightGold,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Beautiful work begins with a clear view.",
+                                      style: AppTheme.serifHeader(
+                                        fontSize: 36,
+                                        color: Colors.white,
+                                        height: 1.2,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Om Events · Celebration Studio Management",
+                                      style: AppTheme.sansBody(
+                                        fontSize: 11,
+                                        color: Colors.white54,
+                                        letterSpacing: 1.0,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            padding: const EdgeInsets.all(48),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "OE",
-                                  style: AppTheme.serifHeader(
-                                    fontSize: 24,
-                                    color:
-                                        isDark
-                                            ? AppTheme.darkGold
-                                            : AppTheme.lightGold,
-                                  ),
-                                ),
-                                Text(
-                                  "Beautiful work begins with a clear view.",
-                                  style: AppTheme.serifHeader(
-                                    fontSize: 36,
-                                    color: Colors.white,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                Text(
-                                  "Om Events · Celebration Studio Management",
-                                  style: AppTheme.sansBody(
-                                    fontSize: 11,
-                                    color: Colors.white54,
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                              ],
+                            // Right Column: Form Pane (login-card)
+                            Expanded(
+                              flex: 9,
+                              child: Container(
+                                color:
+                                    isDark
+                                        ? AppTheme.darkPaper
+                                        : AppTheme.lightPaper,
+                                padding: const EdgeInsets.symmetric(horizontal: 48),
+                                child: loginForm,
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        // Right Column: Form Pane (login-card)
-                        Expanded(
-                          flex: 9,
-                          child: Container(
-                            color:
-                                isDark
-                                    ? AppTheme.darkPaper
-                                    : AppTheme.lightPaper,
-                            padding: const EdgeInsets.symmetric(horizontal: 48),
-                            child: loginForm,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
+                      ),
+                    )
                   : SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Container(

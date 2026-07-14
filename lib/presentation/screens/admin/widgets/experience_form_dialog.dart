@@ -313,7 +313,7 @@ class _ExperienceFormDialogState extends State<ExperienceFormDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
       child: Container(
-        width: 600,
+        constraints: const BoxConstraints(maxWidth: 600),
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(28),

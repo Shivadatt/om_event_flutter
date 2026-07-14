@@ -205,7 +205,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
       child: Container(
-        width: 500,
+        constraints: const BoxConstraints(maxWidth: 500),
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(28),

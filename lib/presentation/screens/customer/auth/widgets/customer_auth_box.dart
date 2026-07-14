@@ -65,7 +65,7 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 450,
+      constraints: const BoxConstraints(maxWidth: 450),
       padding: const EdgeInsets.all(36),
       decoration: BoxDecoration(
         gradient: const LinearGradient(

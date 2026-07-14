@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +10,7 @@ import '../../core/services/listener_registry_service.dart';
 import '../../core/services/fcm_notification_service.dart';
 import '../../core/services/notification_handler_service.dart';
 import '../../core/services/fcm/fcm_module.dart';
+import '../utils/app_logger.dart';
 
 /// The sole startup orchestrator for authentication, role resolution, and stream listener lifecycle mapping.
 class BootstrapService extends GetxService {
@@ -43,7 +43,7 @@ class BootstrapService extends GetxService {
     _authSub = _auth.authStateChanges().listen((user) async {
       final sequenceId = ++_currentAuthSequence; // Increment on every emission
       rxIsApplicationReady.value = false;
-      debugPrint("BOOTSTRAP: Auth state changed. User: ${user?.uid}, Sequence: $sequenceId");
+      AppLogger.info("Auth state changed. User: ${user?.uid}, Sequence: $sequenceId", layer: LogLayer.core, className: "BootstrapService", methodName: "_startBootstrapSequence");
       
       if (!Get.isRegistered<ListenerRegistryService>()) {
         Get.put(ListenerRegistryService());
@@ -54,7 +54,7 @@ class BootstrapService extends GetxService {
         if (sequenceId != _currentAuthSequence) return; // Discard stale state
         rxUserRole.value = 'guest';
         registry.registerGuestListeners();
-        debugPrint("BOOTSTRAP: Guest mode initialized.");
+        AppLogger.success("Guest mode initialized.", layer: LogLayer.core, className: "BootstrapService", methodName: "_startBootstrapSequence");
         rxIsApplicationReady.value = true;
         return;
       }
@@ -62,12 +62,12 @@ class BootstrapService extends GetxService {
       try {
         final role = await _getUserRole(user.uid);
         if (sequenceId != _currentAuthSequence) {
-          debugPrint("BOOTSTRAP: Discarding stale role resolution for sequence: $sequenceId");
+          AppLogger.warning("Discarding stale role resolution for sequence: $sequenceId", layer: LogLayer.core, className: "BootstrapService", methodName: "_startBootstrapSequence");
           return;
         }
 
         rxUserRole.value = role;
-        debugPrint("BOOTSTRAP: Authenticated UID: ${user.uid}, Resolved Role: $role");
+        AppLogger.success("Resolved User Role. UID: ${user.uid}, Resolved Role: $role", layer: LogLayer.core, className: "BootstrapService", methodName: "_startBootstrapSequence");
 
         if (role == 'admin' || role == 'staff' || role == 'demo_admin' || role == 'super_admin') {
           registry.registerAdminListeners(user.uid);
@@ -86,7 +86,7 @@ class BootstrapService extends GetxService {
         FcmNotificationService.to.initializeUserFcm(user.uid, role: role);
 
       } catch (e) {
-        debugPrint("BOOTSTRAP ERROR: Failed resolving role metadata: $e");
+        AppLogger.errorDetailed("Failed resolving role metadata", layer: LogLayer.core, className: "BootstrapService", methodName: "_startBootstrapSequence", error: e);
       } finally {
         if (sequenceId == _currentAuthSequence) {
           rxIsApplicationReady.value = true;
@@ -132,11 +132,11 @@ class BootstrapService extends GetxService {
               AppStrings.fieldCreatedBy: AppStrings.createdBySystem,
               AppStrings.fieldPermissions: permissions,
             });
-            debugPrint("BOOTSTRAP: Self-bootstrapped admin role document for email: $emailLower");
+            AppLogger.success("Self-bootstrapped admin role document for email: $emailLower", layer: LogLayer.core, className: "BootstrapService", methodName: "_getUserRole");
             return roleType;
           }
         } catch (e) {
-          debugPrint("BOOTSTRAP ERROR: Failed to self-bootstrap admin document: $e");
+          AppLogger.errorDetailed("Failed to self-bootstrap admin document", layer: LogLayer.core, className: "BootstrapService", methodName: "_getUserRole", error: e);
         }
       }
     }
@@ -168,8 +168,7 @@ class BootstrapService extends GetxService {
                 role;
           }
         } catch (e) {
-          debugPrint(
-              "BOOTSTRAP INFO: Admin metadata unavailable, using users.role");
+          AppLogger.info("Admin metadata unavailable, using users.role", layer: LogLayer.core, className: "BootstrapService", methodName: "_getUserRole");
         }
 
         return role;
@@ -178,7 +177,7 @@ class BootstrapService extends GetxService {
       return role ?? 'customer';
     }
   } catch (e) {
-    debugPrint("BOOTSTRAP WARNING: User role lookup failed - $e");
+    AppLogger.warning("User role lookup failed", layer: LogLayer.core, className: "BootstrapService", methodName: "_getUserRole", error: e);
   }
 
   // STEP 2: Fallback only

@@ -66,41 +66,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   final slide = _slides[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "0${index + 1}",
-                          style: AppTheme.serifHeader(
-                            fontSize: 48,
-                            color:
-                                isDark ? AppTheme.darkGold : AppTheme.lightGold,
-                          ),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "0${index + 1}",
+                              style: AppTheme.serifHeader(
+                                fontSize: 48,
+                                color:
+                                    isDark ? AppTheme.darkGold : AppTheme.lightGold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              slide['title']!,
+                              style: AppTheme.serifHeader(
+                                fontSize: 34,
+                                color:
+                                    isDark ? AppTheme.darkInk : AppTheme.lightInk,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              slide['subtitle']!,
+                              style: AppTheme.sansBody(
+                                fontSize: 15,
+                                color:
+                                    isDark
+                                        ? AppTheme.darkMuted
+                                        : AppTheme.lightMuted,
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          slide['title']!,
-                          style: AppTheme.serifHeader(
-                            fontSize: 34,
-                            color:
-                                isDark ? AppTheme.darkInk : AppTheme.lightInk,
-                            height: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          slide['subtitle']!,
-                          style: AppTheme.sansBody(
-                            fontSize: 15,
-                            color:
-                                isDark
-                                    ? AppTheme.darkMuted
-                                    : AppTheme.lightMuted,
-                            height: 1.6,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 },

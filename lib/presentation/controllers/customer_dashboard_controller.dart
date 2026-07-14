@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../domain/entities/customer_lead.dart';
+import '../../domain/repositories/notification_repository.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/entities/customer_notification.dart';
@@ -42,6 +44,8 @@ class CustomerDashboardController extends GetxController {
 
   final rxProfile = Rxn<CustomerProfile>();
   final isLoading = false.obs;
+  final rxPreferences = <String, dynamic>{}.obs;
+  final isPreferencesLoading = false.obs;
 
   @override
   void onInit() {
@@ -81,7 +85,7 @@ class CustomerDashboardController extends GetxController {
     void logFetch(String name, dynamic data) {
       final elapsed = DateTime.now().difference(startTime).inMilliseconds;
       final length = (data is Iterable) ? data.length : (data != null ? 1 : 0);
-      debugPrint("TIME_LOG [$name]: Fetched $length records in ${elapsed}ms");
+      AppLogger.info("TIME_LOG [$name]: Fetched $length records in ${elapsed}ms", layer: LogLayer.controller, className: "CustomerDashboardController", methodName: "_bindStreams");
     }
 
     rxLeads.bindStream(_portalRepo.streamCustomerLeads(customerId).handleError(_logErr).map((d) { logFetch('leads', d); return d; }));
@@ -93,7 +97,7 @@ class CustomerDashboardController extends GetxController {
     rxActivity.bindStream(_portalRepo.streamCustomerActivity(customerId).handleError(_logErr).map((d) { logFetch('activity', d); return d; }));
   }
 
-  void _logErr(e) => debugPrint("CustomerDashboard stream ERROR: $e");
+  void _logErr(e) => AppLogger.errorDetailed("CustomerDashboard stream ERROR", error: e, layer: LogLayer.controller, className: "CustomerDashboardController", methodName: "_logErr");
 
   void _clearAll() {
     rxLeads.clear();

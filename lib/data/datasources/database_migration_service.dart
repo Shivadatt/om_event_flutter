@@ -1,8 +1,8 @@
-// ignore_for_file: avoid_print
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../domain/entities/quotation.dart';
 import 'seeds/migration_seed.dart';
+import '../../core/utils/app_logger.dart';
 
 class DatabaseMigrationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -18,7 +18,7 @@ class DatabaseMigrationService {
         return doc.data()?['servicesSeeded'] == true;
       }
     } catch (e) {
-      print("Check migration error: $e");
+      AppLogger.errorDetailed("Check migration error", error: e, layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "isMigrationCompleted");
     }
     return false;
   }
@@ -43,9 +43,9 @@ class DatabaseMigrationService {
         'relationshipVersion': 1,
         'lastMigration': FieldValue.serverTimestamp(),
       });
-      print("DATABASE MIGRATION: Marked migration as completed.");
+      AppLogger.success("DATABASE MIGRATION: Marked migration as completed.", layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "markMigrationCompleted");
     } catch (e) {
-      print("Failed to mark migration as completed: $e");
+      AppLogger.errorDetailed("Failed to mark migration as completed", error: e, layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "markMigrationCompleted");
     }
   }
 
@@ -84,15 +84,18 @@ class DatabaseMigrationService {
                 'category_slug': catSlug,
                 'category_ids': targetCatIds,
               });
-              print(
+              AppLogger.info(
                 "DATABASE MIGRATION: Migrated $itemId to multiple categories $targetCatIds",
+                layer: LogLayer.repository,
+                className: "DatabaseMigrationService",
+                methodName: "correctDatabaseRelationships",
               );
             }
           }
         }
       }
     } catch (e) {
-      print("DATABASE MIGRATION ERROR: $e");
+      AppLogger.errorDetailed("DATABASE MIGRATION ERROR", error: e, layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "correctDatabaseRelationships");
       rethrow;
     }
   }
@@ -120,11 +123,11 @@ class DatabaseMigrationService {
             'created_at': FieldValue.serverTimestamp(),
             'updated_at': FieldValue.serverTimestamp(),
           });
-          print("SUCCESSFULLY INSERTED CATEGORY ${cat['id']}");
+          AppLogger.success("SUCCESSFULLY INSERTED CATEGORY ${cat['id']}", layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "seedCategoriesOnly");
         }
       }
     } catch (e) {
-      print("SEED CATEGORIES ERROR: $e");
+      AppLogger.errorDetailed("SEED CATEGORIES ERROR", error: e, layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "seedCategoriesOnly");
       rethrow;
     }
   }
@@ -166,11 +169,11 @@ class DatabaseMigrationService {
             'created_at': FieldValue.serverTimestamp(),
             'updated_at': FieldValue.serverTimestamp(),
           });
-          print("SUCCESSFULLY INSERTED SERVICE ${item['id']}");
+          AppLogger.success("SUCCESSFULLY INSERTED SERVICE ${item['id']}", layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "insertNewServices");
         }
       }
     } catch (e) {
-      print("INSERT SERVICES ERROR: $e");
+      AppLogger.errorDetailed("INSERT SERVICES ERROR", error: e, layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "insertNewServices");
       rethrow;
     }
   }
@@ -275,9 +278,9 @@ class DatabaseMigrationService {
         }
       }
 
-      print("DATABASE MIGRATION SUMMARY: Scanned: $scanned, Updated: $updated, Skipped: $skipped, Failed: $failed");
+      AppLogger.info("DATABASE MIGRATION SUMMARY: Scanned: $scanned, Updated: $updated, Skipped: $skipped, Failed: $failed", layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "migrateQuotationsCustomerId");
     } catch (e) {
-      print("DATABASE MIGRATION ERROR: $e");
+      AppLogger.errorDetailed("DATABASE MIGRATION ERROR", error: e, layer: LogLayer.repository, className: "DatabaseMigrationService", methodName: "migrateQuotationsCustomerId");
     }
 
     return {

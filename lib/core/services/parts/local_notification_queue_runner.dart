@@ -5,7 +5,7 @@ extension LocalNotificationQueueExtension on LocalNotificationTriggerService {
   /// PRODUCTION SAFETY: Only runs in debug builds. In production, the Supabase Edge Function processes the queue.
   void processQueueSnapshot(QuerySnapshot<Map<String, dynamic>> snap) async {
     if (!kDebugMode) {
-      debugPrint('LocalNotificationTriggerService: Queue runner disabled in Release build — Supabase handles this.');
+      AppLogger.info('LocalNotificationTriggerService: Queue runner disabled in Release build — Supabase handles this.', layer: LogLayer.service, className: 'LocalNotificationQueueExtension', methodName: 'processQueueSnapshot');
       return;
     }
     for (var doc in snap.docs) {

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/config/app_theme.dart';
-import '../../../../../core/constants/app_collections.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
 class PreferencesView extends StatefulWidget {
@@ -19,8 +16,6 @@ class PreferencesView extends StatefulWidget {
 }
 
 class _PreferencesViewState extends State<PreferencesView> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   bool pushEnabled = true;
   bool emailEnabled = true;
   bool whatsappEnabled = true;
@@ -54,13 +49,9 @@ class _PreferencesViewState extends State<PreferencesView> {
       final profile = widget.controller.rxProfile.value;
       if (profile != null) {
         userId = profile.id;
-        final doc = await _firestore
-            .collection(AppCollections.customerNotificationPreferences)
-            .doc(userId)
-            .get();
-
-        if (doc.exists) {
-          final data = doc.data()!;
+        await widget.controller.loadNotificationPreferences(userId!);
+        final data = widget.controller.rxPreferences;
+        if (data.isNotEmpty) {
           setState(() {
             pushEnabled = data['pushEnabled'] ?? true;
             emailEnabled = data['emailEnabled'] ?? true;
@@ -92,10 +83,7 @@ class _PreferencesViewState extends State<PreferencesView> {
     if (userId == null) return;
     try {
       setState(() => isLoading = true);
-      await _firestore
-          .collection(AppCollections.customerNotificationPreferences)
-          .doc(userId)
-          .set({
+      final data = {
         'pushEnabled': pushEnabled,
         'emailEnabled': emailEnabled,
         'whatsappEnabled': whatsappEnabled,
@@ -112,18 +100,10 @@ class _PreferencesViewState extends State<PreferencesView> {
         'quietHoursStart': quietHoursStart,
         'quietHoursEnd': quietHoursEnd,
         'dailyDigestEnabled': dailyDigestEnabled,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-      Get.snackbar(
-        "Preferences Saved",
-        "Your notification channel configurations have been updated.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF171411),
-        colorText: const Color(0xFFD4AF37),
-      );
-    } catch (e) {
-      Get.snackbar("Error", "Failed to save: $e");
+      };
+      await widget.controller.saveNotificationPreferences(userId!, data);
+    } catch (_) {
+      // Fail silently
     } finally {
       setState(() => isLoading = false);
     }

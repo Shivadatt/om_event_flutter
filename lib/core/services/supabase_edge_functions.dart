@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import '../utils/app_logger.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SupabaseEdgeFunctions
@@ -106,8 +106,8 @@ class SupabaseEdgeFunctions extends GetxService {
       }
 
       return EdgeJobResult.fromResponse(res);
-    } catch (e) {
-      if (kDebugMode) debugPrint('SupabaseEdgeFunctions.$functionName error: $e');
+    } catch (e, s) {
+      AppLogger.errorDetailed('SupabaseEdgeFunctions.$functionName error', error: e, stack: s, layer: LogLayer.service, className: 'SupabaseEdgeFunctions', methodName: 'invoke');
       return EdgeJobResult.failure(e.toString());
     }
   }

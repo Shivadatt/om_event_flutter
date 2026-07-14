@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/services/local_notification_trigger_service.dart';
 import '../../core/services/app_config_service.dart';
+import '../utils/app_logger.dart';
 
 /// Centralized registry managing ALL active Firestore stream subscriptions.
 /// Controllers and services must register their streams here to prevent listener leaks and permission conflicts.
@@ -22,40 +23,40 @@ class ListenerRegistryService extends GetxService {
     final sub = stream.listen(
       onData,
       onError: (e, stack) {
-        debugPrint("LISTENER REGISTRY ERROR [$key]: $e");
+        AppLogger.errorDetailed("LISTENER REGISTRY ERROR [$key]", error: e, stack: stack, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerAndListen");
         if (onError != null) {
           onError(e, stack);
         }
       },
     );
     _activeSubscriptions[key] = sub;
-    debugPrint("LISTENER REGISTRY: Registered stream listener '$key'");
+    AppLogger.info("LISTENER REGISTRY: Registered stream listener '$key'", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerAndListen");
   }
 
   void registerListener(String key, StreamSubscription sub) {
     _activeSubscriptions[key]?.cancel();
     _activeSubscriptions[key] = sub;
-    debugPrint("LISTENER REGISTRY: Registered stream listener '$key'");
+    AppLogger.info("LISTENER REGISTRY: Registered stream listener '$key'", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerListener");
   }
 
   void pauseListener(String key) {
     if (_activeSubscriptions.containsKey(key)) {
       _activeSubscriptions[key]!.pause();
-      debugPrint("LISTENER REGISTRY: Paused stream listener '$key'");
+      AppLogger.info("LISTENER REGISTRY: Paused stream listener '$key'", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "pauseListener");
     }
   }
 
   void resumeListener(String key) {
     if (_activeSubscriptions.containsKey(key)) {
       _activeSubscriptions[key]!.resume();
-      debugPrint("LISTENER REGISTRY: Resumed stream listener '$key'");
+      AppLogger.info("LISTENER REGISTRY: Resumed stream listener '$key'", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "resumeListener");
     }
   }
 
   void disposeListener(String key) {
     _activeSubscriptions[key]?.cancel();
     _activeSubscriptions.remove(key);
-    debugPrint("LISTENER REGISTRY: Disposed stream listener '$key'");
+    AppLogger.info("LISTENER REGISTRY: Disposed stream listener '$key'", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "disposeListener");
   }
 
   /// Cancels all active subscriptions on logout
@@ -73,19 +74,19 @@ class ListenerRegistryService extends GetxService {
     if (Get.isRegistered<LocalNotificationTriggerService>()) {
       LocalNotificationTriggerService.to.teardown();
     }
-    debugPrint("LISTENER REGISTRY: Cleaned up all active listeners on logout.");
+    AppLogger.success("LISTENER REGISTRY: Cleaned up all active listeners on logout.", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "cleanupOnLogout");
   }
 
   /// Guest mode: Zero protected streams attached
   void registerGuestListeners() {
     cleanupOnLogout();
-    debugPrint("LISTENER REGISTRY: Guest mode listeners initialized (zero protected streams).");
+    AppLogger.success("LISTENER REGISTRY: Guest mode listeners initialized (zero protected streams).", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerGuestListeners");
   }
 
   /// Admin mode: register global admin dashboard streams
   void registerAdminListeners(String adminId) {
     cleanupOnLogout();
-    debugPrint("LISTENER REGISTRY: Registering admin-scoped listeners for admin ID: $adminId");
+    AppLogger.info("LISTENER REGISTRY: Registering admin-scoped listeners for admin ID: $adminId", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerAdminListeners");
 
     // 1. Bind sensitive admin configuration settings streams
     if (Get.isRegistered<AppConfigService>()) {
@@ -99,7 +100,7 @@ class ListenerRegistryService extends GetxService {
           LocalNotificationTriggerService.to.handleLeadsSnapshot(snap);
         }
       },
-      onError: (e) => debugPrint("LISTENER REGISTRY ERROR [leads]: $e"),
+      onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [leads]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerAdminListeners"),
     );
     registerListener('leads', leadsSub);
 
@@ -110,7 +111,7 @@ class ListenerRegistryService extends GetxService {
           LocalNotificationTriggerService.to.handleQuotationsSnapshot(snap);
         }
       },
-      onError: (e) => debugPrint("LISTENER REGISTRY ERROR [quotations]: $e"),
+      onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [quotations]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerAdminListeners"),
     );
     registerListener('quotations', quotesSub);
 
@@ -126,7 +127,7 @@ class ListenerRegistryService extends GetxService {
             LocalNotificationTriggerService.to.handleQueueSnapshot(snap);
           }
         },
-        onError: (e) => debugPrint("LISTENER REGISTRY ERROR [queue]: $e"),
+        onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [queue]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerAdminListeners"),
       );
       registerListener('queue', queueSub);
     }
@@ -140,7 +141,7 @@ class ListenerRegistryService extends GetxService {
   /// Customer mode: register customer-scoped streams
   void registerCustomerListeners(String customerId) {
     cleanupOnLogout();
-    debugPrint("LISTENER REGISTRY: Registering customer-scoped listeners for customer ID: $customerId");
+    AppLogger.info("LISTENER REGISTRY: Registering customer-scoped listeners for customer ID: $customerId", layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerCustomerListeners");
 
     // 1. Customer Quotation Listener (scoped to customerId)
     final quotesSub = _firestore
@@ -153,7 +154,7 @@ class ListenerRegistryService extends GetxService {
           LocalNotificationTriggerService.to.handleQuotationsSnapshot(snap);
         }
       },
-      onError: (e) => debugPrint("LISTENER REGISTRY ERROR [customer_quotations]: $e"),
+      onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [customer_quotations]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerCustomerListeners"),
     );
     registerListener('quotations', quotesSub);
 
@@ -166,7 +167,7 @@ class ListenerRegistryService extends GetxService {
       (snap) {
         // Scoped notifications sync
       },
-      onError: (e) => debugPrint("LISTENER REGISTRY ERROR [customer_notifications]: $e"),
+      onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [customer_notifications]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerCustomerListeners"),
     );
     registerListener('notifications', notifSub);
 
