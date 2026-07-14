@@ -759,7 +759,7 @@ class _QuotesViewState extends State<QuotesView> {
             children: [
               Expanded(
                 child: Obx(() {
-                  final messages = chatController.rxMessages;
+                  final messages = chatController.combinedMessages;
                   if (messages.isEmpty) {
                     return Center(
                       child: Column(
@@ -845,18 +845,10 @@ class _QuotesViewState extends State<QuotesView> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Obx(() {
-                      return chatController.isSending.value
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFD4AF37)),
-                            )
-                          : IconButton(
-                              icon: const Icon(Icons.send_rounded, color: Color(0xFFD4AF37), size: 20),
-                              onPressed: () => chatController.sendTextMessage(),
-                            );
-                    }),
+                    IconButton(
+                      icon: const Icon(Icons.send_rounded, color: Color(0xFFD4AF37), size: 20),
+                      onPressed: () => chatController.sendTextMessage(),
+                    ),
                   ],
                 ),
               ),
@@ -989,11 +981,17 @@ class _QuotesViewState extends State<QuotesView> {
                 ),
                 if (isMe) const SizedBox(width: 4),
                 if (isMe)
-                  Icon(
-                    msg.isReadByAdmin ? Icons.done_all_rounded : Icons.done_rounded,
-                    size: 11,
-                    color: msg.isReadByAdmin ? const Color(0xFFD4AF37) : Colors.white24,
-                  ),
+                  msg.id.startsWith('temp_')
+                      ? const Icon(
+                          Icons.access_time_rounded,
+                          size: 11,
+                          color: Colors.white24,
+                        )
+                      : Icon(
+                          msg.isReadByAdmin ? Icons.done_all_rounded : Icons.done_rounded,
+                          size: 11,
+                          color: msg.isReadByAdmin ? const Color(0xFFD4AF37) : Colors.white24,
+                        ),
               ],
             ),
           ),

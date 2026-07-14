@@ -317,8 +317,8 @@ BusinessDetailsEntity fromJson(Map<String, dynamic> json) {
   List<ContactItemEntity> phones = [];
   List<ContactItemEntity> whatsapps = [];
   List<ContactItemEntity> emails = [];
-  List<ContactItemEntity> customerCares = [];
-  List<ContactItemEntity> emergencyContacts = [];
+  // List<ContactItemEntity> customerCares = [];
+  // List<ContactItemEntity> emergencyContacts = [];
 
   if (contactsMap != null) {
     // skipped for test

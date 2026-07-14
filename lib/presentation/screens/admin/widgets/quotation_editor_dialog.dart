@@ -20,13 +20,39 @@ class QuotationEditorDialog extends StatefulWidget {
     required this.controller,
   });
 
-  static void show(BuildContext context, Quotation quotation, AdminController controller) {
-    controller.loadQuotationForEditing(quotation);
+  static void show(BuildContext context, Quotation quotation, AdminController controller) async {
+    // Show a loading dialog first
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => QuotationEditorDialog(quotation: quotation, controller: controller),
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryAccent),
+      ),
     );
+
+    try {
+      debugPrint("QuotationEditorDialog.show: Loading quotation...");
+      await controller.loadQuotationForEditing(quotation);
+      
+      // Close the loading dialog
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+      
+      // Open the actual editor dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => QuotationEditorDialog(quotation: quotation, controller: controller),
+        );
+      }
+    } catch (e) {
+      debugPrint("QuotationEditorDialog.show Error: $e");
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+      }
+    }
   }
 
   @override
@@ -70,7 +96,7 @@ class _QuotationEditorDialogState extends State<QuotationEditorDialog> {
     _adminMessageController = TextEditingController(text: quote.adminMessage ?? '');
 
     _discountController = TextEditingController(text: quote.discount.toStringAsFixed(0));
-    _deliveryController = TextEditingController(text: quote.deliveryCharge.toStringAsFixed(0));
+    _deliveryController = TextEditingController(text: "0");
     _travelController = TextEditingController(text: quote.travelCharge.toStringAsFixed(0));
     _gstPercentController = TextEditingController(text: quote.gstPercent.toStringAsFixed(0));
 
@@ -82,7 +108,6 @@ class _QuotationEditorDialogState extends State<QuotationEditorDialog> {
 
     // Listen to changes for recalculation
     _discountController.addListener(_onPricingFieldsChanged);
-    _deliveryController.addListener(_onPricingFieldsChanged);
     _travelController.addListener(_onPricingFieldsChanged);
     _gstPercentController.addListener(_onPricingFieldsChanged);
   }
@@ -101,7 +126,6 @@ class _QuotationEditorDialogState extends State<QuotationEditorDialog> {
     _logisticsController.dispose();
 
     _discountController.removeListener(_onPricingFieldsChanged);
-    _deliveryController.removeListener(_onPricingFieldsChanged);
     _travelController.removeListener(_onPricingFieldsChanged);
     _gstPercentController.removeListener(_onPricingFieldsChanged);
 
@@ -114,7 +138,7 @@ class _QuotationEditorDialogState extends State<QuotationEditorDialog> {
 
   void _onPricingFieldsChanged() {
     widget.controller.editorDiscount.value = double.tryParse(_discountController.text) ?? 0.0;
-    widget.controller.editorDelivery.value = double.tryParse(_deliveryController.text) ?? 0.0;
+    widget.controller.editorDelivery.value = 0.0;
     widget.controller.editorTravel.value = double.tryParse(_travelController.text) ?? 0.0;
     widget.controller.editorGstPercent.value = double.tryParse(_gstPercentController.text) ?? 18.0;
     widget.controller.recalculateEditorTotals();
@@ -188,85 +212,131 @@ class _QuotationEditorDialogState extends State<QuotationEditorDialog> {
   }
 
   void _promptRevisionReason(BuildContext context, AdminController controller) {
+    // Capture the editor dialog's navigator BEFORE showing the reason dialog
     final editorNavigator = Navigator.of(context);
     final reasonCtrl = TextEditingController(text: "Updated decorations & price adjustment");
+
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
         final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
 
-        return Dialog(
-          backgroundColor: paperColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "PUBLISH REVISED PROPOSAL",
-                  style: AppTheme.sansBody(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryAccent,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                CustomInput(
-                  label: "Revision Reason (Internal/Client visible)",
-                  placeholder: "e.g. Added flower arches",
-                  controller: reasonCtrl,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+        bool isPublishing = false;
+
+        // StatefulBuilder gives us a local setState inside this dialog
+        return StatefulBuilder(
+          builder: (sbContext, setState) {
+            return Dialog(
+              backgroundColor: paperColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: Text("Cancel", style: TextStyle(color: inkColor.withValues(alpha: 0.6))),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFC9A77E),
-                        foregroundColor: const Color(0xFF091210),
+                    Text(
+                      "PUBLISH REVISED PROPOSAL",
+                      style: AppTheme.sansBody(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryAccent,
+                        letterSpacing: 1.5,
                       ),
-                      onPressed: () async {
-                        if (reasonCtrl.text.trim().isEmpty) return;
-                        Navigator.pop(dialogContext); // Close reason dialog
-                        
-                        final success = await controller.publishActiveRevision(
-                          eventDate: _selectedDate,
-                          eventTime: _timeController.text,
-                          location: _locController.text,
-                          notes: _notesController.text,
-                          internalNotes: _internalNotesController.text,
-                          adminMessage: _adminMessageController.text,
-                          revisionReason: reasonCtrl.text.trim(),
-                          operationalNotes: _operationalNotesController.text,
-                          bookingDetails: _bookingDetailsController.text,
-                          staffAssignment: _staffAssignmentController.text,
-                          logistics: _logisticsController.text,
-                        );
-                        if (success) {
-                          editorNavigator.pop(); // Close editor dialog
-                        }
-                      },
-                      child: const Text("Publish"),
+                    ),
+                    const SizedBox(height: 16),
+                    CustomInput(
+                      label: "Revision Reason (Internal/Client visible)",
+                      placeholder: "e.g. Added flower arches",
+                      controller: reasonCtrl,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isPublishing ? null : () => Navigator.pop(dialogContext),
+                          child: Text("Cancel", style: TextStyle(color: inkColor.withValues(alpha: 0.6))),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFC9A77E),
+                            foregroundColor: const Color(0xFF091210),
+                          ),
+                          onPressed: isPublishing
+                              ? null
+                              : () async {
+                                  if (reasonCtrl.text.trim().isEmpty) return;
+
+                                  debugPrint("_promptRevisionReason: Publish clicked — saving to Firebase first.");
+
+                                  // Show loading on Publish button inside this dialog
+                                  setState(() => isPublishing = true);
+
+                                  try {
+                                    final success = await controller.publishActiveRevision(
+                                      eventDate: _selectedDate,
+                                      eventTime: _timeController.text,
+                                      location: _locController.text,
+                                      notes: _notesController.text,
+                                      internalNotes: _internalNotesController.text,
+                                      adminMessage: _adminMessageController.text,
+                                      revisionReason: reasonCtrl.text.trim(),
+                                      operationalNotes: _operationalNotesController.text,
+                                      bookingDetails: _bookingDetailsController.text,
+                                      staffAssignment: _staffAssignmentController.text,
+                                      logistics: _logisticsController.text,
+                                    );
+
+                                    debugPrint("_promptRevisionReason: publishActiveRevision done. success=$success");
+
+                                    if (success) {
+                                      // Data saved — now close reason dialog then editor dialog
+                                      if (dialogContext.mounted) {
+                                        Navigator.pop(dialogContext);
+                                        debugPrint("_promptRevisionReason: Reason dialog closed.");
+                                      }
+                                      if (editorNavigator.canPop()) {
+                                        editorNavigator.pop();
+                                        debugPrint("_promptRevisionReason: Editor dialog closed.");
+                                      }
+                                    } else {
+                                      // Failed — reset button so user can retry
+                                      debugPrint("_promptRevisionReason: publishActiveRevision returned false. Keeping dialog open.");
+                                      setState(() => isPublishing = false);
+                                    }
+                                  } catch (e, s) {
+                                    debugPrint("_promptRevisionReason: Exception during publish: $e\n$s");
+                                    setState(() => isPublishing = false);
+                                  }
+                                },
+                          child: isPublishing
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF091210),
+                                  ),
+                                )
+                              : const Text("Publish"),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -759,131 +829,119 @@ class _QuotationEditorDialogState extends State<QuotationEditorDialog> {
                       child: Container(
                         padding: const EdgeInsets.all(24),
                         color: paperColor,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              "PRICING ADJUSTMENTS",
-                              style: AppTheme.sansBody(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: goldColor,
-                                letterSpacing: 1.5,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                "PRICING ADJUSTMENTS",
+                                style: AppTheme.sansBody(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: goldColor,
+                                  letterSpacing: 1.5,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            CustomInput(
-                              label: "Discount (₹)",
-                              placeholder: "0",
-                              controller: _discountController,
-                              keyboardType: TextInputType.number,
-                              readOnly: isFinLocked,
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomInput(
-                                    label: "Delivery (₹)",
-                                    placeholder: "0",
-                                    controller: _deliveryController,
-                                    keyboardType: TextInputType.number,
-                                    readOnly: isFinLocked,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: CustomInput(
-                                    label: "Travel (₹)",
-                                    placeholder: "0",
-                                    controller: _travelController,
-                                    keyboardType: TextInputType.number,
-                                    readOnly: isFinLocked,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            CustomInput(
-                              label: "GST (%)",
-                              placeholder: "18",
-                              controller: _gstPercentController,
-                              keyboardType: TextInputType.number,
-                              readOnly: isFinLocked,
-                            ),
-                            
-                            const Divider(height: 32),
-                            Text(
-                              "LIVE CALCULATION SUMMARY",
-                              style: AppTheme.sansBody(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: goldColor,
-                                letterSpacing: 1.5,
+                              const SizedBox(height: 16),
+                              CustomInput(
+                                label: "Discount (₹)",
+                                placeholder: "0",
+                                controller: _discountController,
+                                keyboardType: TextInputType.number,
+                                readOnly: isFinLocked,
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildSummaryRow("Subtotal", widget.controller.editorSubtotal, inkColor),
-                            _buildSummaryRow("Discount", widget.controller.editorDiscount, Colors.green, isNeg: true),
-                            _buildSummaryRow("Delivery Fee", widget.controller.editorDelivery, inkColor),
-                            _buildSummaryRow("Travel Fee", widget.controller.editorTravel, inkColor),
-                            Obx(() => _buildStaticRow("GST (${widget.controller.editorGstPercent.value.toStringAsFixed(0)}%)", AppFormatters.formatCurrency(widget.controller.editorGstAmount.value), inkColor)),
-                            const Divider(height: 24),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "GRAND TOTAL",
-                                  style: AppTheme.sansBody(fontSize: 14, fontWeight: FontWeight.bold, color: inkColor),
+                              CustomInput(
+                                label: "Travel (₹)",
+                                placeholder: "0",
+                                controller: _travelController,
+                                keyboardType: TextInputType.number,
+                                readOnly: isFinLocked,
+                              ),
+                              CustomInput(
+                                label: "GST (%)",
+                                placeholder: "18",
+                                controller: _gstPercentController,
+                                keyboardType: TextInputType.number,
+                                readOnly: isFinLocked,
+                              ),
+                              
+                              const Divider(height: 32),
+                              Text(
+                                "LIVE CALCULATION SUMMARY",
+                                style: AppTheme.sansBody(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: goldColor,
+                                  letterSpacing: 1.5,
                                 ),
-                                Obx(() => Text(
-                                  AppFormatters.formatCurrency(widget.controller.editorGrandTotal.value),
-                                  style: AppTheme.serifHeader(fontSize: 24, fontWeight: FontWeight.bold, color: goldColor),
-                                )),
-                              ],
-                            ),
-                            const Spacer(),
-                            
-                            // Bottom Action Panel
-                            Obx(() {
-                              final saving = widget.controller.isSavingDraft.value;
-                              final publishing = widget.controller.isPublishingRevision.value;
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                              ),
+                              const SizedBox(height: 16),
+                              _buildSummaryRow("Subtotal", widget.controller.editorSubtotal, inkColor),
+                              _buildSummaryRow("Discount", widget.controller.editorDiscount, Colors.green, isNeg: true),
+                              _buildSummaryRow("Travel Fee", widget.controller.editorTravel, inkColor),
+                              Obx(() => _buildStaticRow("GST (${widget.controller.editorGstPercent.value.toStringAsFixed(0)}%)", AppFormatters.formatCurrency(widget.controller.editorGstAmount.value), inkColor)),
+                              const Divider(height: 24),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  CustomButton(
-                                    text: "Save Draft Changes",
-                                    isLoading: saving,
-                                    onPressed: saving || publishing || isPermLocked ? null : () async {
-                                      if (_formKey.currentState?.validate() == true) {
-                                        await widget.controller.saveActiveDraft(
-                                          eventDate: _selectedDate,
-                                          eventTime: _timeController.text,
-                                          location: _locController.text,
-                                          notes: _notesController.text,
-                                          internalNotes: _internalNotesController.text,
-                                          adminMessage: _adminMessageController.text,
-                                          operationalNotes: _operationalNotesController.text,
-                                          bookingDetails: _bookingDetailsController.text,
-                                          staffAssignment: _staffAssignmentController.text,
-                                          logistics: _logisticsController.text,
-                                        );
-                                      }
-                                    },
+                                  Text(
+                                    "GRAND TOTAL",
+                                    style: AppTheme.sansBody(fontSize: 14, fontWeight: FontWeight.bold, color: inkColor),
                                   ),
-                                  const SizedBox(height: 12),
-                                  CustomButton(
-                                    text: "Publish Revised Proposal",
-                                    isLoading: publishing,
-                                    onPressed: saving || publishing || isPermLocked ? null : () {
-                                      if (_formKey.currentState?.validate() == true) {
-                                        _promptRevisionReason(context, widget.controller);
-                                      }
-                                    },
-                                  ),
+                                  Obx(() => Text(
+                                    AppFormatters.formatCurrency(widget.controller.editorGrandTotal.value),
+                                    style: AppTheme.serifHeader(fontSize: 24, fontWeight: FontWeight.bold, color: goldColor),
+                                  )),
                                 ],
-                              );
-                            }),
-                          ],
+                              ),
+                              const SizedBox(height: 24),
+                              
+                              // Bottom Action Panel
+                              Obx(() {
+                                final saving = widget.controller.isSavingDraft.value;
+  
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    CustomButton(
+                                      text: "Save Draft Changes",
+                                      isLoading: saving,
+                                      onPressed: saving || isPermLocked ? null : () async {
+                                        if (_formKey.currentState?.validate() == true) {
+                                          final navigator = Navigator.of(context);
+                                          final success = await widget.controller.saveActiveDraft(
+                                            eventDate: _selectedDate,
+                                            eventTime: _timeController.text,
+                                            location: _locController.text,
+                                            notes: _notesController.text,
+                                            internalNotes: _internalNotesController.text,
+                                            adminMessage: _adminMessageController.text,
+                                            operationalNotes: _operationalNotesController.text,
+                                            bookingDetails: _bookingDetailsController.text,
+                                            staffAssignment: _staffAssignmentController.text,
+                                            logistics: _logisticsController.text,
+                                          );
+                                          if (success && context.mounted) {
+                                            navigator.pop();
+                                          }
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    CustomButton(
+                                      text: "Publish Revised Proposal",
+                                      isLoading: false,
+                                      onPressed: saving || isPermLocked ? null : () {
+                                        if (_formKey.currentState?.validate() == true) {
+                                          _promptRevisionReason(context, widget.controller);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                );
+                              }),
+                            ],
+                          ),
                         ),
                       ),
                     ),

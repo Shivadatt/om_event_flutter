@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,6 +13,8 @@ import 'package:om_event/presentation/controllers/cart_controller.dart';
 import 'package:om_event/presentation/controllers/catalog_controller.dart';
 import 'package:om_event/presentation/widgets/item_visual_placeholder.dart';
 import 'package:om_event/presentation/screens/customer/widgets/home_detail_dialog.dart';
+import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
+import 'package:om_event/presentation/screens/customer/auth/widgets/customer_auth_box.dart';
 
 part 'parts/catalog_card.dart';
 part 'parts/catalog_toolbar.dart';
@@ -211,17 +213,41 @@ class ExperiencesCatalogSection extends StatelessWidget {
                           return ExperienceCard(
                             item: item,
                             onQuickAdd: () {
-                              cartController.addToCart(item);
-                              Get.snackbar(
-                                "Added to Canvas",
-                                "${item.name} added.",
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: const Color(0xFF1B2D27).withValues(alpha: 0.85), // Card Background
-                                colorText: Colors.white,
-                                borderColor: AppColors.secondaryAccent.withValues(alpha: 0.3),
-                                borderWidth: 1.2,
-                                margin: const EdgeInsets.all(16),
-                              );
+                              final authController = Get.find<CustomerAuthController>();
+                              if (!authController.isLoggedIn) {
+                                Get.snackbar(
+                                  "Login Required",
+                                  "Please login first to add items to your selection.",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: const Color(0xFF1B2D27).withValues(alpha: 0.85),
+                                  colorText: Colors.white,
+                                  borderColor: AppColors.secondaryAccent.withValues(alpha: 0.3),
+                                  borderWidth: 1.2,
+                                  margin: const EdgeInsets.all(16),
+                                );
+                                Get.dialog(
+                                  Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: CustomerAuthBox(
+                                      onSuccess: () {
+                                        cartController.addToCart(item);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                cartController.addToCart(item);
+                                Get.snackbar(
+                                  "Added to Canvas",
+                                  "${item.name} added.",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: const Color(0xFF1B2D27).withValues(alpha: 0.85), // Card Background
+                                  colorText: Colors.white,
+                                  borderColor: AppColors.secondaryAccent.withValues(alpha: 0.3),
+                                  borderWidth: 1.2,
+                                  margin: const EdgeInsets.all(16),
+                                );
+                              }
                             },
                             onTap: () {
                               showExperienceDetailDialog(context, item);

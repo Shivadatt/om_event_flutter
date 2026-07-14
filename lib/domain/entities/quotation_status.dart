@@ -123,9 +123,13 @@ class QuotationStatusTransitions {
             to == QuotationStatus.cancelled ||
             to == QuotationStatus.draft ||
             to == QuotationStatus.archived;
+      case QuotationStatus.archived:
+        return to == QuotationStatus.draft ||
+            to == QuotationStatus.revisionRequested ||
+            to == QuotationStatus.underRevision ||
+            to == QuotationStatus.republished;
       case QuotationStatus.completed:
       case QuotationStatus.cancelled:
-      case QuotationStatus.archived:
         return false;
     }
   }

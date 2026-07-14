@@ -212,19 +212,20 @@ class QuotationPdfGenerator {
                           ),
                         ],
                       ),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Text(
-                            "Delivery:",
-                            style: const pw.TextStyle(fontSize: 9),
-                          ),
-                          pw.Text(
-                            "Rs. ${quote.deliveryCharge.toStringAsFixed(2)}",
-                            style: const pw.TextStyle(fontSize: 9),
-                          ),
-                        ],
-                      ),
+                      if (quote.deliveryCharge > 0)
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text(
+                              "Delivery:",
+                              style: const pw.TextStyle(fontSize: 9),
+                            ),
+                            pw.Text(
+                              "Rs. ${quote.deliveryCharge.toStringAsFixed(2)}",
+                              style: const pw.TextStyle(fontSize: 9),
+                            ),
+                          ],
+                        ),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [

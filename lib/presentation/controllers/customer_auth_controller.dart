@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../core/config/app_routes.dart';
@@ -16,9 +18,32 @@ class CustomerAuthController extends GetxController {
   final isLoading = false.obs;
   final verificationId = ''.obs;
 
+  StreamSubscription<User?>? _authSubscription;
+
+  bool get isLoggedIn => rxIsLoggedIn.value || FirebaseAuth.instance.currentUser != null;
+
   @override
   void onInit() {
     super.onInit();
+    
+    // Set initial value synchronously
+    rxIsLoggedIn.value = FirebaseAuth.instance.currentUser != null;
+
+    // Listen to real-time auth state changes
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      final loggedIn = user != null;
+      if (rxIsLoggedIn.value != loggedIn) {
+        rxIsLoggedIn.value = loggedIn;
+      }
+      if (loggedIn) {
+        _authRepository.getCustomerProfile(user.uid).then((profile) {
+          rxCustomerProfile.value = profile;
+        });
+      } else {
+        rxCustomerProfile.value = null;
+      }
+    });
+
     // React to BootstrapService state to avoid race conditions
     ever(BootstrapService.to.rxIsApplicationReady, (isReady) {
       if (isReady) {
@@ -28,6 +53,12 @@ class CustomerAuthController extends GetxController {
     if (BootstrapService.to.rxIsApplicationReady.value) {
       checkAuthStatus();
     }
+  }
+
+  @override
+  void onClose() {
+    _authSubscription?.cancel();
+    super.onClose();
   }
 
   Future<void> checkAuthStatus() async {

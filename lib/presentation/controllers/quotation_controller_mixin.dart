@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
@@ -68,30 +69,46 @@ mixin QuotationControllerMixin on GetxController {
     }
   }
 
-  void loadQuotationForEditing(Quotation quote) async {
+  Future<void> loadQuotationForEditing(Quotation quote) async {
     try {
+      debugPrint("loadQuotationForEditing: Started for quoteId=${quote.id}, current status=${quote.status}");
       if (quote.status == QuotationStatus.revisionRequested ||
           quote.status == QuotationStatus.published ||
-          quote.status == QuotationStatus.viewed) {
+          quote.status == QuotationStatus.viewed ||
+          quote.status == QuotationStatus.republished) {
+        debugPrint("loadQuotationForEditing: Status matches revision triggers. Setting status to underRevision...");
         await quotationRepository.updateQuotationStatus(quote.id, QuotationStatus.underRevision.nameStr);
+        debugPrint("loadQuotationForEditing: Status updated to underRevision on database.");
       }
+
+      debugPrint("loadQuotationForEditing: Fetching quotation draft...");
       final draft = await quotationRepository.getQuotationDraft(quote.id);
       if (draft != null) {
+        debugPrint("loadQuotationForEditing: Draft found. Using draft.");
         rxEditingQuotation.value = draft;
       } else {
+        debugPrint("loadQuotationForEditing: No draft found. Using quote.");
         rxEditingQuotation.value = quote;
       }
       
       final activeQuote = rxEditingQuotation.value!;
+      debugPrint("loadQuotationForEditing: Assigning editor items count=${activeQuote.items.length}");
       rxEditorItems.assignAll(activeQuote.items);
       editorDiscount.value = activeQuote.discount;
-      editorDelivery.value = activeQuote.deliveryCharge;
+      editorDelivery.value = 0.0;
       editorTravel.value = activeQuote.travelCharge;
       editorGstPercent.value = activeQuote.gstPercent;
       
+      debugPrint("loadQuotationForEditing: Recalculating totals...");
       recalculateEditorTotals();
-    } catch (e) {
-      Get.snackbar("Error Loading Editor", e.toString());
+      debugPrint("loadQuotationForEditing: Load completed successfully.");
+    } catch (e, s) {
+      debugPrint("loadQuotationForEditing Exception: $e\n$s");
+      try {
+        Get.snackbar("Error Loading Editor", e.toString());
+      } catch (e2, s2) {
+        debugPrint("loadQuotationForEditing: Snackbar exception: $e2\n$s2");
+      }
     }
   }
 
@@ -186,9 +203,13 @@ mixin QuotationControllerMixin on GetxController {
     String? logistics,
   }) async {
     final active = rxEditingQuotation.value;
-    if (active == null) return false;
+    if (active == null) {
+      print("saveActiveDraft: rxEditingQuotation is null!");
+      return false;
+    }
 
     try {
+      print("saveActiveDraft: Setting isSavingDraft to true");
       isSavingDraft.value = true;
       final draftQuote = active.copyWith(
         eventDate: eventDate,
@@ -211,14 +232,26 @@ mixin QuotationControllerMixin on GetxController {
         logistics: logistics,
       );
 
+      print("saveActiveDraft: Calling saveQuotationDraft");
       await quotationRepository.saveQuotationDraft(draftQuote);
+      print("saveActiveDraft: saveQuotationDraft returned successfully");
       rxEditingQuotation.value = draftQuote;
-      Get.snackbar("Draft Saved", "Quotation draft changes saved successfully.");
+      try {
+        Get.snackbar("Draft Saved", "Quotation draft changes saved successfully.");
+      } catch (e, s) {
+        print("saveActiveDraft: Exception in Get.snackbar: $e\n$s");
+      }
       return true;
-    } catch (e) {
-      Get.snackbar("Error Saving Draft", e.toString());
+    } catch (e, stack) {
+      print("saveActiveDraft Exception: $e\n$stack");
+      try {
+        Get.snackbar("Error Saving Draft", e.toString());
+      } catch (e2, s2) {
+        print("saveActiveDraft: Exception in Get.snackbar error: $e2\n$s2");
+      }
       return false;
     } finally {
+      print("saveActiveDraft: finally - setting isSavingDraft to false");
       isSavingDraft.value = false;
     }
   }
@@ -237,9 +270,13 @@ mixin QuotationControllerMixin on GetxController {
     String? logistics,
   }) async {
     final active = rxEditingQuotation.value;
-    if (active == null) return false;
+    if (active == null) {
+      print("publishActiveRevision: rxEditingQuotation is null!");
+      return false;
+    }
 
     try {
+      print("publishActiveRevision: Setting isPublishingRevision to true");
       isPublishingRevision.value = true;
       final updatedQuote = active.copyWith(
         eventDate: eventDate,
@@ -263,14 +300,27 @@ mixin QuotationControllerMixin on GetxController {
         logistics: logistics,
       );
 
+      print("publishActiveRevision: Calling publishQuotationRevision");
       await quotationRepository.publishQuotationRevision(updatedQuote);
+      print("publishActiveRevision: publishQuotationRevision returned successfully");
+      
       rxEditingQuotation.value = null;
-      Get.snackbar("Proposal Published", "Quotation revision published successfully.");
+      try {
+        Get.snackbar("Proposal Published", "Quotation revision published successfully.");
+      } catch (e, s) {
+        print("publishActiveRevision: Exception in Get.snackbar: $e\n$s");
+      }
       return true;
-    } catch (e) {
-      Get.snackbar("Error Publishing Revision", e.toString());
+    } catch (e, stack) {
+      print("publishActiveRevision: Exception caught: $e\n$stack");
+      try {
+        Get.snackbar("Error Publishing Revision", e.toString());
+      } catch (e2, s2) {
+        print("publishActiveRevision: Exception in Get.snackbar error: $e2\n$s2");
+      }
       return false;
     } finally {
+      print("publishActiveRevision: finally - setting isPublishingRevision to false");
       isPublishingRevision.value = false;
     }
   }

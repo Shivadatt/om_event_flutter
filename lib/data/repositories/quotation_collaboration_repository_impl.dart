@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/quotation_message.dart';
 import '../../domain/entities/quotation_attachment.dart';
@@ -32,6 +33,7 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
   @override
   Future<void> sendMessage(QuotationMessage message) async {
     try {
+      debugPrint("-> [COLLAB] sendMessage: Starting for quotationId=${message.quotationId}");
       final docRef = _firestore.collection('quotation_messages').doc();
       final model = QuotationMessageModel(
         id: docRef.id,
@@ -58,64 +60,87 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
             .toList(),
       );
 
+      debugPrint("-> [COLLAB] sendMessage: Writing message doc...");
       await docRef.set(model.toJson());
+      debugPrint("-> [COLLAB] sendMessage: Message doc written successfully.");
 
-      // Automatic auditing and notification generation
-      try {
-        final quoteSnap = await _firestore.collection('quotations').doc(message.quotationId).get();
-        if (quoteSnap.exists) {
-          final quoteData = quoteSnap.data()!;
-          final versionNum = quoteData['version'] ?? 1;
-          final customerId = quoteData['customerId'] ?? quoteData['customer_id'] ?? '';
-          final location = quoteData['location'] ?? '';
-
-          final hasAttachments = message.attachments.isNotEmpty;
-          final action = hasAttachments ? 'Files Uploaded' : 'Messages Sent';
-          final details = hasAttachments 
-              ? 'Uploaded file: ${message.attachments.map((a) => a.fileName).join(", ")}'
-              : 'Sent message: ${message.content}';
-
-          // 1. Audit Log
-          await _firestore.collection('activity_logs').add({
-            'action': action,
-            'user': message.senderName,
-            'role': message.senderRole,
-            'timestamp': FieldValue.serverTimestamp(),
-            'version': versionNum,
-            'quotationId': message.quotationId,
-            'details': details,
-          });
-
-          // 2. Notification
-          final isFromAdmin = message.senderRole == 'admin';
-          final String targetCustomerId = isFromAdmin ? customerId : 'admin';
-          
-          final String notifTitle = hasAttachments
-              ? (isFromAdmin ? 'New File from Coordinator' : 'New File from Client')
-              : (isFromAdmin ? 'New Message from Coordinator' : 'New Message from Client');
-
-          final String notifBody = isFromAdmin
-              ? message.content
-              : '${message.senderName}: ${message.content}';
-
-          if (targetCustomerId.isNotEmpty) {
-            await _firestore.collection('customer_notifications').add({
-              'customerId': targetCustomerId,
-              'title': notifTitle,
-              'body': notifBody,
-              'type': hasAttachments ? 'file_uploaded' : 'message_sent',
-              'isRead': false,
-              'createdAt': DateTime.now().toIso8601String(),
-              'branch': location,
-              'quotationId': message.quotationId,
-            });
-          }
-        }
-      } catch (_) {}
+      // Fire-and-forget: run audit log and notification in background
+      // Do NOT await these — they must NOT block isSending from resetting
+      _postSendSideEffects(message);
     } catch (e) {
+      debugPrint("-> [COLLAB] sendMessage Exception: $e");
       throw ServerFailure("Failed to send message: ${e.toString()}");
     }
   }
+
+  /// Runs audit log + notification writes in background after message is sent.
+  /// Never throws — failures are silently logged.
+  void _postSendSideEffects(QuotationMessage message) {
+    Future(() async {
+      try {
+        debugPrint("-> [COLLAB] _postSendSideEffects: Fetching quotation doc...");
+        final quoteSnap = await _firestore.collection('quotations').doc(message.quotationId).get();
+        if (!quoteSnap.exists) {
+          debugPrint("-> [COLLAB] _postSendSideEffects: Quotation doc not found, skipping.");
+          return;
+        }
+
+        final quoteData = quoteSnap.data()!;
+        final versionNum = quoteData['version'] ?? 1;
+        final customerId = quoteData['customerId'] ?? quoteData['customer_id'] ?? '';
+        final location = quoteData['location'] ?? '';
+
+        final hasAttachments = message.attachments.isNotEmpty;
+        final action = hasAttachments ? 'Files Uploaded' : 'Messages Sent';
+        final details = hasAttachments
+            ? 'Uploaded file: ${message.attachments.map((a) => a.fileName).join(", ")}'
+            : 'Sent message: ${message.content}';
+
+        // 1. Audit Log
+        debugPrint("-> [COLLAB] _postSendSideEffects: Writing activity_log...");
+        await _firestore.collection('activity_logs').add({
+          'action': action,
+          'user': message.senderName,
+          'role': message.senderRole,
+          'timestamp': FieldValue.serverTimestamp(),
+          'version': versionNum,
+          'quotationId': message.quotationId,
+          'details': details,
+        });
+        debugPrint("-> [COLLAB] _postSendSideEffects: activity_log written.");
+
+        // 2. Notification
+        final isFromAdmin = message.senderRole == 'admin';
+        final String targetCustomerId = isFromAdmin ? customerId : 'admin';
+
+        final String notifTitle = hasAttachments
+            ? (isFromAdmin ? 'New File from Coordinator' : 'New File from Client')
+            : (isFromAdmin ? 'New Message from Coordinator' : 'New Message from Client');
+
+        final String notifBody = isFromAdmin
+            ? message.content
+            : '${message.senderName}: ${message.content}';
+
+        if (targetCustomerId.isNotEmpty) {
+          debugPrint("-> [COLLAB] _postSendSideEffects: Writing customer_notification for $targetCustomerId...");
+          await _firestore.collection('customer_notifications').add({
+            'customerId': targetCustomerId,
+            'title': notifTitle,
+            'body': notifBody,
+            'type': hasAttachments ? 'file_uploaded' : 'message_sent',
+            'isRead': false,
+            'createdAt': DateTime.now().toIso8601String(),
+            'branch': location,
+            'quotationId': message.quotationId,
+          });
+          debugPrint("-> [COLLAB] _postSendSideEffects: customer_notification written.");
+        }
+      } catch (e) {
+        debugPrint("-> [COLLAB] _postSendSideEffects Error (non-blocking): $e");
+      }
+    });
+  }
+
 
   @override
   Future<void> markMessagesAsRead(String quotationId, String role) async {

@@ -406,12 +406,13 @@ class CartDrawer extends StatelessWidget {
                             : mutedColor,
                         mutedColor: mutedColor,
                       ),
-                      _summaryRow(
-                        "Delivery Charge",
-                        AppFormatters.formatCurrency(cartController.deliveryCharge),
-                        inkColor: inkColor,
-                        mutedColor: mutedColor,
-                      ),
+                      if (cartController.deliveryCharge > 0)
+                        _summaryRow(
+                          "Delivery Charge",
+                          AppFormatters.formatCurrency(cartController.deliveryCharge),
+                          inkColor: inkColor,
+                          mutedColor: mutedColor,
+                        ),
                       _summaryRow(
                         "GST (${AppConstants.gstPercent.toStringAsFixed(0)}%)",
                         AppFormatters.formatCurrency(cartController.gstAmount),

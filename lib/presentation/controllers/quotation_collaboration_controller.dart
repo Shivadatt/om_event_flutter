@@ -13,6 +13,12 @@ class QuotationCollaborationController extends GetxController {
   final QuotationCollaborationRepository _collaborationRepo;
   
   final rxMessages = <QuotationMessage>[].obs;
+  final pendingMessages = <QuotationMessage>[].obs;
+  
+  List<QuotationMessage> get combinedMessages {
+    return [...rxMessages, ...pendingMessages];
+  }
+
   final textController = TextEditingController();
   final scrollController = ScrollController();
   
@@ -70,62 +76,105 @@ class QuotationCollaborationController extends GetxController {
     final text = textController.text.trim();
     if (text.isEmpty) return;
 
+    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+    final message = QuotationMessage(
+      id: tempId,
+      quotationId: quotationId,
+      senderId: senderId,
+      senderName: senderName,
+      senderRole: senderRole,
+      type: 'text',
+      content: text,
+      timestamp: DateTime.now(),
+      isReadByAdmin: senderRole == 'admin',
+      isReadByClient: senderRole == 'client',
+      attachments: const [],
+    );
+
+    // Instant clear of input and add to pending list
+    textController.clear();
+    pendingMessages.add(message);
+    _scrollToBottom();
+
     try {
+      debugPrint("sendTextMessage: Setting isSending=true, text='$text'");
       isSending.value = true;
-      textController.clear();
 
-      final message = QuotationMessage(
-        id: '',
-        quotationId: quotationId,
-        senderId: senderId,
-        senderName: senderName,
-        senderRole: senderRole,
-        type: 'text',
-        content: text,
-        timestamp: DateTime.now(),
-        isReadByAdmin: senderRole == 'admin',
-        isReadByClient: senderRole == 'client',
-        attachments: const [],
-      );
-
+      debugPrint("sendTextMessage: Calling sendMessage...");
       await _collaborationRepo.sendMessage(message);
+      debugPrint("sendTextMessage: sendMessage completed successfully.");
     } catch (e) {
+      debugPrint("sendTextMessage Exception: $e");
       Get.snackbar("Error", "Failed to send message: ${e.toString()}");
     } finally {
+      debugPrint("sendTextMessage: finally — removing tempId=$tempId and setting isSending=false");
+      pendingMessages.removeWhere((m) => m.id == tempId);
       isSending.value = false;
     }
   }
 
   Future<void> pickAndUploadAttachment() async {
     try {
+      debugPrint("pickAndUploadAttachment: Opening file picker...");
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
         withData: true,
       );
 
-      if (result == null || result.files.isEmpty) return;
+      if (result == null || result.files.isEmpty) {
+        debugPrint("pickAndUploadAttachment: File picker cancelled or no file selected.");
+        return;
+      }
 
       final file = result.files.first;
       final fileBytes = file.bytes;
       if (fileBytes == null) {
+        debugPrint("pickAndUploadAttachment: fileBytes is null — cannot read file data.");
         Get.snackbar("Error", "Cannot read selected file data.");
         return;
       }
 
-      isUploading.value = true;
+      final tempId = 'temp_file_${DateTime.now().millisecondsSinceEpoch}';
+      final ext = file.name.split('.').last.toLowerCase();
+      String fileType = 'document';
+      if (['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(ext)) {
+        fileType = 'image';
+      } else if (ext == 'pdf') {
+        fileType = 'pdf';
+      }
 
-      // 1. Upload file attachment
-      final attachment = await _collaborationRepo.uploadAttachment(
+      final tempMessage = QuotationMessage(
+        id: tempId,
         quotationId: quotationId,
-        messageId: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-        fileName: file.name,
-        fileBytes: fileBytes,
-        contentType: _getContentType(file.extension ?? 'bin'),
-        uploadedBy: senderName,
+        senderId: senderId,
+        senderName: senderName,
+        senderRole: senderRole,
+        type: fileType,
+        content: file.name,
+        timestamp: DateTime.now(),
+        isReadByAdmin: senderRole == 'admin',
+        isReadByClient: senderRole == 'client',
+        attachments: const [],
       );
 
-      // 3. Send final attachment message
+      pendingMessages.add(tempMessage);
+      isUploading.value = true;
+      _scrollToBottom();
+
+      // 1. Upload file attachment
+      debugPrint("pickAndUploadAttachment: Uploading attachment...");
+      final attachment = await _collaborationRepo.uploadAttachment(
+        quotationId: quotationId,
+        messageId: tempId,
+        fileName: file.name,
+        fileBytes: fileBytes,
+        contentType: _getContentType(ext),
+        uploadedBy: senderName,
+      );
+      debugPrint("pickAndUploadAttachment: Attachment uploaded. URL=${attachment.fileUrl}");
+
+      // 2. Send final attachment message
       final message = QuotationMessage(
         id: '',
         quotationId: quotationId,
@@ -140,10 +189,15 @@ class QuotationCollaborationController extends GetxController {
         attachments: [attachment],
       );
 
+      debugPrint("pickAndUploadAttachment: Sending message with attachment...");
       await _collaborationRepo.sendMessage(message);
+      debugPrint("pickAndUploadAttachment: Message with attachment sent successfully.");
     } catch (e) {
+      debugPrint("pickAndUploadAttachment Exception: $e");
       Get.snackbar("Error", "Failed to upload file: ${e.toString()}");
     } finally {
+      debugPrint("pickAndUploadAttachment: finally — setting isUploading=false");
+      pendingMessages.clear();
       isUploading.value = false;
     }
   }

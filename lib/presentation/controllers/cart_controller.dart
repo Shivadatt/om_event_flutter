@@ -179,8 +179,7 @@ class CartController extends GetxController {
   double get volumeDiscount =>
       _roundToTwoDecimals(subtotal >= 50000 ? (subtotal * 0.05) : 0.0);
 
-  double get deliveryCharge =>
-      rxCartItems.isNotEmpty ? AppConstants.deliveryCharge : 0.0;
+  double get deliveryCharge => 0.0;
 
   double get travelCharge => AppConstants.travelCharge;
 

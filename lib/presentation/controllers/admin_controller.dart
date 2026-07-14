@@ -12,6 +12,7 @@ import 'customer_controller_mixin.dart';
 import 'user_controller_mixin.dart';
 import 'review_controller_mixin.dart';
 import 'quotation_controller_mixin.dart';
+import '../../core/services/bootstrap_service.dart';
 
 class AdminController extends GetxController
     with
@@ -48,12 +49,27 @@ class AdminController extends GetxController
   final quoteCount = 0.obs;
   final pipelineRevenue = 0.0.obs;
 
+  bool _isInitialized = false;
+
+  void _initializeAdminData() {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
+    // Bind real-time stream of all quotations
+    rxQuotes.bindStream(quotationRepository.streamAllQuotations());
+
+    loadDashboardStats();
+    loadCategories();
+    loadExperiences();
+    loadCustomers();
+    loadUsers();
+    loadAdminRoles();
+    loadReviews();
+  }
+
   @override
   void onInit() {
     super.onInit();
-    
-    // Bind real-time stream of all quotations
-    rxQuotes.bindStream(quotationRepository.streamAllQuotations());
     
     // Recalculate metrics reactively when quotations list changes
     ever(rxQuotes, (quotesList) {
@@ -64,13 +80,22 @@ class AdminController extends GetxController
       );
     });
 
-    loadDashboardStats();
-    loadCategories();
-    loadExperiences();
-    loadCustomers();
-    loadUsers();
-    loadAdminRoles();
-    loadReviews();
+    // Wait until application bootstrap is ready and user is admin/staff
+    ever(BootstrapService.to.rxIsApplicationReady, (isReady) {
+      if (isReady) {
+        final role = BootstrapService.to.rxUserRole.value;
+        if (role == 'admin' || role == 'staff' || role == 'super_admin' || role == 'demo_admin') {
+          _initializeAdminData();
+        }
+      }
+    });
+
+    if (BootstrapService.to.rxIsApplicationReady.value) {
+      final role = BootstrapService.to.rxUserRole.value;
+      if (role == 'admin' || role == 'staff' || role == 'super_admin' || role == 'demo_admin') {
+        _initializeAdminData();
+      }
+    }
   }
 
   @override

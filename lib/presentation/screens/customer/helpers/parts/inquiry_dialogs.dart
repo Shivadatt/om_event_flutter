@@ -10,6 +10,45 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
     final reqsController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
+    // Autofill logged-in customer details
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      if (currentUser.displayName != null && currentUser.displayName!.isNotEmpty) {
+        nameController.text = currentUser.displayName!;
+      }
+      if (currentUser.phoneNumber != null && currentUser.phoneNumber!.isNotEmpty) {
+        phoneController.text = currentUser.phoneNumber!;
+      }
+
+      final authCtrl = Get.find<CustomerAuthController>();
+      final profile = authCtrl.rxCustomerProfile.value;
+      if (profile != null) {
+        if (profile.fullName.isNotEmpty) nameController.text = profile.fullName;
+        if (profile.phone.isNotEmpty) phoneController.text = profile.phone;
+      }
+
+      final email = currentUser.email;
+      if (email != null && email.isNotEmpty) {
+        FirebaseFirestore.instance
+            .collection(AppCollections.customers)
+            .where('email', isEqualTo: email)
+            .get()
+            .then((snap) {
+          if (snap.docs.isNotEmpty) {
+            final data = snap.docs.first.data();
+            final name = data['name'] ?? '';
+            final phone = data['phone'] ?? snap.docs.first.id;
+            if (name.isNotEmpty) {
+              nameController.text = name;
+            }
+            if (phone.isNotEmpty) {
+              phoneController.text = phone;
+            }
+          }
+        }).catchError((_) {});
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -177,6 +216,45 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
     final locController = TextEditingController();
     final notesController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+
+    // Autofill logged-in customer details
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      if (currentUser.displayName != null && currentUser.displayName!.isNotEmpty) {
+        nameController.text = currentUser.displayName!;
+      }
+      if (currentUser.phoneNumber != null && currentUser.phoneNumber!.isNotEmpty) {
+        phoneController.text = currentUser.phoneNumber!;
+      }
+
+      final authCtrl = Get.find<CustomerAuthController>();
+      final profile = authCtrl.rxCustomerProfile.value;
+      if (profile != null) {
+        if (profile.fullName.isNotEmpty) nameController.text = profile.fullName;
+        if (profile.phone.isNotEmpty) phoneController.text = profile.phone;
+      }
+
+      final email = currentUser.email;
+      if (email != null && email.isNotEmpty) {
+        FirebaseFirestore.instance
+            .collection(AppCollections.customers)
+            .where('email', isEqualTo: email)
+            .get()
+            .then((snap) {
+          if (snap.docs.isNotEmpty) {
+            final data = snap.docs.first.data();
+            final name = data['name'] ?? '';
+            final phone = data['phone'] ?? snap.docs.first.id;
+            if (name.isNotEmpty) {
+              nameController.text = name;
+            }
+            if (phone.isNotEmpty) {
+              phoneController.text = phone;
+            }
+          }
+        }).catchError((_) {});
+      }
+    }
 
     showDialog(
       context: context,

@@ -606,7 +606,7 @@ class ManageQuotesScreen extends GetView<AdminController> {
                   children: [
                     Expanded(
                       child: Obx(() {
-                        final messages = chatController.rxMessages;
+                        final messages = chatController.combinedMessages;
                         if (messages.isEmpty) {
                           return Center(
                             child: Column(
@@ -693,18 +693,10 @@ class ManageQuotesScreen extends GetView<AdminController> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Obx(() {
-                            return chatController.isSending.value
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.primaryAccent),
-                                  )
-                                : IconButton(
-                                    icon: Icon(Icons.send_rounded, color: AppColors.primaryAccent, size: 20),
-                                    onPressed: () => chatController.sendTextMessage(),
-                                  );
-                          }),
+                          IconButton(
+                            icon: Icon(Icons.send_rounded, color: AppColors.primaryAccent, size: 20),
+                            onPressed: () => chatController.sendTextMessage(),
+                          ),
                         ],
                       ),
                     ),
@@ -847,11 +839,17 @@ class ManageQuotesScreen extends GetView<AdminController> {
                 ),
                 if (isMe) const SizedBox(width: 4),
                 if (isMe)
-                  Icon(
-                    msg.isReadByClient ? Icons.done_all_rounded : Icons.done_rounded,
-                    size: 11,
-                    color: msg.isReadByClient ? AppColors.primaryAccent : subtitleColor,
-                  ),
+                  msg.id.startsWith('temp_')
+                      ? Icon(
+                          Icons.access_time_rounded,
+                          size: 11,
+                          color: subtitleColor,
+                        )
+                      : Icon(
+                          msg.isReadByClient ? Icons.done_all_rounded : Icons.done_rounded,
+                          size: 11,
+                          color: msg.isReadByClient ? AppColors.primaryAccent : subtitleColor,
+                        ),
               ],
             ),
           ),

@@ -190,7 +190,21 @@ class QuotationModel extends Quotation {
       'grand_total': grandTotal,
       'pdf_url': pdfUrl,
       'status': status.nameStr,
-      'items': items.map((e) => (e as QuotationItemModel).toJson()).toList(),
+      'items': items.map((e) {
+        if (e is QuotationItemModel) {
+          return e.toJson();
+        } else {
+          return QuotationItemModel(
+            experienceId: e.experienceId,
+            name: e.name,
+            quantity: e.quantity,
+            unitPrice: e.unitPrice,
+            color: e.color,
+            theme: e.theme,
+            notes: e.notes,
+          ).toJson();
+        }
+      }).toList(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'customerId': customerId,

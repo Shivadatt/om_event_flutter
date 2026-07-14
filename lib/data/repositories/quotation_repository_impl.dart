@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/errors/failures.dart';
 import '../../core/utils/quotation_pdf_generator.dart';
@@ -82,10 +83,11 @@ class QuotationRepositoryImpl implements QuotationRepository {
       });
 
       // Upsert customer record exactly like Python Django backend
+      final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
       await firestoreSource.upsertCustomer(
         phone: quotation.customerPhone,
         name: quotation.customerName,
-        email: '',
+        email: userEmail,
       );
 
       return model;
@@ -484,17 +486,16 @@ class QuotationRepositoryImpl implements QuotationRepository {
         .orderBy('created_at', descending: true)
         .snapshots()
         .asyncMap((snap) async {
-          final List<Quotation> quotesList = [];
-          for (var doc in snap.docs) {
+          final futures = snap.docs.map((doc) async {
             final model = QuotationModel.fromJson(doc.data(), doc.id);
             final versions = await _getVersionsForQuotation(
               doc.id,
               model.legacyVersionHistory,
               model.items,
             );
-            quotesList.add(model.copyWith(versions: versions));
-          }
-          return quotesList;
+            return model.copyWith(versions: versions);
+          }).toList();
+          return await Future.wait(futures);
         });
   }
 
@@ -508,16 +509,16 @@ class QuotationRepositoryImpl implements QuotationRepository {
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .asyncMap((snap) async {
-          final List<Quotation> quotesList = [];
-          for (var doc in snap.docs) {
+          final futures = snap.docs.map((doc) async {
             final model = QuotationModel.fromJson(doc.data(), doc.id);
             final versions = await _getVersionsForQuotation(
               doc.id,
               model.legacyVersionHistory,
               model.items,
             );
-            quotesList.add(model.copyWith(versions: versions));
-          }
+            return model.copyWith(versions: versions);
+          }).toList();
+          final List<Quotation> quotesList = await Future.wait(futures);
           quotesList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return quotesList;
         });
@@ -526,6 +527,7 @@ class QuotationRepositoryImpl implements QuotationRepository {
   @override
   Future<void> saveQuotationDraft(Quotation quotation) async {
     try {
+      print("-> [REP] saveQuotationDraft: Started for ${quotation.id}");
       final db = FirebaseFirestore.instance;
       final model = QuotationModel(
         id: quotation.id,
@@ -570,8 +572,11 @@ class QuotationRepositoryImpl implements QuotationRepository {
         lastPublishedAt: quotation.lastPublishedAt,
         internalNotes: quotation.internalNotes,
       );
+      print("-> [REP] saveQuotationDraft: Writing to 'quotation_drafts'...");
       await db.collection('quotation_drafts').doc(quotation.id).set(model.toJson());
+      print("-> [REP] saveQuotationDraft: Completed successfully.");
     } catch (e) {
+      print("-> [REP] saveQuotationDraft Exception: $e");
       throw ServerFailure("Failed to save draft: ${e.toString()}");
     }
   }
@@ -599,45 +604,22 @@ class QuotationRepositoryImpl implements QuotationRepository {
   @override
   Future<void> publishQuotationRevision(Quotation quotation) async {
     try {
+      print("-> [REP] publishQuotationRevision: Started for ${quotation.id}");
       final db = FirebaseFirestore.instance;
-      
+
+      print("-> [REP] publishQuotationRevision: Fetching quotation doc...");
       final doc = await db.collection(AppCollections.quotations).doc(quotation.id).get();
+      print("-> [REP] publishQuotationRevision: Fetched quotation doc. Exists: ${doc.exists}");
       if (!doc.exists) {
         throw ServerFailure("Quotation not found");
       }
 
       final data = doc.data()!;
       final previousVersionNum = data['version'] ?? 1;
-      final versionId = '${quotation.id}_$previousVersionNum';
-      
-      final rawItems = data['items'] as List? ?? [];
-      final itemsList = rawItems
-          .map((e) => QuotationItemModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-
-      final versionModel = QuotationVersionModel(
-        id: versionId,
-        quotationId: quotation.id,
-        versionNumber: previousVersionNum,
-        items: itemsList,
-        subtotal: (data['subtotal'] as num?)?.toDouble() ?? 0.0,
-        discount: (data['discount'] as num?)?.toDouble() ?? 0.0,
-        gstPercent: (data['gst_percent'] ?? data['gstPercent'] as num?)?.toDouble() ?? 18.0,
-        gstAmount: (data['gst_amount'] ?? data['gstAmount'] as num?)?.toDouble() ?? 0.0,
-        deliveryCharge: (data['delivery_charge'] ?? data['deliveryCharge'] ?? data['delivery'] as num?)?.toDouble() ?? 0.0,
-        travelCharge: (data['travel_charge'] ?? data['travelCharge'] as num?)?.toDouble() ?? 0.0,
-        grandTotal: (data['grand_total'] ?? data['grandTotal'] as num?)?.toDouble() ?? 0.0,
-        adminMessage: data['adminMessage'] ?? data['admin_message'],
-        publishedAt: DateTime.tryParse(data['updated_at'] ?? data['updatedAt'] ?? '') ?? DateTime.now(),
-        publishedBy: data['publishedBy'] ?? 'Admin',
-        pdfUrl: data['pdf_url'] ?? data['pdfUrl'] ?? '',
-        revisionReason: quotation.revisionReason ?? 'Admin Revision',
-      );
-
-      await db.collection('quotation_versions').doc(versionId).set(versionModel.toJson());
-
       final newVersion = previousVersionNum + 1;
       final newStatus = QuotationStatus.republished;
+
+      print("-> [REP] publishQuotationRevision: previousVersion: $previousVersionNum, newVersion: $newVersion");
 
       var updatedQuotation = quotation.resetConsent().copyWith(
         version: newVersion,
@@ -648,12 +630,18 @@ class QuotationRepositoryImpl implements QuotationRepository {
         revisionMessage: null,
       );
 
+      print("-> [REP] publishQuotationRevision: Checking PDF generation. supabaseSource is null? ${supabaseSource == null}");
       if (supabaseSource != null) {
         try {
+          print("-> [REP] publishQuotationRevision: Generating PDF bytes...");
           final pdfBytes = await QuotationPdfGenerator.generate(updatedQuotation);
+          print("-> [REP] publishQuotationRevision: Uploading PDF to Supabase...");
           final uploadedPdfUrl = await uploadQuotationPdf(updatedQuotation.publicId, pdfBytes);
+          print("-> [REP] publishQuotationRevision: PDF uploaded: $uploadedPdfUrl");
           updatedQuotation = updatedQuotation.copyWith(pdfUrl: uploadedPdfUrl);
-        } catch (_) {}
+        } catch (pdfEx, pdfStack) {
+          print("-> [REP] publishQuotationRevision: PDF upload failed, continuing. Error: $pdfEx\n$pdfStack");
+        }
       }
 
       final model = QuotationModel(
@@ -706,66 +694,157 @@ class QuotationRepositoryImpl implements QuotationRepository {
         consentTextVersion: null,
       );
 
+      // ─── CRITICAL WRITE — await this only ───────────────────────────────────
+      print("-> [REP] publishQuotationRevision: Setting main quotations document...");
       await db.collection(AppCollections.quotations).doc(quotation.id).set(model.toJson());
-      await deleteQuotationDraft(quotation.id);
+      print("-> [REP] publishQuotationRevision: ✅ Main quotations document written. Publish DONE.");
+      // ────────────────────────────────────────────────────────────────────────
 
-      // Price Change Message
-      final oldGrandTotal = (data['grand_total'] ?? data['grandTotal'] as num?)?.toDouble() ?? 0.0;
-      final newGrandTotal = model.grandTotal;
-      if (oldGrandTotal != newGrandTotal) {
+      // Fire-and-forget all secondary operations (version snapshot, draft delete,
+      // system messages, notifications, audit log). They must NOT block the return.
+      _publishSideEffects(
+        db: db,
+        quotation: quotation,
+        data: data,
+        model: model,
+        previousVersionNum: previousVersionNum,
+        newVersion: newVersion,
+        updatedQuotation: updatedQuotation,
+      );
+    } catch (e, stack) {
+      print("-> [REP] publishQuotationRevision Exception: $e\n$stack");
+      throw ServerFailure("Failed to publish revision: ${e.toString()}");
+    }
+  }
+
+  /// Runs all non-critical side-effects after publish in background.
+  /// Never throws — all failures are logged with print().
+  void _publishSideEffects({
+    required FirebaseFirestore db,
+    required Quotation quotation,
+    required Map<String, dynamic> data,
+    required QuotationModel model,
+    required int previousVersionNum,
+    required int newVersion,
+    required Quotation updatedQuotation,
+  }) {
+    Future(() async {
+      try {
+        final versionId = '${quotation.id}_$previousVersionNum';
+        print("-> [REP] _publishSideEffects: Writing version snapshot '$versionId'...");
+
+        final rawItems = data['items'] as List? ?? [];
+        final itemsList = rawItems
+            .map((e) => QuotationItemModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+
+        final versionModel = QuotationVersionModel(
+          id: versionId,
+          quotationId: quotation.id,
+          versionNumber: previousVersionNum,
+          items: itemsList,
+          subtotal: (data['subtotal'] as num?)?.toDouble() ?? 0.0,
+          discount: (data['discount'] as num?)?.toDouble() ?? 0.0,
+          gstPercent: (data['gst_percent'] ?? data['gstPercent'] as num?)?.toDouble() ?? 18.0,
+          gstAmount: (data['gst_amount'] ?? data['gstAmount'] as num?)?.toDouble() ?? 0.0,
+          deliveryCharge: (data['delivery_charge'] ?? data['deliveryCharge'] ?? data['delivery'] as num?)?.toDouble() ?? 0.0,
+          travelCharge: (data['travel_charge'] ?? data['travelCharge'] as num?)?.toDouble() ?? 0.0,
+          grandTotal: (data['grand_total'] ?? data['grandTotal'] as num?)?.toDouble() ?? 0.0,
+          adminMessage: data['adminMessage'] ?? data['admin_message'],
+          publishedAt: DateTime.tryParse(data['updated_at'] ?? data['updatedAt'] ?? '') ?? DateTime.now(),
+          publishedBy: data['publishedBy'] ?? 'Admin',
+          pdfUrl: data['pdf_url'] ?? data['pdfUrl'] ?? '',
+          revisionReason: quotation.revisionReason ?? 'Admin Revision',
+        );
+
+        await db.collection('quotation_versions').doc(versionId).set(versionModel.toJson());
+        print("-> [REP] _publishSideEffects: Version snapshot written.");
+      } catch (e) {
+        print("-> [REP] _publishSideEffects: Version snapshot failed (non-blocking): $e");
+      }
+
+      try {
+        print("-> [REP] _publishSideEffects: Deleting draft...");
+        await deleteQuotationDraft(quotation.id);
+        print("-> [REP] _publishSideEffects: Draft deleted.");
+      } catch (e) {
+        print("-> [REP] _publishSideEffects: Draft delete failed (non-blocking): $e");
+      }
+
+      try {
+        final oldGrandTotal = (data['grand_total'] ?? data['grandTotal'] as num?)?.toDouble() ?? 0.0;
+        final newGrandTotal = model.grandTotal;
+        print("-> [REP] _publishSideEffects: oldGrandTotal=$oldGrandTotal, newGrandTotal=$newGrandTotal");
+        if (oldGrandTotal != newGrandTotal) {
+          print("-> [REP] _publishSideEffects: Posting price change system message...");
+          await _postSystemMessage(
+            quotation.id,
+            'Price updated from ₹${oldGrandTotal.toStringAsFixed(0)} to ₹${newGrandTotal.toStringAsFixed(0)}.',
+            'priceChange',
+            senderId: 'admin',
+            senderName: 'Admin',
+            senderRole: 'admin',
+          );
+          print("-> [REP] _publishSideEffects: Price change message posted.");
+        }
+
+        print("-> [REP] _publishSideEffects: Posting revision system message...");
+        final revisionNote = quotation.revisionReason ?? updatedQuotation.adminMessage ?? 'No notes';
         await _postSystemMessage(
           quotation.id,
-          'Price updated from ₹${oldGrandTotal.toStringAsFixed(0)} to ₹${newGrandTotal.toStringAsFixed(0)}.',
-          'priceChange',
+          'Revised proposal version $newVersion published by Admin. Notes: $revisionNote',
+          'revision',
           senderId: 'admin',
           senderName: 'Admin',
           senderRole: 'admin',
         );
+        print("-> [REP] _publishSideEffects: Revision message posted.");
+      } catch (e) {
+        print("-> [REP] _publishSideEffects: System messages failed (non-blocking): $e");
       }
 
-      // Revision Message
-      await _postSystemMessage(
-        quotation.id,
-        'Revised proposal version $newVersion published by Admin. Notes: ${updatedQuotation.adminMessage ?? 'No notes'}',
-        'revision',
-        senderId: 'admin',
-        senderName: 'Admin',
-        senderRole: 'admin',
-      );
+      try {
+        final customerId = updatedQuotation.customerId;
+        print("-> [REP] _publishSideEffects: customerId='$customerId'");
+        if (customerId.isNotEmpty) {
+          await db.collection(AppCollections.customerNotifications).add({
+            'customerId': customerId,
+            'title': 'Proposal Updated',
+            'body': 'Admin published a revised proposal for invoice ${updatedQuotation.publicId}.',
+            'type': 'quotation_updated',
+            'isRead': false,
+            'createdAt': DateTime.now().toIso8601String(),
+            'branch': updatedQuotation.location,
+            'quotationId': quotation.id,
+          });
+          print("-> [REP] _publishSideEffects: Customer notification written.");
 
-      final customerId = updatedQuotation.customerId;
-      if (customerId.isNotEmpty) {
-        await db.collection(AppCollections.customerNotifications).add({
-          'customerId': customerId,
-          'title': 'Proposal Updated',
-          'body': 'Admin published a revised proposal for invoice ${updatedQuotation.publicId}.',
-          'type': 'quotation_updated',
-          'isRead': false,
-          'createdAt': DateTime.now().toIso8601String(),
-          'branch': updatedQuotation.location,
-          'quotationId': quotation.id,
-        });
+          await db.collection(AppCollections.customerActivity).add({
+            'customerId': customerId,
+            'status': 'Quotation',
+            'updatedAt': DateTime.now().toIso8601String(),
+            'details': 'Admin published revised proposal version $newVersion.',
+          });
+          print("-> [REP] _publishSideEffects: Customer activity written.");
 
-        await db.collection(AppCollections.customerActivity).add({
-          'customerId': customerId,
-          'status': 'Quotation',
-          'updatedAt': DateTime.now().toIso8601String(),
-          'details': 'Admin published revised proposal version $newVersion.',
-        });
-
-        await _writeAuditLog(
-          action: 'Revision Published',
-          user: 'Admin',
-          role: 'admin',
-          version: newVersion,
-          quotationId: quotation.id,
-          details: 'Admin published revised proposal version $newVersion.',
-        );
+          await _writeAuditLog(
+            action: 'Revision Published',
+            user: 'Admin',
+            role: 'admin',
+            version: newVersion,
+            quotationId: quotation.id,
+            details: 'Admin published revised proposal version $newVersion.',
+          );
+          print("-> [REP] _publishSideEffects: Audit log written.");
+        }
+      } catch (e) {
+        print("-> [REP] _publishSideEffects: Notifications/activity/audit failed (non-blocking): $e");
       }
-    } catch (e) {
-      throw ServerFailure("Failed to publish revision: ${e.toString()}");
-    }
+
+      print("-> [REP] _publishSideEffects: All background side-effects completed.");
+    });
   }
+
 
   Future<List<QuotationVersion>> _getVersionsForQuotation(String quotationId, List<String> legacyHistory, List<QuotationItem> currentItems) async {
     try {

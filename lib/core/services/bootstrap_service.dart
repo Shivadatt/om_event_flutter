@@ -4,6 +4,9 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
+import '../../core/constants/app_strings.dart';
+import '../../core/constants/app_roles.dart';
+import '../../core/constants/app_permissions.dart';
 import '../../core/services/listener_registry_service.dart';
 import '../../core/services/fcm_notification_service.dart';
 import '../../core/services/notification_handler_service.dart';
@@ -93,9 +96,53 @@ class BootstrapService extends GetxService {
   }
 
   /// Resolves user role without triggering unnecessary permission errors.
-Future<String> _getUserRole(String uid) async {
-  // STEP 1: Users collection (this is the primary source)
-  try {
+  Future<String> _getUserRole(String uid) async {
+    // Check if the current user has an admin email but no admin/users document (e.g. database was wiped/seeded)
+    // If so, bootstrap their role document in Firestore.
+    final currentUser = _auth.currentUser;
+    if (currentUser != null && currentUser.uid == uid) {
+      final emailLower = currentUser.email?.toLowerCase().trim() ?? '';
+      final isSuper = emailLower == AppStrings.businessEmail || emailLower == 'admin@omevents.in';
+      final isDemo = emailLower == AppStrings.demoAdminEmail || emailLower == 'demo@omevents.in';
+      
+      if (isSuper || isDemo) {
+        try {
+          final adminDoc = await _firestore
+              .collection(AppCollections.admin)
+              .doc(uid)
+              .get();
+          
+          if (!adminDoc.exists) {
+            final roleType = isSuper ? AppRoles.superAdmin : AppRoles.demoAdmin;
+            final permissions = isSuper
+                ? AppPermissions.superAdminPermissions
+                : AppPermissions.demoAdminPermissions;
+                
+            await _firestore.collection(AppCollections.admin).doc(uid).set({
+              AppStrings.fieldUid: uid,
+              AppStrings.fieldName: isSuper
+                  ? AppStrings.superAdminName
+                  : AppStrings.demoAdminName,
+              AppStrings.fieldEmail: currentUser.email,
+              AppStrings.fieldRole: roleType,
+              AppStrings.fieldRoleType: roleType,
+              AppStrings.fieldIsActive: true,
+              AppStrings.fieldCreatedAt: DateTime.now().toIso8601String(),
+              AppStrings.fieldUpdatedAt: DateTime.now().toIso8601String(),
+              AppStrings.fieldCreatedBy: AppStrings.createdBySystem,
+              AppStrings.fieldPermissions: permissions,
+            });
+            debugPrint("BOOTSTRAP: Self-bootstrapped admin role document for email: $emailLower");
+            return roleType;
+          }
+        } catch (e) {
+          debugPrint("BOOTSTRAP ERROR: Failed to self-bootstrap admin document: $e");
+        }
+      }
+    }
+
+    // STEP 1: Users collection (this is the primary source)
+    try {
     final userDoc = await _firestore
         .collection(AppCollections.users)
         .doc(uid)

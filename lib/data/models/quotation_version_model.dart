@@ -51,7 +51,21 @@ class QuotationVersionModel extends QuotationVersion {
     return {
       'quotationId': quotationId,
       'versionNumber': versionNumber,
-      'items': items.map((e) => (e as QuotationItemModel).toJson()).toList(),
+      'items': items.map((e) {
+        if (e is QuotationItemModel) {
+          return e.toJson();
+        } else {
+          return QuotationItemModel(
+            experienceId: e.experienceId,
+            name: e.name,
+            quantity: e.quantity,
+            unitPrice: e.unitPrice,
+            color: e.color,
+            theme: e.theme,
+            notes: e.notes,
+          ).toJson();
+        }
+      }).toList(),
       'subtotal': subtotal,
       'discount': discount,
       'gstPercent': gstPercent,

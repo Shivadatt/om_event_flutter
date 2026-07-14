@@ -10,6 +10,10 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_input.dart';
 import '../../../controllers/catalog_controller.dart';
 import '../../../controllers/quotation_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/constants/app_collections.dart';
+import '../../../controllers/customer_auth_controller.dart';
 
 part 'parts/inquiry_dialogs.dart';
 part 'parts/billing_dialogs.dart';

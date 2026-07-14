@@ -7,15 +7,23 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // Helper function to check user roles in the users collection
+    // Helper function to check user roles prioritizing the admin collection
     function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return exists(/databases/$(database)/documents/admin/$(request.auth.uid))
+        ? ('roleType' in get(/databases/$(database)/documents/admin/$(request.auth.uid)).data
+            ? get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.roleType
+            : ('role' in get(/databases/$(database)/documents/admin/$(request.auth.uid)).data
+                ? get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.role
+                : 'customer'))
+        : (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && ('role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+            ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+            : 'customer');
     }
     
     // Helper function to check if the user is an admin or staff member
     function isAdminOrStaff() {
       return isAuthenticated() && 
-        (getUserRole() == 'admin' || getUserRole() == 'staff');
+        (getUserRole() == 'admin' || getUserRole() == 'staff' || getUserRole() == 'super_admin' || getUserRole() == 'demo_admin');
     }
 
     // Categories: Read is public, write requires administrative staff
@@ -46,7 +54,9 @@ service cloud.firestore {
     // Customers: Read/write requires staff access, creation is public
     match /customers/{customerId} {
       allow create: if true;
-      allow read, update, delete: if isAdminOrStaff();
+      allow read: if isAuthenticated();
+      allow update: if isAdminOrStaff() || (isAuthenticated() && (resource.data.email == request.auth.token.email || resource.data.email == ''));
+      allow delete: if isAdminOrStaff();
     }
 
     // Quotations: Access control and client field validation rules
@@ -67,13 +77,13 @@ service cloud.firestore {
 
     // Quotation drafts: Admin and staff only
     match /quotation_drafts/{draftId} {
-      allow read, write: if isAdminOrStaff();
+      allow read, write: if isAuthenticated();
     }
 
     // Quotation versions: Read for owner client or admin/staff; write for admin/staff only
     match /quotation_versions/{versionId} {
       allow read: if isAdminOrStaff() || (isAuthenticated() && resource.data.customerId == request.auth.uid);
-      allow write: if isAdminOrStaff();
+      allow write: if isAuthenticated();
     }
 
     // Quotation Messages: Read/write for participants (admin or the matching client)
@@ -122,19 +132,27 @@ service cloud.firestore {
     }
 
     // Admin Role Mapping
-  match /admin/{adminId} {
+    match /admin/{adminId} {
+      // Owner apna admin profile read kar sakta hai
+      // Admin/Staff sab read kar sakte hain
+      allow read: if isAuthenticated() &&
+          (
+            request.auth.uid == adminId ||
+            isAdminOrStaff()
+          );
 
-  // Owner apna admin profile read kar sakta hai
-  // Admin/Staff sab read kar sakte hain
-  allow read: if isAuthenticated() &&
-      (
-        request.auth.uid == adminId ||
-        isAdminOrStaff()
-      );
+      // Allow super admin and demo admin to self-bootstrap their role document
+      allow create: if isAuthenticated() && request.auth.uid == adminId &&
+          (
+            request.auth.token.email == 'admin@omevents.in' || 
+            request.auth.token.email == 'demo@omevents.in' ||
+            request.auth.token.email == 'admin@gmail.com' || 
+            request.auth.token.email == 'omeventsanddecorators@gmail.com' ||
+            isAdminOrStaff()
+          );
 
-  // Sirf admin/staff write kar sakte hain
-  allow write: if isAdminOrStaff();
-}
+      allow update, delete: if isAdminOrStaff();
+    }
     // =========================================================================
     // CUSTOMER PORTAL COLLECTIONS
     // =========================================================================
@@ -153,7 +171,7 @@ service cloud.firestore {
 
     match /customer_leads/{leadId} {
       allow read: if isCustomerOwner() || isAdminOrStaff();
-      allow create: if isCustomerCreator();
+      allow create: if isCustomerCreator() || isAdminOrStaff();
       allow update, delete: if isAdminOrStaff();
     }
 
@@ -176,7 +194,13 @@ service cloud.firestore {
     match /customer_notifications/{notificationId} {
       allow read: if isCustomerOwner() || isAdminOrStaff();
       allow update: if isCustomerOwner() || isAdminOrStaff(); // mark as read
-      allow create, delete: if isAdminOrStaff();
+      allow create: if isAdminOrStaff() || (
+        isAuthenticated() && 
+        request.resource.data.customerId == 'admin' && 
+        exists(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)) &&
+        get(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)).data.customerId == request.auth.uid
+      );
+      allow delete: if isAdminOrStaff();
     }
 
     match /customer_reviews/{reviewId} {
@@ -197,8 +221,18 @@ service cloud.firestore {
 
     match /customer_activity/{activityId} {
       allow read: if isCustomerOwner() || isAdminOrStaff();
-      allow create: if isCustomerCreator();
+      allow create: if isAuthenticated();
       allow update, delete: if isAdminOrStaff();
+    }
+
+    // Notification tokens: users can read/write their own token
+    match /notification_tokens/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Notification Queue: Read/write for admin and staff
+    match /notification_queue/{docId} {
+      allow read, write: if isAdminOrStaff();
     }
 
     // Enterprise Automation Collections
@@ -221,5 +255,48 @@ service cloud.firestore {
       allow read: if isAdminOrStaff() || !(doc in ['notifications', 'feature_flags', 'email_templates', 'sms_templates', 'invoice', 'analytics', 'dashboard']);
       allow write: if isAdminOrStaff();
     }
+
+    // Offers / Promotions
+    match /offers/{offerId} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    // Customer Notification Preferences
+    match /customer_notification_preferences/{userId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdminOrStaff());
+    }
+
+    // Scheduled, dead letter, and log collections for notifications
+    match /scheduled_notifications/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    match /dead_letter_notifications/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    match /notification_logs/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    // Cron jobs health summary and logs
+    match /cron_health_summary/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    match /cron_health_logs/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    // Maintenance jobs and logs
+    match /maintenance_jobs/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    match /maintenance_logs/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
   }
 }
+
