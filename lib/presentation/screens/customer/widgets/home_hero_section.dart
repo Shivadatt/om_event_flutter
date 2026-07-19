@@ -61,10 +61,10 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
         width: double.infinity,
-        constraints: BoxConstraints(minHeight: heroHeight),
+        height: heroHeight,
         color: const Color(0xFF0D1915),
         child: Stack(
-          fit: StackFit.expand,
+          fit: StackFit.loose,
           children: [
             Positioned.fill(child: CinematicBackground(isHovered: _isHovered)),
             Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.45))),

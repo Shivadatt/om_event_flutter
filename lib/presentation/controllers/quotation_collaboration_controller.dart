@@ -58,11 +58,14 @@ class QuotationCollaborationController extends GetxController {
   void _scrollToBottom() {
     if (scrollController.hasClients) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+        if (scrollController.hasClients &&
+            scrollController.position.hasContentDimensions) {
+          scrollController.animateTo(
+            scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
       });
     }
   }

@@ -14,13 +14,14 @@ class FAQSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final paddingHorizontal = isDesktop ? 64.0 : 24.0;
 
-    return Container(
+    return Material(
       color: const Color(0xFF183129), // Section Background
-      padding: EdgeInsets.symmetric(
-        horizontal: paddingHorizontal,
-        vertical: isDesktop ? 100 : 70,
-      ),
-      child: Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: paddingHorizontal,
+          vertical: isDesktop ? 100 : 70,
+        ),
+        child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Obx(() {
@@ -106,8 +107,9 @@ class FAQSection extends StatelessWidget {
           }),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _faqItem(String question, String answer) {
     return Theme(
