@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/app_routes.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/widgets/custom_button.dart';
@@ -45,7 +46,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () => Get.offNamed(AppRoutes.home),
+                onPressed: () {
+                  Get.find<SharedPreferences>().setBool('onboarding_complete', true);
+                  Get.offNamed(AppRoutes.home);
+                },
                 child: Text(
                   "SKIP",
                   style: AppTheme.sansBody(
@@ -153,6 +157,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             curve: Curves.easeInOut,
                           );
                         } else {
+                          Get.find<SharedPreferences>().setBool('onboarding_complete', true);
                           Get.offNamed(AppRoutes.home);
                         }
                       },

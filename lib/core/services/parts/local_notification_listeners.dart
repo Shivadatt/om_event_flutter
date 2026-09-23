@@ -30,21 +30,22 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
 
   void _processQuotationChanges(QuerySnapshot<Map<String, dynamic>> snap) {
     for (var change in snap.docChanges) {
-      if (change.type == DocumentChangeType.modified) {
+      if (change.type == DocumentChangeType.modified || change.type == DocumentChangeType.added) {
         final data = change.doc.data();
         if (data != null) {
-          final status = data['status'] ?? 'pending';
+          final status = (data['status'] ?? '').toString();
           final customerId = data['customerId'] ?? '';
           final customerName = data['customer_name'] ?? data['customerName'] ?? 'Customer';
           final publicId = data['public_id'] ?? data['publicId'] ?? change.doc.id;
+          final quotationId = change.doc.id;
           final email = data['customer_email'] ?? data['customerEmail'] ?? 'customer@gmail.com';
           final phone = data['customer_phone'] ?? data['customerPhone'] ?? '';
 
-          if (status == 'acceptedByClient' || status == 'bookingConfirmed') {
+          if (status == 'acceptedByClient' || status == 'bookingConfirmed' || status == 'accepted') {
             // Notify Admin
             _queueAdminNotification(
               eventType: 'Quotation Approved',
-              description: 'Quotation {{public_id}} has been approved/booked by {{customer_name}}.',
+              description: 'Booking $publicId has been confirmed by $customerName.',
               params: {
                 'public_id': publicId,
                 'customer_name': customerName,
@@ -54,22 +55,98 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
             // Notify Customer
             _queueCustomerNotification(
               customerId: customerId,
-              title: 'Quotation Approved',
-              body: 'Your quotation {{public_id}} has been booked successfully.',
+              title: 'Booking Accepted',
+              body: 'Your booking $publicId has been accepted.',
+              type: 'booking_accepted',
+              bookingId: quotationId,
+              publicBookingId: publicId,
               email: email,
               phone: phone,
               whatsappTemplate: 'quotation_approved',
               whatsappParams: [publicId],
               variables: {'public_id': publicId},
             );
-          } else if (status == 'declinedByClient') {
+          } else if (status == 'declinedByClient' || status == 'rejected') {
             _queueCustomerNotification(
               customerId: customerId,
-              title: 'Quotation Rejected',
-              body: 'Your quotation {{public_id}} has been rejected.',
+              title: 'Booking Rejected',
+              body: 'Your booking request $publicId was rejected.',
+              type: 'booking_rejected',
+              bookingId: quotationId,
+              publicBookingId: publicId,
               email: email,
               phone: phone,
               whatsappTemplate: 'quotation_rejected',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
+            );
+          } else if (status == 'cancelled') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Booking Cancelled',
+              body: 'Your booking $publicId has been cancelled.',
+              type: 'booking_cancelled',
+              bookingId: quotationId,
+              publicBookingId: publicId,
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'booking_cancelled',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
+            );
+          } else if (status == 'cancellationRequested') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Cancellation Requested',
+              body: 'Your cancellation request for $publicId has been received.',
+              type: 'cancellation_requested',
+              bookingId: quotationId,
+              publicBookingId: publicId,
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'cancellation_requested',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
+            );
+          } else if (status == 'cancellationApproved') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Cancellation Approved',
+              body: 'Your cancellation request for $publicId has been approved.',
+              type: 'cancellation_approved',
+              bookingId: quotationId,
+              publicBookingId: publicId,
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'cancellation_approved',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
+            );
+          } else if (status == 'cancellationRejected') {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Cancellation Rejected',
+              body: 'Your cancellation request for $publicId has been rejected.',
+              type: 'cancellation_rejected',
+              bookingId: quotationId,
+              publicBookingId: publicId,
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'cancellation_rejected',
+              whatsappParams: [publicId],
+              variables: {'public_id': publicId},
+            );
+          } else if (change.type == DocumentChangeType.added && (status == 'pending' || status == 'draft')) {
+            _queueCustomerNotification(
+              customerId: customerId,
+              title: 'Booking Submitted',
+              body: 'Your booking request $publicId has been received.',
+              type: 'booking_submitted',
+              bookingId: quotationId,
+              publicBookingId: publicId,
+              email: email,
+              phone: phone,
+              whatsappTemplate: 'booking_submitted',
               whatsappParams: [publicId],
               variables: {'public_id': publicId},
             );
@@ -118,13 +195,19 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
     required String whatsappTemplate,
     required List<String> whatsappParams,
     Map<String, String>? variables,
+    String? type,
+    String? bookingId,
+    String? publicBookingId,
   }) {
     _firestore.collection(AppCollections.customerNotifications).add({
       'customerId': customerId,
       'title': title,
       'body': body,
-      'type': 'Alert',
+      'type': type ?? 'Alert',
+      'bookingId': bookingId ?? '',
+      'publicBookingId': publicBookingId ?? '',
       'isRead': false,
+      'read': false,
       'branch': 'Ahmedabad',
       'priority': 'normal',
       'createdAt': FieldValue.serverTimestamp(),

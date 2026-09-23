@@ -35,6 +35,12 @@ class MigrationSeed {
     'terrace-sunset-story': ['grand-entries', 'wedding'],
     'royal-fog-entry': ['birthday', 'balloon--flower-decoration'],
     'flower-shower-walk': ['grand-entries', 'flower-decoration'],
+    'candle-light-dinner-decoration': ['proposal'],
+    'room-decoration': ['room-decoration', 'birthday'],
+    'balloon-flower-decoration': ['balloon--flower-decoration', 'birthday'],
+    'office-decoration': ['corporate', 'new-shop-opening'],
+    'new-shop-opening-decoration': ['new-shop-opening', 'corporate'],
+    'flower-decoration': ['flower-decoration', 'wedding'],
   };
 
   static const List<Map<String, dynamic>> newCategories = [

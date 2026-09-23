@@ -61,11 +61,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "branch",
+          "fieldPath": "is_active",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "isActive",
+          "fieldPath": "sort_order",
           "order": "ASCENDING"
         }
       ]
@@ -84,6 +84,62 @@
         },
         {
           "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sort_order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "customer_bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "customerId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "customer_bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "customerId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "notification_templates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "channel",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "eventType",
           "order": "ASCENDING"
         }
       ]

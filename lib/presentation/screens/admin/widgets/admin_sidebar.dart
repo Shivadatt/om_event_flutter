@@ -14,7 +14,7 @@ class AdminSidebar extends StatelessWidget {
 
   /// Whether the navigation items are being rendered inside a mobile Drawer.
   final bool isMobileDrawer;
-  
+
   /// Whether the sidebar should be rendered in a collapsed, icon-only state.
   final bool isCollapsed;
 
@@ -120,7 +120,7 @@ class AdminSidebar extends StatelessWidget {
                   label: "Categories",
                   isActive: currentRoute == AppRoutes.manageCategories,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.manageCategories),
+                  onTap: () => _navigate(AppRoutes.manageCategories),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_items'] ?? false))
@@ -129,7 +129,7 @@ class AdminSidebar extends StatelessWidget {
                   label: "Experiences",
                   isActive: currentRoute == AppRoutes.manageExperiences,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.manageExperiences),
+                  onTap: () => _navigate(AppRoutes.manageExperiences),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_customers'] ?? false))
@@ -138,7 +138,7 @@ class AdminSidebar extends StatelessWidget {
                   label: "Customers",
                   isActive: currentRoute == AppRoutes.manageCustomers,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.manageCustomers),
+                  onTap: () => _navigate(AppRoutes.manageCustomers),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_leads'] ?? false))
@@ -147,7 +147,7 @@ class AdminSidebar extends StatelessWidget {
                   label: "Leads",
                   isActive: currentRoute == AppRoutes.manageLeads,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.manageLeads),
+                  onTap: () => _navigate(AppRoutes.manageLeads),
                 ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_quotes'] ?? false))
@@ -156,8 +156,22 @@ class AdminSidebar extends StatelessWidget {
                   label: "Quotations",
                   isActive: currentRoute == AppRoutes.manageQuotes,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.manageQuotes),
+                  onTap: () => _navigate(AppRoutes.manageQuotes),
                 ),
+              AdminSidebarItem(
+                icon: Icons.book_online_outlined,
+                label: "Bookings",
+                isActive: currentRoute == AppRoutes.adminBookings,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.adminBookings),
+              ),
+              AdminSidebarItem(
+                icon: Icons.calendar_month_outlined,
+                label: "Availability",
+                isActive: currentRoute == AppRoutes.adminAvailability,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.adminAvailability),
+              ),
               if (isSuper ||
                   (currentAdmin?.permissions['can_manage_users'] ?? false))
                 AdminSidebarItem(
@@ -165,7 +179,7 @@ class AdminSidebar extends StatelessWidget {
                   label: "Users",
                   isActive: currentRoute == AppRoutes.manageUsers,
                   isCollapsed: isCollapsed,
-                onTap: () => _navigate(AppRoutes.manageUsers),
+                  onTap: () => _navigate(AppRoutes.manageUsers),
                 ),
               AdminSidebarItem(
                 icon: Icons.rate_review_outlined,
@@ -191,6 +205,61 @@ class AdminSidebar extends StatelessWidget {
                   onTap: () => _navigate(AppRoutes.systemSettings),
                 ),
               ],
+
+              // ── CMS Section ──────────────────────────────────────────────
+              Divider(
+                color: isDark ? AppColors.darkLine : AppColors.lightLine,
+                height: 24,
+              ),
+              if (!isCollapsed)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    'CONTENT',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.8,
+                      color: isDark ? AppColors.darkMuted : AppColors.lightMuted,
+                    ),
+                  ),
+                ),
+              AdminSidebarItem(
+                icon: Icons.photo_library_outlined,
+                label: "Gallery",
+                isActive: currentRoute == AppRoutes.manageGallery,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageGallery),
+              ),
+              AdminSidebarItem(
+                icon: Icons.quiz_outlined,
+                label: "FAQ",
+                isActive: currentRoute == AppRoutes.manageFaq,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageFaq),
+              ),
+              AdminSidebarItem(
+                icon: Icons.policy_outlined,
+                label: "Policies",
+                isActive: currentRoute == AppRoutes.managePolicies,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.managePolicies),
+              ),
+              AdminSidebarItem(
+                icon: Icons.map_outlined,
+                label: "Service Areas",
+                isActive: currentRoute == AppRoutes.manageServiceArea,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageServiceArea),
+              ),
+              AdminSidebarItem(
+                icon: Icons.notifications_active_outlined,
+                label: "Notif. Templates",
+                isActive: currentRoute == AppRoutes.manageNotificationTemplates,
+                isCollapsed: isCollapsed,
+                onTap: () => _navigate(AppRoutes.manageNotificationTemplates),
+              ),
+
               Divider(
                 color: isDark ? AppColors.darkLine : AppColors.lightLine,
                 height: 32,

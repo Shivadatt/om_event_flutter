@@ -62,7 +62,9 @@ service cloud.firestore {
     // Quotations: Access control and client field validation rules
     match /quotations/{quotationId} {
       allow create: if true;
-      allow read: if isAdminOrStaff() || (isAuthenticated() && resource.data.customerId == request.auth.uid);
+      allow read: if isAdminOrStaff() || 
+                  (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
+                  (resource.data.publicId != null && resource.data.publicId != '');
       allow update: if isAdminOrStaff() || (
         isAuthenticated() && 
         resource.data.customerId == request.auth.uid && 
@@ -75,15 +77,18 @@ service cloud.firestore {
       allow delete: if isAdminOrStaff();
     }
 
-    // Quotation drafts: Admin and staff only
+    // Quotation drafts: Only admin/staff may write.
+    // Previously `allow write: if isAuthenticated()` — tightened to prevent customer tampering.
     match /quotation_drafts/{draftId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if isAdminOrStaff();
     }
 
-    // Quotation versions: Read for owner client or admin/staff; write for admin/staff only
+    // Quotation versions: Read for owner client or admin/staff; write for admin/staff only.
+    // Previously `allow write: if isAuthenticated()` — tightened to prevent version history forgery.
     match /quotation_versions/{versionId} {
       allow read: if isAdminOrStaff() || (isAuthenticated() && resource.data.customerId == request.auth.uid);
-      allow write: if isAuthenticated();
+      allow write: if isAdminOrStaff();
     }
 
     // Quotation Messages: Read/write for participants (admin or the matching client)
@@ -111,19 +116,17 @@ service cloud.firestore {
 
     // Users (Auth mappings): Users can read/write their own profiles; admins can manage all
     match /users/{userId} {
-
-  allow read: if isAuthenticated() &&
-      (
-        request.auth.uid == userId ||
-        isAdminOrStaff()
-      );
-
-  allow write: if isAuthenticated() &&
-      (
-        request.auth.uid == userId ||
-        getUserRole() == 'admin'
-      );
-}
+      allow read: if isAuthenticated() &&
+        (
+          request.auth.uid == userId ||
+          isAdminOrStaff()
+        );
+      allow write: if isAuthenticated() &&
+        (
+          request.auth.uid == userId ||
+          getUserRole() == 'admin'
+        );
+    }
 
     // Activity Logs: Write is allowed for authenticated sessions; reading requires admin role
     match /activity_logs/{logId} {
@@ -133,26 +136,25 @@ service cloud.firestore {
 
     // Admin Role Mapping
     match /admin/{adminId} {
-      // Owner apna admin profile read kar sakta hai
-      // Admin/Staff sab read kar sakte hain
       allow read: if isAuthenticated() &&
-          (
-            request.auth.uid == adminId ||
-            isAdminOrStaff()
-          );
+        (
+          request.auth.uid == adminId ||
+          isAdminOrStaff()
+        );
 
       // Allow super admin and demo admin to self-bootstrap their role document
       allow create: if isAuthenticated() && request.auth.uid == adminId &&
-          (
-            request.auth.token.email == 'admin@omevents.in' || 
-            request.auth.token.email == 'demo@omevents.in' ||
-            request.auth.token.email == 'admin@gmail.com' || 
-            request.auth.token.email == 'omeventsanddecorators@gmail.com' ||
-            isAdminOrStaff()
-          );
+        (
+          request.auth.token.email == 'admin@omevents.in' || 
+          request.auth.token.email == 'demo@omevents.in' ||
+          request.auth.token.email == 'admin@gmail.com' || 
+          request.auth.token.email == 'omeventsanddecorators@gmail.com' ||
+          isAdminOrStaff()
+        );
 
       allow update, delete: if isAdminOrStaff();
     }
+
     // =========================================================================
     // CUSTOMER PORTAL COLLECTIONS
     // =========================================================================
@@ -214,8 +216,10 @@ service cloud.firestore {
       allow create: if isCustomerCreator();
     }
 
+    // ✅ C-4 FIX: Public gallery items contain no PII — read is public.
+    // Previously required isCustomerOwner() which blocked unauthenticated visitors.
     match /customer_gallery/{galleryId} {
-      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow read: if true;
       allow write: if isAdminOrStaff(); // Only admins upload media
     }
 
@@ -232,6 +236,12 @@ service cloud.firestore {
 
     // Notification Queue: Read/write for admin and staff
     match /notification_queue/{docId} {
+      allow read, write: if isAdminOrStaff();
+    }
+
+    // ✅ H-5 FIX: Explicitly permit admin CMS to read/write notification templates.
+    // Previously missing — Firestore defaults to deny when no rule matches.
+    match /notification_templates/{docId} {
       allow read, write: if isAdminOrStaff();
     }
 
@@ -299,4 +309,3 @@ service cloud.firestore {
     }
   }
 }
-

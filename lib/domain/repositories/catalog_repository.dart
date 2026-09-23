@@ -38,6 +38,9 @@ abstract class CatalogRepository {
   /// Realtime stream of published customer reviews.
   Stream<List<Review>> streamPublishedReviews();
 
+  /// Realtime stream of ALL reviews (published + unpublished) for the Admin Panel.
+  Stream<List<Review>> streamAllReviews();
+
   // ── Admin CRUD Operations ────────────────────────────────────────────────
 
   Future<void> createCategory(Category category);
@@ -47,4 +50,8 @@ abstract class CatalogRepository {
   Future<void> createExperience(Experience experience);
   Future<void> updateExperience(Experience experience);
   Future<void> deleteExperience(String slug);
+
+  Future<void> createReview(Review review);
+  Future<void> updateReview(Review review);
+  Future<void> deleteReview(String id);
 }

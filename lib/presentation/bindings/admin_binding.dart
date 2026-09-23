@@ -14,6 +14,12 @@ import '../../domain/usecases/create_quotation.dart';
 import '../controllers/admin_controller.dart';
 import '../controllers/cart_controller.dart';
 import '../controllers/quotation_controller.dart';
+import '../../domain/repositories/admin_booking_repository.dart';
+import '../../data/repositories/admin_booking_repository_impl.dart';
+import '../controllers/admin_booking_controller.dart';
+import '../../domain/repositories/gallery_repository.dart';
+import '../../data/repositories/gallery_repository_impl.dart';
+import '../controllers/gallery_controller.dart';
 
 class AdminBinding extends Bindings {
   @override
@@ -76,6 +82,26 @@ class AdminBinding extends Bindings {
         customerRepository: Get.find<CustomerRepository>(),
         authRepository: Get.find<AuthRepository>(),
       ),
+    );
+
+    Get.lazyPut<AdminBookingRepository>(
+      () => AdminBookingRepositoryImpl(),
+      fenix: true,
+    );
+
+    Get.lazyPut<AdminBookingController>(
+      () => AdminBookingController(Get.find<AdminBookingRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GalleryRepository>(
+      () => GalleryRepositoryImpl(),
+      fenix: true,
+    );
+
+    Get.lazyPut<GalleryController>(
+      () => GalleryController(),
+      fenix: true,
     );
   }
 }

@@ -22,4 +22,9 @@ abstract class CustomerAuthRepository {
   // Profile Management
   Future<CustomerProfile?> getCustomerProfile(String uid);
   Future<void> saveCustomerProfile(CustomerProfile profile, {bool isEdit = false});
+  Future<CustomerProfile> ensureGuestSession({
+    required String name,
+    required String phone,
+    String? email,
+  });
 }

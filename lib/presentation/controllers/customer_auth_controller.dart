@@ -7,6 +7,8 @@ import '../../domain/entities/customer_profile.dart';
 import '../../core/config/app_routes.dart';
 import '../../core/services/bootstrap_service.dart';
 import '../../core/services/fcm_notification_service.dart';
+import 'cart_controller.dart';
+import 'quotation_controller.dart';
 
 class CustomerAuthController extends GetxController {
   final CustomerAuthRepository _authRepository;
@@ -203,6 +205,13 @@ class CustomerAuthController extends GetxController {
       if (uid != null) {
         await FcmNotificationService.to.removeToken(uid);
       }
+      // Reset customer-scoped reactive states to isolate sessions
+      if (Get.isRegistered<QuotationController>()) {
+        Get.find<QuotationController>().rxCreatedQuotation.value = null;
+      }
+      if (Get.isRegistered<CartController>()) {
+        Get.find<CartController>().clearCart();
+      }
       await _authRepository.logout();
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);
@@ -211,5 +220,20 @@ class CustomerAuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<CustomerProfile> ensureGuestSession({
+    required String name,
+    required String phone,
+    String? email,
+  }) async {
+    final profile = await _authRepository.ensureGuestSession(
+      name: name,
+      phone: phone,
+      email: email,
+    );
+    rxCustomerProfile.value = profile;
+    rxIsLoggedIn.value = true;
+    return profile;
   }
 }

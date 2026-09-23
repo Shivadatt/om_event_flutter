@@ -25,4 +25,23 @@ class AppRoutes {
   static const String customerDashboard = '/dashboard';
   static const String customerPortalAdmin = '/admin/customer-portal';
   static const String adminKpis = '/admin/kpis';
+  static const String adminBookings = '/admin/bookings';
+  static const String adminAvailability = '/admin/availability';
+
+  // Phase 2 Customer Routes
+  static const String gallery = '/gallery';
+  static const String serviceArea = '/service-area';
+  static const String bookingPolicy = '/booking-policy';
+  static const String cancellationPolicy = '/cancellation-policy';
+  static const String policies = '/policies';
+
+  // Phase 3 Customer Routes
+  static const String contact = '/contact';
+
+  // Phase 6 Admin CMS Routes
+  static const String manageGallery = '/admin/gallery';
+  static const String manageFaq = '/admin/faq';
+  static const String managePolicies = '/admin/policies-cms';
+  static const String manageServiceArea = '/admin/service-area-cms';
+  static const String manageNotificationTemplates = '/admin/notification-templates';
 }

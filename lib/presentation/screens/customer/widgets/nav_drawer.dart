@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/config/app_routes.dart';
 import '../../../../core/config/app_theme.dart';
+import 'booking_tracker_dialog.dart';
 
 /// Navigation Drawer for mobile and tablet views of the Customer portal.
 class NavDrawer extends StatelessWidget {
@@ -58,6 +59,18 @@ class NavDrawer extends StatelessWidget {
                 curve: Curves.easeInOut,
               );
             }),
+            _drawerTile("Studio Gallery", () {
+              Navigator.pop(context);
+              Get.toNamed(AppRoutes.gallery);
+            }),
+            _drawerTile("Service Area", () {
+              Navigator.pop(context);
+              Get.toNamed(AppRoutes.serviceArea);
+            }),
+            _drawerTile("Policies & Terms", () {
+              Navigator.pop(context);
+              Get.toNamed(AppRoutes.policies);
+            }),
             _drawerTile("Stories", () {
               Navigator.pop(context);
               Scrollable.ensureVisible(
@@ -66,18 +79,14 @@ class NavDrawer extends StatelessWidget {
                 curve: Curves.easeInOut,
               );
             }),
-            _drawerTile("Contact", () {
+            _drawerTile("Contact & Studios", () {
               Navigator.pop(context);
-              Scrollable.ensureVisible(
-                contactKey.currentContext!,
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-              );
+              Get.toNamed(AppRoutes.contact);
             }),
-            // _drawerTile("Developer API", () {
-            //   Navigator.pop(context);
-            //   Get.toNamed(AppRoutes.docs);
-            // }),
+            _drawerTile("Track Booking", () {
+              Navigator.pop(context);
+              showBookingTrackerDialog(context);
+            }),
             _drawerTile("Team Studio", () {
               Navigator.pop(context);
               Get.toNamed(AppRoutes.login);

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../core/config/app_routes.dart';
 import '../../core/utils/app_logger.dart';
+import '../../presentation/screens/customer/widgets/booking_tracker_dialog.dart';
 
 /// Isolate-safe background handler — must be a top-level function.
 /// Called by Firebase when the app is completely terminated.
@@ -84,10 +85,16 @@ class NotificationHandlerService extends GetxService {
   void _handleNavigation(Map<String, dynamic> data) {
     final type = data['type'] ?? '';
     final url = data['url'] ?? '';
+    final bookingId = data['publicBookingId'] ?? data['public_id'] ?? data['bookingId'] ?? '';
 
     if (!kIsWeb) {
       // On native, only navigate if Get routing is active
       if (!Get.isRegistered<dynamic>()) return;
+    }
+
+    if (bookingId.toString().isNotEmpty && Get.context != null) {
+      showBookingTrackerDialog(Get.context!, initialReferenceId: bookingId.toString());
+      return;
     }
 
     if (type == 'booking' || url.contains('/dashboard')) {

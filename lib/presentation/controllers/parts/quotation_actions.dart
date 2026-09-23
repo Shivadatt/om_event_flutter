@@ -71,10 +71,13 @@ extension QuotationActions on QuotationController {
       final grandTotal = taxable + gstAmount;
 
       final authCtrl = Get.find<CustomerAuthController>();
-      final customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
+      String customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
       if (customerId.trim().isEmpty) {
-        Get.snackbar("Authentication Required", "Customer UID not found. Cannot create quotation.");
-        throw Exception("Customer UID not found. Cannot create quotation.");
+        final profile = await authCtrl.ensureGuestSession(
+          name: name,
+          phone: cleanedPhone,
+        );
+        customerId = profile.id;
       }
 
       final partialQuotation = Quotation(
@@ -153,6 +156,182 @@ extension QuotationActions on QuotationController {
       return true;
     } catch (e) {
       Get.snackbar("Failed", "Quotation failed: ${e.toString()}");
+      return false;
+    } finally {
+      isGeneratingQuote.value = false;
+    }
+  }
+
+  /// Submits a direct service + package booking with real availability validation
+  Future<bool> submitDirectBookingRequest({
+    required Experience experience,
+    required PackageOption package,
+    required String name,
+    required String phone,
+    String? email,
+    required String dateStr,
+    required String timeStr,
+    required String venue,
+    required int guestCount,
+    required String notes,
+    String? referenceImageUrl,
+  }) async {
+    if (!AppValidators.isValidName(name)) {
+      Get.snackbar("Validation Error", "Please enter a valid name (at least 2 letters).");
+      return false;
+    }
+    if (!AppValidators.isValidPhone(phone)) {
+      Get.snackbar("Validation Error", "Please enter a valid 10-digit mobile number.");
+      return false;
+    }
+    if (venue.trim().isEmpty) {
+      Get.snackbar("Validation Error", "Please specify the venue or location.");
+      return false;
+    }
+
+    final eventDate = DateTime.tryParse(dateStr) ?? DateTime.now();
+
+    // Re-verify availability atomically before writing to database
+    final availabilityService = Get.isRegistered<BookingAvailabilityService>()
+        ? BookingAvailabilityService.to
+        : Get.put(BookingAvailabilityService());
+
+    final availability = await availabilityService.checkDateAvailability(eventDate);
+    if (!availability.isAvailable) {
+      Get.snackbar(
+        "Date Unavailable",
+        availability.reason ?? "This date is unavailable. Please select another date.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF231B1B),
+        colorText: const Color(0xFFFFAA99),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    try {
+      isGeneratingQuote.value = true;
+
+      final cleanedPhone = AppValidators.cleanPhone(phone);
+      final publicId = generateBookingReferenceId(eventDate);
+      final quotationId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Ensure valid customer session for guests
+      final authCtrl = Get.find<CustomerAuthController>();
+      String customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
+      if (customerId.trim().isEmpty) {
+        final profile = await authCtrl.ensureGuestSession(
+          name: name,
+          phone: cleanedPhone,
+          email: email,
+        );
+        customerId = profile.id;
+      }
+
+      final double unitPrice = package.effectivePrice;
+      final double gstPercent = AppConstants.enableClientFeeWaiver ? 0.0 : AppConstants.gstPercent;
+      final double gstAmount = unitPrice * (gstPercent / 100.0);
+      final double grandTotal = unitPrice + gstAmount;
+
+      final bookingItem = QuotationItem(
+        experienceId: experience.id,
+        name: "${experience.name} (${package.name})",
+        quantity: 1,
+        unitPrice: unitPrice,
+        color: "Selected Theme",
+        theme: package.name,
+        notes: "Package: ${package.tier.toUpperCase()} | Features: ${package.features.take(3).join(', ')}",
+      );
+
+      final combinedNotes = [
+        "Package: ${package.name} (${package.tier.toUpperCase()})",
+        "Expected Guests: $guestCount",
+        if (referenceImageUrl != null && referenceImageUrl.isNotEmpty) "Reference Image: $referenceImageUrl",
+        if (notes.trim().isNotEmpty) "Notes: ${notes.trim()}",
+      ].join("\n");
+
+      final partialQuotation = Quotation(
+        id: quotationId,
+        publicId: publicId,
+        customerPhone: cleanedPhone,
+        customerName: name.trim(),
+        eventDate: eventDate,
+        eventTime: timeStr,
+        location: venue.trim(),
+        notes: combinedNotes,
+        subtotal: unitPrice,
+        discount: 0.0,
+        deliveryCharge: 0.0,
+        travelCharge: 0.0,
+        gstPercent: gstPercent,
+        gstAmount: gstAmount,
+        grandTotal: grandTotal,
+        pdfUrl: '',
+        status: QuotationStatus.published,
+        items: [bookingItem],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        customerId: customerId,
+        operationalNotes: "Guest Count: $guestCount | RefImg: ${referenceImageUrl ?? 'none'}",
+      );
+
+      // Generate invoice / quotation PDF
+      String uploadedPdfUrl = '';
+      try {
+        final pdfBytes = await generateInvoicePdf(partialQuotation);
+        uploadedPdfUrl = await quotationRepository.uploadQuotationPdf(
+          publicId,
+          pdfBytes,
+        );
+      } catch (e) {
+        AppLogger.error("PDF generation or Supabase upload error", e);
+      }
+
+      final finalQuotation = Quotation(
+        id: partialQuotation.id,
+        publicId: partialQuotation.publicId,
+        customerPhone: partialQuotation.customerPhone,
+        customerName: partialQuotation.customerName,
+        eventDate: partialQuotation.eventDate,
+        eventTime: partialQuotation.eventTime,
+        location: partialQuotation.location,
+        notes: partialQuotation.notes,
+        subtotal: partialQuotation.subtotal,
+        discount: partialQuotation.discount,
+        deliveryCharge: partialQuotation.deliveryCharge,
+        travelCharge: partialQuotation.travelCharge,
+        gstPercent: partialQuotation.gstPercent,
+        gstAmount: partialQuotation.gstAmount,
+        grandTotal: partialQuotation.grandTotal,
+        pdfUrl: uploadedPdfUrl,
+        status: QuotationStatus.published,
+        items: partialQuotation.items,
+        createdAt: partialQuotation.createdAt,
+        updatedAt: partialQuotation.updatedAt,
+        customerId: customerId,
+        operationalNotes: partialQuotation.operationalNotes,
+      );
+
+      // Persist to Cloud Firestore
+      await createQuotationUsecase(finalQuotation);
+
+      rxCreatedQuotation.value = finalQuotation;
+
+      // Trigger notification
+      try {
+        if (Get.isRegistered<NotificationLocalService>()) {
+          NotificationLocalService.to.show(
+            title: "Booking Request Received",
+            body: "Your booking for ${experience.name} has been received. Reference ID: $publicId",
+          );
+        }
+      } catch (_) {}
+
+      // Navigate to booking confirmation screen
+      Get.offNamed(AppRoutes.quoteSuccess);
+      return true;
+    } catch (e) {
+      Get.snackbar("Booking Failed", "Unable to create booking: ${e.toString()}");
       return false;
     } finally {
       isGeneratingQuote.value = false;

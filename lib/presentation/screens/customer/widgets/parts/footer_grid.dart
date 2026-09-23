@@ -2,6 +2,7 @@ part of '../home_footer_section.dart';
 
 extension FooterGrid on FooterSection {
   Widget _buildDesktopFooter(
+    BuildContext context,
     BusinessDetailsEntity details,
     dynamic footer,
     List<ContactItemEntity> activePhones,
@@ -92,6 +93,26 @@ extension FooterGrid on FooterSection {
                     },
                   ),
                   _FooterLink(
+                    label: "Event Gallery",
+                    onTap: () => Get.toNamed(AppRoutes.gallery),
+                  ),
+                  _FooterLink(
+                    label: "Service Area & Coverage",
+                    onTap: () => Get.toNamed(AppRoutes.serviceArea),
+                  ),
+                  _FooterLink(
+                    label: "Booking Policy",
+                    onTap: () => Get.toNamed(AppRoutes.bookingPolicy),
+                  ),
+                  _FooterLink(
+                    label: "Cancellation Policy",
+                    onTap: () => Get.toNamed(AppRoutes.cancellationPolicy),
+                  ),
+                  _FooterLink(
+                    label: "Contact & Studios",
+                    onTap: () => Get.toNamed(AppRoutes.contact),
+                  ),
+                  _FooterLink(
                     label: "Stories",
                     onTap: () {
                       final ctx = storiesKey.currentContext;
@@ -103,6 +124,10 @@ extension FooterGrid on FooterSection {
                         );
                       }
                     },
+                  ),
+                  _FooterLink(
+                    label: "Track Booking",
+                    onTap: () => showBookingTrackerDialog(context),
                   ),
                 ],
               ),
@@ -215,16 +240,36 @@ extension FooterGrid on FooterSection {
                     );
                   }),
                   const SizedBox(height: 10),
-                  // Instagram
-                  if (details.social.instagramKadi.isNotEmpty)
+                  // Social Media Links (Only non-empty)
+                  if (details.social.instagram.isNotEmpty)
+                    _FooterLink(
+                      label: "Instagram ↗",
+                      onTap: () => _safeLaunch(details.social.instagram),
+                    ),
+                  if (details.social.instagramKadi.isNotEmpty && details.social.instagramKadi != details.social.instagram)
                     _FooterLink(
                       label: "Instagram - Kadi ↗",
-                      onTap: () => launchUrl(Uri.parse(details.social.instagramKadi)),
+                      onTap: () => _safeLaunch(details.social.instagramKadi),
                     ),
                   if (details.social.instagramThangadh.isNotEmpty)
                     _FooterLink(
                       label: "Instagram - Thangadh ↗",
-                      onTap: () => launchUrl(Uri.parse(details.social.instagramThangadh)),
+                      onTap: () => _safeLaunch(details.social.instagramThangadh),
+                    ),
+                  if (details.social.facebook.isNotEmpty)
+                    _FooterLink(
+                      label: "Facebook ↗",
+                      onTap: () => _safeLaunch(details.social.facebook),
+                    ),
+                  if (details.social.youtube.isNotEmpty)
+                    _FooterLink(
+                      label: "YouTube ↗",
+                      onTap: () => _safeLaunch(details.social.youtube),
+                    ),
+                  if (details.social.pinterest.isNotEmpty)
+                    _FooterLink(
+                      label: "Pinterest ↗",
+                      onTap: () => _safeLaunch(details.social.pinterest),
                     ),
                 ],
               ),
@@ -240,6 +285,7 @@ extension FooterGrid on FooterSection {
   }
 
   Widget _buildMobileFooter(
+    BuildContext context,
     BusinessDetailsEntity details,
     dynamic footer,
     List<ContactItemEntity> activePhones,
@@ -309,6 +355,22 @@ extension FooterGrid on FooterSection {
                     },
                   ),
                   _FooterLink(
+                    label: "Event Gallery",
+                    onTap: () => Get.toNamed(AppRoutes.gallery),
+                  ),
+                  _FooterLink(
+                    label: "Service Area & Coverage",
+                    onTap: () => Get.toNamed(AppRoutes.serviceArea),
+                  ),
+                  _FooterLink(
+                    label: "Policies & Terms",
+                    onTap: () => Get.toNamed(AppRoutes.policies),
+                  ),
+                  _FooterLink(
+                    label: "Contact & Studios",
+                    onTap: () => Get.toNamed(AppRoutes.contact),
+                  ),
+                  _FooterLink(
                     label: "Stories",
                     onTap: () {
                       final ctx = storiesKey.currentContext;
@@ -321,6 +383,10 @@ extension FooterGrid on FooterSection {
                       }
                     },
                   ),
+                  _FooterLink(
+                    label: "Track Booking",
+                    onTap: () => showBookingTrackerDialog(context),
+                  ),
                 ],
               ),
             ),
@@ -331,15 +397,35 @@ extension FooterGrid on FooterSection {
                 children: [
                   _buildSectionHeader("FOLLOW", accentColor),
                   const SizedBox(height: 14),
-                  if (details.social.instagramKadi.isNotEmpty)
+                  if (details.social.instagram.isNotEmpty)
+                    _FooterLink(
+                      label: "Instagram ↗",
+                      onTap: () => _safeLaunch(details.social.instagram),
+                    ),
+                  if (details.social.instagramKadi.isNotEmpty && details.social.instagramKadi != details.social.instagram)
                     _FooterLink(
                       label: "Instagram - Kadi ↗",
-                      onTap: () => launchUrl(Uri.parse(details.social.instagramKadi)),
+                      onTap: () => _safeLaunch(details.social.instagramKadi),
                     ),
                   if (details.social.instagramThangadh.isNotEmpty)
                     _FooterLink(
                       label: "Instagram - Thangadh ↗",
-                      onTap: () => launchUrl(Uri.parse(details.social.instagramThangadh)),
+                      onTap: () => _safeLaunch(details.social.instagramThangadh),
+                    ),
+                  if (details.social.facebook.isNotEmpty)
+                    _FooterLink(
+                      label: "Facebook ↗",
+                      onTap: () => _safeLaunch(details.social.facebook),
+                    ),
+                  if (details.social.youtube.isNotEmpty)
+                    _FooterLink(
+                      label: "YouTube ↗",
+                      onTap: () => _safeLaunch(details.social.youtube),
+                    ),
+                  if (details.social.pinterest.isNotEmpty)
+                    _FooterLink(
+                      label: "Pinterest ↗",
+                      onTap: () => _safeLaunch(details.social.pinterest),
                     ),
                 ],
               ),
@@ -498,5 +584,14 @@ extension FooterGrid on FooterSection {
         ),
       ],
     );
+  }
+
+  void _safeLaunch(String url) async {
+    final uri = Uri.tryParse(url.trim());
+    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    }
   }
 }

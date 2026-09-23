@@ -110,4 +110,63 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
       await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).set(model.toJson());
     }
   }
+
+  @override
+  Future<CustomerProfile> ensureGuestSession({
+    required String name,
+    required String phone,
+    String? email,
+  }) async {
+    String uid = '';
+    final existingUser = _auth.currentUser;
+
+    if (existingUser != null) {
+      uid = existingUser.uid;
+    } else {
+      try {
+        final cred = await _auth.signInAnonymously();
+        uid = cred.user?.uid ?? '';
+      } catch (_) {
+        // Fallback if anonymous auth is disabled on Firebase project
+        final cleanDigits = phone.replaceAll(RegExp(r'\D'), '');
+        uid = 'guest_${DateTime.now().millisecondsSinceEpoch}_$cleanDigits';
+      }
+    }
+
+    if (uid.isEmpty) {
+      uid = 'guest_${DateTime.now().millisecondsSinceEpoch}';
+    }
+
+    // Check if profile exists
+    CustomerProfile? profile;
+    try {
+      profile = await getCustomerProfile(uid);
+    } catch (_) {}
+
+    if (profile == null) {
+      final newProfile = CustomerProfileModel(
+        id: uid,
+        fullName: name.trim(),
+        phone: phone.trim(),
+        email: email?.trim() ?? '',
+        gender: '',
+        address: '',
+        city: 'Ahmedabad',
+        state: 'Gujarat',
+        pincode: '',
+        branch: '',
+        profileImageUrl: '',
+        createdAt: DateTime.now(),
+        lastLogin: DateTime.now(),
+      );
+      try {
+        await saveCustomerProfile(newProfile);
+      } catch (_) {
+        // Best-effort profile save
+      }
+      return newProfile;
+    }
+
+    return profile;
+  }
 }

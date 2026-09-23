@@ -230,6 +230,7 @@ class _VideoStoryFrame extends StatefulWidget {
 class _VideoStoryFrameState extends State<_VideoStoryFrame> {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
+  bool _isLoading = false;
   bool _isPlaying = false;
   bool _isHovered = false;
   bool _hasStarted = false;
@@ -237,28 +238,33 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
   @override
   void initState() {
     super.initState();
-    _initController();
+    // Lazy video initialization: load poster first; initialize controller on demand.
   }
 
   Future<void> _initController() async {
-    if (widget.videoAsset.startsWith('http')) {
-      _controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.videoAsset),
-      );
-    } else {
-      _controller = VideoPlayerController.asset(widget.videoAsset);
-    }
+    if (_controller != null || _isLoading) return;
+    setState(() => _isLoading = true);
+
     try {
+      if (widget.videoAsset.startsWith('http')) {
+        _controller = VideoPlayerController.networkUrl(
+          Uri.parse(widget.videoAsset),
+        );
+      } else {
+        _controller = VideoPlayerController.asset(widget.videoAsset);
+      }
       await _controller!.initialize();
       await _controller!.setLooping(true);
       await _controller!.setVolume(0.0);
       if (mounted) {
         setState(() {
           _isInitialized = true;
+          _isLoading = false;
         });
       }
     } catch (e) {
       AppLogger.error("Error initializing video", e);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -268,8 +274,12 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
     super.dispose();
   }
 
-  void _togglePlay() {
+  Future<void> _togglePlay() async {
+    if (!_isInitialized) {
+      await _initController();
+    }
     if (_controller == null || !_isInitialized) return;
+
     setState(() {
       if (_isPlaying) {
         _controller!.pause();
@@ -285,14 +295,19 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) {
+      onEnter: (_) async {
         setState(() => _isHovered = true);
+        if (!_isInitialized) {
+          await _initController();
+        }
         if (_isInitialized && !_isPlaying) {
           _controller!.play();
-          setState(() {
-            _isPlaying = true;
-            _hasStarted = true;
-          });
+          if (mounted) {
+            setState(() {
+              _isPlaying = true;
+              _hasStarted = true;
+            });
+          }
         }
       },
       onExit: (_) {
@@ -363,20 +378,29 @@ class _VideoStoryFrameState extends State<_VideoStoryFrame> {
                 ),
                 Center(
                   child: AnimatedOpacity(
-                    opacity: _isHovered ? 1.0 : 0.0,
+                    opacity: (!_hasStarted || _isHovered || _isLoading) ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 200),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.2),
-                        border: Border.all(color: Colors.white, width: 1),
+                        color: const Color(0xFF0F1B18).withValues(alpha: 0.65),
+                        border: Border.all(color: AppColors.secondaryAccent, width: 1.5),
                       ),
-                      child: Icon(
-                        _isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.secondaryAccent,
+                              ),
+                            )
+                          : Icon(
+                              _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                              color: AppColors.secondaryAccent,
+                              size: 28,
+                            ),
                     ),
                   ),
                 ),

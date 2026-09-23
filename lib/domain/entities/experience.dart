@@ -1,3 +1,5 @@
+import 'package_option.dart';
+
 class Experience {
   final String id;
   final String categoryId;
@@ -21,6 +23,7 @@ class Experience {
   final String videoUrl;
   final bool isFeatured;
   final bool isActive;
+  final List<PackageOption> packages;
 
   const Experience({
     required this.id,
@@ -45,7 +48,17 @@ class Experience {
     required this.videoUrl,
     required this.isFeatured,
     required this.isActive,
+    this.packages = const [],
   });
 
   double get effectivePrice => offerPrice != null ? offerPrice! : price;
+
+  List<PackageOption> get dynamicPackages => packages.isNotEmpty
+      ? packages
+      : PackageOption.generateDefaults(
+          serviceId: id,
+          serviceName: name,
+          basePrice: effectivePrice,
+          baseDuration: durationHours,
+        );
 }

@@ -146,21 +146,22 @@
       removeSplash();
     });
 
-    // Start the 10-second timer ONLY when the video actually starts playing
+    // Start the 4-second timer ONLY when the video actually starts playing.
+    // M-3 FIX: Reduced from 10s to 4s — Flutter is typically ready before this fires.
     var video = document.getElementById('splash-video');
     if (video) {
       video.addEventListener('playing', function() {
         setTimeout(function() {
           isMinTimePassed = true;
           removeSplash();
-        }, 10000); // 10 seconds of actual video play time
+        }, 4000); // 4 seconds of actual video play time
       });
     } else {
       // Fallback if video is missing
       setTimeout(function() {
         isMinTimePassed = true;
         removeSplash();
-      }, 10000);
+      }, 4000);
     }
   </script>
 

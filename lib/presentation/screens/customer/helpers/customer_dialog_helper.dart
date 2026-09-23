@@ -11,6 +11,7 @@ import '../../../../core/widgets/custom_input.dart';
 import '../../../controllers/catalog_controller.dart';
 import '../../../controllers/quotation_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/services/booking_availability_service.dart';
 import '../../../controllers/customer_auth_controller.dart';
 
 part 'parts/inquiry_dialogs.dart';

@@ -8,6 +8,7 @@ import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/presentation/controllers/cart_controller.dart';
 import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
 import '../auth/widgets/customer_auth_box.dart';
+import 'booking_tracker_dialog.dart';
 
 class HomeSliverAppBar extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -162,17 +163,25 @@ class HomeSliverAppBar extends StatelessWidget {
               onTap: () => scrollToSection(catalogKey),
             ),
             _NavHoverLink(
+              label: "Gallery",
+              onTap: () => Get.toNamed(AppRoutes.gallery),
+            ),
+            _NavHoverLink(
+              label: "Coverage",
+              onTap: () => Get.toNamed(AppRoutes.serviceArea),
+            ),
+            _NavHoverLink(
               label: "Stories",
               onTap: () => scrollToSection(storiesKey),
             ),
             _NavHoverLink(
               label: "Contact",
-              onTap: () => scrollToSection(contactKey),
+              onTap: () => Get.toNamed(AppRoutes.contact),
             ),
-            // _NavHoverLink(
-            //   label: "Developer API",
-            //   onTap: () => Get.toNamed(AppRoutes.docs),
-            // ),
+            _NavHoverLink(
+              label: "Track Booking",
+              onTap: () => showBookingTrackerDialog(context),
+            ),
           ],
         ],
       ),

@@ -209,12 +209,20 @@ class SocialMediaEntity {
   final String instagramThangadh;
   final String website;
   final String googleBusinessProfile;
+  final String instagram;
+  final String facebook;
+  final String youtube;
+  final String pinterest;
 
   const SocialMediaEntity({
     required this.instagramKadi,
     required this.instagramThangadh,
     required this.website,
     required this.googleBusinessProfile,
+    this.instagram = '',
+    this.facebook = '',
+    this.youtube = '',
+    this.pinterest = '',
   });
 
   factory SocialMediaEntity.defaultVal() {
@@ -223,6 +231,10 @@ class SocialMediaEntity {
       instagramThangadh: '',
       website: '',
       googleBusinessProfile: '',
+      instagram: '',
+      facebook: '',
+      youtube: '',
+      pinterest: '',
     );
   }
 }

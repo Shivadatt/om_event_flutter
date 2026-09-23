@@ -29,7 +29,8 @@ void main() async {
         projectId: 'om-event',
         storageBucket: 'om-event.firebasestorage.app',
         messagingSenderId: '443981257323',
-        appId: '1:443981257323:android:a99b824ca6d4a10b64af2e',
+        // ✅ Web app ID (not the Android ID) — required for correct Flutter Web SDK routing
+        appId: '1:443981257323:web:845ec22c4774094264af2e',
       ),
     ).then((_) {
       AppLogger.success('Firebase initialized successfully');

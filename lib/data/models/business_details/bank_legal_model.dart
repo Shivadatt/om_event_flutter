@@ -103,6 +103,10 @@ class SocialMediaModel {
       instagramThangadh: json['instagramThangadh'] ?? '',
       website: json['website'] ?? '',
       googleBusinessProfile: json['googleBusinessProfile'] ?? '',
+      instagram: json['instagram'] ?? '',
+      facebook: json['facebook'] ?? '',
+      youtube: json['youtube'] ?? '',
+      pinterest: json['pinterest'] ?? '',
     );
   }
 
@@ -112,6 +116,10 @@ class SocialMediaModel {
       'instagramThangadh': entity.instagramThangadh,
       'website': entity.website,
       'googleBusinessProfile': entity.googleBusinessProfile,
+      'instagram': entity.instagram,
+      'facebook': entity.facebook,
+      'youtube': entity.youtube,
+      'pinterest': entity.pinterest,
     };
   }
 }

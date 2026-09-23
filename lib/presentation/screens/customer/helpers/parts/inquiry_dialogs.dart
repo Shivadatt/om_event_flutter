@@ -292,10 +292,14 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                             controller: dateController,
                             readOnly: true,
                             onTap: () async {
+                              final availabilityService = Get.isRegistered<BookingAvailabilityService>()
+                                  ? BookingAvailabilityService.to
+                                  : Get.put(BookingAvailabilityService());
+                              final minDate = availabilityService.minBookingDate;
                               final DateTime? picked = await showDatePicker(
                                 context: context,
-                                initialDate: DateTime.now().add(const Duration(days: 7)),
-                                firstDate: DateTime.now().add(const Duration(days: 7)),
+                                initialDate: minDate,
+                                firstDate: minDate,
                                 lastDate: DateTime.now().add(const Duration(days: 365)),
                                 builder: (context, child) {
                                   return Theme(
@@ -313,7 +317,7 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                               );
                               if (picked != null) {
                                 dateController.text =
-                                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                                    BookingAvailabilityService.normalizeDateString(picked);
                               }
                             },
                             validator: (val) {

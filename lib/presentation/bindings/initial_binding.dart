@@ -14,6 +14,7 @@ import '../../domain/repositories/settings_repository.dart';
 import '../../domain/repositories/contact_number_repository.dart';
 import '../../data/repositories/contact_number_repository_impl.dart';
 import '../../core/services/app_config_service.dart';
+import '../../core/services/booking_availability_service.dart';
 import '../controllers/seeder_controller.dart';
 import '../controllers/auth_controller.dart';
 
@@ -42,6 +43,9 @@ import '../../domain/repositories/notification_repository.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 import '../controllers/customer_dashboard_controller.dart';
 import '../controllers/admin_customer_portal_controller.dart';
+import '../../domain/repositories/gallery_repository.dart';
+import '../../data/repositories/gallery_repository_impl.dart';
+import '../controllers/gallery_controller.dart';
 import '../../data/datasources/firestore_remote_source.dart';
 import '../../data/repositories/quotation_repository_impl.dart';
 import '../../domain/repositories/quotation_repository.dart';
@@ -230,6 +234,21 @@ class InitialBinding extends Bindings {
 
     Get.lazyPut<AdminCustomerPortalController>(
       () => AdminCustomerPortalController(),
+      fenix: true,
+    );
+
+    Get.lazyPut<BookingAvailabilityService>(
+      () => BookingAvailabilityService(),
+      fenix: true,
+    );
+
+    Get.lazyPut<GalleryRepository>(
+      () => GalleryRepositoryImpl(firestore: Get.find<FirebaseFirestore>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GalleryController>(
+      () => GalleryController(),
       fenix: true,
     );
   }

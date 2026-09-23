@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/app_routes.dart';
 import '../../../core/config/app_theme.dart';
 
@@ -15,6 +16,8 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+
+  static const _kOnboardingKey = 'onboarding_complete';
 
   @override
   void initState() {
@@ -36,9 +39,16 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Route to Onboarding after 2.5 seconds
-    Future.delayed(const Duration(milliseconds: 2600), () {
-      Get.offNamed(AppRoutes.onboarding);
+    // H-4 FIX: Skip onboarding for returning users.
+    // Route to home immediately if they've already seen it; otherwise show onboarding.
+    Future.delayed(const Duration(milliseconds: 2600), () async {
+      final prefs = Get.find<SharedPreferences>();
+      final hasSeenOnboarding = prefs.getBool(_kOnboardingKey) ?? false;
+      if (hasSeenOnboarding) {
+        Get.offNamed(AppRoutes.home);
+      } else {
+        Get.offNamed(AppRoutes.onboarding);
+      }
     });
   }
 

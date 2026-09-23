@@ -1,12 +1,15 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:om_event/core/config/app_routes.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/domain/entities/experience.dart';
+import 'package:om_event/domain/entities/package_option.dart';
 import 'package:om_event/presentation/controllers/cart_controller.dart';
 import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
 import 'package:om_event/presentation/screens/customer/auth/widgets/customer_auth_box.dart';
+import 'customer_booking_dialog.dart';
 import 'home_detail_parts.dart';
 
 void showExperienceDetailDialog(BuildContext context, Experience item) {
@@ -29,10 +32,21 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
   final _notesController = TextEditingController();
   String _selectedColor = '';
   String _selectedTheme = '';
+  late PackageOption _selectedPackage;
 
   @override
   void initState() {
     super.initState();
+    final pkgs = widget.item.dynamicPackages;
+    _selectedPackage = pkgs.isNotEmpty
+        ? pkgs.first
+        : PackageOption.generateDefaults(
+            serviceId: widget.item.id,
+            serviceName: widget.item.name,
+            basePrice: widget.item.effectivePrice,
+            baseDuration: widget.item.durationHours,
+          ).first;
+
     if (widget.item.colors.isNotEmpty) {
       _selectedColor = widget.item.colors.first;
     }
@@ -66,10 +80,6 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
     final dialogWidth = (width * 0.9).clamp(320.0, 940.0);
     final dialogMaxHeight = (height - keyboardHeight) * 0.92;
 
-    final hasDiscount = item.offerPrice != null && item.price > item.effectivePrice;
-    final discountPct = hasDiscount ? ((1 - item.effectivePrice / item.price) * 100).round() : 0;
-    final savedAmount = item.price - item.effectivePrice;
-
     Widget rightPanel = SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 36 : 20, vertical: 32),
       child: Column(
@@ -100,8 +110,113 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
             style: AppTheme.sansBody(fontSize: 13, color: inkColor.withValues(alpha: 0.7), height: 1.6),
           ),
           const SizedBox(height: 20),
-          ExperiencePriceCard(item: item, hasDiscount: hasDiscount, discountPct: discountPct, savedAmount: savedAmount),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          ExperiencePriceCard(
+            item: item,
+            hasDiscount: _selectedPackage.discountPrice != null && _selectedPackage.price > _selectedPackage.effectivePrice,
+            discountPct: _selectedPackage.discountPrice != null && _selectedPackage.price > _selectedPackage.effectivePrice
+                ? ((1 - _selectedPackage.effectivePrice / _selectedPackage.price) * 100).round()
+                : 0,
+            savedAmount: _selectedPackage.price - _selectedPackage.effectivePrice,
+          ),
+          const SizedBox(height: 20),
+
+          // Dynamic Package Selector (Basic, Premium, Luxury)
+          Text("CHOOSE PACKAGE TIER", style: AppTheme.sansBody(fontSize: 9, color: inkColor, fontWeight: FontWeight.w700, letterSpacing: 1.3)),
+          const SizedBox(height: 10),
+          Row(
+            children: item.dynamicPackages.map((pkg) {
+              final isSelected = _selectedPackage.id == pkg.id;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: InkWell(
+                    onTap: () => setState(() => _selectedPackage = pkg),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? goldColor.withValues(alpha: 0.15) : paperColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isSelected ? goldColor : lineColor,
+                          width: isSelected ? 1.8 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            pkg.tier.toUpperCase(),
+                            style: AppTheme.sansBody(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: isSelected ? goldColor : inkColor.withValues(alpha: 0.7),
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "₹${pkg.effectivePrice.toStringAsFixed(0)}",
+                            style: AppTheme.sansBody(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: isSelected ? Colors.white : inkColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+
+          // Selected package inclusions bullet list
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: paperColor.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: lineColor.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.stars_rounded, size: 14, color: goldColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      "${_selectedPackage.name} includes:",
+                      style: AppTheme.sansBody(fontSize: 11, color: goldColor, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ..._selectedPackage.features.map(
+                  (f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("• ", style: TextStyle(color: goldColor, fontSize: 12)),
+                        Expanded(
+                          child: Text(
+                            f,
+                            style: AppTheme.sansBody(fontSize: 11, color: inkColor.withValues(alpha: 0.8)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
           if (item.colors.isNotEmpty) ...[
             Text("COLOR STORY", style: AppTheme.sansBody(fontSize: 9, color: inkColor, fontWeight: FontWeight.w700, letterSpacing: 1.3)),
             const SizedBox(height: 6),
@@ -131,18 +246,8 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: goldColor, width: 1.5)),
             ),
           ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: const [
-              InclusionChip(label: "Styling & installation"),
-              InclusionChip(label: "Teardown"),
-              InclusionChip(label: "Dedicated coordinator"),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildActionButton(cartController, item, paperColor, inkColor, goldColor),
+          const SizedBox(height: 24),
+          _buildActionButtons(cartController, item, paperColor, inkColor, goldColor),
           const SizedBox(height: 12),
         ],
       ),
@@ -202,52 +307,96 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
     );
   }
 
-  Widget _buildActionButton(CartController cartController, Experience item, Color paperColor, Color inkColor, Color goldColor) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          final authController = Get.find<CustomerAuthController>();
-          if (!authController.isLoggedIn) {
-            Get.snackbar(
-              "Login Required",
-              "Please login first to add items to your selection.",
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: const Color(0xFF1B2D27).withValues(alpha: 0.85),
-              colorText: Colors.white,
-              borderColor: AppColors.secondaryAccent.withValues(alpha: 0.3),
-              borderWidth: 1.2,
-              margin: const EdgeInsets.all(16),
-            );
-            Get.dialog(
-              Dialog(
-                backgroundColor: Colors.transparent,
-                child: CustomerAuthBox(
-                  onSuccess: () {
-                    cartController.addToCart(item, color: _selectedColor, theme: _selectedTheme, notes: _notesController.text);
-                  },
-                ),
-              ),
-            );
-          } else {
-            cartController.addToCart(item, color: _selectedColor, theme: _selectedTheme, notes: _notesController.text);
+  Widget _buildActionButtons(CartController cartController, Experience item, Color paperColor, Color inkColor, Color goldColor) {
+    return Column(
+      children: [
+        // Primary CTA: Book This Package
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              showCustomerBookingDialog(
+                context,
+                experience: item,
+                selectedPackage: _selectedPackage,
+              );
+            },
+            icon: const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF0D1915)),
+            label: Text(
+              "BOOK THIS PACKAGE (${_selectedPackage.tier.toUpperCase()})",
+              style: AppTheme.sansBody(fontSize: 12, color: const Color(0xFF0D1915), fontWeight: FontWeight.w800, letterSpacing: 1.2),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: goldColor,
+              foregroundColor: const Color(0xFF0D1915),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Secondary CTA: Add to Selection
+        SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              final authController = Get.find<CustomerAuthController>();
+              if (!authController.isLoggedIn) {
+                Get.dialog(
+                  Dialog(
+                    backgroundColor: Colors.transparent,
+                    child: CustomerAuthBox(
+                      onSuccess: () {
+                        cartController.addToCart(item, color: _selectedColor, theme: _selectedTheme, notes: _notesController.text);
+                      },
+                    ),
+                  ),
+                );
+              } else {
+                cartController.addToCart(item, color: _selectedColor, theme: _selectedTheme, notes: _notesController.text);
+                Navigator.of(context).pop();
+                Get.snackbar(
+                  "Added to Canvas",
+                  "${item.name} added to your selection.",
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: paperColor,
+                  colorText: inkColor,
+                  margin: const EdgeInsets.all(16),
+                );
+              }
+            },
+            icon: Icon(Icons.add, size: 15, color: goldColor),
+            label: Text(
+              "ADD TO MY SELECTION",
+              style: AppTheme.sansBody(fontSize: 11, color: goldColor, fontWeight: FontWeight.w700, letterSpacing: 1.1),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: goldColor.withValues(alpha: 0.6), width: 1.2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: () {
             Navigator.of(context).pop();
-            Get.snackbar(
-              "Added to Canvas",
-              " added to your selection.",
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: paperColor,
-              colorText: inkColor,
-              margin: const EdgeInsets.all(16),
-              boxShadows: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2))],
-            );
-          }
-        },
-        icon: const Icon(Icons.add, size: 16, color: Colors.white),
-        label: Text("ADD TO MY SELECTION", style: AppTheme.sansBody(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-        style: ElevatedButton.styleFrom(backgroundColor: goldColor, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-      ),
+            Get.toNamed('${AppRoutes.detail}/${item.slug}');
+          },
+          icon: Icon(Icons.open_in_new_rounded, size: 14, color: goldColor.withValues(alpha: 0.8)),
+          label: Text(
+            "VIEW FULL DETAILS PAGE",
+            style: AppTheme.sansBody(
+              fontSize: 10,
+              color: goldColor.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.0,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

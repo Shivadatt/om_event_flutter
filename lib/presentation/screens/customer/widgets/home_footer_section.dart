@@ -5,8 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/services/app_config_service.dart';
+import 'package:om_event/core/config/app_routes.dart';
 import '../../../../core/services/business_details_service.dart';
 import '../../../../domain/entities/business_details_entity.dart';
+import 'booking_tracker_dialog.dart';
 
 part 'parts/footer_grid.dart';
 
@@ -305,6 +307,7 @@ class FooterSection extends StatelessWidget {
 
             if (isDesktop) {
               return _buildDesktopFooter(
+                context,
                 details,
                 footer,
                 activePhones,
@@ -313,6 +316,7 @@ class FooterSection extends StatelessWidget {
               );
             } else {
               return _buildMobileFooter(
+                context,
                 details,
                 footer,
                 activePhones,

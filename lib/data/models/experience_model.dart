@@ -1,4 +1,5 @@
 import '../../domain/entities/experience.dart';
+import '../../domain/entities/package_option.dart';
 
 class ExperienceModel extends Experience {
   const ExperienceModel({
@@ -24,6 +25,7 @@ class ExperienceModel extends Experience {
     required super.videoUrl,
     required super.isFeatured,
     required super.isActive,
+    super.packages = const [],
   });
 
   factory ExperienceModel.fromJson(
@@ -52,6 +54,29 @@ class ExperienceModel extends Experience {
       return null;
     }
 
+    final packagesRaw = json['packages'];
+    List<PackageOption> packagesList = [];
+    if (packagesRaw != null && packagesRaw is List) {
+      packagesList = packagesRaw
+          .whereType<Map<String, dynamic>>()
+          .map((pkg) => PackageOption.fromJson(pkg, documentId))
+          .toList();
+    }
+
+    final effectiveBasePrice = parseDouble(json['offer_price'], json['offerPrice']) ??
+        parseDouble(json['price']) ??
+        0.0;
+    final parsedDuration = parseDouble(json['duration_hours'], json['durationHours']) ?? 3.0;
+
+    if (packagesList.isEmpty) {
+      packagesList = PackageOption.generateDefaults(
+        serviceId: documentId,
+        serviceName: json['name'] ?? '',
+        basePrice: effectiveBasePrice,
+        baseDuration: parsedDuration,
+      );
+    }
+
     return ExperienceModel(
       id: documentId,
       categoryId: catId,
@@ -63,7 +88,7 @@ class ExperienceModel extends Experience {
       description: json['description'] ?? '',
       price: parseDouble(json['price']) ?? 0.0,
       offerPrice: parseDouble(json['offer_price'], json['offerPrice']),
-      durationHours: parseDouble(json['duration_hours'], json['durationHours']) ?? 3.0,
+      durationHours: parsedDuration,
       popularity: json['popularity'] ?? 0,
       rating: parseDouble(json['rating']) ?? 5.0,
       reviewCount: json['review_count'] ?? json['reviewCount'] ?? 0,
@@ -75,6 +100,7 @@ class ExperienceModel extends Experience {
       videoUrl: json['video_url'] ?? json['videoUrl'] ?? '',
       isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
       isActive: json['is_active'] ?? json['isActive'] ?? true,
+      packages: packagesList,
     );
   }
 
@@ -101,6 +127,7 @@ class ExperienceModel extends Experience {
       'video_url': videoUrl,
       'is_featured': isFeatured,
       'is_active': isActive,
+      'packages': packages.map((p) => p.toJson()).toList(),
     };
   }
 }

@@ -3,13 +3,16 @@ import 'package:get/get.dart';
 import '../../../core/config/app_routes.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/formatters.dart';
 import '../../controllers/admin_controller.dart';
 import '../../controllers/auth_controller.dart';
 import 'widgets/admin_metric_card.dart';
 import 'widgets/admin_action_button.dart';
 import 'widgets/inquiries_trend_chart.dart';
 import 'widgets/recent_inquiries_widget.dart';
+import '../../controllers/admin_booking_controller.dart';
+import 'widgets/dashboard_booking_alerts.dart';
+import 'widgets/dashboard_recent_bookings.dart';
+import 'widgets/dashboard_upcoming_events.dart';
 
 /// Core Dashboard landing page for administrators and managers.
 class AdminDashboardScreen extends GetView<AdminController> {
@@ -197,7 +200,11 @@ class AdminDashboardScreen extends GetView<AdminController> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+
+                // Operational Booking Alerts
+                const DashboardBookingAlerts(),
+                const SizedBox(height: 8),
 
                 // Metrics grid (Responsive Row layout)
                 LayoutBuilder(
@@ -212,36 +219,54 @@ class AdminDashboardScreen extends GetView<AdminController> {
                       mainAxisSpacing: 16,
                       childAspectRatio: width > 1200 ? 1.6 : 1.9,
                       children: [
-                        AdminMetricCard(
-                          label: "NEW INQUIRIES",
-                          value: controller.leadCount.toString(),
-                          desc: "Active studio leads",
-                          icon: Icons.contact_phone_outlined,
-                          color: AppColors.primaryAccent,
-                        ),
-                        AdminMetricCard(
-                          label: "PROPOSALS SENT",
-                          value: controller.quoteCount.toString(),
-                          desc: "Saved event contracts",
-                          icon: Icons.receipt_long_outlined,
-                          color: AppColors.secondaryAccent,
-                        ),
-                        AdminMetricCard(
-                          label: "TOTAL PIPELINE",
-                          value: AppFormatters.formatCurrency(
-                            controller.pipelineRevenue.value,
-                          ),
-                          desc: "Pending valuation",
-                          icon: Icons.payments_outlined,
-                          color: AppColors.success,
-                        ),
-                        AdminMetricCard(
-                          label: "ACTIVE CATS",
-                          value: controller.activeCategoriesCount.value.toString(),
-                          desc: "Decoration catalog",
-                          icon: Icons.category_outlined,
-                          color: AppColors.highlight,
-                        ),
+                        Obx(() {
+                          final bookingCtrl = Get.isRegistered<AdminBookingController>()
+                              ? Get.find<AdminBookingController>()
+                              : null;
+                          return AdminMetricCard(
+                            label: "TOTAL BOOKINGS",
+                            value: (bookingCtrl?.totalCount.value ?? controller.quoteCount.value).toString(),
+                            desc: "Active client contracts",
+                            icon: Icons.book_online_outlined,
+                            color: AppColors.primaryAccent,
+                          );
+                        }),
+                        Obx(() {
+                          final bookingCtrl = Get.isRegistered<AdminBookingController>()
+                              ? Get.find<AdminBookingController>()
+                              : null;
+                          return AdminMetricCard(
+                            label: "PENDING ACTION",
+                            value: (bookingCtrl?.pendingCount.value ?? 0).toString(),
+                            desc: "Awaiting coordinator review",
+                            icon: Icons.pending_actions_outlined,
+                            color: const Color(0xFFF59E0B),
+                          );
+                        }),
+                        Obx(() {
+                          final bookingCtrl = Get.isRegistered<AdminBookingController>()
+                              ? Get.find<AdminBookingController>()
+                              : null;
+                          return AdminMetricCard(
+                            label: "CONFIRMED EVENTS",
+                            value: (bookingCtrl?.confirmedCount.value ?? 0).toString(),
+                            desc: "Locked celebration dates",
+                            icon: Icons.verified_outlined,
+                            color: AppColors.success,
+                          );
+                        }),
+                        Obx(() {
+                          final bookingCtrl = Get.isRegistered<AdminBookingController>()
+                              ? Get.find<AdminBookingController>()
+                              : null;
+                          return AdminMetricCard(
+                            label: "UPCOMING EVENTS",
+                            value: (bookingCtrl?.upcomingEventsCount.value ?? 0).toString(),
+                            desc: "Next 30 days celebrations",
+                            icon: Icons.event_available_outlined,
+                            color: AppColors.secondaryAccent,
+                          );
+                        }),
                       ],
                     );
                   },
@@ -326,6 +351,13 @@ class AdminDashboardScreen extends GetView<AdminController> {
                     }
                   },
                 ),
+                const SizedBox(height: 32),
+
+                // Upcoming Celebrations List
+                const DashboardUpcomingEvents(),
+
+                // Recent Bookings List
+                const DashboardRecentBookings(),
               ],
             ),
           ),
