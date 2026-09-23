@@ -199,11 +199,14 @@ extension FooterGrid on FooterSection {
                               color: accentColor.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              "${cn.label}: $displayVal",
-                              style: AppTheme.sansBody(
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.65),
+                            Flexible(
+                              child: Text(
+                                "${cn.label}: $displayVal",
+                                style: AppTheme.sansBody(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.65),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -227,11 +230,14 @@ extension FooterGrid on FooterSection {
                               color: accentColor.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              em.value,
-                              style: AppTheme.sansBody(
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.65),
+                            Flexible(
+                              child: Text(
+                                em.value,
+                                style: AppTheme.sansBody(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.65),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -475,11 +481,14 @@ extension FooterGrid on FooterSection {
                     color: accentColor.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    "${cn.label}: ${cn.value}",
-                    style: AppTheme.sansBody(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.65),
+                  Expanded(
+                    child: Text(
+                      "${cn.label}: ${cn.value}",
+                      style: AppTheme.sansBody(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.65),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -501,11 +510,14 @@ extension FooterGrid on FooterSection {
                     color: accentColor.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    em.value,
-                    style: AppTheme.sansBody(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.65),
+                  Expanded(
+                    child: Text(
+                      em.value,
+                      style: AppTheme.sansBody(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.65),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

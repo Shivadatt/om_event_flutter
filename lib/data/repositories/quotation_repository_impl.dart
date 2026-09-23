@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/errors/failures.dart';
+import '../../core/services/booking_availability_service.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/repositories/quotation_repository.dart';
@@ -42,6 +44,13 @@ class QuotationRepositoryImpl implements QuotationRepository {
   Future<Quotation> createQuotation(Quotation quotation) async {
     try {
       AppLogger.info("Starting quotation creation for client UID: ${quotation.customerId}", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "createQuotation");
+      
+      // Strict Backend/Repository Authentication Guard
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || currentUser.isAnonymous || quotation.customerId.startsWith('guest_')) {
+        throw const ServerFailure("Authentication required. Please login with a valid customer account to submit a booking.");
+      }
+
       if (quotation.customerId.trim().isEmpty) {
         throw const ServerFailure("Customer UID not found. Cannot create quotation.");
       }
@@ -56,6 +65,18 @@ class QuotationRepositoryImpl implements QuotationRepository {
       }
       if (quotation.grandTotal <= 0) {
         throw const ServerFailure("Quotation grand total must be positive.");
+      }
+
+      // Strict Backend Date Availability Guard (1 Event / Day Maximum)
+      final availabilityService = Get.isRegistered<BookingAvailabilityService>()
+          ? BookingAvailabilityService.to
+          : Get.put(BookingAvailabilityService());
+      final availResult = await availabilityService.checkDateAvailability(
+        quotation.eventDate,
+        excludeBookingId: quotation.id.isNotEmpty ? quotation.id : null,
+      );
+      if (!availResult.isAvailable) {
+        throw ServerFailure(availResult.reason ?? "This event date is fully booked. Only 1 grand event per day is hosted.");
       }
 
       final model = QuotationModel(
@@ -90,21 +111,30 @@ class QuotationRepositoryImpl implements QuotationRepository {
         updatedAt: quotation.updatedAt,
       );
 
+      AppLogger.info("Submitting quotation document to Firestore...", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "createQuotation");
       await firestoreSource.submitQuotation(model.toJson(), quotation.id);
 
-      SupabaseEdgeFunctions.to.invoke('quotation-event', {
-        'eventType': 'created',
-        'quoteId': quotation.id.isEmpty ? model.id : quotation.id,
-      });
+      try {
+        SupabaseEdgeFunctions.to.invoke('quotation-event', {
+          'eventType': 'created',
+          'quoteId': quotation.id.isEmpty ? model.id : quotation.id,
+        });
+      } catch (e) {
+        AppLogger.warning("Supabase edge function quotation-event skipped: $e", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "createQuotation");
+      }
 
-      final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-      await firestoreSource.upsertCustomer(
-        phone: quotation.customerPhone,
-        name: quotation.customerName,
-        email: userEmail,
-      );
+      try {
+        final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+        await firestoreSource.upsertCustomer(
+          phone: quotation.customerPhone,
+          name: quotation.customerName,
+          email: userEmail,
+        );
+      } catch (e) {
+        AppLogger.warning("Customer CRM sync bypassed: $e", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "createQuotation");
+      }
 
-      AppLogger.success("Quotation created successfully", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "createQuotation");
+      AppLogger.success("Quotation created successfully: ${quotation.publicId}", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "createQuotation");
       return model;
     } catch (e, stack) {
       AppLogger.errorDetailed("Quotation creation failed", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "createQuotation", error: e, stack: stack);

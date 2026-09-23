@@ -22,18 +22,27 @@ class CustomerAuthController extends GetxController {
 
   StreamSubscription<User?>? _authSubscription;
 
-  bool get isLoggedIn => rxIsLoggedIn.value || FirebaseAuth.instance.currentUser != null;
+  bool get isAuthenticatedCustomer {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) return false;
+    final profile = rxCustomerProfile.value;
+    if (profile != null && profile.id.startsWith('guest_')) return false;
+    return true;
+  }
+
+  bool get isLoggedIn => isAuthenticatedCustomer;
 
   @override
   void onInit() {
     super.onInit();
     
     // Set initial value synchronously
-    rxIsLoggedIn.value = FirebaseAuth.instance.currentUser != null;
+    final user = FirebaseAuth.instance.currentUser;
+    rxIsLoggedIn.value = user != null && !user.isAnonymous;
 
     // Listen to real-time auth state changes
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
-      final loggedIn = user != null;
+      final loggedIn = user != null && !user.isAnonymous;
       if (rxIsLoggedIn.value != loggedIn) {
         rxIsLoggedIn.value = loggedIn;
       }
@@ -64,6 +73,12 @@ class CustomerAuthController extends GetxController {
   }
 
   Future<void> checkAuthStatus() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) {
+      rxIsLoggedIn.value = false;
+      rxCustomerProfile.value = null;
+      return;
+    }
     final loggedIn = await _authRepository.isLoggedIn();
     rxIsLoggedIn.value = loggedIn;
     if (loggedIn) {
@@ -78,12 +93,14 @@ class CustomerAuthController extends GetxController {
     }
   }
 
-  Future<bool> loginWithEmail(String email, String password) async {
+  Future<bool> loginWithEmail(String email, String password, {bool navigateHome = true}) async {
     try {
       isLoading.value = true;
       await _authRepository.loginWithEmail(email, password);
       await checkAuthStatus();
-      Get.offAllNamed(AppRoutes.home);
+      if (navigateHome) {
+        Get.offAllNamed(AppRoutes.home);
+      }
       return true;
     } catch (e) {
       Get.snackbar("Login Failed", e.toString());
@@ -93,12 +110,14 @@ class CustomerAuthController extends GetxController {
     }
   }
 
-  Future<bool> registerWithEmail(String fullName, String email, String password) async {
+  Future<bool> registerWithEmail(String fullName, String email, String password, {bool navigateHome = true}) async {
     try {
       isLoading.value = true;
       await _authRepository.registerWithEmail(email, password, fullName);
       await checkAuthStatus();
-      Get.offAllNamed(AppRoutes.home);
+      if (navigateHome) {
+        Get.offAllNamed(AppRoutes.home);
+      }
       return true;
     } catch (e) {
       Get.snackbar("Registration Failed", e.toString());
@@ -128,7 +147,7 @@ class CustomerAuthController extends GetxController {
     }
   }
 
-  Future<bool> verifyOtp(String smsCode) async {
+  Future<bool> verifyOtp(String smsCode, {bool navigateHome = true}) async {
     try {
       isLoading.value = true;
       await _authRepository.signInWithSmsCode(verificationId.value, smsCode);
@@ -139,7 +158,9 @@ class CustomerAuthController extends GetxController {
          // Create stub profile here or redirect to profile completion screen
       }
       
-      Get.offAllNamed(AppRoutes.home);
+      if (navigateHome) {
+        Get.offAllNamed(AppRoutes.home);
+      }
       return true;
     } catch (e) {
       Get.snackbar("Invalid OTP", e.toString());
@@ -149,12 +170,14 @@ class CustomerAuthController extends GetxController {
     }
   }
 
-  Future<void> loginWithGoogle() async {
+  Future<void> loginWithGoogle({bool navigateHome = true}) async {
     try {
       isLoading.value = true;
       await _authRepository.signInWithGoogle();
       await checkAuthStatus();
-      Get.offAllNamed(AppRoutes.home);
+      if (navigateHome) {
+        Get.offAllNamed(AppRoutes.home);
+      }
     } catch (e) {
       final errStr = e.toString().toLowerCase();
       if (errStr.contains('popup-closed-by-user') || 
@@ -169,7 +192,9 @@ class CustomerAuthController extends GetxController {
       try {
         await _authRepository.loginWithEmail("google.demo@omevents.com", "GoogleDemo123!");
         await checkAuthStatus();
-        Get.offAllNamed(AppRoutes.home);
+        if (navigateHome) {
+          Get.offAllNamed(AppRoutes.home);
+        }
         Get.snackbar(
           "Google Sign-In Fallback", 
           "Firebase Google Auth not enabled. Connected using Google Demo account.",
@@ -181,7 +206,9 @@ class CustomerAuthController extends GetxController {
         try {
           await _authRepository.registerWithEmail("google.demo@omevents.com", "GoogleDemo123!", "Google Demo User");
           await checkAuthStatus();
-          Get.offAllNamed(AppRoutes.home);
+          if (navigateHome) {
+            Get.offAllNamed(AppRoutes.home);
+          }
           Get.snackbar(
             "Google Sign-In Fallback", 
             "Firebase Google Auth not enabled. Connected using Google Demo account.",
@@ -233,7 +260,7 @@ class CustomerAuthController extends GetxController {
       email: email,
     );
     rxCustomerProfile.value = profile;
-    rxIsLoggedIn.value = true;
+    rxIsLoggedIn.value = false;
     return profile;
   }
 }

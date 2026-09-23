@@ -188,6 +188,15 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
     BuildContext context,
     QuotationController quoteController,
   ) {
+    final authCtrl = Get.find<CustomerAuthController>();
+    if (!authCtrl.isAuthenticatedCustomer) {
+      showCustomerLoginRequiredDialog(
+        context,
+        subtitle: "Please login to create and customize your quotation.",
+      );
+      return;
+    }
+
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     final dateController = TextEditingController();
@@ -449,6 +458,17 @@ extension CustomerInquiryDialogs on CustomerDialogHelper {
                           text: "Generate quotation",
                           isLoading: quoteController.isGeneratingQuote.value,
                           onPressed: () async {
+                            final authCtrl = Get.find<CustomerAuthController>();
+                            if (!authCtrl.isAuthenticatedCustomer) {
+                              Get.snackbar(
+                                "Login Required",
+                                "Please login to create a quotation.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: const Color(0xFF231B1B),
+                                colorText: const Color(0xFFFFAA99),
+                              );
+                              return;
+                            }
                             if (formKey.currentState?.validate() == true) {
                               final success = await quoteController.submitQuotationRequest(
                                 name: nameController.text,

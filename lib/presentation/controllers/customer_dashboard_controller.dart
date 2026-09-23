@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
@@ -53,8 +54,10 @@ class CustomerDashboardController extends GetxController {
     ever(_authController.rxCustomerProfile, (profile) {
       rxProfile.value = profile;
       if (profile != null) {
-        if (profile.id.isEmpty) {
-          Get.snackbar("Authentication Error", "User UID not found. Cannot load customer data.");
+        final isGuest = profile.id.isEmpty ||
+            profile.id.startsWith('guest_') ||
+            FirebaseAuth.instance.currentUser == null;
+        if (isGuest) {
           _clearAll();
           return;
         }
@@ -65,14 +68,17 @@ class CustomerDashboardController extends GetxController {
       }
     });
 
-    if (_authController.rxCustomerProfile.value != null) {
-      rxProfile.value = _authController.rxCustomerProfile.value;
-      if (rxProfile.value!.id.isEmpty) {
-        Get.snackbar("Authentication Error", "User UID not found. Cannot load customer data.");
+    final currentProfile = _authController.rxCustomerProfile.value;
+    if (currentProfile != null) {
+      rxProfile.value = currentProfile;
+      final isGuest = currentProfile.id.isEmpty ||
+          currentProfile.id.startsWith('guest_') ||
+          FirebaseAuth.instance.currentUser == null;
+      if (isGuest) {
         _clearAll();
       } else {
-        syncMasterData(rxProfile.value!);
-        _bindStreams(rxProfile.value!.id, rxProfile.value!.branch, rxProfile.value!.phone);
+        syncMasterData(currentProfile);
+        _bindStreams(currentProfile.id, currentProfile.branch, currentProfile.phone);
       }
     }
   }

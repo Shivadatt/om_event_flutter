@@ -747,7 +747,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 return null;
               },
               decoration: InputDecoration(
-                hintText: "Tell us about your venue, guest count, theme preferences...",
+                hintText: "Tell us about your venue, theme preferences, special requests...",
                 hintStyle: AppTheme.sansBody(fontSize: 12, color: Colors.white38),
                 filled: true,
                 fillColor: const Color(0xFF0F1E19),

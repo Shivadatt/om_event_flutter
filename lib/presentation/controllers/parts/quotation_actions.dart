@@ -10,6 +10,22 @@ extension QuotationActions on QuotationController {
     required String location,
     required String notes,
   }) async {
+    // 1. AUTH CHECK FIRST
+    final authCtrl = Get.find<CustomerAuthController>();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.isAnonymous || !authCtrl.isAuthenticatedCustomer) {
+      Get.snackbar(
+        "Login Required",
+        "Please login to your customer account to submit a quotation request.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF231B1B),
+        colorText: const Color(0xFFFFAA99),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    // 2. VALIDATION
     if (!AppValidators.isValidName(name)) {
       Get.snackbar(
         "Validation Error",
@@ -41,6 +57,24 @@ extension QuotationActions on QuotationController {
 
       final cleanedPhone = AppValidators.cleanPhone(phone);
       final eventDate = DateTime.tryParse(dateStr) ?? DateTime.now();
+
+      // Check date availability
+      final availabilityService = Get.isRegistered<BookingAvailabilityService>()
+          ? BookingAvailabilityService.to
+          : Get.put(BookingAvailabilityService());
+      final availability = await availabilityService.checkDateAvailability(eventDate);
+      if (!availability.isAvailable) {
+        Get.snackbar(
+          "Date Unavailable",
+          availability.reason ?? "This date is unavailable. Please select another date.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF231B1B),
+          colorText: const Color(0xFFFFAA99),
+          margin: const EdgeInsets.all(16),
+        );
+        return false;
+      }
+
       final publicId = _generatePublicId().toUpperCase();
       final quotationId = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -70,15 +104,7 @@ extension QuotationActions on QuotationController {
       final gstAmount = taxable * (gstPercent / 100.0);
       final grandTotal = taxable + gstAmount;
 
-      final authCtrl = Get.find<CustomerAuthController>();
-      String customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
-      if (customerId.trim().isEmpty) {
-        final profile = await authCtrl.ensureGuestSession(
-          name: name,
-          phone: cleanedPhone,
-        );
-        customerId = profile.id;
-      }
+      final String customerId = currentUser.uid;
 
       final partialQuotation = Quotation(
         id: quotationId,
@@ -172,10 +198,25 @@ extension QuotationActions on QuotationController {
     required String dateStr,
     required String timeStr,
     required String venue,
-    required int guestCount,
     required String notes,
     String? referenceImageUrl,
   }) async {
+    // 1. AUTH CHECK FIRST
+    final authCtrl = Get.find<CustomerAuthController>();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.isAnonymous || !authCtrl.isAuthenticatedCustomer) {
+      Get.snackbar(
+        "Login Required",
+        "Please login to your customer account to submit a booking.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF231B1B),
+        colorText: const Color(0xFFFFAA99),
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    }
+
+    // 2. VALIDATION
     if (!AppValidators.isValidName(name)) {
       Get.snackbar("Validation Error", "Please enter a valid name (at least 2 letters).");
       return false;
@@ -189,6 +230,7 @@ extension QuotationActions on QuotationController {
       return false;
     }
 
+    // 3. AVAILABILITY CHECK
     final eventDate = DateTime.tryParse(dateStr) ?? DateTime.now();
 
     // Re-verify availability atomically before writing to database
@@ -209,24 +251,14 @@ extension QuotationActions on QuotationController {
       return false;
     }
 
+    // 4. BOOKING TRANSACTION
     try {
       isGeneratingQuote.value = true;
 
       final cleanedPhone = AppValidators.cleanPhone(phone);
       final publicId = generateBookingReferenceId(eventDate);
       final quotationId = DateTime.now().millisecondsSinceEpoch.toString();
-
-      // Ensure valid customer session for guests
-      final authCtrl = Get.find<CustomerAuthController>();
-      String customerId = authCtrl.rxCustomerProfile.value?.id ?? '';
-      if (customerId.trim().isEmpty) {
-        final profile = await authCtrl.ensureGuestSession(
-          name: name,
-          phone: cleanedPhone,
-          email: email,
-        );
-        customerId = profile.id;
-      }
+      final String customerId = currentUser.uid;
 
       final double unitPrice = package.effectivePrice;
       final double gstPercent = AppConstants.enableClientFeeWaiver ? 0.0 : AppConstants.gstPercent;
@@ -245,7 +277,6 @@ extension QuotationActions on QuotationController {
 
       final combinedNotes = [
         "Package: ${package.name} (${package.tier.toUpperCase()})",
-        "Expected Guests: $guestCount",
         if (referenceImageUrl != null && referenceImageUrl.isNotEmpty) "Reference Image: $referenceImageUrl",
         if (notes.trim().isNotEmpty) "Notes: ${notes.trim()}",
       ].join("\n");
@@ -272,7 +303,9 @@ extension QuotationActions on QuotationController {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         customerId: customerId,
-        operationalNotes: "Guest Count: $guestCount | RefImg: ${referenceImageUrl ?? 'none'}",
+        operationalNotes: referenceImageUrl != null && referenceImageUrl.isNotEmpty
+            ? "RefImg: $referenceImageUrl"
+            : null,
       );
 
       // Generate invoice / quotation PDF

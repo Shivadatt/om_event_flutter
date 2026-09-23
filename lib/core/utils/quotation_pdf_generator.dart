@@ -278,7 +278,7 @@ class QuotationPdfGenerator {
               pw.SizedBox(height: 4),
               pw.Center(
                 child: pw.Text(
-                  "${AppConstants.businessEmail}   •   ${BusinessDetailsService.to.rxDetails.value.contacts.phones.where((c) => c.isActive).map((c) => c.value).join(' / ')}",
+                  "${AppConstants.businessEmail}   |   ${BusinessDetailsService.to.rxDetails.value.contacts.phones.where((c) => c.isActive).map((c) => c.value).join(' / ')}",
                   style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey),
                 ),
               ),

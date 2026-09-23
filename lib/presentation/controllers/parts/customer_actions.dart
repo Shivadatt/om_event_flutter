@@ -249,7 +249,11 @@ extension CustomerActionsExtension on CustomerDashboardController {
 
   // Notifications
   Future<void> markNotificationRead(String id) async {
-    await _portalRepo.updateNotificationStatus(id, isRead: true);
+    try {
+      await _portalRepo.updateNotificationStatus(id, isRead: true);
+    } catch (e) {
+      AppLogger.warning("Unable to update notification status for $id: $e", layer: LogLayer.controller, className: "CustomerActionsExtension", methodName: "markNotificationRead");
+    }
   }
 
   Future<void> loadNotificationPreferences(String userId) async {

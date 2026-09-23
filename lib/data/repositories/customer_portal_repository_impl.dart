@@ -7,6 +7,7 @@ import '../../domain/entities/customer_wishlist.dart';
 import '../../domain/entities/offer.dart';
 import '../../domain/entities/customer_activity.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
+import '../../core/utils/app_logger.dart';
 import '../models/customer_lead_model.dart';
 import '../models/customer_portal_models.dart';
 
@@ -17,13 +18,18 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
 
   @override
   Stream<List<CustomerLead>> streamCustomerLeads(String customerId) {
+    if (customerId.isEmpty) return Stream.value([]);
     return _firestore
         .collection(AppCollections.customerLeads)
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => CustomerLeadModel.fromJson(doc.data(), doc.id))
-            .toList());
+            .toList())
+        .handleError((e) {
+          AppLogger.warning("Failed to stream customer leads for $customerId: $e");
+          return <CustomerLead>[];
+        });
   }
 
   @override
@@ -62,43 +68,62 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
 
   @override
   Stream<List<CustomerNotification>> streamCustomerNotifications(String customerId) {
+    if (customerId.isEmpty) return Stream.value([]);
     return _firestore
         .collection(AppCollections.customerNotifications)
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => CustomerNotificationModel.fromJson(doc.data(), doc.id))
-            .toList());
+            .toList())
+        .handleError((e) {
+          AppLogger.warning("Failed to stream notifications for $customerId: $e");
+          return <CustomerNotification>[];
+        });
   }
 
   @override
   Future<void> updateNotificationStatus(String id, {required bool isRead}) async {
-    await _firestore
-        .collection(AppCollections.customerNotifications)
-        .doc(id)
-        .update({'isRead': isRead});
+    try {
+      await _firestore
+          .collection(AppCollections.customerNotifications)
+          .doc(id)
+          .update({'isRead': isRead});
+    } catch (e) {
+      AppLogger.warning("Failed to update notification $id: $e");
+    }
   }
 
   @override
   Stream<List<CustomerDocument>> streamCustomerDocuments(String customerId) {
+    if (customerId.isEmpty) return Stream.value([]);
     return _firestore
         .collection(AppCollections.customerDocuments)
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => CustomerDocumentModel.fromJson(doc.data(), doc.id))
-            .toList());
+            .toList())
+        .handleError((e) {
+          AppLogger.warning("Failed to stream customer documents for $customerId: $e");
+          return <CustomerDocument>[];
+        });
   }
 
   @override
   Stream<List<CustomerWishlist>> streamCustomerWishlist(String customerId) {
+    if (customerId.isEmpty) return Stream.value([]);
     return _firestore
         .collection(AppCollections.customerWishlist)
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => CustomerWishlistModel.fromJson(doc.data(), doc.id))
-            .toList());
+            .toList())
+        .handleError((e) {
+          AppLogger.warning("Failed to stream customer wishlist for $customerId: $e");
+          return <CustomerWishlist>[];
+        });
   }
 
   @override
@@ -132,18 +157,27 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => OfferModel.fromJson(doc.data(), doc.id))
-            .toList());
+            .toList())
+        .handleError((e) {
+          AppLogger.warning("Failed to stream offers for $branch: $e");
+          return <Offer>[];
+        });
   }
 
   @override
   Stream<List<CustomerActivity>> streamCustomerActivity(String customerId) {
+    if (customerId.isEmpty) return Stream.value([]);
     return _firestore
         .collection(AppCollections.customerActivity)
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => CustomerActivityModel.fromJson(doc.data(), doc.id))
-            .toList());
+            .toList())
+        .handleError((e) {
+          AppLogger.warning("Failed to stream activity for $customerId: $e");
+          return <CustomerActivity>[];
+        });
   }
 
   @override

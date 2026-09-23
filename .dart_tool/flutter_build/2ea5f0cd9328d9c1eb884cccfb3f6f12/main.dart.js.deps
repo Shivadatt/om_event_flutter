@@ -3041,6 +3041,7 @@ file:///D:/om_event_python/om_event/lib/core/extensions/string_extension.dart
 file:///D:/om_event_python/om_event/lib/core/extensions/theme_extension.dart
 file:///D:/om_event_python/om_event/lib/core/extensions/widget_extension.dart
 file:///D:/om_event_python/om_event/lib/core/middleware/admin_auth_middleware.dart
+file:///D:/om_event_python/om_event/lib/core/middleware/customer_auth_middleware.dart
 file:///D:/om_event_python/om_event/lib/core/seo/meta_manager.dart
 file:///D:/om_event_python/om_event/lib/core/seo/meta_manager_web.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_constants.dart
@@ -3387,6 +3388,7 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/bo
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/cancellation_request_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/cart_drawer.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/customer_booking_dialog.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/customer_login_required_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/customer_review_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/customer_reviews_section.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/empty_review_widget.dart

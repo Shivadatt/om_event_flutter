@@ -6,6 +6,12 @@ service cloud.firestore {
     function isAuthenticated() {
       return request.auth != null;
     }
+
+    // Helper function to check if customer is authenticated via non-anonymous provider
+    function isCustomerAuthenticated() {
+      return request.auth != null && 
+             request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
     
     // Helper function to check user roles prioritizing the admin collection
     function getUserRole() {
@@ -61,10 +67,9 @@ service cloud.firestore {
 
     // Quotations: Access control and client field validation rules
     match /quotations/{quotationId} {
-      allow create: if true;
-      allow read: if isAdminOrStaff() || 
-                  (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
-                  (resource.data.publicId != null && resource.data.publicId != '');
+      allow create: if isAdminOrStaff() || 
+                    (isCustomerAuthenticated() && request.resource.data.customerId == request.auth.uid);
+      allow read: if true;
       allow update: if isAdminOrStaff() || (
         isAuthenticated() && 
         resource.data.customerId == request.auth.uid && 
@@ -194,8 +199,8 @@ service cloud.firestore {
     }
 
     match /customer_notifications/{notificationId} {
-      allow read: if isCustomerOwner() || isAdminOrStaff();
-      allow update: if isCustomerOwner() || isAdminOrStaff(); // mark as read
+      allow read: if isCustomerOwner() || (isAuthenticated() && (resource.data.customerId == request.auth.uid || resource.data.customerId == '')) || isAdminOrStaff();
+      allow update: if isCustomerOwner() || (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'is_read', 'read_at', 'readAt'])) || isAdminOrStaff(); // mark as read
       allow create: if isAdminOrStaff() || (
         isAuthenticated() && 
         request.resource.data.customerId == 'admin' && 
@@ -226,6 +231,35 @@ service cloud.firestore {
     match /customer_activity/{activityId} {
       allow read: if isCustomerOwner() || isAdminOrStaff();
       allow create: if isAuthenticated();
+      allow update, delete: if isAdminOrStaff();
+    }
+
+    match /customer_documents/{docId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow write: if isAdminOrStaff();
+    }
+
+    match /offers/{offerId} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    match /promotions/{promoId} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    match /customer_notification_preferences/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /support_tickets/{ticketId} {
+      allow read, create: if isAuthenticated();
       allow update, delete: if isAdminOrStaff();
     }
 

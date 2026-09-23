@@ -15,6 +15,7 @@ import '../../core/services/booking_availability_service.dart';
 import '../../core/services/fcm/notification_local_service.dart';
 import 'customer_auth_controller.dart';
 import 'cart_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 part 'parts/quotation_pricing.dart';
 part 'parts/quotation_actions.dart';

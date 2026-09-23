@@ -195,16 +195,21 @@ class _NotificationsViewState extends State<NotificationsView> {
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
+                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
+                    ),
+                    child: Material(
                       color: notif.isRead ? const Color(0x99171411) : const Color(0xFF171411),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: notif.isRead ? const Color(0x0AD4AF37) : const Color(0x33D4AF37),
-                        width: 1.2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: notif.isRead ? const Color(0x0AD4AF37) : const Color(0x33D4AF37),
+                          width: 1.2,
+                        ),
                       ),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
-                    ),
-                    child: ListTile(
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       leading: Container(
                         padding: const EdgeInsets.all(8),
@@ -273,8 +278,9 @@ class _NotificationsViewState extends State<NotificationsView> {
                       ),
                       onTap: () => widget.controller.markNotificationRead(notif.id),
                     ),
-                  );
-                },
+                  ),
+                );
+              },
               );
             }),
           )

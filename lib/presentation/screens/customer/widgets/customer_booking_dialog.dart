@@ -18,11 +18,23 @@ import '../../../../domain/entities/package_option.dart';
 import '../../../controllers/customer_auth_controller.dart';
 import '../../../controllers/quotation_controller.dart';
 
+import 'customer_login_required_dialog.dart';
+export 'customer_login_required_dialog.dart';
+
 void showCustomerBookingDialog(
   BuildContext context, {
   required Experience experience,
   required PackageOption selectedPackage,
 }) {
+  final authCtrl = Get.find<CustomerAuthController>();
+  if (!authCtrl.isAuthenticatedCustomer) {
+    showCustomerLoginRequiredDialog(
+      context,
+      subtitle: "Please login to continue with your booking for ${experience.name}.",
+    );
+    return;
+  }
+
   showDialog(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.75),
@@ -56,7 +68,6 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
   final _dateController = TextEditingController();
   final _timeController = TextEditingController(text: "18:00");
   final _venueController = TextEditingController();
-  final _guestsController = TextEditingController(text: "50");
   final _notesController = TextEditingController();
 
   DateTime? _selectedDate;
@@ -106,7 +117,6 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
     _dateController.dispose();
     _timeController.dispose();
     _venueController.dispose();
-    _guestsController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -186,6 +196,11 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
 
   Future<String?> _uploadReferenceImage(String publicId) async {
     if (_referenceImageBytes == null) return null;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.isAnonymous) {
+      Get.snackbar("Authentication Required", "You must be logged in to upload reference images.");
+      return null;
+    }
     try {
       setState(() => _isUploadingImage = true);
       if (Get.isRegistered<SupabaseStorageSource>()) {
@@ -585,26 +600,6 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
                           ],
                         ),
                       ),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomInput(
-                              label: "Expected Guest Count *",
-                              placeholder: "e.g. 100",
-                              controller: _guestsController,
-                              keyboardType: TextInputType.number,
-                              validator: (val) {
-                                final count = int.tryParse(val ?? '');
-                                if (count == null || count <= 0) {
-                                  return "Please enter a valid count.";
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 16),
 
                       // Reference Image Upload
@@ -759,6 +754,17 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
                     onPressed: (_isSubmitting || quoteController.isGeneratingQuote.value || _isUploadingImage)
                         ? null
                         : () async {
+                            final authCtrl = Get.find<CustomerAuthController>();
+                            if (!authCtrl.isAuthenticatedCustomer) {
+                              Get.snackbar(
+                                "Login Required",
+                                "Please login to continue with your booking.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: const Color(0xFF231B1B),
+                                colorText: const Color(0xFFFFAA99),
+                              );
+                              return;
+                            }
                             if (_formKey.currentState?.validate() != true) return;
                             if (_availabilityResult?.isAvailable == false) {
                               Get.snackbar("Date Unavailable", "Please select an available event date.");
@@ -784,7 +790,6 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
                                 dateStr: _dateController.text.trim(),
                                 timeStr: _timeController.text.trim(),
                                 venue: _venueController.text.trim(),
-                                guestCount: int.tryParse(_guestsController.text.trim()) ?? 50,
                                 notes: _notesController.text.trim(),
                                 referenceImageUrl: uploadedImageUrl,
                               );

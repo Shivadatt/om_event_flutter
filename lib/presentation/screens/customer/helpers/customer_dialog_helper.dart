@@ -13,6 +13,7 @@ import '../../../controllers/quotation_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/services/booking_availability_service.dart';
 import '../../../controllers/customer_auth_controller.dart';
+import '../widgets/customer_login_required_dialog.dart';
 
 part 'parts/inquiry_dialogs.dart';
 part 'parts/billing_dialogs.dart';

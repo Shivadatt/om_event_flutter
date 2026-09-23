@@ -72,22 +72,16 @@ extension FirestoreOrders on FirestoreRemoteSource {
     required String name,
     required String email,
   }) async {
-    final docRef = _firestore.collection(AppCollections.customers).doc(phone);
-    final doc = await docRef.get();
-    if (!doc.exists) {
+    try {
+      final docRef = _firestore.collection(AppCollections.customers).doc(phone);
       await docRef.set({
         'name': name,
         'phone': phone,
-        'email': email,
-        'created_at': FieldValue.serverTimestamp(),
+        if (email.isNotEmpty) 'email': email,
         'updated_at': FieldValue.serverTimestamp(),
-      });
-    } else {
-      await docRef.update({
-        'name': name,
-        'email': email,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
+    } catch (_) {
+      // Best-effort CRM lead update for guest/anonymous sessions
     }
   }
 

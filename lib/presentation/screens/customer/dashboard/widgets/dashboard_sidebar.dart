@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -23,20 +23,26 @@ class DashboardSidebar extends StatelessWidget {
     return Container(
       width: 270,
       margin: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF171411),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0x22D4AF37), width: 1.5),
-        boxShadow: const [
+      decoration: const BoxDecoration(
+        boxShadow: [
           BoxShadow(color: Colors.black45, blurRadius: 15, offset: Offset(0, 8)),
         ],
       ),
-      child: Column(
-        children: [
-          _buildProfileCard(),
-          const Divider(color: Color(0x1AD4AF37), height: 1),
-          _buildNavList(),
-        ],
+      child: Material(
+        color: const Color(0xFF171411),
+        borderRadius: BorderRadius.circular(24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Color(0x22D4AF37), width: 1.5),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            _buildProfileCard(),
+            const Divider(color: Color(0x1AD4AF37), height: 1),
+            _buildNavList(),
+          ],
+        ),
       ),
     );
   }
@@ -143,14 +149,11 @@ class SidebarTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
-      decoration: BoxDecoration(
+      child: Material(
+        color: isActive ? const Color(0x33D4AF37) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        gradient: isActive
-            ? const LinearGradient(colors: [Color(0x33D4AF37), Color(0x0AD4AF37)])
-            : null,
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: isActive ? const Color(0xFFD4AF37) : Colors.white60, size: 20),
+        child: ListTile(
+          leading: Icon(icon, color: isActive ? const Color(0xFFD4AF37) : Colors.white60, size: 20),
         title: Text(
           title,
           style: AppTheme.sansBody(
@@ -176,6 +179,7 @@ class SidebarTile extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         onTap: onTap,
       ),
-    );
+    ),
+  );
   }
 }

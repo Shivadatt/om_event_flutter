@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/services/booking_availability_service.dart';
 import '../../core/utils/app_logger.dart';
+import '../../core/utils/date_parser.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/repositories/admin_booking_repository.dart';
 import '../models/quotation_model.dart';
@@ -119,18 +120,16 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
       }
 
       // Re-verify date availability
-      final eventDateRaw = data['eventDate'];
-      DateTime? eventDate;
-      if (eventDateRaw is Timestamp) {
-        eventDate = eventDateRaw.toDate();
-      } else if (eventDateRaw is String) {
-        eventDate = DateTime.tryParse(eventDateRaw);
-      }
+      final eventDateRaw = data['event_date'] ?? data['eventDate'];
+      final eventDate = DateParser.parseNullable(eventDateRaw);
 
       if (eventDate != null) {
-        final availResult = await BookingAvailabilityService.to.checkDateAvailability(eventDate);
-        if (!availResult.isAvailable && availResult.reason != null && !availResult.reason!.contains(bookingId)) {
-          AppLogger.warning("Booking date conflict warning: ${availResult.reason}");
+        final availResult = await BookingAvailabilityService.to.checkDateAvailability(
+          eventDate,
+          excludeBookingId: bookingId,
+        );
+        if (!availResult.isAvailable) {
+          throw Exception("Cannot accept booking: ${availResult.reason ?? 'This event date already has another active booking.'}");
         }
       }
 
@@ -225,6 +224,20 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
       final docRef = _firestore.collection(AppCollections.quotations).doc(bookingId);
       final snapshot = await tx.get(docRef);
       if (!snapshot.exists) throw Exception("Booking not found.");
+
+      final data = snapshot.data() ?? {};
+      final eventDateRaw = data['event_date'] ?? data['eventDate'];
+      final eventDate = DateParser.parseNullable(eventDateRaw);
+
+      if (eventDate != null) {
+        final availResult = await BookingAvailabilityService.to.checkDateAvailability(
+          eventDate,
+          excludeBookingId: bookingId,
+        );
+        if (!availResult.isAvailable) {
+          throw Exception("Cannot confirm booking: ${availResult.reason ?? 'This event date already has another active booking.'}");
+        }
+      }
 
       tx.update(docRef, {
         'status': QuotationStatus.bookingConfirmed.nameStr,

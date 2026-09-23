@@ -166,6 +166,11 @@ class AdminBookingDetailsDialog extends StatelessWidget {
     final goldColor = const Color(0xFFD4AF37);
     final serviceName = booking.items.firstOrNull?.name ?? "Event Decor";
     final packageName = booking.items.firstOrNull?.theme ?? (booking.bookingDetails ?? "Standard");
+    final clientNotes = booking.notes
+        .split('\n')
+        .where((line) => !line.toLowerCase().startsWith('expected guests:'))
+        .join('\n')
+        .trim();
 
     return Dialog(
       backgroundColor: const Color(0xFF122018),
@@ -283,8 +288,8 @@ class AdminBookingDetailsDialog extends StatelessWidget {
                     _buildDetailRow("Event Date", AppFormatters.formatDate(booking.eventDate)),
                     _buildDetailRow("Event Time", booking.eventTime),
                     _buildDetailRow("Venue / Address", booking.location),
-                    if (booking.notes.isNotEmpty)
-                      _buildDetailRow("Client Notes", booking.notes),
+                    if (clientNotes.isNotEmpty)
+                      _buildDetailRow("Client Notes", clientNotes),
 
                     // Financial Overview
                     _buildSectionHeader("Financial Overview"),

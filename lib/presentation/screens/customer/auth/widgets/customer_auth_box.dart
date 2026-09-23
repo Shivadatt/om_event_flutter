@@ -140,9 +140,18 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                 try {
                   bool success = false;
                   if (isLogin) {
-                    success = await authController.loginWithEmail(emailCtrl.text, passCtrl.text);
+                    success = await authController.loginWithEmail(
+                      emailCtrl.text,
+                      passCtrl.text,
+                      navigateHome: widget.onSuccess == null,
+                    );
                   } else {
-                    success = await authController.registerWithEmail(nameCtrl.text, emailCtrl.text, passCtrl.text);
+                    success = await authController.registerWithEmail(
+                      nameCtrl.text,
+                      emailCtrl.text,
+                      passCtrl.text,
+                      navigateHome: widget.onSuccess == null,
+                    );
                   }
                   if (success && widget.onSuccess != null) {
                     widget.onSuccess!();
@@ -246,8 +255,10 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                           isGoogleLoading = true;
                         });
                         try {
-                          await authController.loginWithGoogle();
-                          if (authController.rxIsLoggedIn.value && widget.onSuccess != null) {
+                          await authController.loginWithGoogle(
+                            navigateHome: widget.onSuccess == null,
+                          );
+                          if (authController.isAuthenticatedCustomer && widget.onSuccess != null) {
                             widget.onSuccess!();
                           }
                         } finally {

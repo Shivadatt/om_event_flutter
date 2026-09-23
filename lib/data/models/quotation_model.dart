@@ -1,6 +1,7 @@
 import '../../domain/entities/quotation_version.dart';
 import '../../core/utils/date_parser.dart';
 import '../../domain/entities/quotation.dart';
+import '../../core/services/booking_availability_service.dart';
 
 class QuotationItemModel extends QuotationItem {
   const QuotationItemModel({
@@ -178,6 +179,7 @@ class QuotationModel extends Quotation {
       'customer_phone': customerPhone,
       'customer_name': customerName,
       'event_date': eventDate.toIso8601String(),
+      'normalized_event_date': BookingAvailabilityService.normalizeDateString(eventDate),
       'event_time': eventTime,
       'location': location,
       'notes': notes,

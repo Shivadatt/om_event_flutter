@@ -38,6 +38,7 @@ import '../../presentation/screens/admin/cms/manage_policies_screen.dart';
 import '../../presentation/screens/admin/cms/manage_service_area_screen.dart';
 import '../../presentation/screens/admin/cms/manage_notification_templates_screen.dart';
 import '../middleware/admin_auth_middleware.dart';
+import '../middleware/customer_auth_middleware.dart';
 export '../constants/app_routes.dart';
 
 /// Route definitions and page factory registry.
@@ -95,6 +96,7 @@ class AppRouter {
       name: AppRoutes.customerDashboard,
       page: () => const CustomerDashboardScreen(),
       binding: CatalogBinding(),
+      middlewares: [CustomerAuthMiddleware()],
     ),
     GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
     GetPage(
