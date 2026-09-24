@@ -34,11 +34,11 @@ class FooterSection extends StatelessWidget {
       color: const Color(0xFF0F1B18), // Primary Background
       padding: EdgeInsets.symmetric(
         horizontal: paddingHorizontal,
-        vertical: 72,
+        vertical: isDesktop ? 48 : 36,
       ),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: 1440),
           child: Obx(() {
             final originalDetails = BusinessDetailsService.to.rxDetails.value;
             final footer = AppConfigService.to.rxFooterSettings.value;

@@ -19,17 +19,18 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
   }) {
     final headingWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           "CURATED EXPERIENCES",
           style: AppTheme.sansBody(
-            fontSize: 10,
+            fontSize: 9.5,
             fontWeight: FontWeight.bold,
-            letterSpacing: 3.5,
+            letterSpacing: 2.8,
             color: AppColors.primaryAccent,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         ShaderMask(
           shaderCallback: (bounds) {
             return const LinearGradient(
@@ -38,104 +39,90 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
               end: Alignment.bottomRight,
             ).createShader(bounds);
           },
-          child: RichText(
-            text: TextSpan(
-              style: GoogleFonts.italiana(
-                fontSize: titleSize,
-                fontWeight: FontWeight.normal,
-                color: Colors.white,
-                height: 1.0,
-                letterSpacing: 1.2,
-              ),
-              children: [
-                const TextSpan(text: "DESIGNED TO LEAVE\n"),
-                const TextSpan(text: "A "),
-                TextSpan(
-                  text: "BEAUTIFUL ECHO.",
-                  style: GoogleFonts.italiana(
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
+          child: Text(
+            "TRANSFORMING\nMOMENTS INTO\nLASTING MEMORIES.",
+            style: GoogleFonts.italiana(
+              fontSize: isWide ? 28.0 : 23.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1.15,
+              letterSpacing: 1.1,
             ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          "Explore signature concepts, see an honest starting price, then tune every color, material and detail.",
+          style: AppTheme.sansBody(
+            fontSize: 13,
+            color: AppColors.muted,
+            height: 1.5,
           ),
         ),
       ],
     );
 
-    final descWidget = Container(
-      constraints: const BoxConstraints(maxWidth: 450),
-      child: Text(
-        "Explore signature concepts, see an honest starting price, then tune every color, material and detail.",
-        style: AppTheme.sansBody(
-          fontSize: 14.5,
-          color: AppColors.muted,
-          height: 1.8,
-        ),
-      ),
-    );
+    final double videoBannerHeight = isWide ? 190.0 : 160.0;
+    final videoBanner = _CatalogHeroVideoBanner(height: videoBannerHeight);
 
-    final headerRow = isWide
+    final heroRow = isWide
         ? Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(child: headingWidget),
-              const SizedBox(width: 16),
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 6.0),
-                  child: descWidget,
-                ),
-              ),
+              Expanded(flex: 5, child: headingWidget),
+              const SizedBox(width: 20),
+              Expanded(flex: 5, child: videoBanner),
             ],
           )
         : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               headingWidget,
-              const SizedBox(height: 24),
-              descWidget,
+              const SizedBox(height: 14),
+              videoBanner,
             ],
           );
 
     final searchWidget = Container(
-      height: 44,
-      width: isWide ? 280 : double.infinity,
+      height: 38,
+      width: isWide ? 260 : double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF1B2D27).withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(22),
+        color: const Color(0xFF1B2D27).withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.secondaryAccent.withValues(alpha: 0.25),
-          width: 1.2,
+          width: 1.0,
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         children: [
           const Icon(
             Icons.search,
-            size: 16,
+            size: 15,
             color: AppColors.secondaryAccent,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               onChanged: (val) => controller.updateSearchQuery(val),
               style: AppTheme.sansBody(
-                fontSize: 13,
+                fontSize: 12.5,
                 color: Colors.white,
               ),
               decoration: InputDecoration(
                 hintText: "Search a mood, theme or event…",
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  fontSize: 12.5,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 errorBorder: InputBorder.none,
                 disabledBorder: InputBorder.none,
                 filled: false,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 isDense: true,
               ),
             ),
@@ -145,14 +132,14 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
     );
 
     final sortWidget = Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B2D27).withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(22),
+        color: const Color(0xFF1B2D27).withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.secondaryAccent.withValues(alpha: 0.25),
-          width: 1.2,
+          width: 1.0,
         ),
       ),
       child: Obx(
@@ -161,10 +148,10 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
             value: controller.sortBy.value,
             dropdownColor: const Color(0xFF1B2D27),
             icon: const Padding(
-              padding: EdgeInsets.only(left: 6.0),
+              padding: EdgeInsets.only(left: 4.0),
               child: Icon(
                 Icons.keyboard_arrow_down,
-                size: 16,
+                size: 15,
                 color: AppColors.secondaryAccent,
               ),
             ),
@@ -184,10 +171,10 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
               if (val != null) controller.updateSort(val);
             },
             style: AppTheme.sansBody(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.white.withValues(alpha: 0.9),
-              letterSpacing: 1.2,
+              letterSpacing: 1.1,
             ),
           ),
         ),
@@ -195,7 +182,7 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
     );
 
     final chipsWidget = SizedBox(
-      height: 48,
+      height: 38,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -236,30 +223,226 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
         ? Row(
             children: [
               searchWidget,
-              const SizedBox(width: 20),
+              const SizedBox(width: 14),
               Expanded(child: chipsWidget),
-              const SizedBox(width: 20),
+              const SizedBox(width: 12),
               sortWidget,
             ],
           )
         : Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              searchWidget,
-              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: searchWidget),
+                  const SizedBox(width: 10),
+                  sortWidget,
+                ],
+              ),
+              const SizedBox(height: 12),
               chipsWidget,
-              const SizedBox(height: 16),
-              Align(alignment: Alignment.centerLeft, child: sortWidget),
             ],
           );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        headerRow,
-        const SizedBox(height: 60),
+        heroRow,
+        const SizedBox(height: 18),
         toolbar,
       ],
+    );
+  }
+}
+
+class _CatalogHeroVideoBanner extends StatefulWidget {
+  final double height;
+  const _CatalogHeroVideoBanner({required this.height});
+
+  @override
+  State<_CatalogHeroVideoBanner> createState() => _CatalogHeroVideoBannerState();
+}
+
+class _CatalogHeroVideoBannerState extends State<_CatalogHeroVideoBanner> {
+  VideoPlayerController? _controller;
+  bool _isInitialized = false;
+  bool _isPlaying = false;
+
+  static const String _videoUrl =
+      'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/balloon_blast_hero_section_video.mp4';
+  static const String _posterUrl =
+      'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/balloon_blast_thumbnail.png';
+
+  @override
+  void initState() {
+    super.initState();
+    _initController();
+  }
+
+  Future<void> _initController() async {
+    try {
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(_videoUrl),
+        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+      );
+      await _controller!.initialize();
+      await _controller!.setLooping(true);
+      await _controller!.setVolume(0.0);
+      if (mounted) {
+        setState(() => _isInitialized = true);
+      }
+    } catch (_) {}
+  }
+
+  void _togglePlay() {
+    if (!_isInitialized || _controller == null) return;
+    if (_controller!.value.isPlaying) {
+      _controller!.pause();
+      setState(() => _isPlaying = false);
+    } else {
+      _controller!.play();
+      setState(() => _isPlaying = true);
+    }
+  }
+
+  void _onHover(bool hover) {
+    if (!_isInitialized || _controller == null) return;
+    if (hover) {
+      _controller!.play();
+      setState(() => _isPlaying = true);
+    } else {
+      _controller!.pause();
+      setState(() => _isPlaying = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => _onHover(true),
+      onExit: (_) => _onHover(false),
+      child: GestureDetector(
+        onTap: _togglePlay,
+        child: Container(
+          height: widget.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.secondaryAccent.withValues(alpha: 0.3),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14.8),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Fallback poster image
+                Image.network(
+                  _posterUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: const Color(0xFF152621)),
+                ),
+
+                // Video player
+                if (_isInitialized && _controller != null)
+                  AnimatedOpacity(
+                    opacity: _isPlaying ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 250),
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: _controller!.value.size.width > 0
+                            ? _controller!.value.size.width
+                            : 1280,
+                        height: _controller!.value.size.height > 0
+                            ? _controller!.value.size.height
+                            : 720,
+                        child: VideoPlayer(_controller!),
+                      ),
+                    ),
+                  ),
+
+                // Subtle dark vignette gradient
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.2),
+                        Colors.black.withValues(alpha: 0.45),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Center Play Button & "Watch Our Decoration Video"
+                AnimatedOpacity(
+                  opacity: _isPlaying ? 0.0 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.55),
+                            border: Border.all(
+                              color: AppColors.secondaryAccent.withValues(alpha: 0.7),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.secondaryAccent.withValues(alpha: 0.25),
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.play_arrow_rounded,
+                            size: 26,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Watch Our Decoration Video",
+                          style: AppTheme.sansBody(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -298,22 +481,22 @@ class _ToolbarChipState extends State<_ToolbarChip> {
         cursor: SystemMouseCursors.click,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
             gradient: widget.isActive ? activeGradient : null,
-            color: widget.isActive ? null : Colors.transparent,
+            color: widget.isActive ? null : const Color(0xFF14241F).withValues(alpha: 0.5),
             border: Border.all(
               color: widget.isActive
                   ? Colors.transparent
                   : (_isHovered ? AppColors.primaryAccent : AppColors.primaryAccent.withValues(alpha: 0.2)),
-              width: 1.2,
+              width: 1.0,
             ),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: widget.isActive && _isHovered
                 ? [
                     BoxShadow(
                       color: AppColors.primaryAccent.withValues(alpha: 0.25),
-                      blurRadius: 10,
+                      blurRadius: 8,
                       spreadRadius: 1,
                     )
                   ]
@@ -322,10 +505,10 @@ class _ToolbarChipState extends State<_ToolbarChip> {
           child: Text(
             widget.label.toUpperCase(),
             style: AppTheme.sansBody(
-              fontSize: 10,
+              fontSize: 9.5,
               fontWeight: FontWeight.bold,
               color: widget.isActive ? const Color(0xFF0F1B18) : AppColors.muted,
-              letterSpacing: 1.5,
+              letterSpacing: 1.2,
             ),
           ),
         ),

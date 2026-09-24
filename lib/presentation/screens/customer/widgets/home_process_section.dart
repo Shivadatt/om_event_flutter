@@ -274,7 +274,7 @@ class ProcessSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double pH = isDesktop ? 64.0 : 24.0;
-    final double pV = isDesktop ? 80.0 : 48.0;
+    final double pV = isDesktop ? 48.0 : 36.0;
 
     return _ProcessBackground(
       child: Container(
@@ -282,7 +282,7 @@ class ProcessSection extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: pH, vertical: pV),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1200),
+            constraints: const BoxConstraints(maxWidth: 1440),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -306,7 +306,7 @@ class ProcessSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // ── Headline ──────────────────────────────────
                 ShaderMask(
@@ -336,7 +336,7 @@ class ProcessSection extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 52),
+                const SizedBox(height: 36),
 
                 // ── Step cards ────────────────────────────────
                 if (isDesktop)

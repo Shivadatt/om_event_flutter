@@ -15,6 +15,7 @@ import 'package:om_event/presentation/widgets/item_visual_placeholder.dart';
 import 'package:om_event/presentation/screens/customer/widgets/home_detail_dialog.dart';
 import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
 import 'package:om_event/presentation/screens/customer/auth/widgets/customer_auth_box.dart';
+import 'package:video_player/video_player.dart';
 
 part 'parts/catalog_card.dart';
 part 'parts/catalog_toolbar.dart';
@@ -130,12 +131,12 @@ class ExperiencesCatalogSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final paddingHorizontal = isDesktop ? 64.0 : 24.0;
+    final paddingHorizontal = isDesktop ? 32.0 : 16.0;
 
-    final double sectionPaddingVertical = (width * 0.05).clamp(54.0, 90.0);
+    final double sectionPaddingVertical = isDesktop ? 32.0 : 20.0;
     final double titleSize =
-        width >= 700 ? (width * 0.048).clamp(42.0, 72.0) : 38.0;
-    final bool isWide = width >= 800;
+        width >= 700 ? (width * 0.048).clamp(32.0, 48.0) : 28.0;
+    final bool isWide = width >= 860;
 
     return CatalogSectionBackground(
       child: Container(
@@ -148,6 +149,22 @@ class ExperiencesCatalogSection extends StatelessWidget {
         child: Center(
           child: Container(
             constraints: const BoxConstraints(maxWidth: 1200),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D1714).withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.secondaryAccent.withValues(alpha: 0.28),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  blurRadius: 28,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.all(isDesktop ? 26.0 : 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -158,7 +175,7 @@ class ExperiencesCatalogSection extends StatelessWidget {
                   titleSize: titleSize,
                   isWide: isWide,
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 18),
                 Obx(() {
                   if (controller.isLoadingExperiences.value) {
                     return const Center(
@@ -183,14 +200,12 @@ class ExperiencesCatalogSection extends StatelessWidget {
                     );
                   }
 
-                  final gridCount = isDesktop ? 3 : (isTablet ? 2 : 1);
-                  final double gridWidth = width - (paddingHorizontal * 2);
-                  final double cardWidth =
-                      (gridWidth.clamp(0.0, 1200.0) - (gridCount - 1) * 20) /
-                      gridCount;
+                  final gridCount = width >= 1050
+                      ? 4
+                      : (width >= 720 ? 3 : (width >= 500 ? 2 : 1));
                   
-                  // Aspect ratio adjusted to fit glassmorphic details
-                  final double childAspectRatio = cardWidth / (cardWidth * 0.8 + 190);
+                  // childAspectRatio ensures no overflow with Expanded image
+                  final double childAspectRatio = gridCount == 1 ? 1.05 : 0.90;
 
                   final totalItems = controller.rxExperiences.length;
                   final visibleCount = controller.rxVisibleCount.value.clamp(0, totalItems);
@@ -203,8 +218,8 @@ class ExperiencesCatalogSection extends StatelessWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: gridCount,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 28,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 16,
                           childAspectRatio: childAspectRatio,
                         ),
                         itemCount: visibleCount,
@@ -256,7 +271,7 @@ class ExperiencesCatalogSection extends StatelessWidget {
                         },
                       ),
                       if (hasMore) ...[
-                        const SizedBox(height: 56),
+                        const SizedBox(height: 24),
                         Center(
                           child: CustomButton(
                             text: "Load More Designs",

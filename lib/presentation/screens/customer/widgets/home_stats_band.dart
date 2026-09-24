@@ -160,7 +160,7 @@ class AnimatedStatsBand extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1200),
+            constraints: const BoxConstraints(maxWidth: 1440),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(28),
               child: BackdropFilter(

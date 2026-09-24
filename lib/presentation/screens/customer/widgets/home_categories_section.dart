@@ -129,17 +129,6 @@ class _CategoryCardState extends State<CategoryCard> {
     final hasImage = widget.category.imageUrl.isNotEmpty;
     final baseColor = _parseHexColor(widget.category.color);
 
-    // Slightly darken/lighten the base color for the radial gradient center
-    final lighterColor = Color.lerp(baseColor, Colors.white, 0.22) ?? baseColor;
-    final darkerColor = Color.lerp(baseColor, Colors.black, 0.18) ?? baseColor;
-
-    // Text color: choose dark or light based on perceived brightness of baseColor
-    final luminance = baseColor.computeLuminance();
-    final textColor = luminance > 0.42 ? const Color(0xFF1A2B25) : Colors.white;
-    final subtextColor = luminance > 0.42
-        ? const Color(0xFF1A2B25).withValues(alpha: 0.6)
-        : Colors.white.withValues(alpha: 0.75);
-
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -147,189 +136,135 @@ class _CategoryCardState extends State<CategoryCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          transform: Matrix4.translationValues(0.0, _isHovered ? -8.0 : 0.0, 0.0),
+          transform: Matrix4.translationValues(0.0, _isHovered ? -6.0 : 0.0, 0.0),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: RadialGradient(
-              center: const Alignment(-0.5, -0.5),
-              radius: 1.4,
-              colors: [lighterColor, darkerColor],
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: _isHovered
+                  ? AppColors.secondaryAccent.withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.12),
+              width: _isHovered ? 1.5 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: baseColor.withValues(alpha: _isHovered ? 0.55 : 0.35),
-                blurRadius: _isHovered ? 28 : 16,
-                offset: Offset(0, _isHovered ? 12 : 6),
+                color: _isHovered
+                    ? AppColors.secondaryAccent.withValues(alpha: 0.25)
+                    : Colors.black.withValues(alpha: 0.4),
+                blurRadius: _isHovered ? 20 : 10,
+                offset: Offset(0, _isHovered ? 8 : 4),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(22.8),
+            borderRadius: BorderRadius.circular(16.5),
             child: Stack(
+              fit: StackFit.expand,
               children: [
-                // Subtle radial glow overlay for depth
-                Positioned.fill(
-                  child: Container(
+                // Background image or solid gradient fallback
+                if (hasImage)
+                  Image.network(
+                    widget.category.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            baseColor.withValues(alpha: 0.5),
+                            const Color(0xFF152621),
+                          ],
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.celebration_outlined,
+                          color: AppColors.secondaryAccent,
+                          size: 36,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
                     decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: const Alignment(-0.6, -0.6),
-                        radius: 1.0,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withValues(alpha: 0.18),
-                          Colors.transparent,
+                          baseColor.withValues(alpha: 0.5),
+                          const Color(0xFF152621),
                         ],
                       ),
                     ),
-                  ),
-                ),
-
-                // Bottom-right ambient circle decoration
-                Positioned(
-                  right: -40,
-                  bottom: -40,
-                  child: Container(
-                    width: 160,
-                    height: 160,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.06),
+                    child: const Center(
+                      child: Icon(
+                        Icons.celebration_outlined,
+                        color: AppColors.secondaryAccent,
+                        size: 36,
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  right: -10,
-                  bottom: -10,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.05),
-                    ),
-                  ),
-                ),
 
-                // Main content: image top, text bottom — Positioned.fill so Spacer works
+                // Scrim / gradient overlay for text readability
                 Positioned.fill(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 54, 18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.max,
-                    children: [
-                      // Larger thumbnail image
-                      if (hasImage)
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.40),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.22),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14.5),
-                            child: Image.network(
-                              widget.category.imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: Colors.white.withValues(alpha: 0.12),
-                                child: Icon(
-                                  Icons.celebration_outlined,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  size: 30,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.2),
+                          Colors.black.withValues(alpha: 0.85),
+                        ],
+                        stops: const [0.35, 0.65, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
 
-                      const Spacer(),
-
-                      // Count badge
-                      Text(
-                        "${widget.category.itemCount} SIGNATURE EXPERIENCE${widget.category.itemCount == 1 ? '' : 'S'}",
-                        style: AppTheme.sansBody(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.bold,
-                          color: subtextColor,
-                          letterSpacing: 2.0,
+                // Ambient glow on hover
+                if (_isHovered)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 1.0,
+                          colors: [
+                            AppColors.secondaryAccent.withValues(alpha: 0.12),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      // Category name
+                    ),
+                  ),
+
+                // Category title at bottom left
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
                         widget.category.name,
                         style: GoogleFonts.italiana(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: textColor,
-                          height: 1.15,
-                          letterSpacing: 0.5,
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.18,
+                          letterSpacing: 0.4,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (widget.category.description.isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          widget.category.description,
-                          style: AppTheme.sansBody(
-                            fontSize: 11,
-                            color: subtextColor,
-                            height: 1.4,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
                     ],
-                    ),
-                  ),
-                ),
-
-                // Floating Action arrow (top-right)
-                Positioned(
-                  right: 14,
-                  top: 14,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isHovered
-                          ? textColor.withValues(alpha: 0.90)
-                          : Colors.white.withValues(alpha: 0.25),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: _isHovered ? 0.0 : 0.4),
-                        width: 1,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: AnimatedRotation(
-                      turns: _isHovered ? 0.125 : 0.0,
-                      duration: const Duration(milliseconds: 250),
-                      child: Text(
-                        "↗",
-                        style: AppTheme.sansBody(
-                          fontSize: 15,
-                          color: _isHovered ? baseColor : textColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -356,89 +291,12 @@ class CategoriesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final paddingHorizontal = width >= 1000 ? 64.0 : 24.0;
-    final double sectionPaddingVertical = (width * 0.05).clamp(54.0, 90.0);
+    final paddingHorizontal = width >= 1200
+        ? 48.0
+        : (width >= 800 ? 32.0 : 20.0);
+    final double sectionPaddingVertical = width >= 1000 ? 44.0 : 32.0;
     final double titleSize =
-        width >= 700 ? (width * 0.048).clamp(42.0, 72.0) : 38.0;
-    final bool isWide = width >= 800;
-
-    final headingWidget = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "BEGIN WITH A FEELING",
-          style: AppTheme.sansBody(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 3.5,
-            color: AppColors.secondaryAccent,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ShaderMask(
-          shaderCallback: (bounds) {
-            return const LinearGradient(
-              colors: [Colors.white, Color(0xFFFFE8A3), Color(0xFFF3D37A)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ).createShader(bounds);
-          },
-          child: RichText(
-            text: TextSpan(
-              style: GoogleFonts.italiana(
-                fontSize: titleSize,
-                fontWeight: FontWeight.normal,
-                color: Colors.white,
-                height: 1.0,
-                letterSpacing: 1.2,
-              ),
-              children: [
-                const TextSpan(text: "WHAT ARE WE\n"),
-                TextSpan(
-                  text: "CELEBRATING?",
-                  style: GoogleFonts.italiana(
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-
-    final descWidget = Container(
-      constraints: const BoxConstraints(maxWidth: 450),
-      child: Text(
-        "Choose a chapter and make it personal. Every collection is a starting point, thoughtfully composed for luxury spaces.",
-        style: AppTheme.sansBody(
-          fontSize: 14.5,
-          color: AppColors.muted,
-          height: 1.8,
-        ),
-      ),
-    );
-
-    final headerRow = isWide
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              headingWidget,
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6.0),
-                child: descWidget,
-              ),
-            ],
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              headingWidget,
-              const SizedBox(height: 24),
-              descWidget,
-            ],
-          );
+        width >= 700 ? (width * 0.04).clamp(32.0, 48.0) : 28.0;
 
     return CategoriesSectionBackground(
       child: Container(
@@ -450,12 +308,43 @@ class CategoriesSection extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1200),
+            constraints: const BoxConstraints(maxWidth: 1440),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                headerRow,
-                const SizedBox(height: 60),
+                // Header (Centered, matching Image 1)
+                Text(
+                  "BEGIN WITH A FEELING",
+                  style: AppTheme.sansBody(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 3.5,
+                    color: AppColors.secondaryAccent,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: GoogleFonts.italiana(
+                      fontSize: titleSize,
+                      fontWeight: FontWeight.normal,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                    children: [
+                      const TextSpan(text: "WHAT ARE WE "),
+                      TextSpan(
+                        text: "CELEBRATING?",
+                        style: GoogleFonts.italiana(
+                          color: AppColors.secondaryAccent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
                 Obx(() {
                   if (controller.isLoadingCategories.value) {
                     return const Center(
@@ -467,21 +356,24 @@ class CategoriesSection extends StatelessWidget {
                     return const SizedBox();
                   }
 
-                  final gridCount = width >= 1000 ? 3 : (width >= 600 ? 2 : 1);
-                  final double cardHeight = width >= 600 ? 220 : 200;
-                  final double gridWidth = width - (paddingHorizontal * 2);
-                  final double cardWidth =
-                      (gridWidth.clamp(0.0, 1200.0) - (gridCount - 1) * 20) /
-                      gridCount;
-                  final double childAspectRatio = cardWidth / cardHeight;
+                  // Responsive column count: 6 on large desktop, 4 on medium, 3 on tablet, 2 on mobile
+                  final gridCount = width >= 1150
+                      ? 6
+                      : (width >= 850
+                          ? 4
+                          : (width >= 600
+                              ? 3
+                              : 2));
+
+                  final childAspectRatio = width >= 1150 ? 0.88 : (width >= 600 ? 0.90 : 0.86);
 
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: gridCount,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
                       childAspectRatio: childAspectRatio,
                     ),
                     itemCount: controller.rxCategories.length,

@@ -23,13 +23,16 @@ class CustomerReviewsSection extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isDesktop ? 80 : 20,
-          vertical: isDesktop ? 72 : 48,
+          vertical: isDesktop ? 48 : 36,
         ),
         decoration: const BoxDecoration(
           color: Color(0xFF152621), // Secondary Background
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1440),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Section Header (Luxury style)
             Text(
@@ -41,7 +44,7 @@ class CustomerReviewsSection extends StatelessWidget {
                 letterSpacing: 3.5,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             ShaderMask(
               shaderCallback: (bounds) {
                 return const LinearGradient(
@@ -61,7 +64,7 @@ class CustomerReviewsSection extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               "Real experiences shared by our happy clients.",
               style: AppTheme.sansBody(
@@ -70,7 +73,7 @@ class CustomerReviewsSection extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 32),
 
             // Realtime Stream Builder
             Obx(() {
@@ -88,6 +91,8 @@ class CustomerReviewsSection extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 }

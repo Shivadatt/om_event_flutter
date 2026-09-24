@@ -18,6 +18,7 @@ class ExperienceCard extends StatefulWidget {
 
 class _ExperienceCardState extends State<ExperienceCard> {
   bool _isHovered = false;
+  bool _isFavorite = false;
 
   Widget _buildImage(
     String url,
@@ -67,156 +68,175 @@ class _ExperienceCardState extends State<ExperienceCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          transform: Matrix4.translationValues(0.0, _isHovered ? -6.0 : 0.0, 0.0),
+          transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _isHovered ? AppColors.secondaryAccent.withValues(alpha: 0.6) : AppColors.primaryAccent.withValues(alpha: 0.18),
-              width: 1.2,
+              color: _isHovered
+                  ? AppColors.secondaryAccent.withValues(alpha: 0.6)
+                  : AppColors.primaryAccent.withValues(alpha: 0.16),
+              width: 1.1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: _isHovered ? 0.50 : 0.25),
-                blurRadius: _isHovered ? 24 : 12,
-                offset: Offset(0, _isHovered ? 10 : 4),
+                color: Colors.black.withValues(alpha: _isHovered ? 0.45 : 0.22),
+                blurRadius: _isHovered ? 18 : 10,
+                offset: Offset(0, _isHovered ? 8 : 4),
               ),
               if (_isHovered)
                 BoxShadow(
                   color: AppColors.secondaryAccent.withValues(alpha: 0.08),
-                  blurRadius: 16,
+                  blurRadius: 14,
                   spreadRadius: -2,
                 ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(18.8),
+            borderRadius: BorderRadius.circular(15),
             child: Stack(
               children: [
-                // Base background color (card body is glassmorphic)
+                // Base background color
                 Positioned.fill(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18.8),
+                    borderRadius: BorderRadius.circular(15),
                     child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                       child: Container(
-                        color: const Color(0xFF1B2D27).withValues(alpha: 0.65), // Card Background
+                        color: const Color(0xFF14241F).withValues(alpha: 0.7),
                       ),
                     ),
                   ),
                 ),
 
                 // Card content Column
-                ClipRect(
+                Positioned.fill(
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 1.25,
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(18.8),
-                          topRight: Radius.circular(18.8),
-                        ),
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: AnimatedScale(
-                                scale: _isHovered ? 1.06 : 1.0,
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeOut,
-                                child: _buildImage(
-                                  widget.item.imageUrl,
-                                  widget.item.name,
-                                  widget.item.categorySlug,
-                                  widget.item.categoryName,
-                                ),
-                              ),
-                            ),
-                            // Vignette overlay
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.4),
-                                    ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15),
+                          ),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Positioned.fill(
+                                child: AnimatedScale(
+                                  scale: _isHovered ? 1.05 : 1.0,
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.easeOut,
+                                  child: _buildImage(
+                                    widget.item.imageUrl,
+                                    widget.item.name,
+                                    widget.item.categorySlug,
+                                    widget.item.categoryName,
                                   ),
                                 ),
                               ),
-                            ),
-                            if (widget.item.isFeatured)
-                              Positioned(
-                                left: 14,
-                                top: 14,
+                              // Vignette overlay
+                              Positioned.fill(
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF0F1B18).withValues(alpha: 0.8), // Primary Background
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: AppColors.secondaryAccent.withValues(alpha: 0.35),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    "MOST LOVED",
-                                    style: AppTheme.sansBody(
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.secondaryAccent,
-                                      letterSpacing: 1.5,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.35),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                          ],
+                              if (widget.item.isFeatured)
+                                Positioned(
+                                  left: 10,
+                                  top: 10,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0F1B18).withValues(alpha: 0.85),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: AppColors.secondaryAccent.withValues(alpha: 0.4),
+                                        width: 0.9,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      "MOST LOVED",
+                                      style: AppTheme.sansBody(
+                                        fontSize: 7.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.secondaryAccent,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    _ExperienceCardDetails(item: widget.item, isDark: isDark),
-                  ],
+                      _ExperienceCardDetails(item: widget.item, isDark: isDark),
+                    ],
                   ),
                 ),
 
-                // Floating Circular Add Button on top-right of details
+                // Floating Circular Favorite Button on top-right of image (Image 1 style)
                 Positioned(
-                  right: 14,
-                  top: 14,
+                  right: 10,
+                  top: 10,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                     child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      filter: ui.ImageFilter.blur(sigmaX: 6, sigmaY: 6),
                       child: GestureDetector(
-                        onTap: widget.onQuickAdd,
+                        onTap: () {
+                          setState(() => _isFavorite = !_isFavorite);
+                          Get.snackbar(
+                            _isFavorite ? "Saved" : "Removed",
+                            _isFavorite
+                                ? "${widget.item.name} added to favorites."
+                                : "${widget.item.name} removed from favorites.",
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: const Color(0xFF1B2D27).withValues(alpha: 0.9),
+                            colorText: Colors.white,
+                            borderColor: AppColors.secondaryAccent.withValues(alpha: 0.3),
+                            borderWidth: 1.0,
+                            margin: const EdgeInsets.all(16),
+                            duration: const Duration(seconds: 2),
+                          );
+                        },
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          width: 38,
-                          height: 38,
+                          duration: const Duration(milliseconds: 200),
+                          width: 32,
+                          height: 32,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _isHovered ? AppColors.secondaryAccent : Colors.black.withValues(alpha: 0.45),
+                            color: Colors.black.withValues(alpha: 0.45),
                             border: Border.all(
-                              color: _isHovered ? Colors.transparent : AppColors.secondaryAccent.withValues(alpha: 0.3),
-                              width: 1.2,
+                              color: _isFavorite
+                                  ? AppColors.secondaryAccent
+                                  : AppColors.secondaryAccent.withValues(alpha: 0.3),
+                              width: 1.0,
                             ),
                           ),
                           alignment: Alignment.center,
-                          child: AnimatedRotation(
-                            turns: _isHovered ? 0.25 : 0.0,
-                            duration: const Duration(milliseconds: 250),
-                            child: Icon(
-                              Icons.add,
-                              size: 18,
-                              color: _isHovered ? const Color(0xFF0F1B18) : Colors.white,
-                            ),
+                          child: Icon(
+                            _isFavorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            size: 16,
+                            color: _isFavorite
+                                ? AppColors.secondaryAccent
+                                : Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ),
@@ -241,99 +261,92 @@ class _ExperienceCardDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             "${item.categoryName.toUpperCase()} · ${item.durationHours.toStringAsFixed(0)} HRS",
             style: AppTheme.sansBody(
-              fontSize: 9,
+              fontSize: 8.5,
               color: AppColors.secondaryAccent,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.8,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            item.name,
-            style: GoogleFonts.italiana(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              height: 1.1,
-              letterSpacing: 0.5,
+              letterSpacing: 1.4,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 44,
-            child: Text(
-              item.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.sansBody(
-                fontSize: 12,
-                color: AppColors.muted.withValues(alpha: 0.8),
-                height: 1.6,
-              ),
+          const SizedBox(height: 3),
+          Text(
+            item.name,
+            style: GoogleFonts.italiana(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1.15,
+              letterSpacing: 0.3,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.max,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     AppFormatters.formatCurrency(item.effectivePrice),
                     style: AppTheme.sansBody(
-                      fontSize: 16.5,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  if (item.offerPrice != null && item.offerPrice! < item.price) ...[
-                    const SizedBox(width: 6),
-                    Text(
-                      AppFormatters.formatCurrency(item.price),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.muted.withValues(alpha: 0.7),
-                        decoration: TextDecoration.lineThrough,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (item.offerPrice != null && item.offerPrice! < item.price) ...[
+                        Text(
+                          AppFormatters.formatCurrency(item.price),
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: AppColors.muted.withValues(alpha: 0.7),
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                      ],
+                      Text(
+                        "onwards",
+                        style: AppTheme.sansBody(
+                          fontSize: 9,
+                          color: AppColors.muted.withValues(alpha: 0.7),
+                        ),
                       ),
-                    ),
-                  ],
-                  const SizedBox(width: 4),
-                  Text(
-                    "onwards",
-                    style: AppTheme.sansBody(
-                      fontSize: 10,
-                      color: AppColors.muted.withValues(alpha: 0.7),
-                    ),
+                    ],
                   ),
                 ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
-                    Icons.star,
-                    size: 12,
+                    Icons.star_rounded,
+                    size: 13,
                     color: AppColors.secondaryAccent,
                   ),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: 2),
                   Text(
-                    "${item.rating} (${item.reviewCount})",
+                    "${item.rating.toStringAsFixed(1)} (${item.reviewCount})",
                     style: AppTheme.sansBody(
                       fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ],

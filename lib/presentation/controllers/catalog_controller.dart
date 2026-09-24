@@ -46,17 +46,17 @@ class CatalogController extends GetxController {
   final selectedCategorySlug = ''.obs;
   final searchQuery = ''.obs;
   final sortBy = 'popular'.obs;
-  final rxVisibleCount = 6.obs;
+  final rxVisibleCount = 8.obs;
 
   // Raw unfiltered list of all active experiences from Firestore.
   final List<Experience> _allActiveExperiences = <Experience>[];
 
   void loadMore() {
-    rxVisibleCount.value += 6;
+    rxVisibleCount.value += 8;
   }
 
   void resetVisibleCount() {
-    rxVisibleCount.value = 6;
+    rxVisibleCount.value = 8;
   }
 
   @override
@@ -65,8 +65,14 @@ class CatalogController extends GetxController {
     _bindRealtimeStreams();
 
     // Re-apply experience filters whenever user changes any filter param.
-    ever(selectedCategorySlug, (_) => applyExperienceFilters());
-    ever(sortBy, (_) => applyExperienceFilters());
+    ever(selectedCategorySlug, (_) {
+      resetVisibleCount();
+      applyExperienceFilters();
+    });
+    ever(sortBy, (_) {
+      resetVisibleCount();
+      applyExperienceFilters();
+    });
 
     // Re-apply when categories change (cascade: hide experiences of inactive category).
     ever(rxCategories, (_) => applyExperienceFilters());
@@ -74,7 +80,10 @@ class CatalogController extends GetxController {
     // Debounce keystroke-level search so we don't re-filter on every character.
     debounce(
       searchQuery,
-      (_) => applyExperienceFilters(),
+      (_) {
+        resetVisibleCount();
+        applyExperienceFilters();
+      },
       time: const Duration(milliseconds: 400),
     );
   }
@@ -169,6 +178,7 @@ class CatalogController extends GetxController {
 
   void updateSort(String option) {
     sortBy.value = option;
+    resetVisibleCount();
   }
 
   Future<bool> requestCallback({

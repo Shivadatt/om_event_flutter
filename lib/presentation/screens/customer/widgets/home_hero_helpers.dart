@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -52,8 +52,7 @@ class GoldGlowPainter extends CustomPainter {
 }
 
 class CinematicBackground extends StatefulWidget {
-  final bool isHovered;
-  const CinematicBackground({super.key, required this.isHovered});
+  const CinematicBackground({super.key});
 
   @override
   State<CinematicBackground> createState() => _CinematicBackgroundState();
@@ -63,6 +62,7 @@ class _CinematicBackgroundState extends State<CinematicBackground>
     with SingleTickerProviderStateMixin {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
+  bool _isHovered = false;
   late AnimationController _zoomController;
 
   @override
@@ -77,7 +77,10 @@ class _CinematicBackgroundState extends State<CinematicBackground>
 
   Future<void> _initController() async {
     _controller = VideoPlayerController.networkUrl(
-      Uri.parse('https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/balloon_blast_hero_section_video.mp4'),
+      Uri.parse(
+        'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/balloon_blast_hero_section_video.mp4',
+      ),
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
     try {
       await _controller!.initialize();
@@ -87,21 +90,32 @@ class _CinematicBackgroundState extends State<CinematicBackground>
         setState(() {
           _isInitialized = true;
         });
-        if (widget.isHovered) {
-          _controller!.play();
-        }
+        // Default state: Paused at current position, showing poster
       }
     } catch (_) {}
   }
 
-  @override
-  void didUpdateWidget(covariant CinematicBackground oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_controller == null || !_isInitialized) return;
-    if (widget.isHovered) {
+  void _onEnter() {
+    if (_isHovered) return;
+    setState(() => _isHovered = true);
+    if (_isInitialized && _controller != null) {
       _controller!.play();
-    } else {
+    }
+  }
+
+  void _onExit() {
+    if (!_isHovered) return;
+    setState(() => _isHovered = false);
+    if (_isInitialized && _controller != null) {
       _controller!.pause();
+    }
+  }
+
+  void _onTap() {
+    if (_isHovered) {
+      _onExit();
+    } else {
+      _onEnter();
     }
   }
 
@@ -130,37 +144,54 @@ class _CinematicBackgroundState extends State<CinematicBackground>
       0, 0, 0, 1, 0,
     ];
 
-    return ColorFiltered(
-      colorFilter: ColorFilter.matrix(colorMatrix),
-      child: AnimatedBuilder(
-        animation: _zoomController,
-        builder: (context, child) {
-          final scale = 1.0 + (_zoomController.value * 0.05);
-          return Transform.scale(
-            scale: scale,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.network(fallbackPoster, fit: BoxFit.cover),
-                if (_isInitialized && _controller != null)
-                  IgnorePointer(
-                    child: AnimatedOpacity(
-                      opacity: widget.isHovered ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 250),
-                      child: FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: _controller!.value.size.width > 0 ? _controller!.value.size.width : 1280,
-                          height: _controller!.value.size.height > 0 ? _controller!.value.size.height : 720,
-                          child: VideoPlayer(_controller!),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => _onEnter(),
+      onExit: (_) => _onExit(),
+      child: GestureDetector(
+        onTap: _onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ColorFiltered(
+          colorFilter: ColorFilter.matrix(colorMatrix),
+          child: AnimatedBuilder(
+            animation: _zoomController,
+            builder: (context, child) {
+              final scale = 1.0 + (_zoomController.value * 0.05);
+              return Transform.scale(
+                scale: scale,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      fallbackPoster,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(color: const Color(0xFF152621)),
+                    ),
+                    if (_isInitialized && _controller != null)
+                      IgnorePointer(
+                        child: AnimatedOpacity(
+                          opacity: _isHovered ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _controller!.value.size.width > 0
+                                  ? _controller!.value.size.width
+                                  : 1280,
+                              height: _controller!.value.size.height > 0
+                                  ? _controller!.value.size.height
+                                  : 720,
+                              child: VideoPlayer(_controller!),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

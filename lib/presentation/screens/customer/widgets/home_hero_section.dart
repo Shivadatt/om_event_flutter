@@ -24,7 +24,6 @@ class HeroSection extends StatefulWidget {
 class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _slideController;
-  bool _isHovered = false;
 
   @override
   void initState() {
@@ -51,76 +50,92 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
-    final double pH = widget.isDesktop ? 80.0 : 24.0;
-    final double titleSize = width >= 700 ? (width * 0.055).clamp(42.0, 76.0) : 34.0;
-    final double heroHeight = height.clamp(660.0, 920.0);
+    final isWide = width >= 960;
+    final double pH = width >= 1440 ? 48.0 : (width >= 1000 ? 36.0 : 20.0);
+    final double titleSize = isWide
+        ? (width * 0.038).clamp(42.0, 64.0)
+        : (width * 0.08).clamp(28.0, 42.0);
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: Container(
-        width: double.infinity,
-        height: heroHeight,
-        color: const Color(0xFF0D1915),
-        child: Stack(
-          fit: StackFit.loose,
-          children: [
-            Positioned.fill(child: CinematicBackground(isHovered: _isHovered)),
-            Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.45))),
-            Positioned.fill(child: _buildGradientOverlay()),
-            const Positioned.fill(child: CustomPaint(painter: GoldGlowPainter())),
-            const Positioned.fill(child: CustomPaint(painter: GrainPainter())),
-            Positioned.fill(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: pH),
-                child: Center(
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: Obx(() {
-                      final homepage = AppConfigService.to.rxHomepageSettings.value;
-                      final stats = AppConfigService.to.rxStatisticsSettings.value;
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF0D1915),
+      child: Stack(
+        children: [
+          const Positioned.fill(child: CustomPaint(painter: GoldGlowPainter())),
+          const Positioned.fill(child: CustomPaint(painter: GrainPainter())),
+          Padding(
+            padding: EdgeInsets.fromLTRB(pH, isWide ? 40.0 : 28.0, pH, isWide ? 28.0 : 20.0),
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 1440),
+                child: Obx(() {
+                  final homepage = AppConfigService.to.rxHomepageSettings.value;
+                  final stats = AppConfigService.to.rxStatisticsSettings.value;
 
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: widget.isDesktop ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 72),
-                          _buildEyebrow(),
-                          const SizedBox(height: 18),
-                          _buildHeading(titleSize),
-                          const SizedBox(height: 14),
-                          _buildSubtitle(homepage.heroSubtitle),
-                          const SizedBox(height: 38),
-                          _buildCtaButtons(),
-                          const SizedBox(height: 60),
-                          _buildTrustStats(stats),
-                        ],
-                      );
-                    }),
-                  ),
-                ),
+                  final String headingText = (homepage.heroTitle.isEmpty ||
+                          homepage.heroTitle == "Celebrations,\nthoughtfully composed.")
+                      ? "TURN MOMENTS\nINTO BEAUTIFUL\nMEMORIES."
+                      : homepage.heroTitle.toUpperCase();
+
+                  final String subText = (homepage.heroSubtitle.isEmpty ||
+                          homepage.heroSubtitle.startsWith("From the first sketch"))
+                      ? "Creative decorations for every occasion, designed with love, detail and perfection."
+                      : homepage.heroSubtitle;
+
+                  if (isWide) {
+                    // Desktop Split Layout (Matching Option 2 in Reference Image 1)
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          flex: 6,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildEyebrow(),
+                              const SizedBox(height: 14),
+                              _buildHeading(headingText, titleSize, isWide),
+                              const SizedBox(height: 14),
+                              _buildSubtitle(subText, isWide),
+                              const SizedBox(height: 24),
+                              _buildCtaButtons(isWide),
+                              const SizedBox(height: 28),
+                              _buildTrustStats(stats, isWide),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                        Expanded(
+                          flex: 5,
+                          child: _buildVideoShowcase(isMobile: false),
+                        ),
+                      ],
+                    );
+                  } else {
+                    // Mobile / Tablet Layout (Matching Reference Image 1 Mobile)
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _buildEyebrow(),
+                        const SizedBox(height: 14),
+                        _buildHeading(headingText, titleSize, isWide),
+                        const SizedBox(height: 14),
+                        _buildSubtitle(subText, isWide),
+                        const SizedBox(height: 22),
+                        _buildCtaButtons(isWide),
+                        const SizedBox(height: 24),
+                        _buildTrustStats(stats, isWide),
+                        const SizedBox(height: 28),
+                        _buildVideoShowcase(isMobile: true),
+                      ],
+                    );
+                  }
+                }),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGradientOverlay() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            const Color(0xFF080A08).withValues(alpha: 0.88),
-            const Color(0xFF0A120E).withValues(alpha: 0.65),
-            const Color(0xFF000000).withValues(alpha: 0.20),
-          ],
-          stops: const [0.0, 0.40, 1.0],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -129,19 +144,33 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     return AnimatedBuilder(
       animation: _fadeController,
       builder: (context, child) => Opacity(opacity: _fadeController.value, child: child),
-      child: Text(
-        "BESPOKE EVENT DESIGN • AHMEDABAD",
-        style: AppTheme.sansBody(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 4.0,
-          color: AppColors.secondaryAccent,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.secondaryAccent,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            "BESPOKE EVENT DESIGN • AHMEDABAD",
+            style: AppTheme.sansBody(
+              fontSize: 10.5,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 3.5,
+              color: AppColors.secondaryAccent,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeading(double titleSize) {
+  Widget _buildHeading(String text, double titleSize, bool isWide) {
     return AnimatedBuilder(
       animation: _slideController,
       builder: (context, child) {
@@ -158,47 +187,40 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
           end: Alignment.bottomRight,
         ).createShader(bounds),
         child: Text(
-          "CELEBRATIONS,\nTHOUGHTFULLY\nCOMPOSED.",
+          text,
           style: GoogleFonts.italiana(
             fontSize: titleSize,
             color: Colors.white,
-            height: 0.96,
+            height: 1.05,
             fontWeight: FontWeight.normal,
-            letterSpacing: 1.5,
+            letterSpacing: 1.2,
           ),
-          textAlign: widget.isDesktop ? TextAlign.start : TextAlign.center,
+          textAlign: isWide ? TextAlign.start : TextAlign.center,
         ),
       ),
     );
   }
 
-  Widget _buildSubtitle(String heroSubtitle) {
+  Widget _buildSubtitle(String heroSubtitle, bool isWide) {
     return AnimatedBuilder(
       animation: _fadeController,
       builder: (context, child) => Opacity(opacity: _fadeController.value, child: child),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 580),
+        constraints: const BoxConstraints(maxWidth: 560),
         child: Text(
           heroSubtitle,
-          style: AppTheme.sansBody(fontSize: 15.5, color: AppColors.muted.withValues(alpha: 0.85), height: 1.7),
-          textAlign: widget.isDesktop ? TextAlign.start : TextAlign.center,
+          style: AppTheme.sansBody(
+            fontSize: 15.0,
+            color: Colors.white70,
+            height: 1.65,
+          ),
+          textAlign: isWide ? TextAlign.start : TextAlign.center,
         ),
       ),
     );
   }
 
-  Widget _buildCtaButtons() {
-    final primaryBtn = CinematicButton(
-      text: "Design Your Event",
-      isPrimary: true,
-      onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
-    );
-    final secondaryBtn = CinematicButton(
-      text: "Plan With An Expert",
-      isPrimary: false,
-      onPressed: () => CustomerDialogHelper.openLeadDialog(context),
-    );
-
+  Widget _buildCtaButtons(bool isWide) {
     return AnimatedBuilder(
       animation: _slideController,
       builder: (context, child) {
@@ -208,51 +230,133 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
           child: Transform.translate(offset: Offset(0, slide), child: child),
         );
       },
-      child: widget.isDesktop
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                primaryBtn,
-                const SizedBox(width: 16),
-                secondaryBtn,
-              ],
-            )
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                primaryBtn,
-                const SizedBox(height: 12),
-                secondaryBtn,
-              ],
-            ),
-    );
-  }
-
-  Widget _buildTrustStats(dynamic stats) {
-    return AnimatedBuilder(
-      animation: _fadeController,
-      builder: (context, child) => Opacity(opacity: _fadeController.value, child: child),
-      child: Container(
-        width: double.infinity,
-        alignment: widget.isDesktop ? Alignment.centerLeft : Alignment.center,
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            _statItem("4.9 Google Rating"),
-            _dotSeparator(),
-            _statItem("${stats.completedEvents}+ Celebrations"),
-            _dotSeparator(),
-            _statItem("${stats.years} Years Experience"),
-          ],
-        ),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        alignment: isWide ? WrapAlignment.start : WrapAlignment.center,
+        children: [
+          // Primary Button: EXPLORE OUR SERVICES ->
+          CinematicButton(
+            text: "Explore Our Services →",
+            isPrimary: true,
+            onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
+          ),
+          // Secondary Button: ▶ WATCH VIDEO
+          CinematicButton(
+            text: "▶ Watch Video",
+            isPrimary: false,
+            onPressed: () => CustomerDialogHelper.openLeadDialog(context),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _statItem(String label) => Text(label.toUpperCase(), style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.muted.withValues(alpha: 0.65), letterSpacing: 2.0));
-  Widget _dotSeparator() => Text("•", style: TextStyle(color: AppColors.secondaryAccent.withValues(alpha: 0.4), fontSize: 12));
+  Widget _buildTrustStats(dynamic stats, bool isWide) {
+    return AnimatedBuilder(
+      animation: _fadeController,
+      builder: (context, child) => Opacity(opacity: _fadeController.value, child: child),
+      child: Wrap(
+        spacing: 32,
+        runSpacing: 16,
+        alignment: isWide ? WrapAlignment.start : WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          _buildStatBadge(
+            icon: Icons.star_rounded,
+            count: "500+",
+            label: "Happy Clients",
+          ),
+          _buildStatBadge(
+            icon: Icons.celebration_rounded,
+            count: "1000+",
+            label: "Events Decorated",
+          ),
+          if (isWide)
+            _buildStatBadge(
+              icon: Icons.history_rounded,
+              count: "5+",
+              label: "Years Experience",
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatBadge({
+    required IconData icon,
+    required String count,
+    required String label,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFFC8A96E).withValues(alpha: 0.15),
+            border: Border.all(color: const Color(0xFFC8A96E).withValues(alpha: 0.4), width: 1.2),
+          ),
+          child: Icon(icon, color: const Color(0xFFE8CC8A), size: 16),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              count,
+              style: AppTheme.sansBody(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                height: 1.1,
+              ),
+            ),
+            Text(
+              label,
+              style: AppTheme.sansBody(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.muted,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVideoShowcase({required bool isMobile}) {
+    return Container(
+      height: isMobile ? 240 : 420,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFC8A96E).withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFC8A96E).withValues(alpha: 0.15),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22.5),
+        child: const CinematicBackground(),
+      ),
+    );
+  }
 }

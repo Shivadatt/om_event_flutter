@@ -29,11 +29,11 @@ class VideoStoriesSection extends StatelessWidget {
       color: const Color(0xFF152621), // Secondary Background
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 64.0 : 24.0,
-        vertical: isDesktop ? 72.0 : 48.0,
+        vertical: isDesktop ? 48.0 : 36.0,
       ),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: 1440),
           child: Obx(() {
             final videoSettings = AppConfigService.to.rxVideoSettings.value;
             final videos = videoSettings.videosList.isNotEmpty

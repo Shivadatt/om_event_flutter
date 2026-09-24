@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/constants/app_colors.dart';
@@ -27,7 +27,7 @@ class ContactSection extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(
         horizontal: paddingHorizontal,
-        vertical: isDesktop ? 72 : 48,
+        vertical: isDesktop ? 48 : 36,
       ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -48,7 +48,7 @@ class ContactSection extends StatelessWidget {
       ),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: 1440),
           child: isDesktop
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

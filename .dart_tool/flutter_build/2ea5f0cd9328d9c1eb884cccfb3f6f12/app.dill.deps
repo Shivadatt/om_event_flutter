@@ -3074,6 +3074,7 @@ file:///D:/om_event_python/om_event/lib/core/services/token_service.dart
 file:///D:/om_event_python/om_event/lib/core/utils/app_logger.dart
 file:///D:/om_event_python/om_event/lib/core/utils/booking_communication_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/date_parser.dart
+file:///D:/om_event_python/om_event/lib/core/utils/error_mapper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/formatters.dart
 file:///D:/om_event_python/om_event/lib/core/utils/navigation_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/pdf_helper.dart

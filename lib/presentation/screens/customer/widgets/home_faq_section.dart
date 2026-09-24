@@ -44,11 +44,11 @@ class _FAQSectionState extends State<FAQSection> {
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: paddingHorizontal,
-          vertical: widget.isDesktop ? 100 : 70,
+          vertical: widget.isDesktop ? 54 : 40,
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1200),
+            constraints: const BoxConstraints(maxWidth: 1440),
             child: Obx(() {
               final homepage = AppConfigService.to.rxHomepageSettings.value;
               final rawFaqs = homepage.faqs.isNotEmpty
