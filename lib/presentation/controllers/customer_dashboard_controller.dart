@@ -17,6 +17,7 @@ import '../../domain/entities/customer_wishlist.dart';
 import '../../domain/entities/offer.dart';
 import '../../domain/entities/customer_activity.dart';
 import '../../data/models/customer_profile_model.dart';
+import '../../core/utils/error_mapper.dart';
 import 'customer_auth_controller.dart';
 
 part 'parts/customer_sync.dart';

@@ -1,4 +1,4 @@
-﻿part of '../home_catalog_section.dart';
+part of '../home_catalog_section.dart';
 
 extension _CatalogToolbarExtension on ExperiencesCatalogSection {
   Widget _buildChip({
@@ -80,10 +80,13 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              headingWidget,
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6.0),
-                child: descWidget,
+              Expanded(child: headingWidget),
+              const SizedBox(width: 16),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: descWidget,
+                ),
               ),
             ],
           )

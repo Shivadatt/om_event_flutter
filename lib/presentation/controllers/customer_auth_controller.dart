@@ -7,6 +7,8 @@ import '../../domain/entities/customer_profile.dart';
 import '../../core/config/app_routes.dart';
 import '../../core/services/bootstrap_service.dart';
 import '../../core/services/fcm_notification_service.dart';
+import '../../core/utils/error_mapper.dart';
+import '../../core/utils/app_logger.dart';
 import 'cart_controller.dart';
 import 'quotation_controller.dart';
 
@@ -49,6 +51,8 @@ class CustomerAuthController extends GetxController {
       if (loggedIn) {
         _authRepository.getCustomerProfile(user.uid).then((profile) {
           rxCustomerProfile.value = profile;
+        }).catchError((e) {
+          AppLogger.warning("Customer profile load error: $e");
         });
       } else {
         rxCustomerProfile.value = null;
@@ -73,23 +77,27 @@ class CustomerAuthController extends GetxController {
   }
 
   Future<void> checkAuthStatus() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.isAnonymous) {
-      rxIsLoggedIn.value = false;
-      rxCustomerProfile.value = null;
-      return;
-    }
-    final loggedIn = await _authRepository.isLoggedIn();
-    rxIsLoggedIn.value = loggedIn;
-    if (loggedIn) {
-      final uid = await _authRepository.getCurrentUserId();
-      if (uid != null) {
-        final profile = await _authRepository.getCustomerProfile(uid);
-        rxCustomerProfile.value = profile;
-        // FCM Initialization is strictly orchestrated by BootstrapService now.
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.isAnonymous) {
+        rxIsLoggedIn.value = false;
+        rxCustomerProfile.value = null;
+        return;
       }
-    } else {
-      rxCustomerProfile.value = null;
+      final loggedIn = await _authRepository.isLoggedIn();
+      rxIsLoggedIn.value = loggedIn;
+      if (loggedIn) {
+        final uid = await _authRepository.getCurrentUserId();
+        if (uid != null) {
+          final profile = await _authRepository.getCustomerProfile(uid);
+          rxCustomerProfile.value = profile;
+          // FCM Initialization is strictly orchestrated by BootstrapService now.
+        }
+      } else {
+        rxCustomerProfile.value = null;
+      }
+    } catch (e) {
+      AppLogger.warning("checkAuthStatus error: $e");
     }
   }
 
@@ -103,7 +111,7 @@ class CustomerAuthController extends GetxController {
       }
       return true;
     } catch (e) {
-      Get.snackbar("Login Failed", e.toString());
+      Get.snackbar("Login Failed", AppErrorMapper.mapAuthError(e));
       return false;
     } finally {
       isLoading.value = false;
@@ -120,7 +128,7 @@ class CustomerAuthController extends GetxController {
       }
       return true;
     } catch (e) {
-      Get.snackbar("Registration Failed", e.toString());
+      Get.snackbar("Registration Failed", AppErrorMapper.mapAuthError(e));
       return false;
     } finally {
       isLoading.value = false;
@@ -137,11 +145,11 @@ class CustomerAuthController extends GetxController {
           Get.snackbar("OTP Sent", "Please check your messages.");
         },
         (error) {
-          Get.snackbar("Verification Failed", error);
+          Get.snackbar("Verification Failed", AppErrorMapper.mapAuthError(error));
         },
       );
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      Get.snackbar("Error", AppErrorMapper.mapAuthError(e));
     } finally {
       isLoading.value = false;
     }
@@ -163,7 +171,7 @@ class CustomerAuthController extends GetxController {
       }
       return true;
     } catch (e) {
-      Get.snackbar("Invalid OTP", e.toString());
+      Get.snackbar("Invalid OTP", AppErrorMapper.mapAuthError(e));
       return false;
     } finally {
       isLoading.value = false;
@@ -217,7 +225,7 @@ class CustomerAuthController extends GetxController {
             colorText: const Color(0xFFC9A77E),
           );
         } catch (ex) {
-          Get.snackbar("Google Login Failed", ex.toString());
+          Get.snackbar("Google Login Failed", AppErrorMapper.mapAuthError(ex));
         }
       }
     } finally {
@@ -243,7 +251,7 @@ class CustomerAuthController extends GetxController {
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);
     } catch (e) {
-      Get.snackbar("Logout Error", e.toString());
+      Get.snackbar("Logout Error", AppErrorMapper.mapGeneralError(e));
     } finally {
       isLoading.value = false;
     }

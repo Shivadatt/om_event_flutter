@@ -159,7 +159,7 @@ class _CancellationRequestDialogState extends State<CancellationRequestDialog> {
       if (mounted) {
         Get.snackbar(
           "Submission Failed",
-          "Could not process cancellation: ${e.toString()}",
+          "Could not process cancellation at this time. Please try again or contact our concierge.",
           backgroundColor: const Color(0xFF1F1210),
           colorText: const Color(0xFFE57373),
         );

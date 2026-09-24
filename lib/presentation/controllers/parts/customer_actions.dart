@@ -39,7 +39,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await logActivity('Profile Updated', 'Customer updated bio profile details.');
       Get.snackbar("Success", "Profile updated successfully");
     } catch (e) {
-      Get.snackbar("Error", "Failed to update profile: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to update profile. Please try again."));
     } finally {
       isLoading.value = false;
     }
@@ -72,7 +72,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await logActivity('Lead Created', 'Created a new lead inquiry for $service.');
       Get.snackbar("Success", "Inquiry submitted successfully!");
     } catch (e) {
-      Get.snackbar("Error", "Failed to submit inquiry: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to submit inquiry. Please try again."));
     } finally {
       isLoading.value = false;
     }
@@ -92,7 +92,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await logActivity('Review', 'Submitted a booking review.');
       Get.snackbar("Success", "Review submitted for verification");
     } catch (e) {
-      Get.snackbar("Error", "Failed to submit review: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to submit review. Please try again."));
     } finally {
       isLoading.value = false;
     }
@@ -106,7 +106,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await logActivity('Quotation', 'Accepted quotation ID: $quoteId');
       Get.snackbar("Success", "Quotation accepted.");
     } catch (e) {
-      Get.snackbar("Error", "Failed to accept quotation: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to accept quotation. Please try again."));
     } finally {
       isLoading.value = false;
     }
@@ -156,7 +156,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await logActivity('Quotation', 'Legally accepted quotation ID: $quoteId (v$acceptedVersion) signed by $acceptedBy.');
       Get.snackbar("Success", "Proposal signed and accepted successfully.");
     } catch (e) {
-      Get.snackbar("Consent Error", e.toString());
+      Get.snackbar("Consent Error", AppErrorMapper.mapCustomerError(e, fallback: "Unable to complete signature consent. Please reload and try again."));
       rethrow;
     } finally {
       isLoading.value = false;
@@ -170,7 +170,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await logActivity('Quotation', 'Rejected quotation ID: $quoteId');
       Get.snackbar("Success", "Quotation rejected.");
     } catch (e) {
-      Get.snackbar("Error", "Failed to reject quotation: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to reject quotation. Please try again."));
     } finally {
       isLoading.value = false;
     }
@@ -189,7 +189,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await logActivity('Quotation', 'Requested revision for quote: $quoteId. Notes: $revisionNotes');
       Get.snackbar("Success", "Revision request submitted.");
     } catch (e) {
-      Get.snackbar("Error", "Failed to request revision: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to submit revision request. Please try again."));
     } finally {
       isLoading.value = false;
     }
@@ -219,7 +219,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await _portalRepo.addToWishlist(item);
       Get.snackbar("Added", "Item saved to wishlist.");
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to save item to wishlist."));
     }
   }
 
@@ -228,7 +228,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
       await _portalRepo.removeFromWishlist(wishlistId);
       Get.snackbar("Removed", "Item removed from wishlist.");
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to remove item from wishlist."));
     }
   }
 
@@ -265,7 +265,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
         rxPreferences.value = prefs;
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to load preferences: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to load preferences. Please try again."));
     } finally {
       isPreferencesLoading.value = false;
     }
@@ -285,7 +285,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
         colorText: const Color(0xFFD4AF37),
       );
     } catch (e) {
-      Get.snackbar("Error", "Failed to save: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to save preferences. Please try again."));
     } finally {
       isPreferencesLoading.value = false;
     }
@@ -303,7 +303,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
         colorText: const Color(0xFFD4AF37),
       );
     } catch (e) {
-      Get.snackbar("Error", "Action failed: $e");
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Action could not be completed. Please try again."));
     }
   }
 }

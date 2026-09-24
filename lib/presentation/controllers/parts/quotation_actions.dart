@@ -181,7 +181,8 @@ extension QuotationActions on QuotationController {
       Get.offNamed(AppRoutes.quoteSuccess);
       return true;
     } catch (e) {
-      Get.snackbar("Failed", "Quotation failed: ${e.toString()}");
+      final safeMsg = AppErrorMapper.mapBookingError(e);
+      Get.snackbar("Notice", safeMsg);
       return false;
     } finally {
       isGeneratingQuote.value = false;
@@ -364,7 +365,15 @@ extension QuotationActions on QuotationController {
       Get.offNamed(AppRoutes.quoteSuccess);
       return true;
     } catch (e) {
-      Get.snackbar("Booking Failed", "Unable to create booking: ${e.toString()}");
+      final safeMsg = AppErrorMapper.mapBookingError(e);
+      Get.snackbar(
+        "Booking Notice",
+        safeMsg,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF231B1B),
+        colorText: const Color(0xFFFFAA99),
+        margin: const EdgeInsets.all(16),
+      );
       return false;
     } finally {
       isGeneratingQuote.value = false;

@@ -13,6 +13,7 @@ import '../../core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import '../../core/services/booking_availability_service.dart';
 import '../../core/services/fcm/notification_local_service.dart';
+import '../../core/utils/error_mapper.dart';
 import 'customer_auth_controller.dart';
 import 'cart_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';

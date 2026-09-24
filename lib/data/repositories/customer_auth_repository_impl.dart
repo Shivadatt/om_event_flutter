@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../models/customer_profile_model.dart';
@@ -94,11 +95,16 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
 
   @override
   Future<CustomerProfile?> getCustomerProfile(String uid) async {
-    final doc = await _firestore.collection(AppCollections.customerProfiles).doc(uid).get();
-    if (doc.exists && doc.data() != null) {
-      return CustomerProfileModel.fromJson(doc.data()!, doc.id);
+    try {
+      final doc = await _firestore.collection(AppCollections.customerProfiles).doc(uid).get();
+      if (doc.exists && doc.data() != null) {
+        return CustomerProfileModel.fromJson(doc.data()!, doc.id);
+      }
+      return null;
+    } catch (e) {
+      AppLogger.warning("Failed to fetch customer profile for $uid: $e");
+      return null;
     }
-    return null;
   }
 
   @override

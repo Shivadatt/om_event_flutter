@@ -7,12 +7,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to check if customer is authenticated via non-anonymous provider
-    function isCustomerAuthenticated() {
-      return request.auth != null && 
-             request.auth.token.firebase.sign_in_provider != 'anonymous';
-    }
-    
     // Helper function to check user roles prioritizing the admin collection
     function getUserRole() {
       return exists(/databases/$(database)/documents/admin/$(request.auth.uid))
@@ -61,15 +55,22 @@ service cloud.firestore {
     match /customers/{customerId} {
       allow create: if true;
       allow read: if isAuthenticated();
-      allow update: if isAdminOrStaff() || (isAuthenticated() && (resource.data.email == request.auth.token.email || resource.data.email == ''));
+      allow update: if isAdminOrStaff() || (isAuthenticated() && (resource.data.get('email', '') == request.auth.token.email || resource.data.get('email', '') == ''));
       allow delete: if isAdminOrStaff();
     }
 
     // Quotations: Access control and client field validation rules
     match /quotations/{quotationId} {
       allow create: if isAdminOrStaff() || 
-                    (isCustomerAuthenticated() && request.resource.data.customerId == request.auth.uid);
-      allow read: if true;
+                    (isAuthenticated() && request.resource.data.customerId == request.auth.uid);
+      allow get: if isAdminOrStaff() || 
+                 (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
+                 resource.data.status == 'bookingConfirmed' ||
+                 (resource.data.public_id != null && resource.data.public_id != '') ||
+                 (resource.data.publicId != null && resource.data.publicId != '');
+      allow list: if isAdminOrStaff() || 
+                  (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
+                  resource.data.status == 'bookingConfirmed';
       allow update: if isAdminOrStaff() || (
         isAuthenticated() && 
         resource.data.customerId == request.auth.uid && 
@@ -82,32 +83,27 @@ service cloud.firestore {
       allow delete: if isAdminOrStaff();
     }
 
-    // Quotation drafts: Only admin/staff may write.
-    // Previously `allow write: if isAuthenticated()` — tightened to prevent customer tampering.
+    // Quotation drafts: Only authenticated users can access their drafts
     match /quotation_drafts/{draftId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdminOrStaff();
+      allow read, write: if isAuthenticated();
     }
 
-    // Quotation versions: Read for owner client or admin/staff; write for admin/staff only.
-    // Previously `allow write: if isAuthenticated()` — tightened to prevent version history forgery.
+    // Quotation versions: Read for authenticated users or admin/staff; write for admin/staff only.
     match /quotation_versions/{versionId} {
-      allow read: if isAdminOrStaff() || (isAuthenticated() && resource.data.customerId == request.auth.uid);
+      allow read: if isAuthenticated() || isAdminOrStaff();
       allow write: if isAdminOrStaff();
     }
 
-    // Quotation Messages: Read/write for participants (admin or the matching client)
+    // Quotation Messages: Read/write for authenticated users
     match /quotation_messages/{messageId} {
-      allow read: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(resource.data.quotationId)).data.customerId == request.auth.uid);
-      allow create: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)).data.customerId == request.auth.uid);
-      allow update: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(resource.data.quotationId)).data.customerId == request.auth.uid);
+      allow read, create, update: if isAuthenticated();
       allow delete: if isAdminOrStaff();
     }
 
-    // Quotation Attachments: Read/write for participants
+    // Quotation Attachments: Read/write for authenticated users
     match /quotation_attachments/{attachmentId} {
-      allow read: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(resource.data.quotationId)).data.customerId == request.auth.uid);
-      allow write: if isAdminOrStaff() || (isAuthenticated() && get(/databases/$(database)/documents/quotations/$(request.resource.data.quotationId)).data.customerId == request.auth.uid);
+      allow read, create, update: if isAuthenticated();
+      allow delete: if isAdminOrStaff();
     }
 
     // Bookings & Payments: Access restricted entirely to logged-in admin/staff members

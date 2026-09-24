@@ -74,7 +74,7 @@ extension CatalogLeadExtension on CatalogController {
       Get.snackbar("Inquiry Failed", e.message);
       return false;
     } catch (e) {
-      Get.snackbar("Inquiry Failed", e.toString());
+      Get.snackbar("Inquiry Notice", AppErrorMapper.mapCustomerError(e, fallback: "Unable to submit inquiry at this time. Please try again."));
       return false;
     } finally {
       isSubmittingLead.value = false;

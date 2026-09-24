@@ -5,6 +5,7 @@ import '../../core/errors/failures.dart';
 import '../../core/utils/validators.dart';
 import '../../core/utils/app_logger.dart';
 import '../../core/constants/app_collections.dart';
+import '../../core/utils/error_mapper.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/experience.dart';
 import '../../domain/entities/lead.dart';

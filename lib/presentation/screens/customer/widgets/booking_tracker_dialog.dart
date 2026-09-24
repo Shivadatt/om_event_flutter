@@ -110,7 +110,7 @@ class _BookingTrackerDialogState extends State<BookingTrackerDialog> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = "Unable to fetch booking status: ${e.toString()}";
+        _errorMessage = "Unable to locate booking details for this reference ID. Please check the code and try again.";
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -190,7 +190,7 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
         });
       }
     } catch (e) {
-      Get.snackbar("Image Selection Error", e.toString());
+      Get.snackbar("Image Selection Error", "Unable to select the reference image. Please try again.");
     }
   }
 
@@ -477,23 +477,29 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
                                         Icon(
                                           _availabilityResult!.isAvailable
                                               ? Icons.check_circle_rounded
-                                              : Icons.cancel_rounded,
+                                              : (_availabilityResult!.isError
+                                                  ? Icons.error_outline_rounded
+                                                  : Icons.cancel_rounded),
                                           size: 14,
                                           color: _availabilityResult!.isAvailable
                                               ? const Color(0xFF4EBA7A)
-                                              : const Color(0xFFE57373),
+                                              : (_availabilityResult!.isError
+                                                  ? const Color(0xFFFFA726)
+                                                  : const Color(0xFFE57373)),
                                         ),
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
                                             _availabilityResult!.isAvailable
                                                 ? "Date Available (1 Grand Event/Day Guaranteed)"
-                                                : _availabilityResult!.reason ?? "Date unavailable.",
+                                                : (_availabilityResult!.reason ?? "Date unavailable."),
                                             style: AppTheme.sansBody(
                                               fontSize: 11,
                                               color: _availabilityResult!.isAvailable
                                                   ? const Color(0xFF4EBA7A)
-                                                  : const Color(0xFFE57373),
+                                                  : (_availabilityResult!.isError
+                                                      ? const Color(0xFFFFA726)
+                                                      : const Color(0xFFE57373)),
                                             ),
                                           ),
                                         ),
@@ -767,7 +773,16 @@ class _CustomerBookingDialogState extends State<CustomerBookingDialog> {
                             }
                             if (_formKey.currentState?.validate() != true) return;
                             if (_availabilityResult?.isAvailable == false) {
-                              Get.snackbar("Date Unavailable", "Please select an available event date.");
+                              final msg = _availabilityResult?.isError == true
+                                  ? (_availabilityResult?.reason ?? "Unable to verify date availability right now. Please try again.")
+                                  : (_availabilityResult?.reason ?? "Please select an available event date.");
+                              Get.snackbar(
+                                "Date Unavailable",
+                                msg,
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: const Color(0xFF231B1B),
+                                colorText: const Color(0xFFFFAA99),
+                              );
                               return;
                             }
 

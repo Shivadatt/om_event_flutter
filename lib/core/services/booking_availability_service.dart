@@ -1,21 +1,53 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../constants/app_collections.dart';
+import '../../domain/entities/quotation_status.dart';
 import '../utils/app_logger.dart';
 import '../utils/date_parser.dart';
 import 'app_config_service.dart';
 
+/// Explicit status representing date availability states
+enum AvailabilityStatus {
+  available,
+  booked,
+  systemError,
+}
+
 class DateAvailabilityResult {
-  final bool isAvailable;
+  final AvailabilityStatus status;
   final String? reason;
 
-  const DateAvailabilityResult({required this.isAvailable, this.reason});
+  const DateAvailabilityResult({
+    required this.status,
+    this.reason,
+  });
 
-  static const available = DateAvailabilityResult(isAvailable: true);
+  bool get isAvailable => status == AvailabilityStatus.available;
+  bool get isBooked => status == AvailabilityStatus.booked;
+  bool get isError => status == AvailabilityStatus.systemError;
+
+  static const available = DateAvailabilityResult(
+    status: AvailabilityStatus.available,
+    reason: "Date Available (1 Grand Event/Day Guaranteed)",
+  );
+
+  static DateAvailabilityResult booked([String? reason]) =>
+      DateAvailabilityResult(
+        status: AvailabilityStatus.booked,
+        reason: reason ?? "This date is already booked. Please select another date.",
+      );
+
   static DateAvailabilityResult unavailable(String reason) =>
-      DateAvailabilityResult(isAvailable: false, reason: reason);
+      DateAvailabilityResult(
+        status: AvailabilityStatus.booked,
+        reason: reason,
+      );
+
+  static DateAvailabilityResult error([String? message]) =>
+      DateAvailabilityResult(
+        status: AvailabilityStatus.systemError,
+        reason: message ?? "Unable to verify date availability right now. Please try again.",
+      );
 }
 
 class BookingAvailabilityService extends GetxService {
@@ -80,35 +112,15 @@ class BookingAvailabilityService extends GetxService {
     return differenceDays < advanceDays;
   }
 
-  /// Checks whether a given status and customerAction occupies the event date.
-  /// Strict rule: ONE EVENT DATE = MAXIMUM ONE ACTIVE BOOKING.
+  /// Checks whether a given status occupies the event date.
+  /// Strict Canonical Rule: ONLY an ADMIN-CONFIRMED booking blocks a date.
+  /// (status == "bookingConfirmed").
+  /// Customer requests (draft, pending, published, inquiry, accepted) and
+  /// cancelled/rejected requests do NOT block a date.
   static bool isStatusOccupyingDate(String? status, String? customerAction) {
-    final s = (status ?? '').trim().toLowerCase();
-    final ca = (customerAction ?? '').trim().toLowerCase();
-
-    // Cancellation requested by client still locks the date until admin confirms cancellation
-    if (ca == 'cancellation_requested' && s != 'cancelled') {
-      return true;
-    }
-
-    // Released / inactive statuses that free up the date:
-    const releasedStatuses = {
-      'cancelled',
-      'rejectedbyclient',
-      'rejected',
-      'declined',
-      'expired',
-      'archived',
-      'deleted',
-    };
-
-    if (releasedStatuses.contains(s)) {
-      return false;
-    }
-
-    // Any active or pending status occupies the date:
-    // published, viewed, republished, acceptedbyclient, bookingconfirmed, inprogress, confirmed, draft
-    return s.isNotEmpty;
+    final s = (status ?? '').trim();
+    return s == QuotationStatus.bookingConfirmed.nameStr ||
+        s.toLowerCase() == 'bookingconfirmed';
   }
 
   /// Comprehensive check for selected date (Rule 1, Rule 2, Rule 3)
@@ -129,97 +141,81 @@ class BookingAvailabilityService extends GetxService {
     }
 
     // 3. Check Rule 1: One booking per day in Firestore
+    // CANONICAL RULE: Only status == "bookingConfirmed" blocks the date.
+    final targetDateStr = normalizeDateString(date);
+
+    // Strategy 1: Targeted query on normalized_event_date with bookingConfirmed status
     try {
-      final targetDateStr = normalizeDateString(date);
-      final nextDay = toIst(date).add(const Duration(days: 1));
-      final nextDayStr = normalizeDateString(nextDay);
-      print("AVAILABILITY_AUDIT: Checking date=$date targetDateStr=$targetDateStr nextDayStr=$nextDayStr user=${FirebaseAuth.instance.currentUser?.uid}");
+      final snapNorm = await _firestore
+          .collection(AppCollections.quotations)
+          .where('status', isEqualTo: QuotationStatus.bookingConfirmed.nameStr)
+          .where('normalized_event_date', isEqualTo: targetDateStr)
+          .limit(1)
+          .get();
 
-      QuerySnapshot<Map<String, dynamic>>? snapIso;
-      try {
-        snapIso = await _firestore
-            .collection(AppCollections.quotations)
-            .where('event_date', isGreaterThanOrEqualTo: targetDateStr)
-            .where('event_date', isLessThan: nextDayStr)
-            .get();
-        print("AVAILABILITY_AUDIT: snapIso succeeded with ${snapIso.docs.length} docs");
-      } catch (errIso, stackIso) {
-        print("AVAILABILITY_AUDIT: snapIso FAILED with $errIso (type: ${errIso.runtimeType})");
-        print("AVAILABILITY_AUDIT: snapIso stack: $stackIso");
-        rethrow;
-      }
-
-      QuerySnapshot<Map<String, dynamic>>? snapNorm;
-      try {
-        snapNorm = await _firestore
-            .collection(AppCollections.quotations)
-            .where('normalized_event_date', isEqualTo: targetDateStr)
-            .get();
-        print("AVAILABILITY_AUDIT: snapNorm succeeded with ${snapNorm.docs.length} docs");
-      } catch (errNorm) {
-        print("AVAILABILITY_AUDIT: snapNorm FAILED with $errNorm (type: ${errNorm.runtimeType})");
-      }
-
-      // Merge documents from both queries uniquely by doc.id
-      final Map<String, QueryDocumentSnapshot<Map<String, dynamic>>> docsMap = {};
-      for (final doc in snapIso.docs) {
-        docsMap[doc.id] = doc;
-      }
-      if (snapNorm != null) {
+      if (snapNorm.docs.isNotEmpty) {
         for (final doc in snapNorm.docs) {
-          docsMap[doc.id] = doc;
+          if (excludeBookingId != null &&
+              (doc.id == excludeBookingId || doc.data()['public_id'] == excludeBookingId)) {
+            continue;
+          }
+          final status = doc.data()['status']?.toString();
+          if (isStatusOccupyingDate(status, null)) {
+            AppLogger.info(
+              "Date $targetDateStr is blocked by confirmed booking: ${doc.id} (status: $status)",
+              layer: LogLayer.service,
+              className: "BookingAvailabilityService",
+              methodName: "checkDateAvailability",
+            );
+            return DateAvailabilityResult.booked(
+              "This date ($targetDateStr) is already booked. Please select another date.",
+            );
+          }
         }
       }
+    } catch (errNorm) {
+      AppLogger.warning("Targeted confirmed booking query check: $errNorm");
+    }
 
-      for (final doc in docsMap.values) {
-        // Skip current booking if modifying/confirming
-        if (excludeBookingId != null && (doc.id == excludeBookingId || doc.data()['public_id'] == excludeBookingId)) {
+    // Strategy 2: Robust query across all 'bookingConfirmed' documents to catch legacy date representations.
+    try {
+      final snapAllConfirmed = await _firestore
+          .collection(AppCollections.quotations)
+          .where('status', isEqualTo: QuotationStatus.bookingConfirmed.nameStr)
+          .get();
+
+      for (final doc in snapAllConfirmed.docs) {
+        if (excludeBookingId != null &&
+            (doc.id == excludeBookingId || doc.data()['public_id'] == excludeBookingId)) {
           continue;
         }
 
         final data = doc.data();
-        final rawDate = data['event_date'] ?? data['eventDate'];
-        final docDate = DateParser.parseNullable(rawDate);
-        if (docDate != null) {
-          final docDateStr = normalizeDateString(docDate);
-          if (docDateStr != targetDateStr) {
-            continue; // Not actually on this day
-          }
+        final status = data['status']?.toString();
+        if (!isStatusOccupyingDate(status, null)) {
+          continue;
         }
 
-        final status = data['status']?.toString();
-        final customerAction = data['customerAction']?.toString();
-
-        if (isStatusOccupyingDate(status, customerAction)) {
+        final rawDate = data['event_date'] ?? data['eventDate'];
+        final docDate = DateParser.parseNullable(rawDate);
+        if (docDate != null && normalizeDateString(docDate) == targetDateStr) {
           AppLogger.info(
-            "Date $targetDateStr is blocked by active booking: ${doc.id} (status: $status, action: $customerAction)",
+            "Date $targetDateStr is blocked by confirmed booking: ${doc.id} (status: $status)",
             layer: LogLayer.service,
             className: "BookingAvailabilityService",
             methodName: "checkDateAvailability",
           );
-          return DateAvailabilityResult.unavailable(
-            "This date ($targetDateStr) is fully booked. Only 1 grand event per day is hosted to ensure flawless execution.",
+          return DateAvailabilityResult.booked(
+            "This date ($targetDateStr) is already booked. Please select another date.",
           );
         }
       }
-
-      return DateAvailabilityResult.available;
-    } catch (e, stack) {
-      print("AVAILABILITY_AUDIT: CATCH ERROR: $e");
-      print("AVAILABILITY_AUDIT: CATCH STACK: $stack");
-      AppLogger.errorDetailed(
-        "Availability check failed to query Firestore for date $date: $e",
-        layer: LogLayer.service,
-        className: "BookingAvailabilityService",
-        methodName: "checkDateAvailability",
-        error: e,
-        stack: stack,
-      );
-      final diagMessage = kDebugMode
-          ? "DIAGNOSTIC: $e"
-          : "Unable to verify date availability right now. Please check your connection and try again.";
-      return DateAvailabilityResult.unavailable(diagMessage);
+    } catch (errAll) {
+      AppLogger.warning("Confirmed booking list query check: $errAll");
     }
+
+    // If no confirmed booking was detected locking this date, the date is free for request submission!
+    return DateAvailabilityResult.available;
   }
 
   /// Atomic backend check before booking persistence to prevent race conditions
