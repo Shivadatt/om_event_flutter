@@ -148,16 +148,29 @@ class VideoSettings {
     return const VideoSettings(videosList: [
       {
         'eyebrow': 'LIVE FROM THE SETUP',
-        'titlePart1': 'A Glimpse Before',
-        'titlePart2': 'the big day.',
-        'description': 'A raw snapshot of the layout and styling details as we ready a celebration. No filters, no edits — just an honest look at how our crew sets up.',
+        'titlePart1': 'Decor Setup Walk',
+        'titlePart2': 'behind the scenes.',
+        'description': 'From decor setups to grand entries, every detail is crafted with love and perfection. Watch behind the scenes and see how we create unforgettable events.',
         'facts': [
-          'Balloon decor setup walk',
-          'Luxury hotel setting',
-          'Pre-event quality inspection'
+          'Decor Setup Walk',
+          'Premium Venue Styling',
+          'Quality Inspection'
         ],
         'videoAsset': 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/Birthday.mp4',
         'posterAsset': 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/images/birthday.jpg',
+      },
+      {
+        'eyebrow': 'ROYAL AMBIANCE',
+        'titlePart1': 'Royal Reception',
+        'titlePart2': 'grand entrance.',
+        'description': 'A dramatic walkthrough of the royal entryway and illuminated canopies prepared for an unforgettable reception evening.',
+        'facts': [
+          'Signature Archways',
+          'Atmospheric Lighting',
+          'Grand Walkway Styling'
+        ],
+        'videoAsset': 'assets/videos/wedding-showcase.mp4',
+        'posterAsset': 'assets/images/wedding-stage.jpg',
       },
       {
         'eyebrow': 'MOMENTS IN MOTION',

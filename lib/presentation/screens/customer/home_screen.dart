@@ -12,7 +12,6 @@ import 'package:om_event/presentation/controllers/customer_auth_controller.dart'
 import 'widgets/announcement_banner.dart';
 import 'widgets/nav_drawer.dart';
 import 'widgets/cart_drawer.dart';
-import 'widgets/customer_reviews_section.dart';
 import 'widgets/home_hero_section.dart';
 import 'widgets/home_marquee_ribbon.dart';
 import 'widgets/home_benefits_section.dart';
@@ -20,7 +19,6 @@ import 'widgets/home_categories_section.dart';
 import 'widgets/home_catalog_section.dart';
 import 'widgets/home_video_stories_section.dart';
 import 'widgets/home_process_section.dart';
-import 'widgets/home_stats_band.dart';
 import 'widgets/home_faq_section.dart';
 import 'widgets/home_contact_section.dart';
 import 'widgets/home_footer_section.dart';
@@ -126,8 +124,6 @@ class HomeScreen extends GetView<CatalogController> {
                   catalogKey: catalogKey,
                 ),
                 ProcessSection(isDesktop: isDesktop),
-                AnimatedStatsBand(isDesktop: isDesktop),
-                CustomerReviewsSection(isDesktop: isDesktop),
                 FAQSection(isDesktop: isDesktop),
                 ContactSection(
                   controller: controller,
