@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/services/app_config_service.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 class BenefitsSection extends StatefulWidget {
   final bool isDesktop;
@@ -46,7 +47,7 @@ class _BenefitsSectionState extends State<BenefitsSection> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final double hPad = width >= 1440 ? 48.0 : (width >= 1000 ? 32.0 : 16.0);
+    final double hPad = AppPageContainer.horizontalPadding(context);
     final double titleSize = width >= 700 ? (width * 0.038).clamp(32.0, 52.0) : 26.0;
 
     return Obx(() {
@@ -120,7 +121,7 @@ class _BenefitsSectionState extends State<BenefitsSection> {
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1440),
+            constraints: const BoxConstraints(maxWidth: AppPageContainer.maxContentWidth),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [

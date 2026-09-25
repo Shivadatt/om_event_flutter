@@ -19,4 +19,5 @@ class AppImages {
   static const String balloonDecor = '$_base/Baloondecor.png';
   static const String mirror = '$_base/Mirror.jpg';
   static const String birthdayBalloons = '$_base/birthday-balloons.jpg';
+  static const String luxuryEveningDecor = '$_base/luxury-evening-decor.jpg';
 }

@@ -20,8 +20,6 @@ import 'widgets/home_catalog_section.dart';
 import 'widgets/home_video_stories_section.dart';
 import 'widgets/home_process_section.dart';
 import 'widgets/home_faq_section.dart';
-import 'widgets/home_contact_section.dart';
-import 'widgets/home_footer_section.dart';
 import 'widgets/home_sliver_app_bar.dart';
 
 part 'parts/home_tab_navigation.dart';
@@ -124,14 +122,10 @@ class HomeScreen extends GetView<CatalogController> {
                   catalogKey: catalogKey,
                 ),
                 ProcessSection(isDesktop: isDesktop),
-                FAQSection(isDesktop: isDesktop),
-                ContactSection(
+                FAQSection(
+                  isDesktop: isDesktop,
                   controller: controller,
                   contactKey: contactKey,
-                  isDesktop: isDesktop,
-                ),
-                FooterSection(
-                  isDesktop: isDesktop,
                   categoriesKey: categoriesKey,
                   catalogKey: catalogKey,
                   storiesKey: storiesKey,

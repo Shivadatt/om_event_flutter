@@ -6,6 +6,7 @@ import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/services/app_config_service.dart';
 import 'package:om_event/domain/entities/settings_entities.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 class _StatItem {
   final double targetValue;
@@ -28,7 +29,7 @@ class AnimatedStatsBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final paddingHorizontal = width >= 1000 ? 64.0 : 24.0;
+    final paddingHorizontal = AppPageContainer.horizontalPadding(context);
 
     return Obx(() {
       final rawStats = AppConfigService.to.rxStatisticsSettings.value;
@@ -160,7 +161,7 @@ class AnimatedStatsBand extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1440),
+            constraints: const BoxConstraints(maxWidth: AppPageContainer.maxContentWidth),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(28),
               child: BackdropFilter(

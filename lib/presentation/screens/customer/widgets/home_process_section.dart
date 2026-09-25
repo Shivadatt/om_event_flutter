@@ -8,6 +8,7 @@ import 'package:om_event/core/services/app_config_service.dart';
 import 'package:om_event/domain/entities/settings_entities.dart';
 import 'package:om_event/domain/entities/review.dart';
 import 'package:om_event/presentation/controllers/catalog_controller.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 // ─── Step data model ────────────────────────────────────────────────────────
 class _StepData {
@@ -68,13 +69,12 @@ class ProcessSection extends StatelessWidget {
       width: double.infinity,
       color: const Color(0xFF152621), // Page background
       padding: EdgeInsets.symmetric(
-        horizontal: isDesktopLayout ? 48.0 : (isTabletLayout ? 24.0 : 16.0),
+        horizontal: AppPageContainer.horizontalPadding(context),
         vertical: isDesktopLayout ? 40.0 : 28.0,
       ),
       child: Center(
         child: ConstrainedBox(
-          // Controlled maxWidth matching the second image's contained proportions
-          constraints: const BoxConstraints(maxWidth: 1140),
+          constraints: const BoxConstraints(maxWidth: AppPageContainer.maxContentWidth),
           child: Container(
             decoration: BoxDecoration(
               // Near-black luxury base with deep subtle emerald undertone

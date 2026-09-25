@@ -5,6 +5,7 @@ import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/widgets/custom_button.dart';
 import 'package:om_event/presentation/controllers/catalog_controller.dart';
 import 'package:om_event/presentation/screens/customer/helpers/customer_dialog_helper.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 class ContactSection extends StatelessWidget {
   final CatalogController controller;
@@ -20,7 +21,7 @@ class ContactSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final paddingHorizontal = isDesktop ? 64.0 : 24.0;
+    final paddingHorizontal = AppPageContainer.horizontalPadding(context);
 
     return Container(
       key: contactKey,

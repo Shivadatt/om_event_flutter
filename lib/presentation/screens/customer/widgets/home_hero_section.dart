@@ -5,6 +5,7 @@ import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/services/app_config_service.dart';
 import 'package:om_event/presentation/screens/customer/helpers/customer_dialog_helper.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 import 'home_hero_helpers.dart';
 
 class HeroSection extends StatefulWidget {
@@ -51,7 +52,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isWide = width >= 960;
-    final double pH = width >= 1440 ? 48.0 : (width >= 1000 ? 36.0 : 20.0);
+    final double pH = AppPageContainer.horizontalPadding(context);
     final double titleSize = isWide
         ? (width * 0.038).clamp(42.0, 64.0)
         : (width * 0.08).clamp(28.0, 42.0);
@@ -67,7 +68,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
             padding: EdgeInsets.fromLTRB(pH, isWide ? 40.0 : 28.0, pH, isWide ? 28.0 : 20.0),
             child: Center(
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 1440),
+                constraints: const BoxConstraints(maxWidth: AppPageContainer.maxContentWidth),
                 child: Obx(() {
                   final homepage = AppConfigService.to.rxHomepageSettings.value;
                   final stats = AppConfigService.to.rxStatisticsSettings.value;

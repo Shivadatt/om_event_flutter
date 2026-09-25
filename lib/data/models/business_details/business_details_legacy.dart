@@ -214,6 +214,60 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
       }
     }
 
+    // Ensure root primary_phone, secondary_phone, and support_email are also merged if present
+    String normalizePhone(String p) {
+      final clean = p.replaceAll(RegExp(r'\D'), '');
+      if (clean.length == 12 && clean.startsWith('91')) {
+        return clean.substring(2);
+      }
+      return clean;
+    }
+
+    final rootPrimaryPhone = json['primary_phone']?.toString() ?? json['phone']?.toString();
+    if (rootPrimaryPhone != null && rootPrimaryPhone.trim().isNotEmpty) {
+      final norm = normalizePhone(rootPrimaryPhone);
+      if (!phones.any((p) => normalizePhone(p.value) == norm)) {
+        phones.insert(0, ContactItemEntity(
+          id: 'p_root_primary',
+          label: 'Primary Phone',
+          value: rootPrimaryPhone.trim(),
+          isPrimary: true,
+          isActive: true,
+          displayOrder: 1,
+        ));
+      }
+    }
+
+    final rootSecondaryPhone = json['secondary_phone']?.toString();
+    if (rootSecondaryPhone != null && rootSecondaryPhone.trim().isNotEmpty) {
+      final norm = normalizePhone(rootSecondaryPhone);
+      if (!phones.any((p) => normalizePhone(p.value) == norm)) {
+        phones.add(ContactItemEntity(
+          id: 'p_root_secondary',
+          label: 'Secondary Phone',
+          value: rootSecondaryPhone.trim(),
+          isPrimary: false,
+          isActive: true,
+          displayOrder: phones.length + 1,
+        ));
+      }
+    }
+
+    final rootSupportEmail = json['support_email']?.toString() ?? json['email']?.toString();
+    if (rootSupportEmail != null && rootSupportEmail.trim().isNotEmpty) {
+      final emailLower = rootSupportEmail.trim().toLowerCase();
+      if (!emails.any((e) => e.value.trim().toLowerCase() == emailLower)) {
+        emails.insert(0, ContactItemEntity(
+          id: 'e_root_support',
+          label: 'Support Email',
+          value: rootSupportEmail.trim(),
+          isPrimary: true,
+          isActive: true,
+          displayOrder: 1,
+        ));
+      }
+    }
+
     // 4. Addresses
     List<AddressEntity> addresses = [];
     final addressesList = json['addresses'] as List?;
@@ -253,33 +307,47 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
     if (socialData is Map) {
       social = SocialMediaModel.fromJson(Map<String, dynamic>.from(socialData));
     } else {
-      final legacySocial = json['socialLinks'] as Map? ?? json;
-      String igKadi = (legacySocial['instagram_kadi'] ?? legacySocial['instagramKadi'] ?? '').toString();
-      String igThangadh = (legacySocial['instagram_thangadh'] ?? legacySocial['instagramThangadh'] ?? '').toString();
-      final website = (legacySocial['website'] ?? '').toString();
-      final googleBusiness = (legacySocial['google_business_profile'] ?? legacySocial['googleBusinessProfile'] ?? legacySocial['google_business'] ?? '').toString();
+      social = SocialMediaEntity.defaultVal();
+    }
+    
+    final legacySocial = json['socialLinks'] as Map? ?? json;
+    String igKadi = social.instagramKadi.isNotEmpty 
+        ? social.instagramKadi 
+        : (legacySocial['instagram_kadi'] ?? legacySocial['instagramKadi'] ?? json['instagram_kadi'] ?? json['instagramKadi'] ?? '').toString();
+    String igThangadh = social.instagramThangadh.isNotEmpty 
+        ? social.instagramThangadh 
+        : (legacySocial['instagram_thangadh'] ?? legacySocial['instagramThangadh'] ?? json['instagram_thangadh'] ?? json['instagramThangadh'] ?? '').toString();
+    final website = social.website.isNotEmpty 
+        ? social.website 
+        : (legacySocial['website'] ?? json['website'] ?? '').toString();
+    final googleBusiness = social.googleBusinessProfile.isNotEmpty 
+        ? social.googleBusinessProfile 
+        : (legacySocial['google_business_profile'] ?? legacySocial['googleBusinessProfile'] ?? legacySocial['google_business'] ?? json['google_business_profile'] ?? '').toString();
 
-      if (igKadi.isEmpty || igThangadh.isEmpty) {
-        for (final branch in branches) {
-          final lowerName = branch.branchName.toLowerCase();
-          final lowerAddress = branch.fullAddress.toLowerCase();
-          if (branch.instagram.isNotEmpty) {
-            if (lowerName.contains('kadi') || lowerAddress.contains('kadi')) {
-              if (igKadi.isEmpty) igKadi = branch.instagram;
-            } else if (lowerName.contains('thangadh') || lowerAddress.contains('thangadh')) {
-              if (igThangadh.isEmpty) igThangadh = branch.instagram;
-            }
+    if (igKadi.isEmpty || igThangadh.isEmpty) {
+      for (final branch in branches) {
+        final lowerName = branch.branchName.toLowerCase();
+        final lowerAddress = branch.fullAddress.toLowerCase();
+        if (branch.instagram.isNotEmpty) {
+          if (lowerName.contains('kadi') || lowerAddress.contains('kadi')) {
+            if (igKadi.isEmpty) igKadi = branch.instagram;
+          } else if (lowerName.contains('thangadh') || lowerAddress.contains('thangadh')) {
+            if (igThangadh.isEmpty) igThangadh = branch.instagram;
           }
         }
       }
-
-      social = SocialMediaEntity(
-        instagramKadi: igKadi,
-        instagramThangadh: igThangadh,
-        website: website,
-        googleBusinessProfile: googleBusiness,
-      );
     }
+
+    social = SocialMediaEntity(
+      instagramKadi: igKadi,
+      instagramThangadh: igThangadh,
+      website: website,
+      googleBusinessProfile: googleBusiness,
+      instagram: social.instagram.isNotEmpty ? social.instagram : (legacySocial['instagram'] ?? json['instagram'] ?? '').toString(),
+      facebook: social.facebook.isNotEmpty ? social.facebook : (legacySocial['facebook'] ?? json['facebook'] ?? '').toString(),
+      youtube: social.youtube.isNotEmpty ? social.youtube : (legacySocial['youtube'] ?? json['youtube'] ?? '').toString(),
+      pinterest: social.pinterest.isNotEmpty ? social.pinterest : (legacySocial['pinterest'] ?? json['pinterest'] ?? '').toString(),
+    );
 
     // 6. Working Hours
     WorkingHoursEntity workingHours;

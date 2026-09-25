@@ -16,6 +16,7 @@ import 'package:om_event/presentation/screens/customer/widgets/home_detail_dialo
 import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
 import 'package:om_event/presentation/screens/customer/auth/widgets/customer_auth_box.dart';
 import 'package:video_player/video_player.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 part 'parts/catalog_card.dart';
 part 'parts/catalog_toolbar.dart';
@@ -131,7 +132,7 @@ class ExperiencesCatalogSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final paddingHorizontal = isDesktop ? 32.0 : 16.0;
+    final paddingHorizontal = AppPageContainer.horizontalPadding(context);
 
     final double sectionPaddingVertical = isDesktop ? 32.0 : 20.0;
     final double titleSize =
@@ -148,7 +149,7 @@ class ExperiencesCatalogSection extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1200),
+            constraints: const BoxConstraints(maxWidth: AppPageContainer.maxContentWidth),
             decoration: BoxDecoration(
               color: const Color(0xFF0D1714).withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(24),

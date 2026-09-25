@@ -6,6 +6,7 @@ import '../../../../core/config/app_theme.dart';
 import '../../../controllers/catalog_controller.dart';
 import 'review_slider.dart';
 import 'empty_review_widget.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 class CustomerReviewsSection extends StatelessWidget {
   final bool isDesktop;
@@ -22,7 +23,7 @@ class CustomerReviewsSection extends StatelessWidget {
     return RepaintBoundary(
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 80 : 20,
+          horizontal: AppPageContainer.horizontalPadding(context),
           vertical: isDesktop ? 48 : 36,
         ),
         decoration: const BoxDecoration(

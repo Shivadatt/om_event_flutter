@@ -99,14 +99,14 @@ class ContactDetailsModel {
 class SocialMediaModel {
   static SocialMediaEntity fromJson(Map<String, dynamic> json) {
     return SocialMediaEntity(
-      instagramKadi: json['instagramKadi'] ?? '',
-      instagramThangadh: json['instagramThangadh'] ?? '',
-      website: json['website'] ?? '',
-      googleBusinessProfile: json['googleBusinessProfile'] ?? '',
-      instagram: json['instagram'] ?? '',
-      facebook: json['facebook'] ?? '',
-      youtube: json['youtube'] ?? '',
-      pinterest: json['pinterest'] ?? '',
+      instagramKadi: (json['instagramKadi'] ?? json['instagram_kadi'] ?? '').toString(),
+      instagramThangadh: (json['instagramThangadh'] ?? json['instagram_thangadh'] ?? '').toString(),
+      website: (json['website'] ?? '').toString(),
+      googleBusinessProfile: (json['googleBusinessProfile'] ?? json['google_business_profile'] ?? json['google_business'] ?? '').toString(),
+      instagram: (json['instagram'] ?? '').toString(),
+      facebook: (json['facebook'] ?? '').toString(),
+      youtube: (json['youtube'] ?? '').toString(),
+      pinterest: (json['pinterest'] ?? '').toString(),
     );
   }
 

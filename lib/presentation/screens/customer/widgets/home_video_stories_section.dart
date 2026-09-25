@@ -7,6 +7,7 @@ import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/utils/app_logger.dart';
 import 'package:om_event/core/services/app_config_service.dart';
 import 'package:om_event/domain/entities/settings_entities.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 class VideoStoriesSection extends StatefulWidget {
   final GlobalKey storiesKey;
@@ -39,13 +40,12 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
       width: double.infinity,
       color: const Color(0xFF152621), // Secondary Background matching home page
       padding: EdgeInsets.symmetric(
-        horizontal: isDesktopLayout ? 48.0 : (isTabletLayout ? 24.0 : 16.0),
+        horizontal: AppPageContainer.horizontalPadding(context),
         vertical: isDesktopLayout ? 40.0 : 28.0,
       ),
       child: Center(
         child: ConstrainedBox(
-          // Controlled maxWidth matching the compact, cohesive proportions of Image 2
-          constraints: const BoxConstraints(maxWidth: 1140),
+          constraints: const BoxConstraints(maxWidth: AppPageContainer.maxContentWidth),
           child: Obx(() {
             final videoSettings = AppConfigService.to.rxVideoSettings.value;
             final defaultList = VideoSettings.defaultVal().videosList;

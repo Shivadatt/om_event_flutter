@@ -24,17 +24,22 @@ mixin SettingsBusiness {
                       .toList()
                   : BusinessProfile.defaultVal().officeBranches;
 
-          final rawSocial = source['socialLinks'] ?? {
-            'instagram_kadi': source['instagram_kadi'] ?? source['instagram'] ?? '',
-            'instagram_thangadh': source['instagram_thangadh'] ?? source['instagram'] ?? '',
-            'website': source['website'] ?? '',
-            'google_business_profile': source['google_business'] ?? '',
-          };
+          final Map<dynamic, dynamic> rawSocialMap = source['socialLinks'] is Map 
+              ? Map<dynamic, dynamic>.from(source['socialLinks']) 
+              : (source['social'] is Map ? Map<dynamic, dynamic>.from(source['social']) : <dynamic, dynamic>{});
+          final socialKadi = source['instagram_kadi'] ?? source['instagramKadi'] ?? rawSocialMap['instagram_kadi'] ?? rawSocialMap['instagramKadi'] ?? source['instagram'] ?? '';
+          final socialThangadh = source['instagram_thangadh'] ?? source['instagramThangadh'] ?? rawSocialMap['instagram_thangadh'] ?? rawSocialMap['instagramThangadh'] ?? source['instagram'] ?? '';
           final socialLinks = Map<String, String>.from(
-            rawSocial.map(
+            rawSocialMap.map(
               (key, value) => MapEntry(key.toString(), value.toString()),
             ),
           );
+          if (socialKadi.toString().trim().isNotEmpty) {
+            socialLinks['instagram_kadi'] = socialKadi.toString().trim();
+          }
+          if (socialThangadh.toString().trim().isNotEmpty) {
+            socialLinks['instagram_thangadh'] = socialThangadh.toString().trim();
+          }
 
           final List<dynamic> rawContacts = source['contactNumbers'] ?? [];
           List<ContactNumberEntity> contactNumbers = [];
@@ -43,12 +48,16 @@ mixin SettingsBusiness {
                 .map((c) => ContactNumberModel.fromJson(Map<String, dynamic>.from(c)))
                 .map(ContactNumberMapper.toEntity)
                 .toList();
-          } else {
-            final primaryPhone = source['primary_phone']?.toString() ?? source['phone']?.toString();
-            final secondaryPhone = source['secondary_phone']?.toString();
+          }
+          
+          final primaryPhone = source['primary_phone']?.toString() ?? source['phone']?.toString();
+          final secondaryPhone = source['secondary_phone']?.toString();
 
-            if (primaryPhone != null && primaryPhone.isNotEmpty) {
-              contactNumbers.add(
+          if (primaryPhone != null && primaryPhone.trim().isNotEmpty) {
+            final exists = contactNumbers.any((c) => c.number.replaceAll(RegExp(r'\D'), '') == primaryPhone.replaceAll(RegExp(r'\D'), ''));
+            if (!exists) {
+              contactNumbers.insert(
+                0,
                 ContactNumberEntity(
                   id: 'primary',
                   label: 'Primary',
@@ -59,7 +68,10 @@ mixin SettingsBusiness {
                 ),
               );
             }
-            if (secondaryPhone != null && secondaryPhone.isNotEmpty) {
+          }
+          if (secondaryPhone != null && secondaryPhone.trim().isNotEmpty) {
+            final exists = contactNumbers.any((c) => c.number.replaceAll(RegExp(r'\D'), '') == secondaryPhone.replaceAll(RegExp(r'\D'), ''));
+            if (!exists) {
               contactNumbers.add(
                 ContactNumberEntity(
                   id: 'secondary',
@@ -67,7 +79,7 @@ mixin SettingsBusiness {
                   number: secondaryPhone,
                   isPrimary: false,
                   isActive: true,
-                  displayOrder: 2,
+                  displayOrder: contactNumbers.length + 1,
                 ),
               );
             }

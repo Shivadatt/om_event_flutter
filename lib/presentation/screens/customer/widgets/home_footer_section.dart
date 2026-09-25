@@ -9,6 +9,7 @@ import 'package:om_event/core/config/app_routes.dart';
 import '../../../../core/services/business_details_service.dart';
 import '../../../../domain/entities/business_details_entity.dart';
 import 'booking_tracker_dialog.dart';
+import 'package:om_event/presentation/widgets/app_page_container.dart';
 
 part 'parts/footer_grid.dart';
 
@@ -28,7 +29,7 @@ class FooterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final paddingHorizontal = isDesktop ? 64.0 : 32.0;
+    final paddingHorizontal = AppPageContainer.horizontalPadding(context);
 
     return Container(
       color: const Color(0xFF0F1B18), // Primary Background
