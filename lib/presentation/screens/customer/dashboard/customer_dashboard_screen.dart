@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -33,6 +33,12 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   int selectedIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    controller.ensureProfileLoaded();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final bool isDesktop = width >= 1000;
@@ -60,7 +66,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       ),
                     Expanded(
                       child: Obx(() {
-                        if (controller.rxProfile.value == null) {
+                        if (controller.isLoading.value && controller.rxProfile.value == null) {
                           return const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)));
                         }
                         return _buildActiveView();

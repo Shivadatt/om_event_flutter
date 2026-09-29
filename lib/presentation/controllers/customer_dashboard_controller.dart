@@ -81,6 +81,60 @@ class CustomerDashboardController extends GetxController {
         syncMasterData(currentProfile);
         _bindStreams(currentProfile.id, currentProfile.branch, currentProfile.phone);
       }
+    } else {
+      ensureProfileLoaded();
+    }
+  }
+
+  Future<void> ensureProfileLoaded() async {
+    if (rxProfile.value != null) return;
+    isLoading.value = true;
+    try {
+      await _authController.checkAuthStatus();
+      var profile = _authController.rxCustomerProfile.value;
+      if (profile == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          profile = await _authRepo.getCustomerProfile(user.uid);
+          if (profile != null) {
+            _authController.rxCustomerProfile.value = profile;
+          }
+        }
+      }
+      if (profile != null) {
+        rxProfile.value = profile;
+        final isGuest = profile.id.isEmpty ||
+            profile.id.startsWith('guest_') ||
+            FirebaseAuth.instance.currentUser == null;
+        if (!isGuest) {
+          syncMasterData(profile);
+          _bindStreams(profile.id, profile.branch, profile.phone);
+        }
+      } else {
+        final user = FirebaseAuth.instance.currentUser;
+        final fallback = CustomerProfileModel(
+          id: user?.uid ?? 'guest',
+          fullName: (user?.displayName?.isNotEmpty == true)
+              ? user!.displayName!
+              : (user?.email?.split('@').first ?? 'Valued Client'),
+          phone: user?.phoneNumber ?? '',
+          email: user?.email ?? '',
+          gender: '',
+          address: '',
+          city: 'Ahmedabad',
+          state: 'Gujarat',
+          pincode: '',
+          branch: '',
+          profileImageUrl: user?.photoURL ?? '',
+          createdAt: DateTime.now(),
+          lastLogin: DateTime.now(),
+        );
+        rxProfile.value = fallback;
+      }
+    } catch (e) {
+      AppLogger.warning("ensureProfileLoaded error: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 

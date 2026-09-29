@@ -30,7 +30,6 @@ class DashboardSidebar extends StatelessWidget {
       ),
       child: Material(
         color: const Color(0xFF171411),
-        borderRadius: BorderRadius.circular(24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: const BorderSide(color: Color(0x22D4AF37), width: 1.5),

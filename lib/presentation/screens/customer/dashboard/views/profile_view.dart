@@ -30,14 +30,14 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
-    final profile = widget.controller.rxProfile.value!;
-    nameCtrl = TextEditingController(text: profile.fullName);
-    phoneCtrl = TextEditingController(text: profile.phone);
-    emailCtrl = TextEditingController(text: profile.email);
-    addressCtrl = TextEditingController(text: profile.address);
-    cityCtrl = TextEditingController(text: profile.city);
-    stateCtrl = TextEditingController(text: profile.state);
-    pincodeCtrl = TextEditingController(text: profile.pincode);
+    final profile = widget.controller.rxProfile.value;
+    nameCtrl = TextEditingController(text: profile?.fullName ?? '');
+    phoneCtrl = TextEditingController(text: profile?.phone ?? '');
+    emailCtrl = TextEditingController(text: profile?.email ?? '');
+    addressCtrl = TextEditingController(text: profile?.address ?? '');
+    cityCtrl = TextEditingController(text: profile?.city ?? '');
+    stateCtrl = TextEditingController(text: profile?.state ?? '');
+    pincodeCtrl = TextEditingController(text: profile?.pincode ?? '');
   }
 
   @override
@@ -54,7 +54,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = widget.controller.rxProfile.value!;
+    final profile = widget.controller.rxProfile.value;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
@@ -111,14 +111,14 @@ class _ProfileViewState extends State<ProfileView> {
                         child: CircleAvatar(
                           radius: 48,
                           backgroundColor: const Color(0xFF2A241F),
-                          backgroundImage: profile.profileImageUrl.isNotEmpty == true
+                          backgroundImage: profile?.profileImageUrl.isNotEmpty == true
                               ? CachedNetworkImageProvider(
-                                  profile.profileImageUrl,
+                                  profile!.profileImageUrl,
                                   maxWidth: 192, // 96 * 2 (radius 48 * 2 for pixel ratio)
                                   maxHeight: 192,
                                 )
                               : null,
-                          child: profile.profileImageUrl.isEmpty == true
+                          child: profile?.profileImageUrl.isEmpty != false
                               ? const Icon(Icons.person_outline, size: 48, color: Color(0xFFD4AF37))
                               : null,
                         ),
@@ -194,13 +194,13 @@ class _ProfileViewState extends State<ProfileView> {
                         fullName: nameCtrl.text,
                         phone: phoneCtrl.text,
                         email: emailCtrl.text,
-                        gender: profile.gender,
+                        gender: profile?.gender ?? '',
                         address: addressCtrl.text,
                         city: cityCtrl.text,
                         state: stateCtrl.text,
                         pincode: pincodeCtrl.text,
-                        branch: profile.branch,
-                        profileImageUrl: profile.profileImageUrl,
+                        branch: profile?.branch ?? '',
+                        profileImageUrl: profile?.profileImageUrl ?? '',
                       );
                       Get.snackbar(
                         "Profile Updated",

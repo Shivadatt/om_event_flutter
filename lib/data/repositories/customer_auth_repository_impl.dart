@@ -100,9 +100,81 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
       if (doc.exists && doc.data() != null) {
         return CustomerProfileModel.fromJson(doc.data()!, doc.id);
       }
+
+      // Check users collection fallback
+      try {
+        final userDoc = await _firestore.collection(AppCollections.users).doc(uid).get();
+        if (userDoc.exists && userDoc.data() != null) {
+          final userData = userDoc.data()!;
+          final fallbackProfile = CustomerProfileModel(
+            id: uid,
+            fullName: userData['name'] ?? userData['fullName'] ?? 'Valued Client',
+            phone: userData['phone'] ?? '',
+            email: userData['email'] ?? '',
+            gender: userData['gender'] ?? '',
+            address: userData['address'] ?? '',
+            city: userData['city'] ?? 'Ahmedabad',
+            state: userData['state'] ?? 'Gujarat',
+            pincode: userData['pincode'] ?? '',
+            branch: userData['branch'] ?? '',
+            profileImageUrl: userData['profileImageUrl'] ?? userData['photoUrl'] ?? '',
+            createdAt: DateTime.now(),
+            lastLogin: DateTime.now(),
+          );
+          await saveCustomerProfile(fallbackProfile).catchError((_) {});
+          return fallbackProfile;
+        }
+      } catch (_) {}
+
+      // Check current Firebase Auth user fallback
+      final currentUser = _auth.currentUser;
+      if (currentUser != null && currentUser.uid == uid) {
+        final displayName = currentUser.displayName?.trim();
+        final emailPrefix = currentUser.email?.split('@').first;
+        final name = (displayName != null && displayName.isNotEmpty)
+            ? displayName
+            : (emailPrefix != null && emailPrefix.isNotEmpty ? emailPrefix : 'Valued Client');
+
+        final fallbackProfile = CustomerProfileModel(
+          id: uid,
+          fullName: name,
+          phone: currentUser.phoneNumber ?? '',
+          email: currentUser.email ?? '',
+          gender: '',
+          address: '',
+          city: 'Ahmedabad',
+          state: 'Gujarat',
+          pincode: '',
+          branch: '',
+          profileImageUrl: currentUser.photoURL ?? '',
+          createdAt: DateTime.now(),
+          lastLogin: DateTime.now(),
+        );
+        await saveCustomerProfile(fallbackProfile).catchError((_) {});
+        return fallbackProfile;
+      }
+
       return null;
     } catch (e) {
       AppLogger.warning("Failed to fetch customer profile for $uid: $e");
+      final currentUser = _auth.currentUser;
+      if (currentUser != null && currentUser.uid == uid) {
+        return CustomerProfileModel(
+          id: uid,
+          fullName: currentUser.displayName ?? currentUser.email?.split('@').first ?? 'Valued Client',
+          phone: currentUser.phoneNumber ?? '',
+          email: currentUser.email ?? '',
+          gender: '',
+          address: '',
+          city: 'Ahmedabad',
+          state: 'Gujarat',
+          pincode: '',
+          branch: '',
+          profileImageUrl: currentUser.photoURL ?? '',
+          createdAt: DateTime.now(),
+          lastLogin: DateTime.now(),
+        );
+      }
       return null;
     }
   }

@@ -200,7 +200,6 @@ class _NotificationsViewState extends State<NotificationsView> {
                     ),
                     child: Material(
                       color: notif.isRead ? const Color(0x99171411) : const Color(0xFF171411),
-                      borderRadius: BorderRadius.circular(16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
