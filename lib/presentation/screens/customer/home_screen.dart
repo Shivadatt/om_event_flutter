@@ -21,6 +21,7 @@ import 'widgets/home_video_stories_section.dart';
 import 'widgets/home_process_section.dart';
 import 'widgets/home_faq_section.dart';
 import 'widgets/home_sliver_app_bar.dart';
+import 'helpers/customer_drawer_helper.dart';
 
 part 'parts/home_tab_navigation.dart';
 
@@ -32,7 +33,7 @@ class HomeScreen extends GetView<CatalogController> {
     final cartController = Get.find<CartController>();
     final quoteController = Get.find<QuotationController>();
     final authCtrl = Get.find<CustomerAuthController>();
-    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+    final scaffoldKey = CustomerDrawerHelper.homeScaffoldKey;
 
     // Section Scroll Keys
     final categoriesKey = GlobalKey();
@@ -60,6 +61,7 @@ class HomeScreen extends GetView<CatalogController> {
 
     return Scaffold(
       key: scaffoldKey,
+      drawerScrimColor: Colors.black.withValues(alpha: 0.75),
       drawer: isDesktop
           ? null
           : NavDrawer(

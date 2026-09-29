@@ -21,7 +21,8 @@ class LocalNotificationTriggerService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   Timer? _schedulerTimer;
   final Random _random = Random();
-
+  final Map<String, String> lastKnownQuotationStatuses = {};
+  final Set<String> knownLeadIds = {};
 
   @override
   void onClose() {
@@ -46,6 +47,8 @@ class LocalNotificationTriggerService extends GetxService {
   void teardown() {
     _schedulerTimer?.cancel();
     _schedulerTimer = null;
+    lastKnownQuotationStatuses.clear();
+    knownLeadIds.clear();
     AppLogger.info("LocalNotificationTriggerService: Terminated trigger services and simulator timers.", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "teardown");
   }
 

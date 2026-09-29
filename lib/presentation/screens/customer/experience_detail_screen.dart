@@ -9,10 +9,9 @@ import '../../../core/widgets/custom_input.dart';
 import '../../controllers/cart_controller.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../widgets/item_visual_placeholder.dart';
-import '../../controllers/customer_auth_controller.dart';
 import '../../../domain/entities/package_option.dart';
-import 'auth/widgets/customer_auth_box.dart';
 import 'widgets/customer_booking_dialog.dart';
+import 'helpers/customer_drawer_helper.dart';
 
 class ExperienceDetailScreen extends StatefulWidget {
   const ExperienceDetailScreen({super.key});
@@ -514,44 +513,27 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
         text: "Add to my selection",
         isPrimary: false,
         onPressed: () {
-          final authController = Get.find<CustomerAuthController>();
-          if (!authController.isLoggedIn) {
-            Get.snackbar(
-              "Login Required",
-              "Please login first to add items to your selection.",
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: const Color(0xFF1B2D27).withValues(alpha: 0.85),
-              colorText: Colors.white,
-              margin: const EdgeInsets.all(16),
-            );
-            Get.dialog(
-              Dialog(
-                backgroundColor: Colors.transparent,
-                child: CustomerAuthBox(
-                  onSuccess: () {
-                    cartController.addToCart(
-                      item,
-                      color: _selectedColor,
-                      theme: _selectedTheme,
-                      notes: _notesController.text,
-                    );
-                  },
-                ),
-              ),
-            );
-          } else {
-            cartController.addToCart(
-              item,
-              color: _selectedColor,
-              theme: _selectedTheme,
-              notes: _notesController.text,
-            );
-            Get.back();
-            Get.snackbar(
-              "Added to Canvas",
-              "${item.name} added to your selection.",
-            );
-          }
+          final experienceToCart = _selectedPackage != null
+              ? item.copyWith(
+                  price: _selectedPackage!.price,
+                  offerPrice: _selectedPackage!.effectivePrice,
+                )
+              : item;
+          cartController.addToCart(
+            experienceToCart,
+            color: _selectedColor,
+            theme: _selectedTheme,
+            notes: _notesController.text,
+          );
+          CustomerDrawerHelper.openEventCanvas(context);
+          Get.snackbar(
+            "Added to Canvas",
+            "${item.name} added to your selection.",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: const Color(0xFF1B2D27).withValues(alpha: 0.85),
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+          );
         },
       ),
       const SizedBox(height: 40),

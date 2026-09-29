@@ -7,8 +7,7 @@ import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/domain/entities/experience.dart';
 import 'package:om_event/domain/entities/package_option.dart';
 import 'package:om_event/presentation/controllers/cart_controller.dart';
-import 'package:om_event/presentation/controllers/customer_auth_controller.dart';
-import 'package:om_event/presentation/screens/customer/auth/widgets/customer_auth_box.dart';
+import '../helpers/customer_drawer_helper.dart';
 import 'customer_booking_dialog.dart';
 import 'home_detail_parts.dart';
 
@@ -343,30 +342,26 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
           height: 44,
           child: OutlinedButton.icon(
             onPressed: () {
-              final authController = Get.find<CustomerAuthController>();
-              if (!authController.isLoggedIn) {
-                Get.dialog(
-                  Dialog(
-                    backgroundColor: Colors.transparent,
-                    child: CustomerAuthBox(
-                      onSuccess: () {
-                        cartController.addToCart(item, color: _selectedColor, theme: _selectedTheme, notes: _notesController.text);
-                      },
-                    ),
-                  ),
-                );
-              } else {
-                cartController.addToCart(item, color: _selectedColor, theme: _selectedTheme, notes: _notesController.text);
-                Navigator.of(context).pop();
-                Get.snackbar(
-                  "Added to Canvas",
-                  "${item.name} added to your selection.",
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: paperColor,
-                  colorText: inkColor,
-                  margin: const EdgeInsets.all(16),
-                );
-              }
+              final experienceToCart = item.copyWith(
+                price: _selectedPackage.price,
+                offerPrice: _selectedPackage.effectivePrice,
+              );
+              cartController.addToCart(
+                experienceToCart,
+                color: _selectedColor,
+                theme: _selectedTheme,
+                notes: _notesController.text,
+              );
+              Navigator.of(context).pop();
+              CustomerDrawerHelper.openEventCanvas(context);
+              Get.snackbar(
+                "Added to Canvas",
+                "${item.name} added to your selection.",
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: paperColor,
+                colorText: inkColor,
+                margin: const EdgeInsets.all(16),
+              );
             },
             icon: Icon(Icons.add, size: 15, color: goldColor),
             label: Text(

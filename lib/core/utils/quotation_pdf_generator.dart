@@ -20,7 +20,7 @@ class QuotationPdfGenerator {
             children: [
               // Header Brand Title
               pw.Text(
-                AppConstants.businessName.toUpperCase(),
+                _cleanText(AppConstants.businessName).toUpperCase(),
                 style: pw.TextStyle(
                   fontSize: 24,
                   fontWeight: pw.FontWeight.bold,
@@ -45,11 +45,11 @@ class QuotationPdfGenerator {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        "Prepared for: ${quote.customerName}",
+                        "Prepared for: ${_cleanText(quote.customerName)}",
                         style: const pw.TextStyle(fontSize: 10),
                       ),
                       pw.Text(
-                        "Location: ${quote.location}",
+                        "Location: ${_cleanText(quote.location)}",
                         style: const pw.TextStyle(fontSize: 10),
                       ),
                     ],
@@ -58,11 +58,11 @@ class QuotationPdfGenerator {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        "Proposal ID: ${quote.publicId}",
+                        "Proposal ID: ${_cleanText(quote.publicId)}",
                         style: const pw.TextStyle(fontSize: 10),
                       ),
                       pw.Text(
-                        "Event Date: ${quote.eventDate.year}-${quote.eventDate.month}-${quote.eventDate.day} at ${quote.eventTime}",
+                        "Event Date: ${quote.eventDate.year}-${quote.eventDate.month}-${quote.eventDate.day} at ${_cleanText(quote.eventTime)}",
                         style: const pw.TextStyle(fontSize: 10),
                       ),
                     ],
@@ -141,20 +141,20 @@ class QuotationPdfGenerator {
                     final customStr = [
                       item.color,
                       item.theme,
-                    ].where((e) => e.isNotEmpty).join(' · ');
+                    ].where((e) => e.isNotEmpty).join(' - ');
                     return pw.TableRow(
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(6),
                           child: pw.Text(
-                            item.name,
+                            _cleanText(item.name),
                             style: const pw.TextStyle(fontSize: 9),
                           ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(6),
                           child: pw.Text(
-                            customStr.isEmpty ? "As shown" : customStr,
+                            customStr.isEmpty ? "As shown" : _cleanText(customStr),
                             style: const pw.TextStyle(fontSize: 8),
                           ),
                         ),
@@ -278,7 +278,9 @@ class QuotationPdfGenerator {
               pw.SizedBox(height: 4),
               pw.Center(
                 child: pw.Text(
-                  "${AppConstants.businessEmail}   |   ${BusinessDetailsService.to.rxDetails.value.contacts.phones.where((c) => c.isActive).map((c) => c.value).join(' / ')}",
+                  _cleanText(
+                    "${AppConstants.businessEmail}   |   ${BusinessDetailsService.to.rxDetails.value.contacts.phones.where((c) => c.isActive).map((c) => c.value).join(' / ')}",
+                  ),
                   style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey),
                 ),
               ),
@@ -289,5 +291,21 @@ class QuotationPdfGenerator {
     );
 
     return await pdf.save();
+  }
+
+  /// Sanitizes text to ISO-8859-1 / standard ASCII to prevent Helvetica Unicode errors.
+  static String _cleanText(String input) {
+    if (input.isEmpty) return input;
+    return input
+        .replaceAll('·', '-')
+        .replaceAll('•', '-')
+        .replaceAll('–', '-')
+        .replaceAll('—', '-')
+        .replaceAll('₹', 'Rs. ')
+        .replaceAll('’', "'")
+        .replaceAll('‘', "'")
+        .replaceAll('”', '"')
+        .replaceAll('“', '"')
+        .replaceAll(RegExp(r'[^\x20-\x7E\n\r\t]'), '');
   }
 }

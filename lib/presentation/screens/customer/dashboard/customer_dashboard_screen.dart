@@ -44,39 +44,62 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
     final bool isDesktop = width >= 1000;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0D0B),
+      backgroundColor: const Color(0xFF070C0A),
       body: Stack(
         children: [
           _buildAmbientBackground(),
-          Column(
-            children: [
-              DashboardTopBar(
-                controller: controller,
-                onLogout: _showLogoutConfirmation,
-                onNavToNotifications: (i) => setState(() => selectedIndex = i),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    if (isDesktop)
-                      DashboardSidebar(
-                        controller: controller,
-                        selectedIndex: selectedIndex,
-                        onIndexChanged: (i) => setState(() => selectedIndex = i),
-                      ),
-                    Expanded(
-                      child: Obx(() {
-                        if (controller.isLoading.value && controller.rxProfile.value == null) {
-                          return const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)));
-                        }
-                        return _buildActiveView();
-                      }),
-                    ),
-                  ],
+          if (isDesktop)
+            Row(
+              children: [
+                // Full-height sticky desktop sidebar
+                DashboardSidebar(
+                  controller: controller,
+                  selectedIndex: selectedIndex,
+                  onIndexChanged: (i) => setState(() => selectedIndex = i),
                 ),
-              ),
-            ],
-          ),
+                // Main application content occupying remaining viewport width
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DashboardTopBar(
+                        controller: controller,
+                        onLogout: _showLogoutConfirmation,
+                        onNavToNotifications: (i) => setState(() => selectedIndex = i),
+                      ),
+                      Expanded(
+                        child: Obx(() {
+                          if (controller.isLoading.value && controller.rxProfile.value == null) {
+                            return const Center(
+                              child: CircularProgressIndicator(color: Color(0xFFD4AF37)),
+                            );
+                          }
+                          return _buildActiveView();
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else
+            Column(
+              children: [
+                DashboardTopBar(
+                  controller: controller,
+                  onLogout: _showLogoutConfirmation,
+                  onNavToNotifications: (i) => setState(() => selectedIndex = i),
+                ),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value && controller.rxProfile.value == null) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)));
+                    }
+                    return _buildActiveView();
+                  }),
+                ),
+              ],
+            ),
         ],
       ),
       bottomNavigationBar: !isDesktop ? _buildBottomNavBar() : null,
