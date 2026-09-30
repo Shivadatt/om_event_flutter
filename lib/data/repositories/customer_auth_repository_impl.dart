@@ -96,35 +96,135 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
   @override
   Future<CustomerProfile?> getCustomerProfile(String uid) async {
     try {
+      CustomerProfileModel? profile;
       final doc = await _firestore.collection(AppCollections.customerProfiles).doc(uid).get();
       if (doc.exists && doc.data() != null) {
-        return CustomerProfileModel.fromJson(doc.data()!, doc.id);
+        profile = CustomerProfileModel.fromJson(doc.data()!, doc.id);
       }
 
-      // Check users collection fallback
+      // Check users collection fallback if profile is null
+      if (profile == null) {
+        try {
+          final userDoc = await _firestore.collection(AppCollections.users).doc(uid).get();
+          if (userDoc.exists && userDoc.data() != null) {
+            final userData = userDoc.data()!;
+            profile = CustomerProfileModel(
+              id: uid,
+              fullName: userData['name'] ?? userData['fullName'] ?? 'Valued Client',
+              phone: userData['phone'] ?? '',
+              email: userData['email'] ?? '',
+              gender: userData['gender'] ?? '',
+              address: userData['address'] ?? '',
+              city: userData['city'] ?? 'Ahmedabad',
+              state: userData['state'] ?? 'Gujarat',
+              pincode: userData['pincode'] ?? '',
+              branch: userData['branch'] ?? '',
+              profileImageUrl: userData['profileImageUrl'] ?? userData['photoUrl'] ?? '',
+              createdAt: DateTime.now(),
+              lastLogin: DateTime.now(),
+            );
+          }
+        } catch (_) {}
+      }
+
+      // Reconstruct or enrich from master customers collection
       try {
-        final userDoc = await _firestore.collection(AppCollections.users).doc(uid).get();
-        if (userDoc.exists && userDoc.data() != null) {
-          final userData = userDoc.data()!;
-          final fallbackProfile = CustomerProfileModel(
-            id: uid,
-            fullName: userData['name'] ?? userData['fullName'] ?? 'Valued Client',
-            phone: userData['phone'] ?? '',
-            email: userData['email'] ?? '',
-            gender: userData['gender'] ?? '',
-            address: userData['address'] ?? '',
-            city: userData['city'] ?? 'Ahmedabad',
-            state: userData['state'] ?? 'Gujarat',
-            pincode: userData['pincode'] ?? '',
-            branch: userData['branch'] ?? '',
-            profileImageUrl: userData['profileImageUrl'] ?? userData['photoUrl'] ?? '',
-            createdAt: DateTime.now(),
-            lastLogin: DateTime.now(),
-          );
-          await saveCustomerProfile(fallbackProfile).catchError((_) {});
-          return fallbackProfile;
+        final currentUser = _auth.currentUser;
+        final targetEmail = (profile?.email.isNotEmpty == true) ? profile!.email : (currentUser?.email ?? '');
+        final targetPhone = (profile?.phone.isNotEmpty == true) ? profile!.phone : (currentUser?.phoneNumber ?? '');
+
+        DocumentSnapshot<Map<String, dynamic>>? custDoc;
+        // Search by phone first
+        if (targetPhone.isNotEmpty) {
+          final cleanDigits = targetPhone.replaceAll(RegExp(r'\D'), '');
+          final tenDigit = cleanDigits.length >= 10 ? cleanDigits.substring(cleanDigits.length - 10) : cleanDigits;
+          final d1 = await _firestore.collection(AppCollections.customers).doc(tenDigit).get();
+          if (d1.exists && d1.data() != null) {
+            custDoc = d1;
+          } else {
+            final d2 = await _firestore.collection(AppCollections.customers).doc(targetPhone).get();
+            if (d2.exists && d2.data() != null) custDoc = d2;
+          }
         }
-      } catch (_) {}
+
+        // If not found by phone, search by email
+        if ((custDoc == null || !custDoc.exists) && targetEmail.isNotEmpty) {
+          final snap = await _firestore
+              .collection(AppCollections.customers)
+              .where('email', isEqualTo: targetEmail)
+              .limit(1)
+              .get();
+          if (snap.docs.isNotEmpty) {
+            custDoc = snap.docs.first;
+          }
+        }
+
+        if (custDoc != null && custDoc.exists && custDoc.data() != null) {
+          final cData = custDoc.data()!;
+          final cName = cData['name'] ?? cData['full_name'] ?? '';
+          final cPhone = cData['phone'] ?? '';
+          final cEmail = cData['email'] ?? '';
+          final cAddr = cData['address'] ?? '';
+          final cCity = cData['city'] ?? '';
+          final cState = cData['state'] ?? '';
+          final cPin = cData['pincode'] ?? '';
+          final cBranch = cData['branch'] ?? '';
+          final cGender = cData['gender'] ?? '';
+          final cDobRaw = cData['date_of_birth'] ?? cData['dateOfBirth'];
+          DateTime? cDob;
+          if (cDobRaw is Timestamp) {
+            cDob = cDobRaw.toDate();
+          } else if (cDobRaw is String && cDobRaw.isNotEmpty) {
+            cDob = DateTime.tryParse(cDobRaw);
+          }
+          final cImg = cData['profile_image_url'] ?? cData['profileImageUrl'] ?? cData['photoUrl'] ?? '';
+
+          if (profile != null) {
+            // Enrich missing fields
+            profile = CustomerProfileModel(
+              id: profile.id,
+              fullName: profile.fullName.isNotEmpty ? profile.fullName : cName,
+              phone: profile.phone.isNotEmpty ? profile.phone : cPhone,
+              email: profile.email.isNotEmpty ? profile.email : cEmail,
+              gender: profile.gender.isNotEmpty ? profile.gender : cGender,
+              dateOfBirth: profile.dateOfBirth ?? cDob,
+              address: profile.address.isNotEmpty ? profile.address : cAddr,
+              city: profile.city.isNotEmpty ? profile.city : (cCity.isNotEmpty ? cCity : 'Ahmedabad'),
+              state: profile.state.isNotEmpty ? profile.state : (cState.isNotEmpty ? cState : 'Gujarat'),
+              pincode: profile.pincode.isNotEmpty ? profile.pincode : cPin,
+              branch: profile.branch.isNotEmpty ? profile.branch : cBranch,
+              profileImageUrl: profile.profileImageUrl.isNotEmpty ? profile.profileImageUrl : cImg,
+              createdAt: profile.createdAt,
+              lastLogin: profile.lastLogin,
+            );
+          } else {
+            // Build profile from customers document
+            final currentUser = _auth.currentUser;
+            profile = CustomerProfileModel(
+              id: uid,
+              fullName: cName.isNotEmpty ? cName : (currentUser?.displayName ?? 'Valued Client'),
+              phone: cPhone.isNotEmpty ? cPhone : (currentUser?.phoneNumber ?? ''),
+              email: cEmail.isNotEmpty ? cEmail : (currentUser?.email ?? ''),
+              gender: cGender,
+              dateOfBirth: cDob,
+              address: cAddr,
+              city: cCity.isNotEmpty ? cCity : 'Ahmedabad',
+              state: cState.isNotEmpty ? cState : 'Gujarat',
+              pincode: cPin,
+              branch: cBranch,
+              profileImageUrl: cImg.isNotEmpty ? cImg : (currentUser?.photoURL ?? ''),
+              createdAt: DateTime.now(),
+              lastLogin: DateTime.now(),
+            );
+          }
+        }
+      } catch (e) {
+        AppLogger.warning("Enrichment from customers collection error: $e");
+      }
+
+      if (profile != null) {
+        return profile;
+      }
 
       // Check current Firebase Auth user fallback
       final currentUser = _auth.currentUser;
@@ -181,11 +281,65 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
 
   @override
   Future<void> saveCustomerProfile(CustomerProfile profile, {bool isEdit = false}) async {
+    AppLogger.info("PROFILE_SAVE_STARTED: Initiating atomic dual profile save for ${profile.id}", layer: LogLayer.repository, className: "CustomerAuthRepositoryImpl", methodName: "saveCustomerProfile");
     final model = profile as CustomerProfileModel;
-    if (isEdit) {
-      await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).update(model.toJson());
+    final profileJson = model.toJson();
+
+    final phoneDigits = profile.phone.replaceAll(RegExp(r'\D'), '');
+    final tenDigit = phoneDigits.length >= 10
+        ? phoneDigits.substring(phoneDigits.length - 10)
+        : phoneDigits;
+    final targetPhoneKey = tenDigit.isNotEmpty ? tenDigit : profile.phone.trim();
+
+    // Canonical customer document fields for customers collection
+    final Map<String, dynamic> customerDocData = {
+      'name': profile.fullName.trim(),
+      'full_name': profile.fullName.trim(),
+      'phone': profile.phone.trim(),
+      if (profile.email.trim().isNotEmpty) 'email': profile.email.trim(),
+      'address': profile.address.trim(),
+      'city': profile.city.trim(),
+      'state': profile.state.trim(),
+      'pincode': profile.pincode.trim(),
+      'branch': profile.branch.trim(),
+      'gender': profile.gender.trim(),
+      if (profile.dateOfBirth != null) 'date_of_birth': profile.dateOfBirth!.toIso8601String(),
+      'profile_image_url': profile.profileImageUrl.trim(),
+      'profileImageUrl': profile.profileImageUrl.trim(),
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+
+    // Use WriteBatch for atomic logical synchronization between customer_profiles and customers
+    final batch = _firestore.batch();
+
+    // 1. Queue write to customer_profiles/{profile.id}
+    final profileDocRef = _firestore.collection(AppCollections.customerProfiles).doc(profile.id);
+    batch.set(
+      profileDocRef,
+      {
+        ...profileJson,
+        'updated_at': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+
+    // 2. Queue write to canonical customers collection
+    if (targetPhoneKey.isNotEmpty) {
+      final customerDocRef = _firestore.collection(AppCollections.customers).doc(targetPhoneKey);
+      batch.set(customerDocRef, customerDocData, SetOptions(merge: true));
     } else {
-      await _firestore.collection(AppCollections.customerProfiles).doc(profile.id).set(model.toJson());
+      final fallbackRef = _firestore.collection(AppCollections.customers).doc(profile.id);
+      batch.set(fallbackRef, customerDocData, SetOptions(merge: true));
+    }
+
+    // 3. Atomically commit both operations
+    // If either write fails, the entire batch fails and an exception is raised
+    try {
+      await batch.commit();
+      AppLogger.info("PROFILE_FIREBASE_UPDATE_SUCCESS: Dual persistence succeeded for customer_profiles/${profile.id} and customers/${targetPhoneKey.isNotEmpty ? targetPhoneKey : profile.id}", layer: LogLayer.repository, className: "CustomerAuthRepositoryImpl", methodName: "saveCustomerProfile");
+    } catch (e) {
+      AppLogger.errorDetailed("PROFILE_SAVE_FAILED: Batch commit failed for customer profile synchronization", layer: LogLayer.repository, className: "CustomerAuthRepositoryImpl", methodName: "saveCustomerProfile", error: e);
+      rethrow; // Crucial: surface error so UI does not display false success
     }
   }
 

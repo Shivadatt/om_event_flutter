@@ -56,7 +56,9 @@ extension CatalogLeadExtension on CatalogController {
           'leadNumber': 'L-${DateTime.now().millisecondsSinceEpoch}',
           'date': DateTime.now().toIso8601String(),
           'service': requirements.trim().isNotEmpty ? requirements.trim() : 'Event Inquiry',
-          'branch': authCtrl.rxCustomerProfile.value?.branch ?? 'Ahmedabad',
+          'branch': authCtrl.rxCustomerProfile.value?.branch.isNotEmpty == true
+              ? authCtrl.rxCustomerProfile.value!.branch
+              : 'Kadi',
           'budget': budget,
           'eventDate': eventDate?.toIso8601String() ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
           'status': 'Pending',

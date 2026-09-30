@@ -55,8 +55,22 @@ service cloud.firestore {
     match /customers/{customerId} {
       allow create: if true;
       allow read: if isAuthenticated();
-      allow update: if isAdminOrStaff() || (isAuthenticated() && (resource.data.get('email', '') == request.auth.token.email || resource.data.get('email', '') == ''));
-      allow delete: if isAdminOrStaff();
+      allow update: if isAdminOrStaff() || (
+        isAuthenticated() && (
+          resource.data.get('email', '') == request.auth.token.email ||
+          resource.data.get('email', '') == '' ||
+          customerId == request.auth.uid ||
+          (request.auth.token.phone_number != null && (customerId == request.auth.token.phone_number || resource.data.get('phone', '') == request.auth.token.phone_number))
+        )
+      );
+      allow delete: if isAdminOrStaff() || (
+        isAuthenticated() && request.auth.token.email != null && request.auth.token.email != '' && resource.data.get('email', '') == request.auth.token.email
+      );
+    }
+
+    // Customer Profiles: Client Lounge authenticated customer may read/write only their own profile
+    match /customer_profiles/{profileId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == profileId || isAdminOrStaff());
     }
 
     // Quotations: Access control and client field validation rules
@@ -173,6 +187,12 @@ service cloud.firestore {
     }
 
     match /customer_leads/{leadId} {
+      allow read: if isCustomerOwner() || isAdminOrStaff();
+      allow create: if isCustomerCreator() || isAdminOrStaff();
+      allow update, delete: if isAdminOrStaff();
+    }
+
+    match /inquiries/{inquiryId} {
       allow read: if isCustomerOwner() || isAdminOrStaff();
       allow create: if isCustomerCreator() || isAdminOrStaff();
       allow update, delete: if isAdminOrStaff();
@@ -305,6 +325,13 @@ service cloud.firestore {
     // Customer Notification Preferences
     match /customer_notification_preferences/{userId} {
       allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdminOrStaff());
+    }
+
+    // Customer Wishlist
+    match /customer_wishlist/{wishlistId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.customerId || isAdminOrStaff());
+      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.customerId || isAdminOrStaff());
+      allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.customerId || isAdminOrStaff());
     }
 
     // Scheduled, dead letter, and log collections for notifications

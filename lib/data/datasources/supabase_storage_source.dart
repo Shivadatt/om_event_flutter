@@ -30,6 +30,7 @@ class SupabaseStorageSource {
         'Authorization': 'Bearer $apiKey',
         'ApiKey': apiKey,
         'Content-Type': contentType,
+        'x-upsert': 'true',
       },
       body: fileBytes,
     );

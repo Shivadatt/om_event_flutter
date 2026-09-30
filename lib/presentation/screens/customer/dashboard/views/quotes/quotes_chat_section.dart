@@ -1,69 +1,179 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/domain/entities/quotation.dart';
 import 'package:om_event/presentation/controllers/quotation_collaboration_controller.dart';
 import 'quotes_chat_bubble.dart';
 
-/// Renders the collaboration and discussions chat feed between customer and coordinators.
-class QuotesChatSection extends StatelessWidget {
+/// Full-width Collaboration & Discussions workspace matching Option 2 Modern Card Style.
+/// Displays an authentic real-time chat interface with message bubbles, customer/coordinator
+/// roles, dynamic empty states, attachment support, and active message composer.
+class QuotesChatSection extends StatefulWidget {
   final Quotation activeQuote;
 
   const QuotesChatSection({super.key, required this.activeQuote});
 
   @override
-  Widget build(BuildContext context) {
-    final chatController = Get.put(
+  State<QuotesChatSection> createState() => _QuotesChatSectionState();
+}
+
+class _QuotesChatSectionState extends State<QuotesChatSection> {
+  late final QuotationCollaborationController _chatController;
+
+  @override
+  void initState() {
+    super.initState();
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    final currentUserName = FirebaseAuth.instance.currentUser?.displayName;
+
+    _chatController = Get.put(
       QuotationCollaborationController(
-        quotationId: activeQuote.id,
-        senderId: activeQuote.customerId.isNotEmpty ? activeQuote.customerId : 'client_user',
-        senderName: activeQuote.customerName.isNotEmpty ? activeQuote.customerName : 'Client',
+        quotationId: widget.activeQuote.id,
+        senderId: widget.activeQuote.customerId.isNotEmpty
+            ? widget.activeQuote.customerId
+            : (currentUserId ?? 'client_user'),
+        senderName: widget.activeQuote.customerName.isNotEmpty
+            ? widget.activeQuote.customerName
+            : (currentUserName ?? 'Client'),
         senderRole: 'client',
       ),
-      tag: activeQuote.id,
+      tag: widget.activeQuote.id,
     );
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 32),
+        // ── Eyebrow Section Title ─────────────────────────────────────────────
         Text(
           "COLLABORATION & DISCUSSIONS",
-          style: AppTheme.sansBody(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37), letterSpacing: 1.5),
+          style: AppTheme.sansBody(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFD4AF37),
+            letterSpacing: 1.5,
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
+
+        // ── Main Chat Interface Card ──────────────────────────────────────────
         Container(
-          height: 400,
+          width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.02),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            color: const Color(0xFF111713),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0x2BD4AF37), width: 1.0),
+            boxShadow: const [
+              BoxShadow(color: Color(0x33000000), blurRadius: 14, offset: Offset(0, 4)),
+            ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              // 1. Chat Header Bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0F1512),
+                  border: Border(bottom: BorderSide(color: Color(0x1AD4AF37), width: 1)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "PROPOSAL COORDINATION CHAT",
+                          style: GoogleFonts.italiana(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFD4AF37),
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Obx(() {
+                      final count = _chatController.combinedMessages.length;
+                      return Text(
+                        count == 0 ? "No messages yet" : "$count ${count == 1 ? 'message' : 'messages'}",
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white54,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+
+              // 2. Chat Feed / Empty State Area
+              Container(
+                height: 250,
+                color: const Color(0xFF0C110E),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Obx(() {
-                  final messages = chatController.combinedMessages;
+                  final messages = _chatController.combinedMessages;
+
+                  // Empty State: Professional invitation to start discussion
                   if (messages.isEmpty) {
                     return Center(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white24, size: 36),
-                          const SizedBox(height: 12),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFFD4AF37).withValues(alpha: 0.1),
+                              border: Border.all(color: const Color(0x33D4AF37)),
+                            ),
+                            child: const Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              color: Color(0xFFD4AF37),
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
                           Text(
-                            "Start a discussion with our design coordinators.",
-                            style: AppTheme.sansBody(fontSize: 11, color: Colors.white30),
+                            "Start a discussion",
+                            style: GoogleFonts.italiana(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Ask questions or request modifications.\nOur curation team will respond to your proposal.",
+                            textAlign: TextAlign.center,
+                            style: AppTheme.sansBody(fontSize: 11.5, color: Colors.white54),
                           ),
                         ],
                       ),
                     );
                   }
 
+                  // Active Conversation Feed
                   return ListView.builder(
-                    controller: chatController.scrollController,
-                    padding: const EdgeInsets.all(16),
+                    controller: _chatController.scrollController,
                     physics: const BouncingScrollPhysics(),
                     itemCount: messages.length,
                     itemBuilder: (context, idx) {
@@ -74,65 +184,104 @@ class QuotesChatSection extends StatelessWidget {
                   );
                 }),
               ),
+
+              // 3. Upload Progress Indicator
               Obx(() {
-                if (chatController.isUploading.value) {
+                if (_chatController.isUploading.value) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: Colors.black26,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    color: const Color(0x1AD4AF37),
                     child: const Row(
                       children: [
                         SizedBox(
-                          width: 14,
-                          height: 14,
+                          width: 12,
+                          height: 12,
                           child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFD4AF37)),
                         ),
-                        SizedBox(width: 10),
-                        Text(
-                          "Uploading attachment...",
-                          style: TextStyle(color: Colors.white54, fontSize: 11),
-                        ),
+                        SizedBox(width: 8),
+                        Text("Uploading attachment...", style: TextStyle(color: Color(0xFFE6C98D), fontSize: 11)),
                       ],
                     ),
                   );
                 }
                 return const SizedBox.shrink();
               }),
+
+              // 4. Integrated Message Composer Bar
               Container(
-                padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
-                  color: Colors.black26,
-                  border: Border(top: BorderSide(color: Colors.white10)),
+                  border: Border(top: BorderSide(color: Color(0x1AD4AF37), width: 1)),
+                  color: Color(0xFF0D1410),
                 ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Row(
                   children: [
+                    // Attachment Action
                     IconButton(
                       icon: const Icon(Icons.attach_file_rounded, color: Color(0xFFD4AF37), size: 20),
-                      onPressed: () => chatController.pickAndUploadAttachment(),
-                      tooltip: "Upload Attachment",
+                      onPressed: () => _chatController.pickAndUploadAttachment(),
+                      tooltip: "Attach Floorplan or Reference",
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(8),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
+
+                    // Text Input Field
                     Expanded(
                       child: TextField(
-                        controller: chatController.textController,
+                        controller: _chatController.textController,
                         style: const TextStyle(color: Colors.white, fontSize: 13),
-                        decoration: InputDecoration(
-                          hintText: "Ask a question, request modifications...",
-                          hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
-                          filled: true,
-                          fillColor: Colors.black12,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide.none,
-                          ),
+                        decoration: const InputDecoration(
+                          hintText: "Type a message or request a modification...",
+                          hintStyle: TextStyle(color: Colors.white30, fontSize: 12.5),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
                         ),
-                        onSubmitted: (_) => chatController.sendTextMessage(),
+                        onSubmitted: (_) => _chatController.sendTextMessage(),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.send_rounded, color: Color(0xFFD4AF37), size: 20),
-                      onPressed: () => chatController.sendTextMessage(),
+
+                    // Send Button with dynamic state & loading indicator
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _chatController.textController,
+                      builder: (context, value, _) {
+                        final hasText = value.text.trim().isNotEmpty;
+                        return Obx(() {
+                          if (_chatController.isSending.value) {
+                            return const SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFD4AF37)),
+                                ),
+                              ),
+                            );
+                          }
+                          return Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: hasText ? const Color(0xFFD4AF37) : const Color(0x22D4AF37),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.send_rounded,
+                                color: hasText ? const Color(0xFF091210) : Colors.white30,
+                                size: 16,
+                              ),
+                              padding: EdgeInsets.zero,
+                              onPressed: hasText ? () => _chatController.sendTextMessage() : null,
+                              tooltip: "Send Message",
+                            ),
+                          );
+                        });
+                      },
                     ),
                   ],
                 ),

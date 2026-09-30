@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -108,15 +107,12 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
 
   Widget _buildAmbientBackground() {
     return Positioned.fill(
-      child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 130.0, sigmaY: 130.0),
-        child: Stack(
-          children: [
-            _blurBlob(size: 600, color: AppColors.primaryAccent, top: -200, left: -100),
-            _blurBlob(size: 500, color: AppColors.secondaryAccent, top: 250, right: -150),
-            _blurBlob(size: 400, color: AppColors.highlight, top: 600, left: 200),
-          ],
-        ),
+      child: Stack(
+        children: [
+          _blurBlob(size: 600, color: AppColors.primaryAccent, top: -200, left: -100),
+          _blurBlob(size: 500, color: AppColors.secondaryAccent, top: 250, right: -150),
+          _blurBlob(size: 400, color: AppColors.highlight, top: 600, left: 200),
+        ],
       ),
     );
   }
@@ -132,7 +128,12 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color.withValues(alpha: 0.08), color.withValues(alpha: 0.0)],
+            colors: [
+              color.withValues(alpha: 0.08),
+              color.withValues(alpha: 0.03),
+              color.withValues(alpha: 0.0),
+            ],
+            stops: const [0.0, 0.5, 1.0],
           ),
         ),
       ),
@@ -198,7 +199,16 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   }
 
   void _showNewInquiryDialog() {
-    Get.dialog(NewInquiryDialog(controller: controller));
+    Get.dialog(
+      NewInquiryDialog(
+        controller: controller,
+        onSuccess: () {
+          setState(() {
+            selectedIndex = 1;
+          });
+        },
+      ),
+    );
   }
 
   void _showRevisionDialog(String quoteId) {

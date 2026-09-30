@@ -8,6 +8,7 @@ class AppImage extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
+  final Alignment alignment;
   final Widget? placeholder;
 
   const AppImage({
@@ -16,24 +17,49 @@ class AppImage extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
     this.placeholder,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (url.isEmpty) {
+      return placeholder ??
+          Container(
+            color: Colors.grey.shade100,
+            width: width,
+            height: height,
+            child: const Icon(
+              Icons.broken_image_outlined,
+              color: Colors.grey,
+            ),
+          );
+    }
+
     if (url.startsWith('assets/')) {
-      return Image.asset(url, width: width, height: height, fit: fit);
+      return Image.asset(
+        url,
+        width: width,
+        height: height,
+        fit: fit,
+        alignment: alignment,
+      );
     }
     
-    // Calculate device pixel ratio for sharper mem cached images if width/height are provided
-    final int? memCacheWidth = width != null ? (width! * 2).toInt() : null;
-    final int? memCacheHeight = height != null ? (height! * 2).toInt() : null;
+    // Calculate device pixel ratio for sharper mem cached images if finite positive width/height are provided
+    final int? memCacheWidth = (width != null && width!.isFinite && width! > 0)
+        ? (width! * 2).toInt()
+        : null;
+    final int? memCacheHeight = (height != null && height!.isFinite && height! > 0)
+        ? (height! * 2).toInt()
+        : null;
 
     return CachedNetworkImage(
       imageUrl: url,
       width: width,
       height: height,
       fit: fit,
+      alignment: alignment,
       memCacheWidth: memCacheWidth,
       memCacheHeight: memCacheHeight,
       placeholder: (context, url) =>

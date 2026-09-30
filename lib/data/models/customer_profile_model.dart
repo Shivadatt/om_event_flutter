@@ -22,7 +22,7 @@ class CustomerProfileModel extends CustomerProfile {
   factory CustomerProfileModel.fromJson(Map<String, dynamic> json, String id) {
     return CustomerProfileModel(
       id: id,
-      fullName: json['full_name'] ?? '',
+      fullName: json['full_name'] ?? json['name'] ?? '',
       phone: json['phone'] ?? '',
       email: json['email'] ?? '',
       gender: json['gender'] ?? '',
@@ -32,7 +32,7 @@ class CustomerProfileModel extends CustomerProfile {
       state: json['state'] ?? '',
       pincode: json['pincode'] ?? '',
       branch: json['branch'] ?? '',
-      profileImageUrl: json['profile_image_url'] ?? '',
+      profileImageUrl: json['profile_image_url'] ?? json['profileImageUrl'] ?? json['photoUrl'] ?? '',
       createdAt: DateParser.parse(json['created_at']),
       lastLogin: json['last_login'] != null ? DateParser.parse(json['last_login']) : null,
     );
@@ -41,6 +41,7 @@ class CustomerProfileModel extends CustomerProfile {
   Map<String, dynamic> toJson() {
     return {
       'full_name': fullName,
+      'name': fullName,
       'phone': phone,
       'email': email,
       'gender': gender,
@@ -51,6 +52,7 @@ class CustomerProfileModel extends CustomerProfile {
       'pincode': pincode,
       'branch': branch,
       'profile_image_url': profileImageUrl,
+      'profileImageUrl': profileImageUrl,
       'created_at': createdAt.toIso8601String(),
       'last_login': lastLogin?.toIso8601String(),
     };

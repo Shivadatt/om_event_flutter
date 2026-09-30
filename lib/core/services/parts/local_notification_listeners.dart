@@ -224,7 +224,7 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
       'publicBookingId': publicBookingId ?? '',
       'isRead': false,
       'read': false,
-      'branch': 'Ahmedabad',
+      'branch': 'Kadi',
       'priority': 'normal',
       'createdAt': FieldValue.serverTimestamp(),
     });

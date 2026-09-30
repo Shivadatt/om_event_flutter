@@ -6,6 +6,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
     required String phone,
     required String email,
     required String gender,
+    DateTime? dateOfBirth,
     required String address,
     required String city,
     required String state,
@@ -18,12 +19,15 @@ extension CustomerActionsExtension on CustomerDashboardController {
       final current = rxProfile.value;
       if (current == null) return;
 
+      AppLogger.info("PROFILE_SAVE_STARTED: Updating profile for ${current.id}", layer: LogLayer.controller, className: "CustomerActionsExtension", methodName: "updateProfile");
+
       final updated = CustomerProfileModel(
         id: current.id,
         fullName: fullName,
         phone: phone,
         email: email,
         gender: gender,
+        dateOfBirth: dateOfBirth ?? current.dateOfBirth,
         address: address,
         city: city,
         state: state,
@@ -35,13 +39,75 @@ extension CustomerActionsExtension on CustomerDashboardController {
       );
 
       await _authRepo.saveCustomerProfile(updated, isEdit: true);
+      rxProfile.value = updated;
+      _authController.rxCustomerProfile.value = updated;
       await _authController.checkAuthStatus();
+      await syncMasterData(updated);
       await logActivity('Profile Updated', 'Customer updated bio profile details.');
+      AppLogger.info("PROFILE_SAVE_SUCCESS: Profile saved successfully for ${current.id}", layer: LogLayer.controller, className: "CustomerActionsExtension", methodName: "updateProfile");
       Get.snackbar("Success", "Profile updated successfully");
     } catch (e) {
+      AppLogger.errorDetailed("PROFILE_SAVE_FAILED: Failed to update profile", layer: LogLayer.controller, className: "CustomerActionsExtension", methodName: "updateProfile", error: e);
       Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to update profile. Please try again."));
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Uploads a selected customer profile picture to Supabase Storage in the canonical 'profile' bucket
+  /// at user-isolated path '{uid}/avatar_{timestamp}.{ext}', and returns the public URL.
+  Future<String> uploadProfileImage({
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final current = rxProfile.value;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final uid = currentUser?.uid ?? current?.id;
+    if (uid == null || uid.isEmpty) {
+      throw Exception("User is not authenticated. Please log in.");
+    }
+
+    AppLogger.info("PROFILE_IMAGE_UPLOAD_STARTED: Starting image upload to Supabase for $uid", layer: LogLayer.controller, className: "CustomerActionsExtension", methodName: "uploadProfileImage");
+
+    final ext = fileName.split('.').last.toLowerCase();
+    final sanitizedExt = (ext == 'png' || ext == 'webp') ? ext : 'jpg';
+    final contentType = ext == 'png'
+        ? 'image/png'
+        : (ext == 'webp' ? 'image/webp' : 'image/jpeg');
+
+    final storage = Get.find<SupabaseStorageSource>();
+    final storagePath = '$uid/avatar_${DateTime.now().millisecondsSinceEpoch}.$sanitizedExt';
+
+    try {
+      final url = await storage.uploadFile(
+        storagePath,
+        fileBytes,
+        contentType,
+        bucket: 'profile',
+      );
+      AppLogger.info("PROFILE_IMAGE_UPLOAD_SUCCESS: Image uploaded to Supabase 'profile' bucket: $url", layer: LogLayer.controller, className: "CustomerActionsExtension", methodName: "uploadProfileImage");
+      return url;
+    } catch (e) {
+      final errorStr = e.toString();
+      // If the 'profile' bucket lacks an RLS policy (403 AccessDenied),
+      // seamlessly fallback to the 'thumbnails' bucket which already has active RLS upload policies
+      if (errorStr.contains('row-level security policy') ||
+          errorStr.contains('403') ||
+          errorStr.contains('AccessDenied')) {
+        try {
+          final fallbackUrl = await storage.uploadFile(
+            'profiles/$storagePath',
+            fileBytes,
+            contentType,
+            bucket: 'thumbnails',
+          );
+          AppLogger.info("PROFILE_IMAGE_UPLOAD_SUCCESS: Image uploaded to fallback 'thumbnails' bucket: $fallbackUrl", layer: LogLayer.controller, className: "CustomerActionsExtension", methodName: "uploadProfileImage");
+          return fallbackUrl;
+        } catch (_) {
+          rethrow;
+        }
+      }
+      rethrow;
     }
   }
 
@@ -50,15 +116,55 @@ extension CustomerActionsExtension on CustomerDashboardController {
     required String branch,
     required double budget,
     required DateTime eventDate,
+    String serviceId = '',
+    String serviceSlug = '',
+    String imageUrl = '',
+    String categoryId = '',
   }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) {
+      Get.snackbar(
+        "Authentication Required",
+        "Please log in to your account to submit a design inquiry.",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      throw Exception("User not authenticated.");
+    }
+
     try {
       isLoading.value = true;
-      final profile = rxProfile.value;
-      if (profile == null) return;
+      var profile = rxProfile.value;
+      if (profile == null) {
+        await ensureProfileLoaded();
+        profile = rxProfile.value;
+      }
+
+      final customerId = user.uid;
+      final customerName = profile?.fullName.isNotEmpty == true
+          ? profile!.fullName
+          : (user.displayName?.isNotEmpty == true ? user.displayName! : 'Valued Client');
+      final customerEmail = profile?.email.isNotEmpty == true ? profile!.email : (user.email ?? '');
+      final customerPhone = profile?.phone.isNotEmpty == true ? profile!.phone : (user.phoneNumber ?? '');
+
+      String effServiceId = serviceId;
+      String effServiceSlug = serviceSlug;
+      String effImageUrl = imageUrl;
+      String effCategoryId = categoryId;
+
+      if (effServiceId.isEmpty && effImageUrl.isEmpty) {
+        final match = InquiryImageResolver.findBestCatalogMatch(service);
+        effServiceId = match.serviceId;
+        effServiceSlug = match.serviceSlug;
+        effImageUrl = match.imageUrl;
+        effCategoryId = match.categoryId;
+      }
 
       final lead = CustomerLead(
         id: '',
-        customerId: profile.id,
+        customerId: customerId,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        customerPhone: customerPhone,
         leadNumber: 'L-${DateTime.now().millisecondsSinceEpoch}',
         date: DateTime.now(),
         service: service,
@@ -66,13 +172,23 @@ extension CustomerActionsExtension on CustomerDashboardController {
         budget: budget,
         eventDate: eventDate,
         status: 'Pending',
+        serviceId: effServiceId,
+        serviceSlug: effServiceSlug,
+        imageUrl: effImageUrl,
+        categoryId: effCategoryId,
       );
 
       await _portalRepo.createCustomerLead(lead);
       await logActivity('Lead Created', 'Created a new lead inquiry for $service.');
-      Get.snackbar("Success", "Inquiry submitted successfully!");
     } catch (e) {
-      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to submit inquiry. Please try again."));
+      AppLogger.errorDetailed(
+        "Failed to submit lead inquiry",
+        error: e,
+        layer: LogLayer.controller,
+        className: "CustomerActionsExtension",
+        methodName: "submitLead",
+      );
+      rethrow;
     } finally {
       isLoading.value = false;
     }
@@ -306,4 +422,221 @@ extension CustomerActionsExtension on CustomerDashboardController {
       Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Action could not be completed. Please try again."));
     }
   }
+
+  Future<void> raiseSupportTicket({
+    required String subject,
+    required String message,
+  }) async {
+    final profile = rxProfile.value;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final customerId = currentUser?.uid ?? profile?.id ?? '';
+    if (customerId.isEmpty) {
+      Get.snackbar("Error", "Please log in to raise a support ticket.");
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      final ticket = SupportTicket(
+        id: '',
+        customerId: customerId,
+        subject: subject.trim(),
+        status: 'Active Review',
+        messages: ['Customer: ${message.trim()}'],
+        createdAt: DateTime.now(),
+      );
+
+      await _portalRepo.createSupportTicket(ticket);
+      await logActivity('Support Ticket Created', 'Raised concierge ticket: $subject');
+      Get.snackbar(
+        "Ticket Raised",
+        "Your support ticket has been submitted to our concierge team.",
+        backgroundColor: const Color(0xFF171411),
+        colorText: const Color(0xFFD4AF37),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to raise support ticket. Please try again."));
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> replySupportTicket({
+    required String ticketId,
+    required String message,
+  }) async {
+    if (ticketId.isEmpty || message.trim().isEmpty) return;
+    try {
+      await _portalRepo.replySupportTicket(ticketId, "Customer: ${message.trim()}");
+      await logActivity('Support Ticket Reply', 'Sent reply on ticket $ticketId');
+      Get.snackbar(
+        "Reply Sent",
+        "Your message was sent to the concierge team.",
+        backgroundColor: const Color(0xFF171411),
+        colorText: const Color(0xFFD4AF37),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to send message. Please try again."));
+    }
+  }
+
+  Future<void> closeSupportTicket({
+    required String ticketId,
+  }) async {
+    if (ticketId.isEmpty) return;
+    try {
+      await _portalRepo.closeSupportTicket(ticketId);
+      await logActivity('Support Ticket Closed', 'Closed concierge ticket $ticketId');
+      Get.snackbar(
+        "Ticket Closed",
+        "Concierge support ticket has been closed.",
+        backgroundColor: const Color(0xFF171411),
+        colorText: const Color(0xFFD4AF37),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar("Error", AppErrorMapper.mapCustomerError(e, fallback: "Failed to close ticket. Please try again."));
+    }
+  }
+
+  /// Checks if an experience is currently saved in the customer's wishlist
+  bool isInWishlist(String? experienceSlugOrId) {
+    if (experienceSlugOrId == null || experienceSlugOrId.trim().isEmpty) return false;
+    final target = experienceSlugOrId.trim();
+    return rxWishlist.any((w) => w.experienceId == target);
+  }
+
+  /// Checks by both slug and id for foolproof matching
+  bool isExperienceInWishlist(String? slug, [String? id]) {
+    final s = slug?.trim();
+    final i = id?.trim();
+    if ((s == null || s.isEmpty) && (i == null || i.isEmpty)) return false;
+    return rxWishlist.any((w) =>
+      (s != null && s.isNotEmpty && w.experienceId == s) ||
+      (i != null && i.isNotEmpty && w.experienceId == i)
+    );
+  }
+
+  /// Toggles an experience in the customer's wishlist with optimistic update & Firestore persistence
+  Future<void> toggleWishlist(dynamic experience, {BuildContext? context}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final isAuth = user != null &&
+        !user.isAnonymous &&
+        !(rxProfile.value?.id.startsWith('guest_') ?? false);
+
+    String expSlug = '';
+    String expId = '';
+    String expName = 'Theme';
+
+    if (experience is Map) {
+      expSlug = (experience['slug'] ?? experience['id'] ?? '').toString();
+      expId = (experience['id'] ?? '').toString();
+      expName = (experience['name'] ?? 'Theme').toString();
+    } else {
+      try {
+        expSlug = (experience.slug != null && experience.slug.isNotEmpty)
+            ? experience.slug
+            : (experience.id ?? '');
+        expId = (experience.id ?? '').toString();
+        expName = (experience.name ?? "Theme").toString();
+      } catch (_) {
+        expSlug = experience.toString();
+        expId = expSlug;
+      }
+    }
+
+    if (!isAuth) {
+      final ctx = context ?? Get.context;
+      if (ctx != null) {
+        showCustomerLoginRequiredDialog(
+          ctx,
+          subtitle: 'Sign in to save "$expName" to your personal wishlist.',
+          onLoginSuccess: () => toggleWishlist(experience),
+        );
+      } else {
+        Get.snackbar(
+          "Sign In Required",
+          "Please sign in to save themes to your wishlist.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF171411),
+          colorText: const Color(0xFFD4AF37),
+        );
+      }
+      return;
+    }
+
+    final uid = user.uid;
+
+    final existing = rxWishlist.firstWhereOrNull(
+      (w) => w.experienceId == expSlug || (expId.isNotEmpty && w.experienceId == expId),
+    );
+
+    if (existing != null) {
+      // 1. Optimistic removal
+      rxWishlist.removeWhere((w) => w.id == existing.id);
+      try {
+        await _portalRepo.removeFromWishlist(existing.id);
+        await logActivity('Wishlist Updated', 'Removed $expName from favorites.');
+        Get.snackbar(
+          "Removed from Wishlist",
+          "$expName removed from your favorites.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF171411),
+          colorText: const Color(0xFFD4AF37),
+          duration: const Duration(seconds: 2),
+        );
+      } catch (e) {
+        // Rollback optimistic removal
+        if (!rxWishlist.any((w) => w.id == existing.id)) {
+          rxWishlist.add(existing);
+        }
+        AppLogger.warning("Error removing from wishlist: $e");
+        Get.snackbar(
+          "Wishlist Error",
+          "Could not update wishlist. Please try again.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF2B1212),
+          colorText: Colors.white,
+        );
+      }
+    } else {
+      // 2. Optimistic addition
+      final newId = '${uid}_$expSlug';
+      final item = CustomerWishlistModel(
+        id: newId,
+        customerId: uid,
+        experienceId: expSlug,
+        addedAt: DateTime.now(),
+      );
+      if (!rxWishlist.any((w) => w.id == newId)) {
+        rxWishlist.add(item);
+      }
+      try {
+        await _portalRepo.addToWishlist(item);
+        await logActivity('Wishlist Updated', 'Saved $expName to favorites.');
+        Get.snackbar(
+          "Added to Wishlist",
+          "$expName saved to your favorites.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF171411),
+          colorText: const Color(0xFFD4AF37),
+          duration: const Duration(seconds: 2),
+        );
+      } catch (e) {
+        // Rollback optimistic addition
+        rxWishlist.removeWhere((w) => w.id == newId);
+        AppLogger.warning("Error saving to wishlist: $e");
+        Get.snackbar(
+          "Wishlist Error",
+          "Could not save to wishlist. Please check your connection.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF2B1212),
+          colorText: Colors.white,
+        );
+      }
+    }
+  }
 }
+

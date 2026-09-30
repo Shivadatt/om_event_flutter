@@ -4,6 +4,7 @@ import '../entities/customer_document.dart';
 import '../entities/customer_wishlist.dart';
 import '../entities/offer.dart';
 import '../entities/customer_activity.dart';
+import '../entities/support_ticket.dart';
 
 abstract class CustomerPortalRepository {
   // Leads
@@ -31,4 +32,10 @@ abstract class CustomerPortalRepository {
   // Activity Timeline
   Stream<List<CustomerActivity>> streamCustomerActivity(String customerId);
   Future<void> logCustomerActivity(CustomerActivity activity);
+
+  // Support Tickets
+  Stream<List<SupportTicket>> streamCustomerTickets(String customerId);
+  Future<void> createSupportTicket(SupportTicket ticket);
+  Future<void> replySupportTicket(String ticketId, String message);
+  Future<void> closeSupportTicket(String ticketId);
 }

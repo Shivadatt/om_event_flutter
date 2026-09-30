@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
@@ -110,6 +112,227 @@ class DashboardSidebar extends StatelessWidget {
   }
 
   Widget _buildBrandHeader(Color goldColor) {
+    return Obx(() {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final bool isAuthenticated = currentUser != null && !currentUser.isAnonymous;
+      final profile = controller.rxProfile.value;
+      final bool isLoading = controller.isLoading.value && profile == null;
+
+      // 1. If not authenticated as real customer, display default brand header
+      if (!isAuthenticated) {
+        return _buildDefaultBrandHeader(goldColor);
+      }
+
+      // 2. If profile data is currently loading, show smooth skeleton header
+      if (isLoading) {
+        return _buildSkeletonHeader(goldColor);
+      }
+
+      // 3. Resolve customer display name using canonical profile
+      String customerName = profile?.fullName.trim() ?? '';
+      if (customerName.isEmpty ||
+          customerName.toLowerCase() == 'guest' ||
+          customerName.toLowerCase() == 'null' ||
+          customerName.toLowerCase() == 'undefined') {
+        customerName = 'Valued Client';
+      }
+
+      final profileImageUrl = profile?.profileImageUrl ?? '';
+
+      return Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () => onIndexChanged(8), // Navigate directly to Profile Settings
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    // Circular Customer Profile Picture / Avatar
+                    _buildAvatarWidget(profileImageUrl, goldColor),
+
+                    const SizedBox(width: 10),
+
+                    // Customer Name & Lounge Label
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            customerName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.sansBody(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Client Lounge',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.sansBody(
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w600,
+                              color: goldColor.withValues(alpha: 0.85),
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Text(
+                'CLIENT LOUNGE',
+                style: AppTheme.sansBody(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.bold,
+                  color: goldColor.withValues(alpha: 0.85),
+                  letterSpacing: 2.0,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildAvatarWidget(String imageUrl, Color goldColor) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0xFF14201A),
+        border: Border.all(
+          color: goldColor.withValues(alpha: 0.85),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: goldColor.withValues(alpha: 0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: imageUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                width: 34,
+                height: 34,
+                placeholder: (context, url) => Container(
+                  color: const Color(0xFF14201A),
+                  child: Center(
+                    child: SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: goldColor,
+                      ),
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Center(
+                  child: Icon(
+                    Icons.person_rounded,
+                    color: goldColor.withValues(alpha: 0.85),
+                    size: 19,
+                  ),
+                ),
+              )
+            : Center(
+                child: Icon(
+                  Icons.person_rounded,
+                  color: goldColor.withValues(alpha: 0.85),
+                  size: 19,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonHeader(Color goldColor) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF14201A),
+                  border: Border.all(
+                    color: goldColor.withValues(alpha: 0.3),
+                    width: 1.0,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 75,
+                    height: 11,
+                    decoration: BoxDecoration(
+                      color: Colors.white12,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Container(
+                    width: 50,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: goldColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: Text(
+              'CLIENT LOUNGE',
+              style: AppTheme.sansBody(
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+                color: goldColor.withValues(alpha: 0.85),
+                letterSpacing: 2.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultBrandHeader(Color goldColor) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
       child: Column(

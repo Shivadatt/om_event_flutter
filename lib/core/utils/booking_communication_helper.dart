@@ -5,6 +5,21 @@ import '../constants/app_strings.dart';
 import '../services/business_details_service.dart';
 import '../utils/formatters.dart';
 
+/// Model representing a canonical business contact option (WhatsApp or Voice Phone).
+class BusinessContactOption {
+  final String label;
+  final String rawPhone;
+  final String displayPhone;
+  final bool isPrimary;
+
+  const BusinessContactOption({
+    required this.label,
+    required this.rawPhone,
+    required this.displayPhone,
+    this.isPrimary = false,
+  });
+}
+
 /// Centralized utility for phone normalization and customer-facing WhatsApp & booking communication.
 class BookingCommunicationHelper {
   BookingCommunicationHelper._();
@@ -35,39 +50,148 @@ class BookingCommunicationHelper {
     return rawPhone.trim().isNotEmpty ? rawPhone.trim() : '+91 95121 49944';
   }
 
-  /// Resolves the active business WhatsApp number from dynamic settings or fallback.
-  static String getBusinessWhatsAppNumber() {
+  /// Resolves all active business WhatsApp contact options (Primary & Secondary).
+  static List<BusinessContactOption> getBusinessWhatsAppOptions() {
+    final List<BusinessContactOption> options = [];
     try {
       if (Get.isRegistered<BusinessDetailsService>()) {
         final details = BusinessDetailsService.to.rxDetails.value;
-        final activeWa = details.contacts.whatsapps.where((c) => c.isActive).toList();
+        final activeWa = details.contacts.whatsapps.where((c) => c.isActive && c.value.isNotEmpty).toList();
         if (activeWa.isNotEmpty) {
-          final primary = activeWa.firstWhere((c) => c.isPrimary, orElse: () => activeWa.first);
-          return normalizePhone(primary.value);
-        }
-        final activePhones = details.contacts.phones.where((c) => c.isActive).toList();
-        if (activePhones.isNotEmpty) {
-          final primary = activePhones.firstWhere((c) => c.isPrimary, orElse: () => activePhones.first);
-          return normalizePhone(primary.value);
+          for (final wa in activeWa) {
+            final isPrimary = wa.isPrimary ||
+                wa.label.toLowerCase().contains('primary') ||
+                wa.value.contains('93135');
+            String cleanLabel = wa.label
+                .replaceAll(RegExp(r'\s*WhatsApp\s*$', caseSensitive: false), '')
+                .trim();
+            if (cleanLabel.isEmpty) {
+              cleanLabel = isPrimary ? "WhatsApp" : "Kadi (Medha)";
+            }
+            final display = formatDisplayPhone(wa.value);
+            options.add(BusinessContactOption(
+              label: cleanLabel,
+              rawPhone: wa.value,
+              displayPhone: display,
+              isPrimary: isPrimary,
+            ));
+          }
         }
       }
     } catch (_) {}
-    return AppStrings.businessPhone;
+
+    // Ensure both canonical business numbers exist
+    if (options.isEmpty) {
+      options.add(const BusinessContactOption(
+        label: "WhatsApp",
+        rawPhone: "+91 93135 13156",
+        displayPhone: "+91 93135 13156",
+        isPrimary: true,
+      ));
+      options.add(const BusinessContactOption(
+        label: "Kadi (Medha)",
+        rawPhone: "+91 95121 49944",
+        displayPhone: "+91 95121 49944",
+        isPrimary: false,
+      ));
+    } else if (options.length == 1) {
+      if (options.first.rawPhone.contains('93135')) {
+        options.add(const BusinessContactOption(
+          label: "Kadi (Medha)",
+          rawPhone: "+91 95121 49944",
+          displayPhone: "+91 95121 49944",
+          isPrimary: false,
+        ));
+      } else {
+        options.insert(
+          0,
+          const BusinessContactOption(
+            label: "WhatsApp",
+            rawPhone: "+91 93135 13156",
+            displayPhone: "+91 93135 13156",
+            isPrimary: true,
+          ),
+        );
+      }
+    }
+    return options;
+  }
+
+  /// Resolves all active business phone contact options for voice calling (Primary & Secondary).
+  static List<BusinessContactOption> getBusinessPhoneOptions() {
+    final List<BusinessContactOption> options = [];
+    try {
+      if (Get.isRegistered<BusinessDetailsService>()) {
+        final details = BusinessDetailsService.to.rxDetails.value;
+        final activePhones = details.contacts.phones.where((c) => c.isActive && c.value.isNotEmpty).toList();
+        if (activePhones.isNotEmpty) {
+          for (final p in activePhones) {
+            final isPrimary = p.isPrimary ||
+                p.label.toLowerCase().contains('primary') ||
+                p.value.contains('93135');
+            String cleanLabel = p.label.trim();
+            if (cleanLabel.isEmpty) {
+              cleanLabel = isPrimary ? "Primary" : "Secondary";
+            }
+            final display = formatDisplayPhone(p.value);
+            options.add(BusinessContactOption(
+              label: cleanLabel,
+              rawPhone: p.value,
+              displayPhone: display,
+              isPrimary: isPrimary,
+            ));
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Ensure both canonical business numbers exist
+    if (options.isEmpty) {
+      options.add(const BusinessContactOption(
+        label: "Primary",
+        rawPhone: "+91 93135 13156",
+        displayPhone: "+91 93135 13156",
+        isPrimary: true,
+      ));
+      options.add(const BusinessContactOption(
+        label: "Secondary",
+        rawPhone: "+91 95121 49944",
+        displayPhone: "+91 95121 49944",
+        isPrimary: false,
+      ));
+    } else if (options.length == 1) {
+      if (options.first.rawPhone.contains('93135')) {
+        options.add(const BusinessContactOption(
+          label: "Secondary",
+          rawPhone: "+91 95121 49944",
+          displayPhone: "+91 95121 49944",
+          isPrimary: false,
+        ));
+      } else {
+        options.insert(
+          0,
+          const BusinessContactOption(
+            label: "Primary",
+            rawPhone: "+91 93135 13156",
+            displayPhone: "+91 93135 13156",
+            isPrimary: true,
+          ),
+        );
+      }
+    }
+    return options;
+  }
+
+  /// Resolves the primary active business WhatsApp number from dynamic settings or fallback.
+  static String getBusinessWhatsAppNumber() {
+    final options = getBusinessWhatsAppOptions();
+    return normalizePhone(options.first.rawPhone);
   }
 
   /// Resolves the primary business phone number for voice calling.
   static String getBusinessPhoneNumber() {
-    try {
-      if (Get.isRegistered<BusinessDetailsService>()) {
-        final details = BusinessDetailsService.to.rxDetails.value;
-        final activePhones = details.contacts.phones.where((c) => c.isActive).toList();
-        if (activePhones.isNotEmpty) {
-          final primary = activePhones.firstWhere((c) => c.isPrimary, orElse: () => activePhones.first);
-          return normalizePhone(primary.value);
-        }
-      }
-    } catch (_) {}
-    return AppStrings.businessPhone;
+    final options = getBusinessPhoneOptions();
+    return normalizePhone(options.first.rawPhone);
   }
 
   /// Resolves the primary business email address.

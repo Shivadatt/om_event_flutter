@@ -67,19 +67,48 @@ extension FirestoreOrders on FirestoreRemoteSource {
   }
 
   /// Create or update a CRM customer record keyed by phone number.
+  /// Preserves all existing extended profile fields (address, city, state, pincode, profile_image_url).
   Future<void> upsertCustomer({
     required String phone,
     required String name,
     required String email,
+    String? address,
+    String? city,
+    String? state,
+    String? pincode,
+    String? branch,
+    String? gender,
+    dynamic dateOfBirth,
+    String? profileImageUrl,
   }) async {
     try {
-      final docRef = _firestore.collection(AppCollections.customers).doc(phone);
-      await docRef.set({
-        'name': name,
-        'phone': phone,
-        if (email.isNotEmpty) 'email': email,
+      final cleanDigits = phone.replaceAll(RegExp(r'\D'), '');
+      final tenDigit = cleanDigits.length >= 10
+          ? cleanDigits.substring(cleanDigits.length - 10)
+          : phone.trim();
+      final docId = tenDigit.isNotEmpty ? tenDigit : phone.trim();
+      if (docId.isEmpty) return;
+
+      final docRef = _firestore.collection(AppCollections.customers).doc(docId);
+      final Map<String, dynamic> data = {
+        'name': name.trim(),
+        'full_name': name.trim(),
+        'phone': phone.trim(),
+        if (email.isNotEmpty) 'email': email.trim(),
+        if (address != null && address.isNotEmpty) 'address': address.trim(),
+        if (city != null && city.isNotEmpty) 'city': city.trim(),
+        if (state != null && state.isNotEmpty) 'state': state.trim(),
+        if (pincode != null && pincode.isNotEmpty) 'pincode': pincode.trim(),
+        if (branch != null && branch.isNotEmpty) 'branch': branch.trim(),
+        if (gender != null && gender.isNotEmpty) 'gender': gender.trim(),
+        if (dateOfBirth != null) 'date_of_birth': dateOfBirth is DateTime ? dateOfBirth.toIso8601String() : dateOfBirth.toString().trim(),
+        if (profileImageUrl != null && profileImageUrl.isNotEmpty) ...{
+          'profile_image_url': profileImageUrl.trim(),
+          'profileImageUrl': profileImageUrl.trim(),
+        },
         'updated_at': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      };
+      await docRef.set(data, SetOptions(merge: true));
     } catch (_) {
       // Best-effort CRM lead update for guest/anonymous sessions
     }

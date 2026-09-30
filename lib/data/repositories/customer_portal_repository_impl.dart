@@ -6,6 +6,7 @@ import '../../domain/entities/customer_document.dart';
 import '../../domain/entities/customer_wishlist.dart';
 import '../../domain/entities/offer.dart';
 import '../../domain/entities/customer_activity.dart';
+import '../../domain/entities/support_ticket.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
 import '../../core/utils/app_logger.dart';
 import '../models/customer_lead_model.dart';
@@ -23,9 +24,13 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
         .collection(AppCollections.customerLeads)
         .where('customerId', isEqualTo: customerId)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CustomerLeadModel.fromJson(doc.data(), doc.id))
-            .toList())
+        .map((snapshot) {
+          final list = snapshot.docs
+              .map((doc) => CustomerLeadModel.fromJson(doc.data(), doc.id))
+              .toList();
+          list.sort((a, b) => b.date.compareTo(a.date));
+          return list;
+        })
         .handleError((e) {
           AppLogger.warning("Failed to stream customer leads for $customerId: $e");
           return <CustomerLead>[];
@@ -34,22 +39,60 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
 
   @override
   Future<void> createCustomerLead(CustomerLead lead) async {
+    final docRef = lead.id.isNotEmpty
+        ? _firestore.collection(AppCollections.customerLeads).doc(lead.id)
+        : _firestore.collection(AppCollections.customerLeads).doc();
+    final leadId = docRef.id;
+
     final model = CustomerLeadModel(
-      id: lead.id,
+      id: leadId,
       customerId: lead.customerId,
-      leadNumber: lead.leadNumber,
+      customerName: lead.customerName,
+      customerEmail: lead.customerEmail,
+      customerPhone: lead.customerPhone,
+      leadNumber: lead.leadNumber.isNotEmpty
+          ? lead.leadNumber
+          : 'L-${DateTime.now().millisecondsSinceEpoch}',
       date: lead.date,
       service: lead.service,
       branch: lead.branch,
       budget: lead.budget,
       eventDate: lead.eventDate,
-      status: lead.status,
+      status: lead.status.isNotEmpty ? lead.status : 'Pending',
       adminNotes: lead.adminNotes,
+      serviceId: lead.serviceId,
+      serviceSlug: lead.serviceSlug,
+      imageUrl: lead.imageUrl,
+      categoryId: lead.categoryId,
     );
-    await _firestore
-        .collection(AppCollections.customerLeads)
-        .doc(lead.id.isEmpty ? null : lead.id)
-        .set(model.toJson());
+
+    // 1. Write to canonical customer_leads collection
+    await docRef.set(model.toJson());
+
+    // 2. Also mirror to admin CRM leads collection for unified back-office visibility
+    try {
+      await _firestore.collection(AppCollections.leads).doc(leadId).set({
+        'id': leadId,
+        'name': model.customerName.isNotEmpty ? model.customerName : 'Valued Client',
+        'phone': model.customerPhone,
+        'email': model.customerEmail,
+        'requestType': 'consultation',
+        'requirements': model.service,
+        'branch': model.branch,
+        'budget': model.budget,
+        'eventDate': model.eventDate.toIso8601String(),
+        'status': 'new',
+        'created_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
+        'customerId': model.customerId,
+        'serviceId': model.serviceId,
+        'serviceSlug': model.serviceSlug,
+        'imageUrl': model.imageUrl,
+        'categoryId': model.categoryId,
+      });
+    } catch (e) {
+      AppLogger.warning("Failed to mirror inquiry to admin leads: $e");
+    }
   }
 
   @override
@@ -118,7 +161,7 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
         .where('customerId', isEqualTo: customerId)
         .snapshots()
         .map((snap) => snap.docs
-            .map((doc) => CustomerWishlistModel.fromJson(doc.data(), doc.id))
+            .map<CustomerWishlist>((doc) => CustomerWishlistModel.fromJson(doc.data(), doc.id))
             .toList())
         .handleError((e) {
           AppLogger.warning("Failed to stream customer wishlist for $customerId: $e");
@@ -193,5 +236,53 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
         .collection(AppCollections.customerActivity)
         .doc(activity.id.isEmpty ? null : activity.id)
         .set(model.toJson());
+  }
+
+  @override
+  Stream<List<SupportTicket>> streamCustomerTickets(String customerId) {
+    if (customerId.isEmpty) return Stream.value([]);
+    return _firestore
+        .collection(AppCollections.supportTickets)
+        .where('customerId', isEqualTo: customerId)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) => SupportTicketModel.fromJson(doc.data(), doc.id))
+            .toList())
+        .handleError((e) {
+          AppLogger.warning("Failed to stream support tickets for $customerId: $e");
+          return <SupportTicket>[];
+        });
+  }
+
+  @override
+  Future<void> createSupportTicket(SupportTicket ticket) async {
+    final model = SupportTicketModel(
+      id: ticket.id,
+      customerId: ticket.customerId,
+      subject: ticket.subject,
+      status: ticket.status.isNotEmpty ? ticket.status : 'Open',
+      messages: ticket.messages,
+      createdAt: ticket.createdAt,
+    );
+    final docRef = ticket.id.isEmpty
+        ? _firestore.collection(AppCollections.supportTickets).doc()
+        : _firestore.collection(AppCollections.supportTickets).doc(ticket.id);
+    await docRef.set(model.toJson());
+  }
+
+  @override
+  Future<void> replySupportTicket(String ticketId, String message) async {
+    if (ticketId.isEmpty || message.trim().isEmpty) return;
+    await _firestore.collection(AppCollections.supportTickets).doc(ticketId).update({
+      'messages': FieldValue.arrayUnion([message]),
+    });
+  }
+
+  @override
+  Future<void> closeSupportTicket(String ticketId) async {
+    if (ticketId.isEmpty) return;
+    await _firestore.collection(AppCollections.supportTickets).doc(ticketId).update({
+      'status': 'Closed',
+    });
   }
 }

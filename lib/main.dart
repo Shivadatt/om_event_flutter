@@ -7,6 +7,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'core/config/app_routes.dart';
 import 'core/config/app_theme.dart';
 import 'core/constants/app_strings.dart';
+import 'dart:ui';
 import 'core/seo/seo_manager.dart';
 import 'core/utils/app_logger.dart';
 import 'presentation/bindings/initial_binding.dart';
@@ -14,6 +15,20 @@ import 'presentation/bindings/initial_binding.dart';
 void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Suppress benign Flutter Web CanvasKit WebGL hot-restart context-lost race
+  FlutterError.onError = (details) {
+    if (details.exceptionAsString().contains('_handledContextLostEvent')) {
+      return;
+    }
+    FlutterError.presentError(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (error.toString().contains('_handledContextLostEvent')) {
+      return true; // handled
+    }
+    return false;
+  };
 
   // Initialize SharedPreferences & Firebase concurrently — saves ~300-500ms vs sequential await
   await Future.wait([

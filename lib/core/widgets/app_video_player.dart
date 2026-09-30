@@ -252,7 +252,10 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
 
   Future<void> _seekTo(double relativePosition) async {
     if (_controller == null || !_isInitialized || _duration == Duration.zero) return;
-    final targetMs = (relativePosition * _duration.inMilliseconds).clamp(0, _duration.inMilliseconds.toDouble()).toInt();
+    if (!relativePosition.isFinite || relativePosition.isNaN) return;
+    final totalMs = _duration.inMilliseconds;
+    if (!totalMs.isFinite || totalMs <= 0) return;
+    final targetMs = (relativePosition * totalMs).clamp(0.0, totalMs.toDouble()).toInt();
     final target = Duration(milliseconds: targetMs);
     await _controller!.seekTo(target);
     _showControls();
@@ -274,9 +277,16 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
   }
 
   String _formatDuration(Duration d) {
-    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return "$minutes:$seconds";
+    if (d == Duration.zero) return "00:00";
+    try {
+      final totalSeconds = d.inSeconds;
+      if (totalSeconds < 0 || totalSeconds > 86400) return "00:00";
+      final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+      final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+      return "$minutes:$seconds";
+    } catch (_) {
+      return "00:00";
+    }
   }
 
   @override
@@ -286,8 +296,8 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
     // 1. Loading State
     if (_isLoading) {
       return Container(
-        height: 360,
         width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 180),
         color: const Color(0xFF070E0B),
         child: const Center(
           child: Column(
@@ -319,8 +329,8 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
     // 2. Error State (Exact format per spec)
     if (_hasError || !_isInitialized || _controller == null) {
       return Container(
-        height: 360,
         width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 180),
         color: const Color(0xFF070E0B),
         padding: const EdgeInsets.all(24),
         child: Center(
@@ -408,7 +418,13 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
 
     // 3. Active Playback State
     final rawRatio = _controller!.value.aspectRatio;
-    final aspectRatio = widget.customAspectRatio ?? (rawRatio > 0.1 ? rawRatio : 16 / 9);
+    final safeRawRatio = (rawRatio.isFinite && !rawRatio.isNaN && rawRatio > 0.1) ? rawRatio : 16 / 9;
+    final aspectRatio = (widget.customAspectRatio != null &&
+            widget.customAspectRatio!.isFinite &&
+            !widget.customAspectRatio!.isNaN &&
+            widget.customAspectRatio! > 0.1)
+        ? widget.customAspectRatio!
+        : safeRawRatio;
 
     return MouseRegion(
       onHover: (_) => _showControls(),
@@ -513,7 +529,9 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
                                       overlayColor: goldColor.withValues(alpha: 0.2),
                                     ),
                                     child: Slider(
-                                      value: _duration.inMilliseconds > 0
+                                      value: (_duration.inMilliseconds > 0 &&
+                                              _duration.inMilliseconds.isFinite &&
+                                              _position.inMilliseconds.isFinite)
                                           ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0)
                                           : 0.0,
                                       onChanged: (val) => _seekTo(val),

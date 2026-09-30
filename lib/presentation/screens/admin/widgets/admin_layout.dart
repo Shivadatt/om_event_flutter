@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -66,20 +65,17 @@ class AdminLayout extends StatelessWidget {
           children: [
             // Ambient Luxury Lighting Background (Vignette)
             Positioned.fill(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 130.0, sigmaY: 130.0),
-                child: Stack(
-                  children: [
-                    if (isDark) ...[
-                      buildBlurBlob(size: 600, color: AppColors.primaryAccent, top: -200, left: -100), // Primary Gold
-                      buildBlurBlob(size: 500, color: AppColors.secondaryAccent, top: 250, right: -150), // Champagne Gold
-                      buildBlurBlob(size: 400, color: AppColors.highlight, top: 600, left: 200),   // Soft Bronze
-                    ] else ...[
-                      buildBlurBlob(size: 600, color: AppColors.primaryAccent.withValues(alpha: 0.2), top: -200, left: -100),
-                      buildBlurBlob(size: 500, color: AppColors.secondaryAccent.withValues(alpha: 0.15), top: 250, right: -150),
-                    ],
+              child: Stack(
+                children: [
+                  if (isDark) ...[
+                    buildBlurBlob(size: 600, color: AppColors.primaryAccent, top: -200, left: -100), // Primary Gold
+                    buildBlurBlob(size: 500, color: AppColors.secondaryAccent, top: 250, right: -150), // Champagne Gold
+                    buildBlurBlob(size: 400, color: AppColors.highlight, top: 600, left: 200),   // Soft Bronze
+                  ] else ...[
+                    buildBlurBlob(size: 600, color: AppColors.primaryAccent.withValues(alpha: 0.2), top: -200, left: -100),
+                    buildBlurBlob(size: 500, color: AppColors.secondaryAccent.withValues(alpha: 0.15), top: 250, right: -150),
                   ],
-                ),
+                ],
               ),
             ),
 

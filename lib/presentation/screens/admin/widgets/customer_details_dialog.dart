@@ -193,6 +193,14 @@ class _CustomerDetailsDialogState extends State<CustomerDetailsDialog> with Sing
             _detailRow("Address", widget.customer.address),
             const Divider(height: 1),
             _detailRow("City", widget.customer.city),
+            if (widget.customer.state.isNotEmpty) ...[
+              const Divider(height: 1),
+              _detailRow("State", widget.customer.state),
+            ],
+            if (widget.customer.pincode.isNotEmpty) ...[
+              const Divider(height: 1),
+              _detailRow("Pincode", widget.customer.pincode),
+            ],
             if (widget.customer.mapLocation.isNotEmpty) ...[
               const Divider(height: 1),
               _detailRow("Map Location", widget.customer.mapLocation),

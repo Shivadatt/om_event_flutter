@@ -73,7 +73,9 @@ class WishlistView extends StatelessWidget {
                 itemCount: controller.rxWishlist.length,
                 itemBuilder: (context, index) {
                   final wish = controller.rxWishlist[index];
-                  final exp = catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == wish.experienceId);
+                  final exp = catalogCtrl.rxExperiences.firstWhereOrNull(
+                    (e) => e.slug == wish.experienceId || e.id == wish.experienceId,
+                  );
                   final title = exp?.name ?? wish.experienceId;
                   final category = exp?.categoryName ?? "DECORATION";
                   final imageUrl = exp?.imageUrl ?? "";

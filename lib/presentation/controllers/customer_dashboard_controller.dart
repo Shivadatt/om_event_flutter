@@ -16,8 +16,13 @@ import '../../domain/entities/customer_document.dart';
 import '../../domain/entities/customer_wishlist.dart';
 import '../../domain/entities/offer.dart';
 import '../../domain/entities/customer_activity.dart';
+import '../../domain/entities/support_ticket.dart';
 import '../../data/models/customer_profile_model.dart';
+import '../../data/models/customer_portal/payment_and_activity.dart';
+import '../../data/datasources/supabase_storage_source.dart';
 import '../../core/utils/error_mapper.dart';
+import '../../core/services/inquiry_image_resolver.dart';
+import '../screens/customer/widgets/customer_login_required_dialog.dart';
 import 'customer_auth_controller.dart';
 
 part 'parts/customer_sync.dart';
@@ -43,6 +48,7 @@ class CustomerDashboardController extends GetxController {
   final rxWishlist = <CustomerWishlist>[].obs;
   final rxOffers = <Offer>[].obs;
   final rxActivity = <CustomerActivity>[].obs;
+  final rxTickets = <SupportTicket>[].obs;
 
   final rxProfile = Rxn<CustomerProfile>();
   final isLoading = false.obs;
@@ -153,9 +159,10 @@ class CustomerDashboardController extends GetxController {
     rxQuotations.bindStream(_quotationRepo.streamCustomerQuotations(customerId).handleError(_logErr).map((d) { logFetch('quotations', d); return d; }));
     rxNotifications.bindStream(_portalRepo.streamCustomerNotifications(customerId).handleError(_logErr).map((d) { logFetch('notifications', d); return d; }));
     rxDocuments.bindStream(_portalRepo.streamCustomerDocuments(customerId).handleError(_logErr).map((d) { logFetch('documents', d); return d; }));
-    rxWishlist.bindStream(_portalRepo.streamCustomerWishlist(customerId).handleError(_logErr).map((d) { logFetch('wishlist', d); return d; }));
+    rxWishlist.bindStream(_portalRepo.streamCustomerWishlist(customerId).handleError(_logErr).map((d) { logFetch('wishlist', d); return List<CustomerWishlist>.from(d); }));
     rxOffers.bindStream(_portalRepo.streamOffers(branch).handleError(_logErr).map((d) { logFetch('offers', d); return d; }));
     rxActivity.bindStream(_portalRepo.streamCustomerActivity(customerId).handleError(_logErr).map((d) { logFetch('activity', d); return d; }));
+    rxTickets.bindStream(_portalRepo.streamCustomerTickets(customerId).handleError(_logErr).map((d) { logFetch('tickets', d); return d; }));
   }
 
   void _logErr(e) => AppLogger.errorDetailed("CustomerDashboard stream ERROR", error: e, layer: LogLayer.controller, className: "CustomerDashboardController", methodName: "_logErr");
@@ -168,5 +175,6 @@ class CustomerDashboardController extends GetxController {
     rxWishlist.clear();
     rxOffers.clear();
     rxActivity.clear();
+    rxTickets.clear();
   }
 }

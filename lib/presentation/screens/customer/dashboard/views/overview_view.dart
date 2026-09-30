@@ -7,7 +7,9 @@ import '../../../../controllers/catalog_controller.dart';
 import '../../../../../core/widgets/app_image.dart';
 
 import '../../../../../core/constants/app_assets.dart';
+import '../../../../../core/constants/app_routes.dart';
 import '../../../../../core/widgets/app_video_player.dart';
+import '../../../../../core/utils/asset_downloader.dart';
 
 /// Overview Dashboard View for the Client Lounge.
 /// Exactly matches the target reference design with compact visual density:
@@ -655,42 +657,49 @@ class OverviewView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header
+        // Section Header with Interactive View All Navigation
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               "Recently Viewed Themes",
               style: GoogleFonts.italiana(
-                fontSize: 16.5,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
                 color: goldColor,
                 letterSpacing: 0.8,
               ),
             ),
-            Row(
-              children: [
-                Text(
-                  "View All",
-                  style: AppTheme.sansBody(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: goldColor,
-                  ),
+            InkWell(
+              onTap: () => Get.toNamed(AppRoutes.gallery),
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  children: [
+                    Text(
+                      "View All",
+                      style: AppTheme.sansBody(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: goldColor,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 13,
+                      color: goldColor,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 3),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 13,
-                  color: goldColor,
-                ),
-              ],
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 9),
+        const SizedBox(height: 14),
 
-        // 4 Theme Cards
+        // 4 Theme Cards Grid
         Builder(
           builder: (context) {
             final catalogCtrl = Get.isRegistered<CatalogController>()
@@ -698,20 +707,48 @@ class OverviewView extends StatelessWidget {
                 : null;
 
             final defaultThemes = [
-              {"name": "BIRTHDAY CELEBRATION", "image": "assets/images/birthday-balloons.jpg"},
-              {"name": "BABY SHOWER/SRIMANT...", "image": "assets/images/babyshower.jpg"},
-              {"name": "CHHATHI PUJAN", "image": "assets/images/Chhathhi.jpg"},
-              {"name": "BALLOON DECORATION", "image": "assets/images/Baloondecor.png"},
+              {
+                "id": "birthday_celebration",
+                "slug": "birthday_celebration",
+                "name": "BIRTHDAY CELEBRATION",
+                "image": "assets/images/birthday-balloons.jpg",
+                "category": "BIRTHDAY",
+              },
+              {
+                "id": "baby_shower_srimant",
+                "slug": "baby_shower_srimant",
+                "name": "BABY SHOWER / SRIMANT",
+                "image": "assets/images/babyshower.jpg",
+                "category": "BABY SHOWER",
+              },
+              {
+                "id": "chhathi_pujan",
+                "slug": "chhathi_pujan",
+                "name": "CHHATHI PUJAN",
+                "image": "assets/images/Chhathhi.jpg",
+                "category": "PUJAN",
+              },
+              {
+                "id": "balloon_decoration",
+                "slug": "balloon_decoration",
+                "name": "BALLOON DECORATION",
+                "image": "assets/images/Baloondecor.png",
+                "category": "BALLOONS",
+              },
             ];
 
-            List<Map<String, String>> cardsData = [];
+            List<Map<String, dynamic>> cardsData = [];
 
             if (catalogCtrl != null && catalogCtrl.rxExperiences.isNotEmpty) {
               final experiences = catalogCtrl.rxExperiences.take(4).toList();
               for (var exp in experiences) {
                 cardsData.add({
+                  "id": exp.id,
+                  "slug": exp.slug,
                   "name": exp.name.toUpperCase(),
                   "image": exp.imageUrl.isNotEmpty ? exp.imageUrl : "assets/images/luxury-evening-decor.jpg",
+                  "category": exp.categoryId.isNotEmpty ? exp.categoryId : "PORTFOLIO",
+                  "exp": exp,
                 });
               }
             }
@@ -723,42 +760,80 @@ class OverviewView extends StatelessWidget {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                final bool isNarrow = constraints.maxWidth < 620;
+                final double width = constraints.maxWidth;
 
-                if (isNarrow) {
+                // ── 1. Desktop: 4 Cards in one row with responsive 16:9 ratio (>= 960px) ─
+                if (width >= 960) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (int i = 0; i < cardsData.length; i++) ...[
+                        Expanded(
+                          child: _themeCard(
+                            cardsData[i],
+                            goldColor,
+                            cardBg,
+                            cardBorder,
+                          ),
+                        ),
+                        if (i < cardsData.length - 1) const SizedBox(width: 14),
+                      ],
+                    ],
+                  );
+                }
+
+                // ── 2. Tablet: Responsive Horizontal Carousel with 16:9 ratio (640px - 959px) ─────
+                if (width >= 640) {
+                  final cardWidth = ((width - 28) / 2.3).clamp(260.0, 340.0);
+                  final cardHeight = (cardWidth * 9 / 16) + 48.0;
+
                   return SizedBox(
-                    height: 155,
+                    height: cardHeight,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       itemCount: cardsData.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      separatorBuilder: (_, __) => const SizedBox(width: 14),
                       itemBuilder: (context, index) {
                         final theme = cardsData[index];
                         return SizedBox(
-                          width: 140,
-                          child: _themeCard(theme["name"]!, theme["image"]!, goldColor, cardBg, cardBorder),
+                          width: cardWidth,
+                          child: _themeCard(
+                            theme,
+                            goldColor,
+                            cardBg,
+                            cardBorder,
+                          ),
                         );
                       },
                     ),
                   );
                 }
 
-                return Row(
-                  children: [
-                    for (int i = 0; i < cardsData.length; i++) ...[
-                      Expanded(
+                // ── 3. Mobile: Horizontal Scroll with 16:9 Landscape Ratio (< 640px) ──
+                final mobileCardWidth = (width * 0.72).clamp(220.0, 280.0);
+                final mobileCardHeight = (mobileCardWidth * 9 / 16) + 48.0;
+
+                return SizedBox(
+                  height: mobileCardHeight,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: cardsData.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final theme = cardsData[index];
+                      return SizedBox(
+                        width: mobileCardWidth,
                         child: _themeCard(
-                          cardsData[i]["name"]!,
-                          cardsData[i]["image"]!,
+                          theme,
                           goldColor,
                           cardBg,
                           cardBorder,
                         ),
-                      ),
-                      if (i < cardsData.length - 1) const SizedBox(width: 10),
-                    ],
-                  ],
+                      );
+                    },
+                  ),
                 );
               },
             );
@@ -768,102 +843,184 @@ class OverviewView extends StatelessWidget {
     );
   }
 
+  /// Helper to determine the optimal visual focal alignment for decoration themes
+  Alignment _getThemeImageAlignment(String title, String category, String imageUrl) {
+    final key = "${title.toLowerCase()} ${category.toLowerCase()} ${imageUrl.toLowerCase()}";
+    if (key.contains("chhath") || key.contains("pujan") || key.contains("chhathhi")) {
+      // Prioritize the central upper-middle arch and backdrop altar
+      return const Alignment(0.0, -0.2);
+    }
+    if (key.contains("birthday")) {
+      // Prioritize main backdrop and stage arrangement
+      return const Alignment(0.0, -0.1);
+    }
+    return Alignment.center;
+  }
+
   Widget _themeCard(
-    String title,
-    String imageUrl,
+    Map<String, dynamic> theme,
     Color goldColor,
     Color cardBg,
     Color cardBorder,
   ) {
-    return Container(
-      height: 178,
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cardBorder, width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image Container with Badges
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+    final title = (theme["name"] as String? ?? "Theme").toUpperCase();
+    final imageUrl = theme["image"] as String? ?? "";
+    final category = theme["category"] as String? ?? "PORTFOLIO";
+    final expId = theme["id"] as String? ?? "";
+    final expSlug = theme["slug"] as String? ?? "";
+
+    final alignment = _getThemeImageAlignment(title, category, imageUrl);
+
+    return InkWell(
+      onTap: () => Get.toNamed(AppRoutes.gallery),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: cardBorder, width: 1.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.28),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── 1. Full-Width 16:9 Image Area (BoxFit.cover, No Empty Side Columns) ─────
+            AspectRatio(
+              aspectRatio: 16 / 9,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
+                  // Full-bleed decoration photo covering full card width
                   imageUrl.startsWith('assets/')
                       ? Image.asset(
                           imageUrl,
                           fit: BoxFit.cover,
+                          alignment: alignment,
                           errorBuilder: (_, __, ___) => Container(
                             color: const Color(0xFF16241C),
-                            child: Icon(Icons.celebration, color: goldColor.withValues(alpha: 0.5), size: 20),
+                            child: Icon(Icons.celebration, color: goldColor.withValues(alpha: 0.5), size: 28),
                           ),
                         )
                       : AppImage(
                           url: imageUrl,
                           fit: BoxFit.cover,
+                          alignment: alignment,
                         ),
 
-                  // Subtle dark gradient
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black87],
-                      ),
-                    ),
+                  // Top-Right Actions (Single Download & Wishlist Heart)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Obx(() {
+                      final isFavorite = controller.isExperienceInWishlist(expSlug, expId);
+
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (imageUrl.isNotEmpty) ...[
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () async {
+                                  final fileName = AssetDownloader.resolveFileName(
+                                    imageUrl,
+                                    fallbackTitle: title,
+                                  );
+                                  Get.snackbar(
+                                    "Download Started",
+                                    "Downloading theme image for $title...",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: const Color(0xFF171411),
+                                    colorText: goldColor,
+                                    duration: const Duration(seconds: 2),
+                                  );
+                                  await AssetDownloader.download(
+                                    imageUrl,
+                                    fileName: fileName,
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  width: 26,
+                                  height: 26,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.black.withValues(alpha: 0.65),
+                                    border: Border.all(color: goldColor.withValues(alpha: 0.35), width: 0.8),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.download_rounded,
+                                      size: 13,
+                                      color: goldColor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                await controller.toggleWishlist(theme["exp"] ?? theme, context: Get.context);
+                              },
+                              borderRadius: BorderRadius.circular(14),
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isFavorite
+                                      ? goldColor.withValues(alpha: 0.25)
+                                      : Colors.black.withValues(alpha: 0.65),
+                                  border: Border.all(
+                                    color: goldColor.withValues(alpha: isFavorite ? 0.7 : 0.35),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                    size: 13,
+                                    color: goldColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ),
 
-                  // Top-Right Wishlist Heart Button
+                  // Bottom-Left Category / Portfolio Badge Over Image
                   Positioned(
-                    top: 6,
-                    right: 6,
+                    bottom: 8,
+                    left: 8,
                     child: Container(
-                      width: 22,
-                      height: 22,
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.black.withValues(alpha: 0.55),
-                        border: Border.all(color: goldColor.withValues(alpha: 0.3), width: 0.8),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.favorite_border_rounded,
-                          size: 11,
-                          color: goldColor,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Bottom-Left PORTFOLIO Badge
-                  Positioned(
-                    bottom: 6,
-                    left: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0D1915).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: goldColor.withValues(alpha: 0.35), width: 0.7),
+                        color: const Color(0xFF0D1915).withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: goldColor.withValues(alpha: 0.4), width: 0.7),
                       ),
                       child: Text(
-                        "PORTFOLIO",
+                        category.toUpperCase(),
                         style: AppTheme.sansBody(
-                          fontSize: 6.5,
+                          fontSize: 8.5,
                           fontWeight: FontWeight.bold,
                           color: goldColor,
-                          letterSpacing: 0.4,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
@@ -871,24 +1028,26 @@ class OverviewView extends StatelessWidget {
                 ],
               ),
             ),
-          ),
 
-          // Title Area
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.sansBody(
-                fontSize: 9.5,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 0.4,
+            // ── 2. Title & Metadata Area (Consistent Height, Clean Typography) ────────
+            Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.sansBody(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
