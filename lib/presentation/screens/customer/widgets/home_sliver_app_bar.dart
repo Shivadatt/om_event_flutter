@@ -163,10 +163,6 @@ class HomeSliverAppBar extends StatelessWidget {
               onTap: () => scrollToSection(catalogKey),
             ),
             _NavHoverLink(
-              label: "Gallery",
-              onTap: () => Get.toNamed(AppRoutes.gallery),
-            ),
-            _NavHoverLink(
               label: "Coverage",
               onTap: () => Get.toNamed(AppRoutes.serviceArea),
             ),
@@ -234,20 +230,6 @@ class HomeSliverAppBar extends StatelessWidget {
             );
           }
         }),
-        const SizedBox(width: 12),
-        if (isDesktop)
-          _TextHoverButton(
-            label: "TEAM STUDIO",
-            onPressed: () => Get.toNamed(AppRoutes.login),
-          )
-        else
-          IconButton(
-            icon: const Icon(
-              Icons.admin_panel_settings_outlined,
-              color: AppColors.primaryAccent,
-            ),
-            onPressed: () => Get.toNamed(AppRoutes.login),
-          ),
         const SizedBox(width: 24),
       ],
     );

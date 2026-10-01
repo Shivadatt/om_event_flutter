@@ -54,7 +54,9 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                 DashboardSidebar(
                   controller: controller,
                   selectedIndex: selectedIndex,
-                  onIndexChanged: (i) => setState(() => selectedIndex = i),
+                  onIndexChanged: (i) {
+                    if (mounted) setState(() => selectedIndex = i);
+                  },
                 ),
                 // Main application content occupying remaining viewport width
                 Expanded(
@@ -64,7 +66,9 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       DashboardTopBar(
                         controller: controller,
                         onLogout: _showLogoutConfirmation,
-                        onNavToNotifications: (i) => setState(() => selectedIndex = i),
+                        onNavToNotifications: (i) {
+                          if (mounted) setState(() => selectedIndex = i);
+                        },
                       ),
                       Expanded(
                         child: Obx(() {
@@ -87,7 +91,9 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                 DashboardTopBar(
                   controller: controller,
                   onLogout: _showLogoutConfirmation,
-                  onNavToNotifications: (i) => setState(() => selectedIndex = i),
+                  onNavToNotifications: (i) {
+                    if (mounted) setState(() => selectedIndex = i);
+                  },
                 ),
                 Expanded(
                   child: Obx(() {
@@ -147,7 +153,9 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       unselectedItemColor: Colors.white54,
       currentIndex: selectedIndex > 3 ? 3 : selectedIndex,
       type: BottomNavigationBarType.fixed,
-      onTap: (index) => setState(() => selectedIndex = index),
+      onTap: (index) {
+        if (mounted) setState(() => selectedIndex = index);
+      },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), label: 'Overview'),
         BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), label: 'Inquiries'),
@@ -163,7 +171,13 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       case 1: return LeadsView(controller: controller, onNewInquiryPressed: _showNewInquiryDialog);
       case 2: return QuotesView(controller: controller, onRequestRevision: _showRevisionDialog);
       case 5: return GalleryView(controller: controller);
-      case 6: return WishlistView(controller: controller);
+      case 6:
+        return WishlistView(
+          controller: controller,
+          onExploreGallery: () {
+            if (mounted) setState(() => selectedIndex = 5);
+          },
+        );
       case 7: return NotificationsView(controller: controller);
       case 8: return ProfileView(controller: controller);
       case 9: return SupportCenterView(controller: controller);

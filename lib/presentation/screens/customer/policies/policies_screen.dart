@@ -62,12 +62,6 @@ class _PoliciesScreenState extends State<PoliciesScreen> with SingleTickerProvid
             ),
             actions: [
               TextButton.icon(
-                icon: Icon(Icons.photo_library_outlined, size: 16, color: goldColor),
-                label: Text("GALLERY", style: AppTheme.sansBody(fontSize: 11, color: goldColor, fontWeight: FontWeight.bold)),
-                onPressed: () => Get.toNamed(AppRoutes.gallery),
-              ),
-              const SizedBox(width: 8),
-              TextButton.icon(
                 icon: const Icon(Icons.track_changes_rounded, size: 16, color: Colors.white70),
                 label: Text("TRACK BOOKING", style: AppTheme.sansBody(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.bold)),
                 onPressed: () => showBookingTrackerDialog(context),

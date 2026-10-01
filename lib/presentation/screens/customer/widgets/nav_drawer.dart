@@ -59,10 +59,6 @@ class NavDrawer extends StatelessWidget {
                 curve: Curves.easeInOut,
               );
             }),
-            _drawerTile("Studio Gallery", () {
-              Navigator.pop(context);
-              Get.toNamed(AppRoutes.gallery);
-            }),
             _drawerTile("Service Area", () {
               Navigator.pop(context);
               Get.toNamed(AppRoutes.serviceArea);
@@ -86,10 +82,6 @@ class NavDrawer extends StatelessWidget {
             _drawerTile("Track Booking", () {
               Navigator.pop(context);
               showBookingTrackerDialog(context);
-            }),
-            _drawerTile("Team Studio", () {
-              Navigator.pop(context);
-              Get.toNamed(AppRoutes.login);
             }),
           ],
         ),

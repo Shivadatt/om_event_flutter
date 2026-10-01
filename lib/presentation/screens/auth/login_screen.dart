@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/config/app_routes.dart';
 import '../../../core/config/app_theme.dart';
+import '../../../core/constants/app_roles.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_input.dart';
 import '../../controllers/auth_controller.dart';
@@ -17,6 +19,25 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final authController = Get.find<AuthController>();
+      final role = authController.rxAdminRole.value?.roleType ?? authController.rxUserRole.value;
+      final isStaffOrAdmin = authController.rxAdminRole.value != null ||
+          role == AppRoles.superAdmin ||
+          role == AppRoles.demoAdmin ||
+          role == 'admin' ||
+          role == 'manager';
+
+      if (authController.rxIsLoggedIn.value && isStaffOrAdmin) {
+        Get.offNamed(AppRoutes.adminDashboard);
+      }
+    });
+  }
 
   @override
   void dispose() {

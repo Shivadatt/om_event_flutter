@@ -42,8 +42,10 @@ class _SplashScreenState extends State<SplashScreen>
     // H-4 FIX: Skip onboarding for returning users.
     // Route to home immediately if they've already seen it; otherwise show onboarding.
     Future.delayed(const Duration(milliseconds: 2600), () async {
+      if (!mounted) return;
       final prefs = Get.find<SharedPreferences>();
       final hasSeenOnboarding = prefs.getBool(_kOnboardingKey) ?? false;
+      if (!mounted) return;
       if (hasSeenOnboarding) {
         Get.offNamed(AppRoutes.home);
       } else {
