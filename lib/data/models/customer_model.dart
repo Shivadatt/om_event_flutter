@@ -36,27 +36,41 @@ class CustomerModel {
   });
 
   factory CustomerModel.fromJson(Map<String, dynamic> json, String id) {
+    String parsedPhone = (json['phone'] ?? '').toString().trim();
+    if (parsedPhone.isEmpty) {
+      parsedPhone = id.trim();
+    }
+
+    String parsedName = (json['name'] ?? json['full_name'] ?? '').toString().trim();
+    if (parsedName.isEmpty) {
+      parsedName = parsedPhone.isNotEmpty ? parsedPhone : 'Client $id';
+    }
+
+    final createdRaw = json['created_at'] ?? json['createdAt'];
+    final updatedRaw = json['updated_at'] ?? json['updatedAt'];
+
     return CustomerModel(
       id: id,
-      name: json['name'] ?? json['full_name'] ?? '',
-      phone: json['phone'] ?? '',
-      email: json['email'] ?? '',
-      address: json['address'] ?? '',
-      city: json['city'] ?? '',
-      state: json['state'] ?? '',
-      pincode: json['pincode'] ?? '',
-      branch: json['branch'] ?? '',
-      gender: json['gender'] ?? '',
+      name: parsedName,
+      phone: parsedPhone,
+      email: (json['email'] ?? '').toString().trim(),
+      address: (json['address'] ?? '').toString().trim(),
+      city: (json['city'] ?? '').toString().trim(),
+      state: (json['state'] ?? '').toString().trim(),
+      pincode: (json['pincode'] ?? '').toString().trim(),
+      branch: (json['branch'] ?? '').toString().trim(),
+      gender: (json['gender'] ?? '').toString().trim(),
       dateOfBirth: json['date_of_birth'] != null ? DateParser.parse(json['date_of_birth']) : null,
-      profileImageUrl: json['profile_image_url'] ?? json['profileImageUrl'] ?? json['photoUrl'] ?? '',
-      mapLocation: json['map_location'] ?? json['mapLocation'] ?? '',
-      createdAt: DateParser.parse(json['created_at'] ?? json['createdAt']),
-      updatedAt: DateParser.parse(json['updated_at'] ?? json['updatedAt']),
+      profileImageUrl: (json['profile_image_url'] ?? json['profileImageUrl'] ?? json['photoUrl'] ?? '').toString().trim(),
+      mapLocation: (json['map_location'] ?? json['mapLocation'] ?? '').toString().trim(),
+      createdAt: DateParser.parse(createdRaw ?? updatedRaw),
+      updatedAt: DateParser.parse(updatedRaw ?? createdRaw),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'full_name': name,
       'phone': phone,

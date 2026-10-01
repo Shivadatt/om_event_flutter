@@ -114,26 +114,45 @@ extension FirestoreOrders on FirestoreRemoteSource {
     }
   }
 
-  /// Fetch all CRM customers ordered by creation date descending.
+  /// Fetch all CRM customers without filtering out docs missing created_at.
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchCustomers() async {
     final snap = await _firestore
         .collection(AppCollections.customers)
-        .orderBy('created_at', descending: true)
         .get();
     return snap.docs;
   }
 
-  /// Delete a customer record.
-  Future<void> deleteCustomer(String phone) async {
-    await _firestore.collection(AppCollections.customers).doc(phone).delete();
+  /// Realtime stream of all CRM customer documents.
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>> streamCustomers() {
+    return _firestore
+        .collection(AppCollections.customers)
+        .snapshots()
+        .map((snap) => snap.docs);
+  }
+
+  /// Create a new customer document keyed by phone/id.
+  Future<void> createCustomer(Map<String, dynamic> json) async {
+    final docId = (json['id'] ?? json['phone'] ?? '').toString().trim();
+    if (docId.isEmpty) {
+      throw ArgumentError("Customer document ID / Phone cannot be empty");
+    }
+    await _firestore
+        .collection(AppCollections.customers)
+        .doc(docId)
+        .set(json, SetOptions(merge: true));
+  }
+
+  /// Delete a customer record by ID or phone.
+  Future<void> deleteCustomer(String idOrPhone) async {
+    await _firestore.collection(AppCollections.customers).doc(idOrPhone).delete();
   }
 
   /// Update specific fields on a customer record.
-  Future<void> updateCustomerDetails(String phone, Map<String, dynamic> json) async {
+  Future<void> updateCustomerDetails(String idOrPhone, Map<String, dynamic> json) async {
     await _firestore
         .collection(AppCollections.customers)
-        .doc(phone)
-        .update(json);
+        .doc(idOrPhone)
+        .set(json, SetOptions(merge: true));
   }
 
   /// Fetch all registered app users.

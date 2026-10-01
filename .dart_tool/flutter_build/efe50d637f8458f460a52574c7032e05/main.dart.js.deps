@@ -3417,7 +3417,9 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/customer/widgets/pa
 file:///D:/om_event_python/om_event/lib/presentation/screens/docs/docs_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/onboarding/onboarding_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/splash/splash_screen.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/splash/video_splash_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/utils/version_comparison_helper.dart
+file:///D:/om_event_python/om_event/lib/presentation/widgets/app_bootstrap_gate.dart
 file:///D:/om_event_python/om_event/lib/presentation/widgets/app_page_container.dart
 file:///D:/om_event_python/om_event/lib/presentation/widgets/item_visual_placeholder.dart
 file:///D:/om_event_python/om_event/lib/presentation/widgets/reusable/version_comparison_sheet.dart

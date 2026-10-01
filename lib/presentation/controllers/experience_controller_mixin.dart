@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../domain/entities/experience.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -24,10 +25,11 @@ mixin ExperienceControllerMixin on GetxController {
   }
 
   /// Saves an experience record with optimistic state updates.
-  Future<void> saveExperience(
+  Future<bool> saveExperience(
     Experience experience, {
     bool isEdit = false,
   }) async {
+    debugPrint("[ExperienceSave] START - Name: ${experience.name}, ID: ${experience.id}, Slug: ${experience.slug}, isEdit: $isEdit");
     try {
       final catalogRepository = Get.find<CatalogRepository>();
       if (isEdit) {
@@ -39,20 +41,33 @@ mixin ExperienceControllerMixin on GetxController {
         }
         await catalogRepository.updateExperience(experience).timeout(
           const Duration(seconds: 4),
-          onTimeout: () {},
+          onTimeout: () {
+            debugPrint("[ExperienceSave] updateExperience timeout reached; continuing with state commit");
+          },
         );
         AppLogger.success("Firestore update success", layer: LogLayer.controller, className: "ExperienceControllerMixin", methodName: "saveExperience");
       } else {
         rxExperiences.insert(0, experience);
         await catalogRepository.createExperience(experience).timeout(
           const Duration(seconds: 4),
-          onTimeout: () {},
+          onTimeout: () {
+            debugPrint("[ExperienceSave] createExperience timeout reached; continuing with state commit");
+          },
         );
       }
-      Get.snackbar("Experience Saved", "Experience '${experience.name}' saved successfully.");
-    } catch (e) {
-      Get.snackbar("Error", e.toString());
+      debugPrint("[ExperienceSave] SUCCESS - Experience '${experience.name}' saved.");
+      return true;
+    } catch (e, stack) {
+      debugPrint("[ExperienceSave] ERROR in saveExperience: $e\n$stack");
+      Get.snackbar(
+        "Save Failed",
+        "Could not save experience: ${e.toString()}",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF8B0000),
+        colorText: const Color(0xFFFFFFFF),
+      );
       await loadExperiences();
+      return false;
     }
   }
 

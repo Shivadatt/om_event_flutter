@@ -147,6 +147,19 @@ class _LoginScreenState extends State<LoginScreen> {
     final width = MediaQuery.of(context).size.width;
     final bool isDesktop = width >= 860;
     final authController = Get.find<AuthController>();
+    final role = authController.rxAdminRole.value?.roleType ?? authController.rxUserRole.value;
+    final isStaffOrAdmin = authController.rxAdminRole.value != null ||
+        role == AppRoles.superAdmin ||
+        role == AppRoles.demoAdmin ||
+        role == 'admin' ||
+        role == 'manager';
+
+    if (authController.rxIsLoggedIn.value && isStaffOrAdmin) {
+      return const Scaffold(
+        backgroundColor: _darkBg,
+        body: SizedBox.shrink(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: _darkBg,

@@ -19,10 +19,15 @@ class AuthController extends GetxController {
   final rxIsLoggedIn = false.obs;
   final rxUserRole = ''.obs;
   final rxAdminRole = Rxn<AdminRole>();
+  final rxAdminBootstrapped = false.obs;
   final isLoading = false.obs;
   final isProfileSaving = false.obs;
   final isPhotoUploading = false.obs;
   final isPasswordChanging = false.obs;
+
+  void markAdminBootstrapped(bool value) {
+    rxAdminBootstrapped.value = value;
+  }
 
   @override
   void onInit() {
@@ -59,6 +64,7 @@ class AuthController extends GetxController {
     rxIsLoggedIn.value = false;
     rxUserRole.value = '';
     rxAdminRole.value = null;
+    rxAdminBootstrapped.value = false;
     Get.snackbar(
       "Admin Session Expired",
       "Your 24-hour admin session has ended. Please sign in again.",
@@ -168,6 +174,7 @@ class AuthController extends GetxController {
       rxIsLoggedIn.value = false;
       rxUserRole.value = '';
       rxAdminRole.value = null;
+      rxAdminBootstrapped.value = false;
       Get.offAllNamed(AppRoutes.login);
     } catch (e) {
       Get.snackbar("Error", e.toString());

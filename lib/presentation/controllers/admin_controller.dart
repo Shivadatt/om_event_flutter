@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../../domain/entities/lead.dart';
 import '../../domain/entities/quotation.dart';
@@ -57,8 +58,13 @@ class AdminController extends GetxController
     if (_isInitialized) return;
     _isInitialized = true;
 
-    // Bind real-time stream of all quotations
+    // Bind real-time stream of all quotations & customers
     rxQuotes.bindStream(quotationRepository.streamAllQuotations());
+    rxCustomers.bindStream(
+      customerRepository.streamCustomers().handleError((err) {
+        debugPrint("[AdminController] Customers stream error: $err");
+      }),
+    );
 
     loadDashboardStats();
     loadCategories();

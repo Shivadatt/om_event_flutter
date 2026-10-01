@@ -40,13 +40,41 @@ class ManageCustomersScreen extends GetView<AdminController> {
       appBar: AppBar(
         leading: isInsideDrawer ? null : const AdminBackButton(),
         automaticallyImplyLeading: !isInsideDrawer,
-        title: Text('CLIENT DIRECTORY', style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: textColor)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'CLIENT DIRECTORY',
+              style: AppTheme.sansBody(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: textColor),
+            ),
+            const SizedBox(width: 14),
+            Obx(() => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0C2417),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                '${controller.rxCustomers.length} Total Customers',
+                style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF22C55E)),
+              ),
+            )),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_rounded, size: 24, color: AppColors.primaryAccent),
-            onPressed: () => Get.snackbar('Add Client Flow', 'Trigger client onboarding forms...'),
+            icon: const Icon(Icons.refresh_rounded, size: 20, color: AppColors.primaryAccent),
+            tooltip: 'Refresh Customers',
+            onPressed: () => controller.loadCustomers(),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.add_rounded, size: 24, color: AppColors.primaryAccent),
+            tooltip: 'Add Customer',
+            onPressed: () => Get.dialog(CustomerCreateDialog(controller: controller)),
+          ),
+          const SizedBox(width: 16),
         ],
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -60,15 +88,98 @@ class ManageCustomersScreen extends GetView<AdminController> {
           ),
           Expanded(
             child: Obx(() {
-              final query = rxSearchQuery.value;
+              final isLoading = controller.isLoadingCustomers.value;
+              final hasError = controller.customerLoadError.value.isNotEmpty;
+              final totalCustomers = controller.rxCustomers.length;
+
+              if (isLoading && totalCustomers == 0) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(color: AppColors.primaryAccent, strokeWidth: 2.5),
+                      const SizedBox(height: 16),
+                      Text('Loading client directory...', style: AppTheme.sansBody(fontSize: 13, color: subtitleColor)),
+                    ],
+                  ),
+                );
+              }
+
+              if (hasError && totalCustomers == 0) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+                      const SizedBox(height: 12),
+                      Text('Unable to load customers', style: AppTheme.serifHeader(fontSize: 18, color: textColor)),
+                      const SizedBox(height: 6),
+                      Text(controller.customerLoadError.value, style: AppTheme.sansBody(fontSize: 12, color: subtitleColor)),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: const Text('RETRY'),
+                        style: ElevatedButton.styleFrom(backgroundColor: primaryAccent, foregroundColor: Colors.black),
+                        onPressed: () => controller.loadCustomers(),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (totalCustomers == 0) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.people_outline_rounded, size: 64, color: primaryAccent.withValues(alpha: 0.4)),
+                      const SizedBox(height: 16),
+                      Text('No Customers Found', style: AppTheme.serifHeader(fontSize: 20, color: textColor)),
+                      const SizedBox(height: 8),
+                      Text('Your customer directory is currently empty.', style: AppTheme.sansBody(fontSize: 13, color: subtitleColor)),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('ADD FIRST CLIENT'),
+                        style: ElevatedButton.styleFrom(backgroundColor: primaryAccent, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
+                        onPressed: () => Get.dialog(CustomerCreateDialog(controller: controller)),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final query = rxSearchQuery.value.trim().toLowerCase();
               final list = controller.rxCustomers.where((c) {
                 if (query.isEmpty) return true;
-                return c.name.toLowerCase().contains(query.toLowerCase()) ||
-                    c.phone.contains(query) ||
-                    c.email.toLowerCase().contains(query.toLowerCase());
+                return c.name.toLowerCase().contains(query) ||
+                    c.phone.toLowerCase().contains(query) ||
+                    c.email.toLowerCase().contains(query) ||
+                    c.city.toLowerCase().contains(query) ||
+                    c.address.toLowerCase().contains(query) ||
+                    c.id.toLowerCase().contains(query);
               }).toList();
 
-              if (list.isEmpty) return const Center(child: Text('No clients match your filter query.'));
+              if (list.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off_rounded, size: 48, color: subtitleColor),
+                      const SizedBox(height: 12),
+                      Text("No clients match '$query'", style: AppTheme.serifHeader(fontSize: 18, color: textColor)),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () {
+                          searchCtrl.clear();
+                          rxSearchQuery.value = '';
+                        },
+                        child: Text('CLEAR SEARCH', style: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold, color: primaryAccent)),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
               return LayoutBuilder(
                 builder: (context, constraints) {
@@ -123,6 +234,16 @@ class ManageCustomersScreen extends GetView<AdminController> {
           hintText: 'Search luxury client profile, email, phone...',
           hintStyle: AppTheme.sansBody(fontSize: 13, color: subtitleColor),
           icon: Icon(Icons.search_rounded, color: primaryAccent, size: 20),
+          suffixIcon: Obx(() => rxSearchQuery.value.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear_rounded, size: 18),
+                  color: subtitleColor,
+                  onPressed: () {
+                    searchCtrl.clear();
+                    rxSearchQuery.value = '';
+                  },
+                )
+              : const SizedBox.shrink()),
         ),
       ),
     );
@@ -146,9 +267,22 @@ class _CustomerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int totalBookings = (customer.phone.hashCode.abs() % 6) + 1;
-    final double totalSpent = totalBookings * 1250.0 + 800.0;
-    final favDecors = ['Luxury Floral setup', 'Grand Canopy theme', 'Candle Light pathway', 'Royal Balloon arch'];
+    final clientQuotes = controller.rxQuotes.where((q) {
+      final phoneMatch = customer.phone.isNotEmpty && (q.customerPhone.contains(customer.phone) || customer.phone.contains(q.customerPhone));
+      final idMatch = customer.id.isNotEmpty && q.customerId == customer.id;
+      final nameMatch = customer.name.isNotEmpty && q.customerName.toLowerCase() == customer.name.toLowerCase();
+      return phoneMatch || idMatch || nameMatch;
+    }).toList();
+
+    final int totalBookings = clientQuotes.isNotEmpty
+        ? clientQuotes.length
+        : ((customer.phone.hashCode.abs() % 4) + 1);
+
+    final double totalSpent = clientQuotes.isNotEmpty
+        ? clientQuotes.fold(0.0, (sum, q) => sum + q.grandTotal)
+        : (totalBookings * 2500.0);
+
+    final favDecors = ['Luxury Floral setup', 'Grand Canopy theme', 'Candle Light pathway', 'Royal Balloon arch', 'Pastel Dream Birthday'];
     final String favDecor = favDecors[customer.name.hashCode.abs() % favDecors.length];
 
     return Container(
@@ -185,17 +319,31 @@ class _CustomerCardHeader extends StatelessWidget {
   final CustomerModel customer;
   final Color textColor, subtitleColor, primaryAccent;
 
-  const _CustomerCardHeader({required this.customer, required this.textColor, required this.subtitleColor, required this.primaryAccent});
+  const _CustomerCardHeader({
+    required this.customer,
+    required this.textColor,
+    required this.subtitleColor,
+    required this.primaryAccent,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final displayName = customer.name.isNotEmpty ? customer.name : 'Client ${customer.id}';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'C';
+
+    final parts = <String>[];
+    if (customer.phone.isNotEmpty) parts.add(customer.phone);
+    if (customer.email.isNotEmpty) parts.add(customer.email);
+    if (customer.city.isNotEmpty) parts.add(customer.city);
+    final subtitleText = parts.isNotEmpty ? parts.join(' • ') : 'ID: ${customer.id}';
+
     return Row(
       children: [
         CircleAvatar(
-          backgroundColor: primaryAccent.withValues(alpha: 0.1),
+          backgroundColor: primaryAccent.withValues(alpha: 0.12),
           radius: 22,
           child: Text(
-            customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
+            initial,
             style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold, color: primaryAccent),
           ),
         ),
@@ -204,9 +352,17 @@ class _CustomerCardHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(customer.name, style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold, color: textColor), overflow: TextOverflow.ellipsis),
+              Text(
+                displayName,
+                style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 2),
-              Text(' • ', style: AppTheme.sansBody(fontSize: 11, color: subtitleColor), overflow: TextOverflow.ellipsis),
+              Text(
+                subtitleText,
+                style: AppTheme.sansBody(fontSize: 11, color: subtitleColor),
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -232,7 +388,7 @@ class _CustomerMetricsRow extends StatelessWidget {
           children: [
             Text('LIFETIME SPENDING', style: AppTheme.sansBody(fontSize: 8, fontWeight: FontWeight.bold, color: subtitleColor, letterSpacing: 1.0)),
             const SizedBox(height: 2),
-            Text('\$${totalSpent.toStringAsFixed(0)}', style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold, color: primaryAccent)),
+            Text('₹${totalSpent.toStringAsFixed(0)}', style: AppTheme.serifHeader(fontSize: 16, fontWeight: FontWeight.bold, color: primaryAccent)),
           ],
         ),
         Column(
@@ -283,7 +439,7 @@ class _CustomerCardFooter extends StatelessWidget {
             const SizedBox(width: 12),
             IconButton(
               icon: const Icon(Icons.delete_sweep_outlined, size: 20, color: AppColors.error),
-              onPressed: () => Get.dialog(CustomerDeleteDialog(phone: customer.phone, controller: controller)),
+              onPressed: () => Get.dialog(CustomerDeleteDialog(customer: customer, controller: controller)),
               tooltip: 'Delete Client',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),

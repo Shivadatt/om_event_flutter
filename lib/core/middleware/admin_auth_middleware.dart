@@ -45,6 +45,14 @@ class AdminAuthMiddleware extends GetMiddleware {
       );
     }
 
+    // If bootstrap is still in progress in AppBootstrapGate, pass through so splash displays
+    if (!auth.rxAdminBootstrapped.value && !auth.isSessionExpired()) {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null || (Get.isRegistered<LocalStorageSource>() && Get.find<LocalStorageSource>().getAdminCachedRole() != null)) {
+        return null;
+      }
+    }
+
     // ── 2. Check In-Memory Role Authorization ─────────────────────────────
     final role = auth.rxAdminRole.value?.roleType ?? auth.rxUserRole.value;
     final isStaffOrAdmin = auth.rxAdminRole.value != null ||

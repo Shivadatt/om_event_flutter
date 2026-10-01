@@ -12,6 +12,7 @@ import 'dart:ui';
 import 'core/seo/seo_manager.dart';
 import 'core/utils/app_logger.dart';
 import 'presentation/bindings/initial_binding.dart';
+import 'presentation/widgets/app_bootstrap_gate.dart';
 
 void main() async {
   usePathUrlStrategy();
@@ -90,6 +91,7 @@ class OmEventsApp extends StatelessWidget {
       initialRoute: AppRoutes.home,
       getPages: AppRouter.pages,
       navigatorObservers: [SeoManager()],
+      builder: (context, child) => AppBootstrapGate(child: child),
     );
   }
 }

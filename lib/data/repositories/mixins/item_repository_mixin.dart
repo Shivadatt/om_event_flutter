@@ -81,6 +81,7 @@ mixin ItemRepositoryMixin {
       videoUrl: experience.videoUrl,
       isFeatured: experience.isFeatured,
       isActive: experience.isActive,
+      packages: experience.packages,
     );
     await remoteSource.createExperience(model.toJson());
   }
@@ -110,8 +111,10 @@ mixin ItemRepositoryMixin {
       videoUrl: experience.videoUrl,
       isFeatured: experience.isFeatured,
       isActive: experience.isActive,
+      packages: experience.packages,
     );
-    await remoteSource.updateExperience(experience.slug, model.toJson());
+    final targetId = experience.id.isNotEmpty ? experience.id : experience.slug;
+    await remoteSource.updateExperience(targetId, model.toJson());
   }
 
   /// Remove an experience from catalog indexes.

@@ -244,6 +244,14 @@ class _ExperienceFormDialogState extends State<ExperienceFormDialog> {
     }
   }
 
+  void _closeDialog([dynamic result]) {
+    if (Navigator.of(context, rootNavigator: true).canPop()) {
+      Navigator.of(context, rootNavigator: true).pop(result);
+    } else if (Get.isDialogOpen == true) {
+      Get.back(result: result);
+    }
+  }
+
   Future<void> _handleSave() async {
     if (nameCtrl.text.trim().isEmpty ||
         slugCtrl.text.trim().isEmpty ||
@@ -318,10 +326,27 @@ class _ExperienceFormDialogState extends State<ExperienceFormDialog> {
 
     setState(() => isSaving = true);
     try {
-      await widget.controller.saveExperience(updated, isEdit: isEdit);
-      if (mounted) {
-        Get.back();
+      final success = await widget.controller.saveExperience(updated, isEdit: isEdit);
+      if (success && mounted) {
+        _closeDialog(true);
+        Get.snackbar(
+          "Experience Saved",
+          "Experience '${updated.name}' saved successfully.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF132219),
+          colorText: const Color(0xFFD4AF37),
+          duration: const Duration(seconds: 3),
+        );
       }
+    } catch (e, stack) {
+      debugPrint("[ExperienceSave] ERROR in _handleSave: $e\n$stack");
+      Get.snackbar(
+        "Save Failed",
+        "Error: ${e.toString()}",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade900,
+        colorText: Colors.white,
+      );
     } finally {
       if (mounted) {
         setState(() => isSaving = false);
@@ -462,7 +487,7 @@ class _ExperienceFormDialogState extends State<ExperienceFormDialog> {
                           color: const Color(0xFF8A9A91),
                           hoverColor: Colors.white10,
                           splashRadius: 18,
-                          onPressed: () => Get.back(),
+                          onPressed: () => _closeDialog(),
                         ),
                       ],
                     ),
@@ -597,7 +622,7 @@ class _ExperienceFormDialogState extends State<ExperienceFormDialog> {
 
   Widget _buildCancelButton() {
     return OutlinedButton(
-      onPressed: isSaving ? null : () => Get.back(),
+      onPressed: isSaving ? null : () => _closeDialog(),
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
         side: const BorderSide(color: Color(0xFF2A3A30), width: 1.2),
