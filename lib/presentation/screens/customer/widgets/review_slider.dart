@@ -39,7 +39,10 @@ class _ReviewSliderState extends State<ReviewSlider> {
   void _startAutoPlay() {
     _stopAutoPlay();
     _autoPlayTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (!mounted) return;
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       final pageCount = _getPageCount();
       if (pageCount <= 1) return;
       final nextPage = (_currentPage + 1) % pageCount;

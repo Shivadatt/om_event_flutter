@@ -24,6 +24,8 @@ class AppAssets {
   static const String imageMirror = '$_imagesBase/Mirror.jpg';
   static const String imageBirthdayBalloons =
       '$_imagesBase/birthday-balloons.jpg';
+  static const String imageLuxuryEveningDecor =
+      '$_imagesBase/luxury-evening-decor.jpg';
 
   // ── Videos ────────────────────────────────────────────────────────────────
   static const String videoBalloonBlast = '$_videosBase/Balloonblast.mp4';

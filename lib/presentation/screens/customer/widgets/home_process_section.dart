@@ -866,7 +866,10 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
   void _startAutoPlay() {
     _stopAutoPlay();
     _autoPlayTimer = Timer.periodic(const Duration(seconds: 6), (timer) {
-      if (!mounted) return;
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       final pageCount = _getPageCount();
       if (pageCount <= 1) return;
       final nextPage = (_currentPage + 1) % pageCount;

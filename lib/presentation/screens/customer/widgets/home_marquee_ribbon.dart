@@ -35,6 +35,10 @@ class _MarqueeRibbonState extends State<MarqueeRibbon> {
     _timer = dart_async.Timer.periodic(const Duration(milliseconds: 16), (
       timer,
     ) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       if (_scrollController.hasClients &&
           _scrollController.position.hasContentDimensions) {
         final max = _scrollController.position.maxScrollExtent;

@@ -16,15 +16,23 @@ void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Suppress benign Flutter Web CanvasKit WebGL hot-restart context-lost race
+  // Suppress benign Flutter Web CanvasKit WebGL hot-restart context-lost race & disposed EngineFlutterView
   FlutterError.onError = (details) {
-    if (details.exceptionAsString().contains('_handledContextLostEvent')) {
+    final msg = details.exceptionAsString();
+    if (msg.contains('_handledContextLostEvent') ||
+        msg.contains('window.dart:99:12') ||
+        msg.contains('EngineFlutterView') ||
+        msg.contains('Trying to render a disposed')) {
       return;
     }
     FlutterError.presentError(details);
   };
   PlatformDispatcher.instance.onError = (error, stack) {
-    if (error.toString().contains('_handledContextLostEvent')) {
+    final errStr = error.toString();
+    if (errStr.contains('_handledContextLostEvent') ||
+        errStr.contains('window.dart:99:12') ||
+        errStr.contains('EngineFlutterView') ||
+        errStr.contains('Trying to render a disposed')) {
       return true; // handled
     }
     return false;
