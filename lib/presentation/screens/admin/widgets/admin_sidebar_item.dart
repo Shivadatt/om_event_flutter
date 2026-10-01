@@ -29,59 +29,40 @@ class _AdminSidebarItemState extends State<AdminSidebarItem> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final Color activeBg = isDark ? const Color(0x1FDFBA73) : const Color(0x0FDFBA73); // Champagne gold accent background
+    final Color activeBg = const Color(0xFFC8A26A); // Warm gold pill
     final Color hoverBg = isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03);
-    final Color activeColor = isDark ? const Color(0xFFDFBA73) : const Color(0xFFD4AF37); // Champagne Gold
+    final Color activeColor = const Color(0xFF0C1410); // Dark text on gold pill
     final Color inactiveColor = isDark ? const Color(0xFFAAB4AE) : const Color(0xFF6B7280);
 
     Widget content = Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: widget.isCollapsed ? 0 : 16,
-        vertical: 12,
+        horizontal: widget.isCollapsed ? 0 : 12,
+        vertical: 8,
       ),
       child: Row(
         mainAxisAlignment:
             widget.isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
         children: [
-          if (!widget.isCollapsed) ...[
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 3,
-              height: widget.isActive ? 16 : 0,
-              decoration: BoxDecoration(
-                color: activeColor,
-                borderRadius: BorderRadius.circular(2),
-                
-              ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: widget.isActive ? 8 : 11,
-            ),
-          ],
-          AnimatedScale(
-            scale: _isHovered ? 1.05 : 1.0,
-            duration: const Duration(milliseconds: 200),
-            child: Icon(
-              widget.icon,
-              size: 20,
-              color: widget.isActive ? activeColor : (_isHovered ? activeColor : inactiveColor),
-            ),
+          Icon(
+            widget.icon,
+            size: 17,
+            color: widget.isActive ? activeColor : (_isHovered ? const Color(0xFFD4AF37) : inactiveColor),
           ),
           if (!widget.isCollapsed) ...[
-            const SizedBox(width: 12),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: AppTheme.sansBody(
-                fontSize: 13,
-                fontWeight: widget.isActive ? FontWeight.bold : FontWeight.normal,
-                color: widget.isActive
-                    ? (isDark ? Colors.white : const Color(0xFF090A0D))
-                    : (_isHovered
-                        ? (isDark ? Colors.white : const Color(0xFF090A0D))
-                        : inactiveColor),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                widget.label,
+                style: AppTheme.sansBody(
+                  fontSize: 12,
+                  fontWeight: widget.isActive ? FontWeight.bold : FontWeight.w500,
+                  color: widget.isActive
+                      ? activeColor
+                      : (_isHovered ? Colors.white : inactiveColor),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              child: Text(widget.label),
             ),
           ],
         ],
@@ -97,28 +78,21 @@ class _AdminSidebarItemState extends State<AdminSidebarItem> {
           color: isDark ? const Color(0xFF161920) : const Color(0xFFFAFAFB),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: isDark ? const Color(0x1AFFFFFF) : const Color(0x0F000000)),
-          
         ),
         child: content,
       );
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 3),
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 150),
           decoration: BoxDecoration(
             color: widget.isActive ? activeBg : (_isHovered ? hoverBg : Colors.transparent),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: widget.isActive
-                  ? activeColor.withValues(alpha: 0.15)
-                  : (_isHovered ? activeColor.withValues(alpha: 0.05) : Colors.transparent),
-              width: 1,
-            ),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Material(
             color: Colors.transparent,

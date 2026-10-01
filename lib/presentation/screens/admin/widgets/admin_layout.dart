@@ -79,35 +79,38 @@ class AdminLayout extends StatelessWidget {
               ),
             ),
 
-            // Main Layout Content
-            Obx(() {
-              final currentAdmin = authController.rxAdminRole.value;
-              return Row(
-                children: [
-                  // Sidebar Wrapper
-                  Container(
-                    width: isCollapsed ? 76 : 260,
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkForest : AppColors.lightForest,
-                      border: Border(
-                        right: BorderSide(
-                          color: isDark ? AppColors.darkLine : AppColors.lightLine,
-                          width: 1.0,
+            // Main Layout Content: Full screen pinned
+            Positioned.fill(
+              child: Obx(() {
+                final currentAdmin = authController.rxAdminRole.value;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Sidebar Wrapper
+                    Container(
+                      width: isCollapsed ? 76 : 230,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkForest : AppColors.lightForest,
+                        border: Border(
+                          right: BorderSide(
+                            color: isDark ? AppColors.darkLine : AppColors.lightLine,
+                            width: 1.0,
+                          ),
                         ),
                       ),
+                      child: AdminSidebar(
+                        currentAdmin: currentAdmin,
+                        isCollapsed: isCollapsed,
+                      ),
                     ),
-                    child: AdminSidebar(
-                      currentAdmin: currentAdmin,
-                      isCollapsed: isCollapsed,
+                    // Main Content Screen (Fills remaining width and height)
+                    Expanded(
+                      child: child,
                     ),
-                  ),
-                  // Main Content Screen
-                  Expanded(
-                    child: child,
-                  ),
-                ],
-              );
-            }),
+                  ],
+                );
+              }),
+            ),
           ],
         ),
       ),

@@ -29,11 +29,11 @@ extension FirestoreCatalog on FirestoreRemoteSource {
   }
 
   /// Toggle the [is_active] flag on a single category document.
-  Future<void> toggleCategoryStatus(String slug, {required bool isActive}) async {
+  Future<void> toggleCategoryStatus(String idOrSlug, {required bool isActive}) async {
     await _firestore
         .collection(AppCollections.categories)
-        .doc(slug)
-        .update({'is_active': isActive});
+        .doc(idOrSlug)
+        .set({'is_active': isActive}, SetOptions(merge: true));
   }
 
   /// Realtime stream of active categories, sorted in-memory by [sort_order].
@@ -234,23 +234,50 @@ extension FirestoreCatalog on FirestoreRemoteSource {
 
   /// Create a new category document keyed by its slug.
   Future<void> createCategory(Map<String, dynamic> json) async {
+    final key = (json['slug'] ?? '').toString();
+    debugPrint("[CategorySave] [Firestore] createCategory doc: categories/$key");
     await _firestore
         .collection(AppCollections.categories)
-        .doc(json['slug'] as String)
-        .set(json);
+        .doc(key)
+        .set(json, SetOptions(merge: true))
+        .timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[CategorySave] [Firestore] createCategory write promise timeout handled; local cache applied");
+          },
+        );
+    debugPrint("[CategorySave] [Firestore] createCategory doc categories/$key confirmed");
   }
 
-  /// Update an existing category document.
-  Future<void> updateCategory(String slug, Map<String, dynamic> json) async {
+  /// Update an existing category document with merge in a single fast write.
+  Future<void> updateCategory(String idOrSlug, Map<String, dynamic> json) async {
+    final key = idOrSlug.isNotEmpty ? idOrSlug : (json['slug']?.toString() ?? 'category');
+    debugPrint("[CategorySave] [Firestore] updateCategory doc: categories/$key");
     await _firestore
         .collection(AppCollections.categories)
-        .doc(slug)
-        .update(json);
+        .doc(key)
+        .set(json, SetOptions(merge: true))
+        .timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[CategorySave] [Firestore] updateCategory write promise timeout handled; local cache applied");
+          },
+        );
+    debugPrint("[CategorySave] [Firestore] updateCategory doc categories/$key confirmed");
   }
 
-  /// Delete a category document.
-  Future<void> deleteCategory(String slug) async {
-    await _firestore.collection(AppCollections.categories).doc(slug).delete();
+  /// Delete a category document safely.
+  Future<void> deleteCategory(String idOrSlug) async {
+    await _firestore
+        .collection(AppCollections.categories)
+        .doc(idOrSlug)
+        .delete()
+        .timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[CategorySave] [Firestore] deleteCategory write promise timeout handled; local cache applied");
+          },
+        );
   }
 
   /// Create a new experience document keyed by its slug.

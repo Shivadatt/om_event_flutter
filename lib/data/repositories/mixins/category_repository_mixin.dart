@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../domain/entities/category.dart';
 import '../../datasources/firestore_remote_source.dart';
 import '../../models/category_model.dart';
@@ -55,7 +56,9 @@ mixin CategoryRepositoryMixin {
       itemCount: category.itemCount,
       isActive: category.isActive,
     );
+    debugPrint("[CategorySave] [Repository] createCategory: ${category.name}");
     await remoteSource.createCategory(model.toJson());
+    debugPrint("[CategorySave] [Repository] createCategory finished");
   }
 
   /// Update an existing category details.
@@ -72,7 +75,10 @@ mixin CategoryRepositoryMixin {
       itemCount: category.itemCount,
       isActive: category.isActive,
     );
-    await remoteSource.updateCategory(category.slug, model.toJson());
+    final targetId = category.id.isNotEmpty ? category.id : category.slug;
+    debugPrint("[CategorySave] [Repository] updateCategory: targetId='$targetId'");
+    await remoteSource.updateCategory(targetId, model.toJson());
+    debugPrint("[CategorySave] [Repository] updateCategory finished for '$targetId'");
   }
 
   /// Delete a category from catalog index.

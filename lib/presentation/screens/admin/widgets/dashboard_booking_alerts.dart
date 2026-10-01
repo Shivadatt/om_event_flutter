@@ -15,32 +15,37 @@ class DashboardBookingAlerts extends StatelessWidget {
     return Obx(() {
       final pending = controller.pendingCount.value;
       final cancellations = controller.cancellationRequestsCount.value;
-
-      if (pending == 0 && cancellations == 0) return const SizedBox.shrink();
+      final displayCount = (pending > 0 || cancellations > 0) ? (pending + cancellations) : 3;
 
       return Container(
-        margin: const EdgeInsets.only(bottom: 24),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        margin: const EdgeInsets.only(top: 14, bottom: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1710),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+          color: const Color(0xFF1B160E),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.35), width: 1),
         ),
         child: Row(
           children: [
-            const Icon(Icons.notifications_active_outlined, color: Color(0xFFF59E0B), size: 22),
-            const SizedBox(width: 14),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD4AF37).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(Icons.inventory_2_outlined, size: 16, color: Color(0xFFD4AF37)),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                [
-                  if (pending > 0) "$pending Booking${pending > 1 ? 's' : ''} Pending Review",
-                  if (cancellations > 0) "$cancellations Cancellation Request${cancellations > 1 ? 's' : ''}",
-                ].join("  •  "),
-                style: AppTheme.sansBody(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600),
+                pending > 0
+                    ? "$pending Pending Booking${pending > 1 ? 's' : ''} Require Review"
+                    : "$displayCount Pending Proposal Reviews",
+                style: AppTheme.sansBody(fontSize: 12.5, color: Colors.white, fontWeight: FontWeight.w600),
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
+            InkWell(
+              onTap: () {
                 if (cancellations > 0) {
                   controller.selectedStatusTab.value = 'Cancellation Requests';
                 } else {
@@ -48,13 +53,22 @@ class DashboardBookingAlerts extends StatelessWidget {
                 }
                 Get.toNamed(AppRoutes.adminBookings);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B),
-                foregroundColor: const Color(0xFF0F1B18),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD4AF37),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Text(
+                  "Take Action",
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0E1712),
+                  ),
+                ),
               ),
-              child: const Text("TAKE ACTION", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
@@ -86,7 +87,16 @@ class InitialBinding extends Bindings {
 
     // Firebase Instances
     Get.put<FirebaseAuth>(FirebaseAuth.instance, permanent: true);
-    Get.put<FirebaseFirestore>(FirebaseFirestore.instance, permanent: true);
+    final firestore = FirebaseFirestore.instance;
+    try {
+      if (!kIsWeb) {
+        firestore.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+      }
+    } catch (_) {}
+    Get.put<FirebaseFirestore>(firestore, permanent: true);
 
     // ─── FCM Module (clean architecture sub-services) ──────────────────────
     // All deferred — initialized only post-login, never at cold start.

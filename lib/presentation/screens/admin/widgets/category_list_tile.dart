@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../../../core/config/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/app_image.dart';
 import '../../../../domain/entities/category.dart';
 import '../../../controllers/admin_controller.dart';
 
+/// Modern Card Style category tile matching the Option 2 reference design:
+/// - Compact landscape presentation (~240px height)
+/// - Hero background image with smooth hover zoom
+/// - Top badges: ACTIVE/HIDDEN status pill + SORT order pill
+/// - Dark vignette gradient overlay for clean contrast
+/// - Clean category title (17px) + 1-line description
+/// - Bottom bar: #tag pill, active toggle switch, edit, delete, and gold circular action button
 class CategoryListTile extends StatefulWidget {
   final Category cat;
   final bool isDark;
@@ -31,58 +39,57 @@ class _CategoryListTileState extends State<CategoryListTile> {
   Widget build(BuildContext context) {
     final cat = widget.cat;
     final isActive = cat.isActive;
-    final isDark = widget.isDark;
-
-    final Color primaryAccent = AppColors.primaryAccent;
-    final Color cardColor = isDark ? AppColors.darkForestSecondary : AppColors.lightForest;
-    final Color borderColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+    const goldColor = Color(0xFFD4AF37);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        transform: _isHovered ? Matrix4.translationValues(0, -8, 0) : Matrix4.identity(),
+        transform: _isHovered ? Matrix4.translationValues(0, -4, 0) : Matrix4.identity(),
         decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(28),
+          color: const Color(0xFF101C16),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isHovered ? primaryAccent.withValues(alpha: 0.6) : borderColor,
-            width: 1.2,
+            color: _isHovered
+                ? goldColor.withValues(alpha: 0.6)
+                : const Color(0xFF1E3328),
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: _isHovered ? 0.35 : 0.2)
-                  : Colors.black.withValues(alpha: _isHovered ? 0.06 : 0.03),
-              blurRadius: _isHovered ? 28 : 16,
-              offset: _isHovered ? const Offset(0, 14) : const Offset(0, 6),
+              color: Colors.black.withValues(alpha: _isHovered ? 0.45 : 0.25),
+              blurRadius: _isHovered ? 20 : 10,
+              offset: _isHovered ? const Offset(0, 8) : const Offset(0, 4),
             ),
           ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // Background Hero Image (Full card height)
+            // ── Background Image with subtle hover zoom ─────────
             Positioned.fill(
               child: AnimatedScale(
-                scale: _isHovered ? 1.08 : 1.0,
+                scale: _isHovered ? 1.05 : 1.0,
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
                 child: _buildCategoryThumbnail(cat),
               ),
             ),
 
-            // Soft luxury vignette overlay
+            // ── Dark luxury gradient overlay ─────────────────────
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withValues(alpha: 0.15),
+                      Colors.black.withValues(alpha: 0.1),
+                      Colors.black.withValues(alpha: 0.3),
                       Colors.black.withValues(alpha: 0.8),
+                      Colors.black.withValues(alpha: 0.95),
                     ],
+                    stops: const [0.0, 0.35, 0.7, 1.0],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -90,159 +97,191 @@ class _CategoryListTileState extends State<CategoryListTile> {
               ),
             ),
 
-            // Floating tags
+            // ── Top Left: ACTIVE / HIDDEN Status Pill ────────────
             Positioned(
-              top: 16,
-              left: 16,
+              top: 12,
+              left: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? AppColors.success.withValues(alpha: 0.9)
-                      : AppColors.error.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white24, width: 0.5),
+                      ? const Color(0xFF0C2417).withValues(alpha: 0.9)
+                      : const Color(0xFF271214).withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isActive
+                        ? const Color(0xFF22C55E).withValues(alpha: 0.6)
+                        : const Color(0xFFEF4444).withValues(alpha: 0.6),
+                    width: 0.8,
+                  ),
                 ),
                 child: Text(
                   isActive ? "ACTIVE" : "HIDDEN",
-                  style: AppTheme.sansBody(
-                    fontSize: 8,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 8.5,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.0,
+                    color: isActive ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+                    letterSpacing: 0.8,
                   ),
                 ),
               ),
             ),
 
+            // ── Top Right: SORT Order Pill ────────────────────────
             Positioned(
-              top: 16,
-              right: 16,
+              top: 12,
+              right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white24, width: 0.5),
+                  color: Colors.black.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: goldColor.withValues(alpha: 0.4),
+                    width: 0.8,
+                  ),
                 ),
                 child: Text(
                   "SORT ${cat.sortOrder}",
-                  style: AppTheme.sansBody(
-                    fontSize: 8,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 8.5,
                     fontWeight: FontWeight.bold,
-                    color: primaryAccent,
+                    color: goldColor,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
             ),
 
-            // Editorial Glass Footer (Overlay)
+            // ── Bottom Content Overlay ───────────────────────────
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  border: const Border(
-                    top: BorderSide(color: Colors.white12, width: 0.8),
-                  ),
-                ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Category Name
                     Text(
                       cat.name,
-                      style: AppTheme.serifHeader(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w400,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.2,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 3),
+
+                    // Description (1 line max to prevent oversized card)
                     Text(
                       cat.description.isNotEmpty
                           ? cat.description
-                          : "Curated Event and Floral arrangements tailored for extraordinary celebrations.",
-                      maxLines: 2,
+                          : "Curated event and decor arrangements tailored for memorable celebrations.",
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTheme.sansBody(
+                      style: GoogleFonts.dmSans(
                         fontSize: 11,
-                        color: const Color(0xFFFAF6EE).withValues(alpha: 0.7),
-                        height: 1.5,
+                        color: Colors.white70,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
+
+                    // Bottom Row: Tag, Switch, Edit, Delete, and Arrow Action Button
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Slug & Toggle status
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Flexible(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white12,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    "#${cat.slug}",
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTheme.sansBody(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      color: primaryAccent,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                height: 18,
-                                width: 28,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Switch(
-                                    value: isActive,
-                                    activeThumbColor: AppColors.success,
-                                    onChanged: (val) {
-                                      widget.controller.toggleCategoryStatus(
-                                        cat.slug,
-                                        isActive: val,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
+                        // Tag Pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1B160E),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: goldColor.withValues(alpha: 0.35),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            "#${cat.slug}",
+                            style: GoogleFonts.dmSans(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w600,
+                              color: goldColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        // Action buttons
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_note_rounded, size: 20, color: Colors.white),
-                              onPressed: widget.onEdit,
-                              tooltip: "Edit Category",
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                        const SizedBox(width: 8),
+
+                        // Active Toggle Switch
+                        SizedBox(
+                          height: 18,
+                          width: 28,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Switch(
+                              value: isActive,
+                              activeThumbColor: const Color(0xFF22C55E),
+                              activeTrackColor: const Color(0xFF143822),
+                              inactiveThumbColor: Colors.white38,
+                              inactiveTrackColor: Colors.white12,
+                              onChanged: (val) {
+                                widget.controller.toggleCategoryStatus(
+                                  cat.slug,
+                                  isActive: val,
+                                );
+                              },
                             ),
-                            const SizedBox(width: 12),
-                            IconButton(
-                              icon: const Icon(Icons.delete_sweep_outlined, size: 20, color: AppColors.error),
-                              onPressed: widget.onDelete,
-                              tooltip: "Delete Category",
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // Edit Action Icon
+                        InkWell(
+                          onTap: widget.onEdit,
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.edit_outlined, size: 16, color: Colors.white70),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+
+                        // Delete Action Icon
+                        InkWell(
+                          onTap: widget.onDelete,
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
+                          ),
+                        ),
+
+                        const Spacer(),
+
+                        // Gold Round Arrow Action Button
+                        InkWell(
+                          onTap: widget.onEdit,
+                          borderRadius: BorderRadius.circular(15),
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: const BoxDecoration(
+                              color: goldColor,
+                              shape: BoxShape.circle,
                             ),
-                          ],
+                            child: const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 15,
+                              color: Color(0xFF0C1410),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -261,17 +300,17 @@ class _CategoryListTileState extends State<CategoryListTile> {
       return _buildIcon(cat.icon);
     }
 
-    return Image.network(
-      cat.imageUrl,
+    return AppImage(
+      url: cat.imageUrl,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _buildIcon(cat.icon),
+      placeholder: _buildIcon(cat.icon),
     );
   }
 
   Widget _buildIcon(String icon) {
     return Center(
       child: Text(
-        icon,
+        icon.isNotEmpty ? icon : '✨',
         style: const TextStyle(fontSize: 32, color: AppColors.primaryAccent),
       ),
     );

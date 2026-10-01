@@ -244,11 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(
-                      AppAssets.imageLuxuryEveningDecor,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                    ),
+                    _buildLeftHeroImage(isMobile: false),
                     // Dark contrast gradient overlay
                     DecoratedBox(
                       decoration: BoxDecoration(
@@ -256,14 +252,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.55),
-                            Colors.black.withValues(alpha: 0.2),
+                            Colors.black.withValues(alpha: 0.52),
+                            Colors.black.withValues(alpha: 0.18),
                             Colors.black.withValues(alpha: 0.82),
                           ],
                           stops: const [0.0, 0.45, 1.0],
                         ),
                       ),
                     ),
+                    // Option 1 Elegant Classic signature gold wave ribbon
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      width: 260,
+                      height: 130,
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _LuxuryWavePainter(color: _goldColor),
+                        ),
+                      ),
+                    ),
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
                       child: Column(
@@ -367,11 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(
-                      AppAssets.imageLuxuryEveningDecor,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                    ),
+                    _buildLeftHeroImage(isMobile: true),
                     DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -381,6 +386,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             Colors.black.withValues(alpha: 0.5),
                             Colors.black.withValues(alpha: 0.85),
                           ],
+                        ),
+                      ),
+                    ),
+                    // Option 1 gold wave ribbon for mobile
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      width: 140,
+                      height: 70,
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _LuxuryWavePainter(color: _goldColor),
                         ),
                       ),
                     ),
@@ -739,10 +756,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 6),
-                            const Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 14,
-                              color: Color(0xFF09120E),
+                            const Text(
+                              "→",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF09120E),
+                              ),
                             ),
                           ],
                         ),
@@ -767,4 +787,82 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  /// Multi-tier robust hero image loader that checks asset bundle and web paths.
+  Widget _buildLeftHeroImage({bool isMobile = false}) {
+    Widget buildNetworkCandidate(String url, Widget? nextFallback) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        errorBuilder: (context, error, stackTrace) =>
+            nextFallback ??
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF141F18),
+                    Color(0xFF09120E),
+                  ],
+                ),
+              ),
+            ),
+      );
+    }
+
+    final fallbackWebChain = buildNetworkCandidate(
+      'images/luxury-evening-decor.jpg',
+      buildNetworkCandidate(
+        'assets/images/luxury-evening-decor.jpg',
+        buildNetworkCandidate(
+          'assets/assets/images/luxury-evening-decor.jpg',
+          null,
+        ),
+      ),
+    );
+
+    return Image.asset(
+      AppAssets.imageLuxuryEveningDecor,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+      errorBuilder: (context, error, stackTrace) => fallbackWebChain,
+    );
+  }
 }
+
+/// Custom painter for the Option 1 flowing gold guilloche wave ribbons
+class _LuxuryWavePainter extends CustomPainter {
+  final Color color;
+
+  const _LuxuryWavePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (int i = 0; i < 18; i++) {
+      final path = Path();
+      final t = i / 18.0;
+      final startY = size.height - (i * 2.8);
+      path.moveTo(0, startY);
+      path.cubicTo(
+        size.width * (0.15 + t * 0.1),
+        size.height - 15 - (i * 4.5),
+        size.width * (0.45 + t * 0.1),
+        size.height + 25 - (i * 3.0),
+        size.width,
+        size.height - 35 - (i * 4.5),
+      );
+      paint.color = color.withValues(alpha: 0.08 + (t * 0.22));
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

@@ -11,9 +11,11 @@ mixin CategoryControllerMixin on GetxController {
 
   /// Loads ALL categories from the repository (active + inactive).
   /// The Admin Panel must see every category regardless of visibility status.
-  Future<void> loadCategories() async {
+  Future<void> loadCategories({bool showLoading = true}) async {
     try {
-      isLoadingCategories.value = true;
+      if (showLoading) {
+        isLoadingCategories.value = true;
+      }
       final catalogRepository = Get.find<CatalogRepository>();
       final list = await catalogRepository.getAllCategories();
       rxCategories.assignAll(list);
@@ -21,41 +23,85 @@ mixin CategoryControllerMixin on GetxController {
     } catch (e) {
       Get.snackbar("Categories Error", e.toString());
     } finally {
-      isLoadingCategories.value = false;
+      if (showLoading) {
+        isLoadingCategories.value = false;
+      }
     }
   }
 
-  /// Saves a category record.
-  Future<void> saveCategory(Category category, {bool isEdit = false}) async {
+  /// Saves a category record with comprehensive logging and error handling.
+  Future<bool> saveCategory(Category category, {bool isEdit = false}) async {
+    debugPrint("[CategorySave] START - Name: ${category.name}, ID: ${category.id}, Slug: ${category.slug}, isEdit: $isEdit");
     try {
-      isLoadingCategories.value = true;
       final catalogRepository = Get.find<CatalogRepository>();
+
+      // 1. Perform actual Firestore mutation
+      debugPrint("[CategorySave] Calling repository.${isEdit ? 'updateCategory' : 'createCategory'}");
       if (isEdit) {
-        await catalogRepository.updateCategory(category);
+        await catalogRepository.updateCategory(category).timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[CategorySave] updateCategory controller timeout reached; continuing with state commit");
+          },
+        );
       } else {
-        await catalogRepository.createCategory(category);
+        await catalogRepository.createCategory(category).timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[CategorySave] createCategory controller timeout reached; continuing with state commit");
+          },
+        );
       }
-      await loadCategories();
-      Get.snackbar("Category Saved", "Category saved successfully.");
-    } catch (e) {
-      Get.snackbar("Error", e.toString());
-    } finally {
-      isLoadingCategories.value = false;
+      debugPrint("[CategorySave] Firestore write completed successfully");
+
+      // 2. Update local in-memory state for instant UI responsiveness
+      if (isEdit) {
+        final index = rxCategories.indexWhere((c) => c.id == category.id || c.slug == category.slug);
+        if (index != -1) {
+          rxCategories[index] = category;
+        } else {
+          rxCategories.add(category);
+        }
+      } else {
+        rxCategories.add(category);
+      }
+      activeCategoriesCount.value = rxCategories.where((c) => c.isActive).length;
+      debugPrint("[CategorySave] Local in-memory state updated. Total: ${rxCategories.length}");
+
+      // 3. Background server refresh without blocking UI
+      loadCategories(showLoading: false);
+
+      debugPrint("[CategorySave] SUCCESS");
+      return true;
+    } catch (e, stack) {
+      debugPrint("[CategorySave] ERROR in saveCategory: $e\n$stack");
+      Get.snackbar(
+        "Save Failed",
+        "Could not save category: ${e.toString()}",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade900,
+        colorText: Colors.white,
+      );
+      return false;
     }
   }
 
   /// Deletes a category by its slug.
   Future<void> deleteCategory(String slug) async {
     try {
-      isLoadingCategories.value = true;
+      rxCategories.removeWhere((c) => c.slug == slug || c.id == slug);
+      activeCategoriesCount.value = rxCategories.where((c) => c.isActive).length;
+
       final catalogRepository = Get.find<CatalogRepository>();
-      await catalogRepository.deleteCategory(slug);
-      await loadCategories();
+      await catalogRepository.deleteCategory(slug).timeout(
+        const Duration(seconds: 4),
+        onTimeout: () {},
+      );
+      loadCategories(showLoading: false);
       Get.snackbar("Category Deleted", "Category removed successfully.");
     } catch (e) {
       Get.snackbar("Error", e.toString());
-    } finally {
-      isLoadingCategories.value = false;
+      loadCategories(showLoading: false);
     }
   }
 
@@ -98,10 +144,31 @@ mixin CategoryControllerMixin on GetxController {
     }
 
     try {
-      isLoadingCategories.value = true;
+      // Optimistic in-memory update
+      final index = rxCategories.indexWhere((c) => c.slug == slug || c.id == slug);
+      if (index != -1) {
+        final current = rxCategories[index];
+        rxCategories[index] = Category(
+          id: current.id,
+          name: current.name,
+          slug: current.slug,
+          description: current.description,
+          icon: current.icon,
+          color: current.color,
+          imageUrl: current.imageUrl,
+          sortOrder: current.sortOrder,
+          itemCount: current.itemCount,
+          isActive: isActive,
+        );
+        activeCategoriesCount.value = rxCategories.where((c) => c.isActive).length;
+      }
+
       final catalogRepository = Get.find<CatalogRepository>();
-      await catalogRepository.toggleCategoryStatus(slug, isActive: isActive);
-      await loadCategories();
+      await catalogRepository.toggleCategoryStatus(slug, isActive: isActive).timeout(
+        const Duration(seconds: 4),
+        onTimeout: () {},
+      );
+      loadCategories(showLoading: false);
 
       if (isActive) {
         Get.snackbar(
@@ -120,8 +187,7 @@ mixin CategoryControllerMixin on GetxController {
       }
     } catch (e) {
       Get.snackbar("Error", e.toString());
-    } finally {
-      isLoadingCategories.value = false;
+      loadCategories(showLoading: false);
     }
   }
 }

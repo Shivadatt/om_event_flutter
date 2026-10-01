@@ -36,19 +36,17 @@ class DashboardRecentBookings extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!Get.isRegistered<AdminBookingController>()) return const SizedBox.shrink();
     final controller = Get.find<AdminBookingController>();
-    final goldColor = const Color(0xFFD4AF37);
+    const goldColor = Color(0xFFD4AF37);
 
     return Obx(() {
       final list = controller.recentBookings;
-      if (list.isEmpty) return const SizedBox.shrink();
 
       return Container(
-        margin: const EdgeInsets.only(bottom: 24),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xFF122018),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1E332B)),
+          color: const Color(0xFF101C16),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF1E3328), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,71 +56,111 @@ class DashboardRecentBookings extends StatelessWidget {
               children: [
                 Text(
                   "RECENT BOOKINGS",
-                  style: AppTheme.serifHeader(
-                    fontSize: 16,
+                  style: AppTheme.sansBody(
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
                     color: goldColor,
-                    letterSpacing: 1.2,
                   ),
                 ),
-                TextButton(
-                  onPressed: () => Get.toNamed(AppRoutes.adminBookings),
-                  child: Text("VIEW ALL", style: AppTheme.sansBody(fontSize: 11, color: goldColor, fontWeight: FontWeight.bold)),
+                InkWell(
+                  onTap: () => Get.toNamed(AppRoutes.adminBookings),
+                  child: Text(
+                    "View All",
+                    style: AppTheme.sansBody(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: goldColor,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const Divider(color: Color(0xFF1E332B), height: 16),
-            ...list.map((b) {
-              final service = b.items.firstOrNull?.name ?? "Event Decor";
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Color(0xFF182B24), width: 0.8)),
+            const SizedBox(height: 12),
+            if (list.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    "No recent bookings recorded.",
+                    style: AppTheme.sansBody(fontSize: 12, color: Colors.white38),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(b.publicId, style: AppTheme.sansBody(fontSize: 12, color: goldColor, fontWeight: FontWeight.bold)),
-                          Text(b.customerName, style: AppTheme.sansBody(fontSize: 11, color: Colors.white70)),
-                        ],
+              )
+            else
+              ...list.take(4).map((b) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Color(0xFF182820), width: 0.8)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              b.publicId,
+                              style: AppTheme.sansBody(
+                                fontSize: 11.5,
+                                color: goldColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              b.customerName,
+                              style: AppTheme.sansBody(
+                                fontSize: 10,
+                                color: Colors.white70,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(service, style: AppTheme.sansBody(fontSize: 12, color: Colors.white60)),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        AppFormatters.formatDate(b.eventDate),
-                        style: AppTheme.sansBody(fontSize: 12, color: Colors.white),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          AppFormatters.formatDate(b.eventDate),
+                          style: AppTheme.sansBody(fontSize: 10.5, color: Colors.white60),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(b.status).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: _getStatusColor(b.status)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(b.status).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _getStatusColor(b.status).withValues(alpha: 0.4),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          b.status.name.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: _getStatusColor(b.status),
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        b.status.name.toUpperCase(),
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: _getStatusColor(b.status)),
+                      IconButton(
+                        padding: const EdgeInsets.only(left: 6),
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.white38),
+                        onPressed: () => showAdminBookingDetailsDialog(context, b),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white70),
-                      onPressed: () => showAdminBookingDetailsDialog(context, b),
-                    ),
-                  ],
-                ),
-              );
-            }),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       );

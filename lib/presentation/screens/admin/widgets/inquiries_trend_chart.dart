@@ -10,11 +10,11 @@ class InquiriesTrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF162822),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFF254235), width: 1),
+        color: const Color(0xFF101C16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1E3328), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -23,26 +23,34 @@ class InquiriesTrendChart extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "INQUIRIES TREND",
+                "BOOKING TREND",
                 style: AppTheme.sansBody(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
-                  color: const Color(0xFFC8A26A),
+                  color: const Color(0xFFD4AF37),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF11211C),
+                  color: const Color(0xFF182820),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.2)),
                 ),
-                child: Text(
-                  "Last 6 Months",
-                  style: AppTheme.sansBody(
-                    fontSize: 9,
-                    color: const Color(0xFFA4A9A7),
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Last 6 Months",
+                      style: AppTheme.sansBody(
+                        fontSize: 9.5,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.keyboard_arrow_down_rounded, size: 12, color: Color(0xFFD4AF37)),
+                  ],
                 ),
               ),
             ],

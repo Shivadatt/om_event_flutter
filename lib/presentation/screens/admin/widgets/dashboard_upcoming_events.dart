@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/config/app_routes.dart';
 import '../../../../core/config/app_theme.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../controllers/admin_booking_controller.dart';
 import '../bookings/widgets/admin_booking_details_dialog.dart';
@@ -13,19 +14,17 @@ class DashboardUpcomingEvents extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!Get.isRegistered<AdminBookingController>()) return const SizedBox.shrink();
     final controller = Get.find<AdminBookingController>();
-    final goldColor = const Color(0xFFD4AF37);
+    const goldColor = Color(0xFFD4AF37);
 
     return Obx(() {
       final list = controller.upcomingEvents;
-      if (list.isEmpty) return const SizedBox.shrink();
 
       return Container(
-        margin: const EdgeInsets.only(bottom: 24),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xFF122018),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1E332B)),
+          color: const Color(0xFF101C16),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF1E3328), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,89 +32,109 @@ class DashboardUpcomingEvents extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.event_available_outlined, size: 18, color: Color(0xFFD4AF37)),
-                    const SizedBox(width: 8),
-                    Text(
-                      "UPCOMING CELEBRATIONS",
-                      style: AppTheme.serifHeader(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: goldColor,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
+                Text(
+                  "UPCOMING CELEBRATIONS",
+                  style: AppTheme.sansBody(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                    color: goldColor,
+                  ),
                 ),
-                TextButton(
-                  onPressed: () => Get.toNamed(AppRoutes.adminAvailability),
-                  child: Text("VIEW CALENDAR", style: AppTheme.sansBody(fontSize: 11, color: goldColor, fontWeight: FontWeight.bold)),
+                InkWell(
+                  onTap: () => Get.toNamed(AppRoutes.adminAvailability),
+                  child: Text(
+                    "View All",
+                    style: AppTheme.sansBody(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: goldColor,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const Divider(color: Color(0xFF1E332B), height: 16),
-            ...list.map((b) {
-              final service = b.items.firstOrNull?.name ?? "Event Decor";
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Color(0xFF182B24), width: 0.8)),
+            const SizedBox(height: 12),
+            if (list.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    "No upcoming celebrations scheduled.",
+                    style: AppTheme.sansBody(fontSize: 12, color: Colors.white38),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: goldColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: goldColor.withValues(alpha: 0.3)),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            b.eventDate.day.toString(),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: goldColor),
+              )
+            else
+              ...list.take(4).map((b) {
+                final service = b.items.firstOrNull?.name ?? "Luxury Celebration";
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Color(0xFF182820), width: 0.8)),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.asset(
+                          AppAssets.imageLuxuryEveningDecor,
+                          width: 38,
+                          height: 38,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            width: 38,
+                            height: 38,
+                            color: const Color(0xFF1B2A22),
+                            child: const Icon(Icons.celebration_outlined, size: 18, color: Color(0xFFD4AF37)),
                           ),
-                          Text(
-                            AppFormatters.formatDate(b.eventDate).split(' ').firstOrNull ?? '',
-                            style: const TextStyle(fontSize: 9, color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(service, style: AppTheme.sansBody(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
-                          Text("${b.customerName} • ${b.location}", style: AppTheme.sansBody(fontSize: 11, color: Colors.white60)),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text("Time: ${b.eventTime}", style: AppTheme.sansBody(fontSize: 11, color: Colors.white70)),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => showAdminBookingDetailsDialog(context, b),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF162923),
-                        foregroundColor: goldColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          side: BorderSide(color: goldColor.withValues(alpha: 0.4)),
                         ),
                       ),
-                      child: const Text("Details", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              );
-            }),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              service,
+                              style: AppTheme.sansBody(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "${b.customerName} • ${AppFormatters.formatDate(b.eventDate)}",
+                              style: AppTheme.sansBody(
+                                fontSize: 10,
+                                color: const Color(0xFFA4A9A7),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () => showAdminBookingDetailsDialog(context, b),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: goldColor,
+                          side: BorderSide(color: goldColor.withValues(alpha: 0.6), width: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        ),
+                        child: const Text("Details", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       );

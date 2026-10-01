@@ -24,12 +24,22 @@
       e.preventDefault();
     }, true);
     window.addEventListener('error', function(e) {
-      if (e && e.message && e.message.indexOf('_handledContextLostEvent') !== -1) {
+      if (e && e.message && (e.message.indexOf('_handledContextLostEvent') !== -1 || e.message.indexOf('webglcontextlost') !== -1)) {
         e.stopImmediatePropagation();
         e.preventDefault();
         return true;
       }
     });
+    if (typeof console !== 'undefined' && console.error) {
+      const _origError = console.error;
+      console.error = function(...args) {
+        const msg = args.join(' ');
+        if (msg.indexOf('_handledContextLostEvent') !== -1 || msg.indexOf('webglcontextlost') !== -1) {
+          return;
+        }
+        _origError.apply(console, args);
+      };
+    }
   </script>
   <meta name="description" content="Bespoke event styling and transparent instant quotations for weddings, birthdays, proposals, baby celebrations and corporate events.">
   <meta name="keywords" content="om events, event planner gujarat, wedding decorator ahmedabad, balloon decoration kadi, stage decoration Thangadh, live quotes">

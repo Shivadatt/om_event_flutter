@@ -43,6 +43,17 @@ class AppImage extends StatelessWidget {
         height: height,
         fit: fit,
         alignment: alignment,
+        errorBuilder: (context, error, stackTrace) =>
+            placeholder ??
+            Container(
+              color: Colors.grey.shade900,
+              width: width,
+              height: height,
+              child: const Icon(
+                Icons.broken_image_outlined,
+                color: Colors.grey,
+              ),
+            ),
       );
     }
     
