@@ -18,7 +18,29 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Suppress CanvasKit WebGL context-lost race during hot restarts -->
+  <script>
+    window.addEventListener('webglcontextlost', function(e) {
+      e.preventDefault();
+    }, true);
+    window.addEventListener('error', function(e) {
+      if (e && e.message && (e.message.indexOf('_handledContextLostEvent') !== -1 || e.message.indexOf('webglcontextlost') !== -1)) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return true;
+      }
+    });
+    if (typeof console !== 'undefined' && console.error) {
+      const _origError = console.error;
+      console.error = function(...args) {
+        const msg = args.join(' ');
+        if (msg.indexOf('_handledContextLostEvent') !== -1 || msg.indexOf('webglcontextlost') !== -1) {
+          return;
+        }
+        _origError.apply(console, args);
+      };
+    }
+  </script>
   <meta name="description" content="Bespoke event styling and transparent instant quotations for weddings, birthdays, proposals, baby celebrations and corporate events.">
   <meta name="keywords" content="om events, event planner gujarat, wedding decorator ahmedabad, balloon decoration kadi, stage decoration Thangadh, live quotes">
   <meta name="author" content="Om Events Team">

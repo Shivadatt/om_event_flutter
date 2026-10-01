@@ -179,10 +179,10 @@ class InitialBinding extends Bindings {
       fenix: true,
     );
 
-    // Auth Controller
-    Get.lazyPut<AuthController>(
-      () => AuthController(Get.find<AuthRepository>()),
-      fenix: true,
+    // Auth Controller — permanent singleton so state survives all route navigation & reloads
+    Get.put<AuthController>(
+      AuthController(Get.find<AuthRepository>()),
+      permanent: true,
     );
 
     // ==========================================

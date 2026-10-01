@@ -3066,6 +3066,7 @@ file:///D:/om_event_python/om_event/lib/core/services/fcm/notification_permissio
 file:///D:/om_event_python/om_event/lib/core/services/fcm/notification_router.dart
 file:///D:/om_event_python/om_event/lib/core/services/fcm/notification_token_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/fcm_notification_service.dart
+file:///D:/om_event_python/om_event/lib/core/services/inquiry_image_resolver.dart
 file:///D:/om_event_python/om_event/lib/core/services/listener_registry_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/local_notification_trigger_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/notification_gateway_service.dart
@@ -3075,6 +3076,8 @@ file:///D:/om_event_python/om_event/lib/core/services/parts/local_notification_q
 file:///D:/om_event_python/om_event/lib/core/services/supabase_edge_functions.dart
 file:///D:/om_event_python/om_event/lib/core/services/token_service.dart
 file:///D:/om_event_python/om_event/lib/core/utils/app_logger.dart
+file:///D:/om_event_python/om_event/lib/core/utils/asset_downloader.dart
+file:///D:/om_event_python/om_event/lib/core/utils/asset_downloader_web.dart
 file:///D:/om_event_python/om_event/lib/core/utils/booking_communication_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/date_parser.dart
 file:///D:/om_event_python/om_event/lib/core/utils/error_mapper.dart
@@ -3307,10 +3310,8 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/admin/profile_scree
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/scheduler_health_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/system_settings_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/add_admin_dialog.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_action_button.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_back_button.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_layout.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_metric_card.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_role_card.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_sidebar.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_sidebar_item.dart
@@ -3365,8 +3366,10 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/preferences_view.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/profile_view.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/digital_consent_dialog.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/proposal_financial_card.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/proposal_mobile_accordion.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/proposal_summary_cards.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/quotation_item_card.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/quotes_actions_panel.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/quotes_chat_bubble.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/quotes_chat_section.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/quotes_timeline_section.dart

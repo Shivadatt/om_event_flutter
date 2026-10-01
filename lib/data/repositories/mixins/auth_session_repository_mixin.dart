@@ -99,6 +99,9 @@ mixin AuthSessionRepositoryMixin {
       if (token != null) {
         await localStorage.saveAdminToken(token);
       }
+      // Save canonical 24-hour admin session start timestamp & cached role
+      await localStorage.saveAdminSessionStartedAt(DateTime.now());
+      await localStorage.saveAdminCachedRole(roleType);
     } on FirebaseAuthException catch (e) {
       if (e.code == AppStrings.firebaseUserNotFound ||
           e.code == AppStrings.firebaseWrongPassword ||
@@ -116,6 +119,8 @@ mixin AuthSessionRepositoryMixin {
   Future<void> logout() async {
     await firebaseAuth.signOut();
     await localStorage.clearAdminToken();
+    await localStorage.clearAdminSessionStartedAt();
+    await localStorage.clearAdminCachedRole();
   }
 
   /// Retrieve current active session bearer JWT token.
@@ -147,8 +152,10 @@ mixin AuthSessionRepositoryMixin {
     return null;
   }
 
-  /// Check whether an authenticated session exists.
+  /// Check whether an authenticated session exists within 24-hour window.
   Future<bool> isLoggedIn() async {
-    return firebaseAuth.currentUser != null;
+    final user = firebaseAuth.currentUser;
+    if (user == null) return false;
+    return !localStorage.isSessionExpired();
   }
 }

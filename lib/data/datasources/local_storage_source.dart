@@ -39,4 +39,47 @@ class LocalStorageSource {
   Future<bool> clearAdminToken() async {
     return await _prefs.remove(AppStrings.adminTokenKey);
   }
+
+  // ── Canonical 24-Hour Admin Session Tracking ────────────────────────────────
+  /// Stores the timestamp of a successful administrator login.
+  /// This timestamp is immutable across route changes, page refreshes, and API calls.
+  Future<bool> saveAdminSessionStartedAt(DateTime timestamp) async {
+    return await _prefs.setString(
+      AppStrings.adminSessionStartedAtKey,
+      timestamp.toUtc().toIso8601String(),
+    );
+  }
+
+  /// Retrieves the timestamp when the current admin session was initiated.
+  DateTime? getAdminSessionStartedAt() {
+    final raw = _prefs.getString(AppStrings.adminSessionStartedAtKey);
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw)?.toLocal();
+  }
+
+  /// Clears the admin session timestamp upon explicit logout or expiration.
+  Future<bool> clearAdminSessionStartedAt() async {
+    return await _prefs.remove(AppStrings.adminSessionStartedAtKey);
+  }
+
+  /// Determines if the current admin session has exceeded the 24-hour lifetime.
+  bool isSessionExpired() {
+    final startedAt = getAdminSessionStartedAt();
+    if (startedAt == null) return true;
+    final now = DateTime.now();
+    return now.difference(startedAt) >= const Duration(hours: 24);
+  }
+
+  // ── Admin Role Caching (Instant authorization on browser reload) ─────────────
+  Future<bool> saveAdminCachedRole(String role) async {
+    return await _prefs.setString(AppStrings.adminCachedRoleKey, role);
+  }
+
+  String? getAdminCachedRole() {
+    return _prefs.getString(AppStrings.adminCachedRoleKey);
+  }
+
+  Future<bool> clearAdminCachedRole() async {
+    return await _prefs.remove(AppStrings.adminCachedRoleKey);
+  }
 }

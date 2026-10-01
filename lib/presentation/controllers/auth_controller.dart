@@ -9,6 +9,9 @@ import '../../core/services/fcm_notification_service.dart';
 import '../../core/services/notification_handler_service.dart';
 import '../../core/services/fcm/fcm_module.dart';
 
+import '../../data/datasources/local_storage_source.dart';
+import '../../core/utils/app_logger.dart';
+
 class AuthController extends GetxController {
   final AuthRepository authRepository;
   AuthController(this.authRepository);
@@ -24,33 +27,99 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Fast synchronous prefill from persistent local storage to avoid frame flash
+    _prefillFromLocalStorage();
     checkAuthStatus();
   }
 
-  Future<void> checkAuthStatus() async {
-    final loggedIn = await authRepository.isLoggedIn();
-    rxIsLoggedIn.value = loggedIn;
-    if (loggedIn) {
-      final role = await authRepository.getCurrentUserRole();
-      rxUserRole.value = role ?? 'demo_admin';
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        final adminData = await authRepository.getAdminRole(currentUser.uid);
-        rxAdminRole.value = adminData;
-        // New FCM module — initialize permission + token + listeners
-        FcmService.to.initialize(
-          userId: currentUser.uid,
-          role: 'admin',
-        );
-        // Legacy FCM (backwards compatibility — kept until fully migrated)
-        if (!Get.isRegistered<NotificationHandlerService>()) {
-          Get.find<NotificationHandlerService>();
+  void _prefillFromLocalStorage() {
+    if (Get.isRegistered<LocalStorageSource>()) {
+      final storage = Get.find<LocalStorageSource>();
+      if (!storage.isSessionExpired() && FirebaseAuth.instance.currentUser != null) {
+        rxIsLoggedIn.value = true;
+        final cachedRole = storage.getAdminCachedRole();
+        if (cachedRole != null && cachedRole.isNotEmpty) {
+          rxUserRole.value = cachedRole;
         }
-        FcmNotificationService.to.initializeUserFcm(currentUser.uid, role: 'admin');
       }
-    } else {
+    }
+  }
+
+  /// Checks if the canonical 24-hour admin session has expired.
+  bool isSessionExpired() {
+    if (!Get.isRegistered<LocalStorageSource>()) return true;
+    return Get.find<LocalStorageSource>().isSessionExpired();
+  }
+
+  /// Terminates an expired 24-hour admin session cleanly.
+  Future<void> handleSessionExpired() async {
+    try {
+      await authRepository.logout();
+    } catch (_) {}
+    rxIsLoggedIn.value = false;
+    rxUserRole.value = '';
+    rxAdminRole.value = null;
+    Get.snackbar(
+      "Admin Session Expired",
+      "Your 24-hour admin session has ended. Please sign in again.",
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: const Color(0xFF231B1B),
+      colorText: const Color(0xFFFFAA99),
+      duration: const Duration(seconds: 4),
+    );
+  }
+
+  Future<void> checkAuthStatus() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final expired = isSessionExpired();
+
+    if (currentUser == null || expired) {
+      if (expired && currentUser != null) {
+        await authRepository.logout();
+      }
+      rxIsLoggedIn.value = false;
       rxUserRole.value = '';
       rxAdminRole.value = null;
+      return;
+    }
+
+    // Session is valid and user exists
+    rxIsLoggedIn.value = true;
+    if (Get.isRegistered<LocalStorageSource>()) {
+      final cachedRole = Get.find<LocalStorageSource>().getAdminCachedRole();
+      if (cachedRole != null && cachedRole.isNotEmpty && rxUserRole.value.isEmpty) {
+        rxUserRole.value = cachedRole;
+      }
+    }
+
+    try {
+      final role = await authRepository.getCurrentUserRole();
+      if (role != null) {
+        rxUserRole.value = role;
+        if (Get.isRegistered<LocalStorageSource>()) {
+          await Get.find<LocalStorageSource>().saveAdminCachedRole(role);
+        }
+      } else if (rxUserRole.value.isEmpty) {
+        rxUserRole.value = 'demo_admin';
+      }
+
+      final adminData = await authRepository.getAdminRole(currentUser.uid);
+      rxAdminRole.value = adminData;
+
+      // New FCM module — initialize permission + token + listeners
+      FcmService.to.initialize(
+        userId: currentUser.uid,
+        role: 'admin',
+      );
+      // Legacy FCM (backwards compatibility — kept until fully migrated)
+      if (!Get.isRegistered<NotificationHandlerService>()) {
+        Get.find<NotificationHandlerService>();
+      }
+      FcmNotificationService.to.initializeUserFcm(currentUser.uid, role: 'admin');
+    } catch (e) {
+      // Temporary network or Firestore error must NEVER log out an authenticated admin with valid 24h session!
+      AppLogger.warning("Non-fatal role refresh notice: $e",
+          layer: LogLayer.controller, className: "AuthController", methodName: "checkAuthStatus");
     }
   }
 
@@ -70,7 +139,14 @@ class AuthController extends GetxController {
       isLoading.value = true;
       await authRepository.loginAdmin(email, password);
       await checkAuthStatus();
-      Get.offNamed(AppRoutes.adminDashboard);
+
+      // Check if user was attempting to reach a specific protected route
+      final redirectUrl = Get.parameters['redirect'];
+      if (redirectUrl != null && redirectUrl.isNotEmpty && redirectUrl.startsWith('/')) {
+        Get.offNamed(redirectUrl);
+      } else {
+        Get.offNamed(AppRoutes.adminDashboard);
+      }
       return true;
     } catch (e) {
       Get.snackbar("Access Denied", e.toString());
@@ -89,8 +165,10 @@ class AuthController extends GetxController {
         await FcmNotificationService.to.removeToken(currentUser.uid);
       }
       await authRepository.logout();
-      await checkAuthStatus();
-      Get.offAllNamed(AppRoutes.home);
+      rxIsLoggedIn.value = false;
+      rxUserRole.value = '';
+      rxAdminRole.value = null;
+      Get.offAllNamed(AppRoutes.login);
     } catch (e) {
       Get.snackbar("Error", e.toString());
     } finally {

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'core/config/app_routes.dart';
 import 'core/config/app_theme.dart';
 import 'core/constants/app_strings.dart';
@@ -61,6 +62,14 @@ void main() async {
       AppLogger.error('Firebase initialization failed', e);
     }),
   ]);
+
+  // Await initial Firebase Auth state restoration on Flutter Web (IndexedDB)
+  try {
+    await FirebaseAuth.instance.authStateChanges().first.timeout(
+      const Duration(milliseconds: 1000),
+      onTimeout: () => FirebaseAuth.instance.currentUser,
+    );
+  } catch (_) {}
 
   runApp(const OmEventsApp());
 }
