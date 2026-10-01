@@ -285,16 +285,40 @@ extension FirestoreCatalog on FirestoreRemoteSource {
     await _firestore
         .collection(AppCollections.items)
         .doc(json['slug'] as String)
-        .set(json);
+        .set(json, SetOptions(merge: true))
+        .timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[ExperienceSave] [Firestore] createExperience timeout handled; cache committed.");
+          },
+        );
   }
 
   /// Update an existing experience document.
   Future<void> updateExperience(String slug, Map<String, dynamic> json) async {
-    await _firestore.collection(AppCollections.items).doc(slug).update(json);
+    await _firestore
+        .collection(AppCollections.items)
+        .doc(slug)
+        .set(json, SetOptions(merge: true))
+        .timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[ExperienceSave] [Firestore] updateExperience timeout handled; cache committed.");
+          },
+        );
   }
 
   /// Delete an experience document.
   Future<void> deleteExperience(String slug) async {
-    await _firestore.collection(AppCollections.items).doc(slug).delete();
+    await _firestore
+        .collection(AppCollections.items)
+        .doc(slug)
+        .delete()
+        .timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("[ExperienceSave] [Firestore] deleteExperience timeout handled; cache committed.");
+          },
+        );
   }
 }
