@@ -51,24 +51,29 @@ service cloud.firestore {
       allow read, update, delete: if isAdminOrStaff();
     }
 
-    // Customers: Read/write requires staff access, creation is public
+    // Customers: Staff/Admin have full management; Authenticated customers can access only their own record; Public denied
     match /customers/{customerId} {
-      allow create: if true;
-      allow read: if isAuthenticated();
-      allow update: if isAdminOrStaff() || (
+      allow create: if isAdminOrStaff() || (isAuthenticated() && (request.auth.uid == customerId || request.resource.data.auth_uid == request.auth.uid));
+      allow read: if isAdminOrStaff() || (
         isAuthenticated() && (
+          resource.data.get('auth_uid', '') == request.auth.uid ||
           resource.data.get('email', '') == request.auth.token.email ||
-          resource.data.get('email', '') == '' ||
           customerId == request.auth.uid ||
           (request.auth.token.phone_number != null && (customerId == request.auth.token.phone_number || resource.data.get('phone', '') == request.auth.token.phone_number))
         )
       );
-      allow delete: if isAdminOrStaff() || (
-        isAuthenticated() && request.auth.token.email != null && request.auth.token.email != '' && resource.data.get('email', '') == request.auth.token.email
+      allow update: if isAdminOrStaff() || (
+        isAuthenticated() && (
+          resource.data.get('auth_uid', '') == request.auth.uid ||
+          resource.data.get('email', '') == request.auth.token.email ||
+          customerId == request.auth.uid ||
+          (request.auth.token.phone_number != null && (customerId == request.auth.token.phone_number || resource.data.get('phone', '') == request.auth.token.phone_number))
+        )
       );
+      allow delete: if isAdminOrStaff();
     }
 
-    // Customer Profiles: Client Lounge authenticated customer may read/write only their own profile
+    // Customer Profiles: Client Lounge authenticated customer may read/write only their own profile; Admin/staff full access
     match /customer_profiles/{profileId} {
       allow read, write: if isAuthenticated() && (request.auth.uid == profileId || isAdminOrStaff());
     }

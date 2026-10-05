@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
+import '../../core/constants/app_roles.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
@@ -96,6 +97,16 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
   @override
   Future<CustomerProfile?> getCustomerProfile(String uid) async {
     try {
+      // 1. Guard: Check if UID belongs to an administrator or staff - Never treat as customer profile
+      final adminDoc = await _firestore.collection(AppCollections.admin).doc(uid).get();
+      if (adminDoc.exists && adminDoc.data() != null) {
+        final data = adminDoc.data()!;
+        final role = (data['roleType'] ?? data['role'] ?? '').toString().toLowerCase();
+        if (AppRoles.isAdminRole(role)) {
+          return null;
+        }
+      }
+
       CustomerProfileModel? profile;
       final doc = await _firestore.collection(AppCollections.customerProfiles).doc(uid).get();
       if (doc.exists && doc.data() != null) {
@@ -108,6 +119,10 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
           final userDoc = await _firestore.collection(AppCollections.users).doc(uid).get();
           if (userDoc.exists && userDoc.data() != null) {
             final userData = userDoc.data()!;
+            final role = (userData['role'] ?? '').toString().toLowerCase();
+            if (AppRoles.isAdminRole(role)) {
+              return null; // Users collection lists this user as admin/staff
+            }
             profile = CustomerProfileModel(
               id: uid,
               fullName: userData['name'] ?? userData['fullName'] ?? 'Valued Client',
@@ -134,8 +149,21 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
         final targetPhone = (profile?.phone.isNotEmpty == true) ? profile!.phone : (currentUser?.phoneNumber ?? '');
 
         DocumentSnapshot<Map<String, dynamic>>? custDoc;
-        // Search by phone first
-        if (targetPhone.isNotEmpty) {
+
+        // A. Search by linked auth_uid first
+        try {
+          final linkedSnap = await _firestore
+              .collection(AppCollections.customers)
+              .where('auth_uid', isEqualTo: uid)
+              .limit(1)
+              .get();
+          if (linkedSnap.docs.isNotEmpty) {
+            custDoc = linkedSnap.docs.first;
+          }
+        } catch (_) {}
+
+        // B. Search by phone
+        if (custDoc == null && targetPhone.isNotEmpty) {
           final cleanDigits = targetPhone.replaceAll(RegExp(r'\D'), '');
           final tenDigit = cleanDigits.length >= 10 ? cleanDigits.substring(cleanDigits.length - 10) : cleanDigits;
           final d1 = await _firestore.collection(AppCollections.customers).doc(tenDigit).get();
@@ -147,7 +175,7 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
           }
         }
 
-        // If not found by phone, search by email
+        // C. If not found by phone, search by email
         if ((custDoc == null || !custDoc.exists) && targetEmail.isNotEmpty) {
           final snap = await _firestore
               .collection(AppCollections.customers)
@@ -160,6 +188,15 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
         }
 
         if (custDoc != null && custDoc.exists && custDoc.data() != null) {
+          // Link auth_uid to customer document if needed
+          final currentAuthUid = custDoc.data()?['auth_uid'];
+          if (currentAuthUid == null || currentAuthUid != uid) {
+            custDoc.reference.set({
+              'auth_uid': uid,
+              'login_enabled': true,
+            }, SetOptions(merge: true)).catchError((_) {});
+          }
+
           final cData = custDoc.data()!;
           final cName = cData['name'] ?? cData['full_name'] ?? '';
           final cPhone = cData['phone'] ?? '';
@@ -226,9 +263,17 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
         return profile;
       }
 
-      // Check current Firebase Auth user fallback
+      // Check current Firebase Auth user fallback only for verified non-admin users
       final currentUser = _auth.currentUser;
       if (currentUser != null && currentUser.uid == uid) {
+        final emailLower = currentUser.email?.toLowerCase().trim() ?? '';
+        // If email indicates admin account, do not create customer profile
+        if (emailLower == 'omeventsanddecorators@gmail.com' ||
+            emailLower == 'demo@omevents.com' ||
+            emailLower.contains('admin@')) {
+          return null;
+        }
+
         final displayName = currentUser.displayName?.trim();
         final emailPrefix = currentUser.email?.split('@').first;
         final name = (displayName != null && displayName.isNotEmpty)
@@ -257,24 +302,6 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
       return null;
     } catch (e) {
       AppLogger.warning("Failed to fetch customer profile for $uid: $e");
-      final currentUser = _auth.currentUser;
-      if (currentUser != null && currentUser.uid == uid) {
-        return CustomerProfileModel(
-          id: uid,
-          fullName: currentUser.displayName ?? currentUser.email?.split('@').first ?? 'Valued Client',
-          phone: currentUser.phoneNumber ?? '',
-          email: currentUser.email ?? '',
-          gender: '',
-          address: '',
-          city: 'Ahmedabad',
-          state: 'Gujarat',
-          pincode: '',
-          branch: '',
-          profileImageUrl: currentUser.photoURL ?? '',
-          createdAt: DateTime.now(),
-          lastLogin: DateTime.now(),
-        );
-      }
       return null;
     }
   }

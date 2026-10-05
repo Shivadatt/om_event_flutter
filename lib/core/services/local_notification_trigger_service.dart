@@ -37,9 +37,8 @@ class LocalNotificationTriggerService extends GetxService {
     AppLogger.info("LocalNotificationTriggerService: Initializing trigger tasks for UID: $uid, Role: $role", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "initForUser");
     
     if (role == 'admin' || role == 'staff' || role == 'demo_admin' || role == 'super_admin') {
-      if (kDebugMode) {
-        _startLocalSchedulerSimulator();
-      }
+      // Disabled automatic periodic background writes in debug mode to prevent exhausting Firebase Spark plan daily write limit (20,000 writes/day).
+      // In production, Supabase Edge Functions or Cloud Functions handle scheduled triggers.
     }
   }
 
@@ -53,6 +52,7 @@ class LocalNotificationTriggerService extends GetxService {
   }
 
   /// 3. Cron Scheduler Simulator (Debug Mode Only)
+  // ignore: unused_element
   void _startLocalSchedulerSimulator() {
     if (!kDebugMode) {
       AppLogger.info("LocalNotificationTriggerService: Local Scheduler Simulator disabled in Release build.", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "_startLocalSchedulerSimulator");

@@ -23,6 +23,7 @@ import '../../data/datasources/supabase_storage_source.dart';
 import '../../core/utils/error_mapper.dart';
 import '../../core/services/inquiry_image_resolver.dart';
 import '../screens/customer/widgets/customer_login_required_dialog.dart';
+import '../../core/utils/auth_route_helper.dart';
 import 'customer_auth_controller.dart';
 
 part 'parts/customer_sync.dart';
@@ -94,13 +95,15 @@ class CustomerDashboardController extends GetxController {
 
   Future<void> ensureProfileLoaded() async {
     if (rxProfile.value != null) return;
+    if (AuthRouteHelper.isCurrentAdminOrStaff()) return;
+
     isLoading.value = true;
     try {
       await _authController.checkAuthStatus();
       var profile = _authController.rxCustomerProfile.value;
       if (profile == null) {
         final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
+        if (user != null && !AuthRouteHelper.isCurrentAdminOrStaff()) {
           profile = await _authRepo.getCustomerProfile(user.uid);
           if (profile != null) {
             _authController.rxCustomerProfile.value = profile;
@@ -116,7 +119,7 @@ class CustomerDashboardController extends GetxController {
           syncMasterData(profile);
           _bindStreams(profile.id, profile.branch, profile.phone);
         }
-      } else {
+      } else if (!AuthRouteHelper.isCurrentAdminOrStaff()) {
         final user = FirebaseAuth.instance.currentUser;
         final fallback = CustomerProfileModel(
           id: user?.uid ?? 'guest',

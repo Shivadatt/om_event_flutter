@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/config/app_routes.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/constants/app_roles.dart';
+import '../../../core/utils/auth_route_helper.dart';
 import '../../controllers/auth_controller.dart';
 
 /// Redesigned Admin / Team Studio Login Screen.
@@ -40,16 +41,10 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final authController = Get.find<AuthController>();
-      final role = authController.rxAdminRole.value?.roleType ?? authController.rxUserRole.value;
-      final isStaffOrAdmin = authController.rxAdminRole.value != null ||
-          role == AppRoles.superAdmin ||
-          role == AppRoles.demoAdmin ||
-          role == 'admin' ||
-          role == 'manager';
-
-      if (authController.rxIsLoggedIn.value && isStaffOrAdmin) {
+      if (AuthRouteHelper.isCurrentAdminOrStaff()) {
         Get.offNamed(AppRoutes.adminDashboard);
+      } else if (AuthRouteHelper.isVerifiedCustomer()) {
+        Get.offNamed(AppRoutes.customerDashboard);
       }
     });
   }

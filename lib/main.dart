@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -20,20 +21,24 @@ void main() async {
 
   // Suppress benign Flutter Web CanvasKit WebGL hot-restart context-lost race & disposed EngineFlutterView
   FlutterError.onError = (details) {
-    final msg = details.exceptionAsString();
-    if (msg.contains('_handledContextLostEvent') ||
-        msg.contains('window.dart:99:12') ||
-        msg.contains('EngineFlutterView') ||
-        msg.contains('Trying to render a disposed')) {
-      return;
-    }
-    FlutterError.presentError(details);
+    try {
+      final msg = details.exceptionAsString();
+      if (msg.contains('_handledContextLostEvent') ||
+          msg.contains('window.dart:99:12') ||
+          msg.contains('EngineFlutterView') ||
+          msg.contains('LegacyJavaScriptObject') ||
+          msg.contains('Trying to render a disposed')) {
+        return;
+      }
+      FlutterError.presentError(details);
+    } catch (_) {}
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     final errStr = error.toString();
     if (errStr.contains('_handledContextLostEvent') ||
         errStr.contains('window.dart:99:12') ||
         errStr.contains('EngineFlutterView') ||
+        errStr.contains('LegacyJavaScriptObject') ||
         errStr.contains('Trying to render a disposed')) {
       return true; // handled
     }
@@ -48,17 +53,14 @@ void main() async {
       AppLogger.error('SharedPreferences initialization failed', e);
     }),
     Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: 'AIzaSyDFpKAUXwIDnoQBrt5Id-xJjn-h5WVv1pc',
-        authDomain: 'om-event.firebaseapp.com',
-        projectId: 'om-event',
-        storageBucket: 'om-event.firebasestorage.app',
-        messagingSenderId: '443981257323',
-        // ✅ Web app ID (not the Android ID) — required for correct Flutter Web SDK routing
-        appId: '1:443981257323:web:845ec22c4774094264af2e',
-      ),
+      options: DefaultFirebaseOptions.currentPlatform,
     ).then((_) {
       AppLogger.success('Firebase initialized successfully');
+      debugPrint('[QUOTA_AUDIT][FIREBASE_PROJECT]\nprojectId=${Firebase.app().options.projectId}');
+      debugPrint('[QUOTA_AUDIT][FIRESTORE_DATABASE]\ndatabaseId=(default)');
+      debugPrint('[CLIENT_CREATE][FIREBASE_PROJECT] projectId: ${Firebase.app().options.projectId}');
+      debugPrint('[CLIENT_CREATE][FIREBASE_APP] appId: ${Firebase.app().options.appId}');
+      debugPrint('[CLIENT_CREATE][FIRESTORE] target collection: customers');
     }).catchError((e) {
       AppLogger.error('Firebase initialization failed', e);
     }),

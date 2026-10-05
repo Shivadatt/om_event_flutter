@@ -18,6 +18,9 @@ import 'widgets/dashboard_sidebar.dart';
 import 'widgets/new_inquiry_dialog.dart';
 import 'widgets/revision_request_dialog.dart';
 
+import '../../../../core/config/app_routes.dart';
+import '../../../../core/utils/auth_route_helper.dart';
+
 /// Desktop/Mobile layout orchestrator for the Client Portal.
 class CustomerDashboardScreen extends StatefulWidget {
   const CustomerDashboardScreen({super.key});
@@ -34,11 +37,25 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    if (AuthRouteHelper.isCurrentAdminOrStaff()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.offAllNamed(AppRoutes.adminDashboard);
+      });
+      return;
+    }
     controller.ensureProfileLoaded();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (AuthRouteHelper.isCurrentAdminOrStaff()) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF070C0A),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFD4AF37)),
+        ),
+      );
+    }
     final width = MediaQuery.of(context).size.width;
     final bool isDesktop = width >= 1000;
 

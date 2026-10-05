@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import '../../core/config/app_routes.dart';
 import '../../core/utils/app_logger.dart';
 import '../../presentation/screens/customer/widgets/booking_tracker_dialog.dart';
+import 'fcm/notification_router.dart';
 
 /// Isolate-safe background handler — must be a top-level function.
 /// Called by Firebase when the app is completely terminated.
@@ -25,8 +25,10 @@ class NotificationHandlerService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    // Register the top-level background handler
-    FirebaseMessaging.onBackgroundMessage(firebaseBackgroundMessageHandler);
+    // Register the top-level background handler (native only)
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(firebaseBackgroundMessageHandler);
+    }
 
     _setupForegroundListener();
     _setupNotificationOpenedListener();
@@ -83,8 +85,6 @@ class NotificationHandlerService extends GetxService {
   // ─── Navigation Router ────────────────────────────────────────────────────
 
   void _handleNavigation(Map<String, dynamic> data) {
-    final type = data['type'] ?? '';
-    final url = data['url'] ?? '';
     final bookingId = data['publicBookingId'] ?? data['public_id'] ?? data['bookingId'] ?? '';
 
     if (!kIsWeb) {
@@ -97,13 +97,6 @@ class NotificationHandlerService extends GetxService {
       return;
     }
 
-    if (type == 'booking' || url.contains('/dashboard')) {
-      Get.toNamed(AppRoutes.customerDashboard);
-    } else if (type == 'admin' || url.contains('/admin')) {
-      Get.toNamed(AppRoutes.adminDashboard);
-    } else if (url.isNotEmpty) {
-      Get.toNamed(url);
-    }
-    // No navigation for unknown types — keeps app stable
+    NotificationRouter.navigate(data);
   }
 }

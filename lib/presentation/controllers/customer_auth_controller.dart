@@ -9,6 +9,7 @@ import '../../core/services/bootstrap_service.dart';
 import '../../core/services/fcm_notification_service.dart';
 import '../../core/utils/error_mapper.dart';
 import '../../core/utils/app_logger.dart';
+import '../../core/utils/auth_route_helper.dart';
 import 'cart_controller.dart';
 import 'quotation_controller.dart';
 
@@ -27,8 +28,11 @@ class CustomerAuthController extends GetxController {
   bool get isAuthenticatedCustomer {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) return false;
+    // Admins and staff are strictly forbidden from having customer lounge access
+    if (AuthRouteHelper.isCurrentAdminOrStaff()) return false;
     final profile = rxCustomerProfile.value;
-    if (profile != null && profile.id.startsWith('guest_')) return false;
+    if (profile == null) return false;
+    if (profile.id.startsWith('guest_')) return false;
     return true;
   }
 
@@ -40,11 +44,13 @@ class CustomerAuthController extends GetxController {
     
     // Set initial value synchronously
     final user = FirebaseAuth.instance.currentUser;
-    rxIsLoggedIn.value = user != null && !user.isAnonymous;
+    final isAdmin = AuthRouteHelper.isCurrentAdminOrStaff();
+    rxIsLoggedIn.value = user != null && !user.isAnonymous && !isAdmin;
 
     // Listen to real-time auth state changes
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
-      final loggedIn = user != null && !user.isAnonymous;
+      final isAdmin = AuthRouteHelper.isCurrentAdminOrStaff();
+      final loggedIn = user != null && !user.isAnonymous && !isAdmin;
       if (rxIsLoggedIn.value != loggedIn) {
         rxIsLoggedIn.value = loggedIn;
       }
@@ -79,7 +85,7 @@ class CustomerAuthController extends GetxController {
   Future<void> checkAuthStatus() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null || user.isAnonymous) {
+      if (user == null || user.isAnonymous || AuthRouteHelper.isCurrentAdminOrStaff()) {
         rxIsLoggedIn.value = false;
         rxCustomerProfile.value = null;
         return;
@@ -105,9 +111,41 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.loginWithEmail(email, password);
+
+      // Strict role boundary: Admin/Staff credentials cannot access Client Portal
+      if (AuthRouteHelper.isCurrentAdminOrStaff()) {
+        await _authRepository.logout();
+        rxIsLoggedIn.value = false;
+        rxCustomerProfile.value = null;
+        Get.snackbar(
+          "Access Denied",
+          "Admin accounts cannot access the Client Portal. Please use a customer account.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF231B1B),
+          colorText: const Color(0xFFFFAA99),
+          duration: const Duration(seconds: 4),
+        );
+        return false;
+      }
+
       await checkAuthStatus();
+      if (!isAuthenticatedCustomer) {
+        await _authRepository.logout();
+        rxIsLoggedIn.value = false;
+        rxCustomerProfile.value = null;
+        Get.snackbar(
+          "Access Denied",
+          "A valid customer account is required to access the Client Portal.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF231B1B),
+          colorText: const Color(0xFFFFAA99),
+          duration: const Duration(seconds: 4),
+        );
+        return false;
+      }
+
       if (navigateHome) {
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.customerDashboard);
       }
       return true;
     } catch (e) {
@@ -122,9 +160,25 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.registerWithEmail(email, password, fullName);
+
+      if (AuthRouteHelper.isCurrentAdminOrStaff()) {
+        await _authRepository.logout();
+        rxIsLoggedIn.value = false;
+        rxCustomerProfile.value = null;
+        Get.snackbar(
+          "Access Denied",
+          "Admin accounts cannot access the Client Portal. Please use a customer account.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF231B1B),
+          colorText: const Color(0xFFFFAA99),
+          duration: const Duration(seconds: 4),
+        );
+        return false;
+      }
+
       await checkAuthStatus();
       if (navigateHome) {
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.customerDashboard);
       }
       return true;
     } catch (e) {
@@ -159,15 +213,25 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.signInWithSmsCode(verificationId.value, smsCode);
-      await checkAuthStatus();
-      
-      // If profile doesn't exist, create a basic one
-      if (rxCustomerProfile.value == null && await _authRepository.getCurrentUserId() != null) {
-         // Create stub profile here or redirect to profile completion screen
+
+      if (AuthRouteHelper.isCurrentAdminOrStaff()) {
+        await _authRepository.logout();
+        rxIsLoggedIn.value = false;
+        rxCustomerProfile.value = null;
+        Get.snackbar(
+          "Access Denied",
+          "Admin accounts cannot access the Client Portal. Please use a customer account.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF231B1B),
+          colorText: const Color(0xFFFFAA99),
+          duration: const Duration(seconds: 4),
+        );
+        return false;
       }
-      
+
+      await checkAuthStatus();
       if (navigateHome) {
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.customerDashboard);
       }
       return true;
     } catch (e) {
@@ -182,17 +246,32 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authRepository.signInWithGoogle();
+
+      if (AuthRouteHelper.isCurrentAdminOrStaff()) {
+        await _authRepository.logout();
+        rxIsLoggedIn.value = false;
+        rxCustomerProfile.value = null;
+        Get.snackbar(
+          "Access Denied",
+          "Admin accounts cannot access the Client Portal. Please use a customer account.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF231B1B),
+          colorText: const Color(0xFFFFAA99),
+          duration: const Duration(seconds: 4),
+        );
+        return;
+      }
+
       await checkAuthStatus();
       if (navigateHome) {
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.customerDashboard);
       }
     } catch (e) {
       final errStr = e.toString().toLowerCase();
       if (errStr.contains('popup-closed-by-user') || 
           errStr.contains('cancelled') || 
-          errStr.contains('canceled') ||
+          errStr.contains('canceled') || 
           errStr.contains('user-cancelled')) {
-        // User closed the popup, handle silently without error message
         return;
       }
       
@@ -201,7 +280,7 @@ class CustomerAuthController extends GetxController {
         await _authRepository.loginWithEmail("google.demo@omevents.com", "GoogleDemo123!");
         await checkAuthStatus();
         if (navigateHome) {
-          Get.offAllNamed(AppRoutes.home);
+          Get.offAllNamed(AppRoutes.customerDashboard);
         }
         Get.snackbar(
           "Google Sign-In Fallback", 
@@ -215,7 +294,7 @@ class CustomerAuthController extends GetxController {
           await _authRepository.registerWithEmail("google.demo@omevents.com", "GoogleDemo123!", "Google Demo User");
           await checkAuthStatus();
           if (navigateHome) {
-            Get.offAllNamed(AppRoutes.home);
+            Get.offAllNamed(AppRoutes.customerDashboard);
           }
           Get.snackbar(
             "Google Sign-In Fallback", 
@@ -237,8 +316,14 @@ class CustomerAuthController extends GetxController {
     try {
       isLoading.value = true;
       final uid = await _authRepository.getCurrentUserId();
-      if (uid != null) {
-        await FcmNotificationService.to.removeToken(uid);
+      if (uid != null && uid.isNotEmpty) {
+        try {
+          if (Get.isRegistered<FcmNotificationService>()) {
+            await FcmNotificationService.to.removeToken(uid);
+          }
+        } catch (e) {
+          AppLogger.warning("Customer FCM notification token removal warning on logout: $e");
+        }
       }
       // Reset customer-scoped reactive states to isolate sessions
       if (Get.isRegistered<QuotationController>()) {
@@ -247,11 +332,22 @@ class CustomerAuthController extends GetxController {
       if (Get.isRegistered<CartController>()) {
         Get.find<CartController>().clearCart();
       }
-      await _authRepository.logout();
+      try {
+        await _authRepository.logout();
+      } catch (e) {
+        AppLogger.warning("Customer auth repository logout warning: $e");
+      }
+      try {
+        if (FirebaseAuth.instance.currentUser != null) {
+          await FirebaseAuth.instance.signOut();
+        }
+      } catch (_) {}
+
       await checkAuthStatus();
       Get.offAllNamed(AppRoutes.home);
     } catch (e) {
-      Get.snackbar("Logout Error", AppErrorMapper.mapGeneralError(e));
+      AppLogger.error("Customer logout unexpected error: $e");
+      Get.offAllNamed(AppRoutes.home);
     } finally {
       isLoading.value = false;
     }

@@ -42,9 +42,11 @@ class FcmService extends GetxService {
     _handler = Get.find<NotificationHandler>();
     _localService = Get.find<NotificationLocalService>();
 
-    // Register the global background message handler immediately.
-    // Must be called before any messaging stream subscriptions.
-    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
+    // Register the global background message handler immediately (native only).
+    // Web handles background messages through firebase-messaging-sw.js.
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
+    }
 
     AppLogger.info('FcmService: initialized');
   }

@@ -1,19 +1,13 @@
 import 'package:get/get.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../utils/app_logger.dart';
+import '../../utils/auth_route_helper.dart';
 
-/// Maps FCM notification payload data to in-app navigation routes.
+/// Maps FCM notification payload data to in-app navigation routes with role-based routing.
 ///
-/// Routing rules (priority order):
-///   1. `data['type']` — semantic type key
-///   2. `data['url']`  — explicit route path
-///   3. Fallback       — no navigation (keeps app stable)
-///
-/// Supported types:
-///   booking → /dashboard (customer)
-///   admin   → /admin-dashboard
-///   quote   → /dashboard
-///   payment → /dashboard
+/// Ensures:
+///   - Admins/Staff are never sent to customer lounge routes.
+///   - Customers are never sent to admin dashboard routes.
 class NotificationRouter {
   NotificationRouter._();
 
@@ -23,20 +17,32 @@ class NotificationRouter {
     try {
       final type = (data['type'] ?? '').toString().toLowerCase();
       final url = (data['url'] ?? '').toString();
+      final isAdmin = AuthRouteHelper.isCurrentAdminOrStaff();
 
-      AppLogger.info('NotificationRouter: type=$type url=$url');
+      AppLogger.info('NotificationRouter: type=$type url=$url isAdmin=$isAdmin');
 
-      if (type == 'booking' ||
-          type == 'quote' ||
-          type == 'payment' ||
-          url.contains('/dashboard')) {
-        Get.toNamed(AppRoutes.customerDashboard);
-      } else if (type == 'admin' || url.contains('/admin')) {
-        Get.toNamed(AppRoutes.adminDashboard);
-      } else if (url.isNotEmpty) {
-        Get.toNamed(url);
+      if (isAdmin) {
+        if (type == 'booking') {
+          Get.toNamed(AppRoutes.adminBookings);
+        } else if (type == 'quote') {
+          Get.toNamed(AppRoutes.manageQuotes);
+        } else if (type == 'admin' || url.contains('/admin')) {
+          Get.toNamed(AppRoutes.adminDashboard);
+        } else if (url.isNotEmpty && !url.contains('/dashboard')) {
+          Get.toNamed(url);
+        } else {
+          Get.toNamed(AppRoutes.adminDashboard);
+        }
+      } else {
+        if (type == 'booking' ||
+            type == 'quote' ||
+            type == 'payment' ||
+            url.contains('/dashboard')) {
+          Get.toNamed(AppRoutes.customerDashboard);
+        } else if (url.isNotEmpty && !url.contains('/admin')) {
+          Get.toNamed(url);
+        }
       }
-      // Unknown type — intentionally do nothing to keep app stable
     } catch (e) {
       AppLogger.error('NotificationRouter: navigation failed', e);
     }

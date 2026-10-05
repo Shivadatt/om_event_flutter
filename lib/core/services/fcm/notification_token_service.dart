@@ -97,6 +97,15 @@ class NotificationTokenService extends GetxService {
   }) async {
     if (userId.isEmpty || token.isEmpty) return;
 
+    try {
+      final prefs = Get.isRegistered<SharedPreferences>() ? Get.find<SharedPreferences>() : null;
+      final cachedToken = prefs?.getString('cached_fcm_token_$userId');
+      if (cachedToken == token) {
+        // Token has not changed, skipping redundant database write
+        return;
+      }
+    } catch (_) {}
+
     final deviceId = await _getDeviceId();
 
     await Future.wait([
@@ -105,6 +114,11 @@ class NotificationTokenService extends GetxService {
       _saveToFirestore(
           userId: userId, role: role, token: token, deviceId: deviceId),
     ]);
+
+    try {
+      final prefs = Get.isRegistered<SharedPreferences>() ? Get.find<SharedPreferences>() : null;
+      await prefs?.setString('cached_fcm_token_$userId', token);
+    } catch (_) {}
   }
 
   Future<void> _saveToSupabase({

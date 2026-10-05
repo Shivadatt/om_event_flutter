@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
@@ -115,22 +114,8 @@ class ListenerRegistryService extends GetxService {
     );
     registerListener('quotations', quotesSub);
 
-    // 4. Notification Queue Listener (Debug Mode only, delegated to LocalNotificationTriggerService)
-    if (kDebugMode) {
-      final queueSub = _firestore
-          .collection(AppCollections.notificationQueue)
-          .where('status', whereIn: ['pending', 'paused_dnd'])
-          .snapshots()
-          .listen(
-        (snap) {
-          if (Get.isRegistered<LocalNotificationTriggerService>()) {
-            LocalNotificationTriggerService.to.handleQueueSnapshot(snap);
-          }
-        },
-        onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [queue]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerAdminListeners"),
-      );
-      registerListener('queue', queueSub);
-    }
+    // 4. Notification Queue Listener: Disabled on client to prevent write amplification.
+    // Backend functions handle queue consumption.
 
     // 5. Initialize background/local trigger tasks
     if (Get.isRegistered<LocalNotificationTriggerService>()) {

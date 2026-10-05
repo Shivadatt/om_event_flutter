@@ -130,16 +130,47 @@ extension FirestoreOrders on FirestoreRemoteSource {
         .map((snap) => snap.docs);
   }
 
-  /// Create a new customer document keyed by phone/id.
+  /// Create a new customer document keyed by phone/id with mandatory read-back verification.
   Future<void> createCustomer(Map<String, dynamic> json) async {
     final docId = (json['id'] ?? json['phone'] ?? '').toString().trim();
     if (docId.isEmpty) {
       throw ArgumentError("Customer document ID / Phone cannot be empty");
     }
-    await _firestore
-        .collection(AppCollections.customers)
-        .doc(docId)
-        .set(json, SetOptions(merge: true));
+    try {
+      debugPrint('[CLIENT_CREATE][FIRESTORE_WRITE_START] collection=${AppCollections.customers} docId=$docId');
+      final ref = _firestore.collection(AppCollections.customers).doc(docId);
+      await ref.set(json, SetOptions(merge: true));
+
+      bool docExists = false;
+      try {
+        final verification = await ref
+            .get(const GetOptions(source: Source.serverAndCache))
+            .timeout(const Duration(seconds: 4));
+        docExists = verification.exists;
+      } catch (_) {
+        try {
+          final cached = await ref.get(const GetOptions(source: Source.cache));
+          docExists = cached.exists;
+        } catch (_) {}
+      }
+
+      if (!docExists) {
+        debugPrint('[CLIENT_CREATE][FIRESTORE_WRITE_ERROR] customers/$docId does not exist after write');
+        throw Exception('Customer Firestore verification failed: customers/$docId does not exist after write');
+      }
+
+      debugPrint(
+        '[CLIENT_CREATE][FIRESTORE_WRITE_SUCCESS] customers/$docId exists=true',
+      );
+    } on FirebaseException catch (fe, st) {
+      debugPrint('[CLIENT_CREATE][FIRESTORE_WRITE_ERROR] FirebaseException code=${fe.code} message=${fe.message}');
+      debugPrint('[CLIENT_CREATE][FIRESTORE_WRITE_STACK] $st');
+      rethrow;
+    } catch (e, st) {
+      debugPrint('[CLIENT_CREATE][FIRESTORE_WRITE_ERROR] $e');
+      debugPrint('[CLIENT_CREATE][FIRESTORE_WRITE_STACK] $st');
+      rethrow;
+    }
   }
 
   /// Delete a customer record by ID or phone.

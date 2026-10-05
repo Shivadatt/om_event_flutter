@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../../data/models/customer_model.dart';
 import '../../domain/repositories/customer_repository.dart';
@@ -24,7 +25,7 @@ mixin CustomerControllerMixin on GetxController {
     }
   }
 
-  /// Creates a new customer record with optimistic updates.
+  /// Creates a new customer record and refreshes from canonical Firestore source.
   Future<bool> createCustomer(CustomerModel customer) async {
     final key = customer.id.isNotEmpty ? customer.id : customer.phone;
     final existingIdx = rxCustomers.indexWhere((c) => c.id == key || c.phone == key);
@@ -33,13 +34,15 @@ mixin CustomerControllerMixin on GetxController {
       return false;
     }
 
-    rxCustomers.insert(0, customer);
     try {
+      debugPrint('[CLIENT_CREATE][LOCAL_STATE] writing to customerRepository for docId=$key');
       final customerRepository = Get.find<CustomerRepository>();
       await customerRepository.createCustomer(customer);
+      await loadCustomers();
+      debugPrint('[CLIENT_CREATE][REFRESH] customer stream refreshed');
       return true;
     } catch (e) {
-      rxCustomers.removeWhere((c) => c.id == key || c.phone == key);
+      debugPrint('[CLIENT_CREATE][ERROR] Customer creation failed: $e');
       Get.snackbar("Error", "Could not create client: $e");
       return false;
     }

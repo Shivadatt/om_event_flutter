@@ -336,9 +336,9 @@ class AdminSidebar extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
-            onPressed: () {
+            onPressed: () async {
               Get.back();
-              authController.logout();
+              await authController.logout();
             },
             child: Text(
               "CONFIRM",

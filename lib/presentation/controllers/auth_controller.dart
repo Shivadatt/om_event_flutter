@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/config/app_routes.dart';
+import '../../core/constants/app_roles.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/admin_role.dart';
 import '../../data/repositories/admin_repository.dart';
 import '../../core/services/fcm_notification_service.dart';
 import '../../core/services/notification_handler_service.dart';
 import '../../core/services/fcm/fcm_module.dart';
+import '../../core/services/listener_registry_service.dart';
 
 import '../../data/datasources/local_storage_source.dart';
 import '../../core/utils/app_logger.dart';
@@ -27,6 +29,25 @@ class AuthController extends GetxController {
 
   void markAdminBootstrapped(bool value) {
     rxAdminBootstrapped.value = value;
+  }
+
+  /// Whether the in-memory or cached role represents an administrative or staff user.
+  bool get isStaffOrAdmin {
+    final role = rxAdminRole.value?.roleType ?? rxUserRole.value;
+    if (rxAdminRole.value != null || AppRoles.isAdminRole(role)) return true;
+    if (Get.isRegistered<LocalStorageSource>()) {
+      final cached = Get.find<LocalStorageSource>().getAdminCachedRole();
+      if (AppRoles.isAdminRole(cached)) return true;
+    }
+    return false;
+  }
+
+  /// Whether there is an active Firebase Auth user with a valid, non-expired 24-hour admin session.
+  bool get isCurrentAdminSessionValid {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.isAnonymous) return false;
+    if (isSessionExpired()) return false;
+    return isStaffOrAdmin;
   }
 
   @override
@@ -148,7 +169,11 @@ class AuthController extends GetxController {
 
       // Check if user was attempting to reach a specific protected route
       final redirectUrl = Get.parameters['redirect'];
-      if (redirectUrl != null && redirectUrl.isNotEmpty && redirectUrl.startsWith('/')) {
+      if (redirectUrl != null &&
+          redirectUrl.isNotEmpty &&
+          redirectUrl.startsWith('/') &&
+          !redirectUrl.startsWith('/dashboard') &&
+          !redirectUrl.startsWith('/client-login')) {
         Get.offNamed(redirectUrl);
       } else {
         Get.offNamed(AppRoutes.adminDashboard);
@@ -166,18 +191,77 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        await FcmService.to.cleanup(currentUser.uid);
-        await FcmNotificationService.to.removeToken(currentUser.uid);
+      final uid = currentUser?.uid;
+
+      // 1. Safe cleanup of FCM tokens (non-fatal, never abort logout)
+      if (uid != null && uid.isNotEmpty) {
+        try {
+          if (Get.isRegistered<FcmService>()) {
+            await FcmService.to.cleanup(uid);
+          }
+        } catch (e) {
+          AppLogger.warning("FCM cleanup non-fatal warning on logout: $e");
+        }
+        try {
+          if (Get.isRegistered<FcmNotificationService>()) {
+            await FcmNotificationService.to.removeToken(uid);
+          }
+        } catch (e) {
+          AppLogger.warning("FCM notification cleanup non-fatal warning on logout: $e");
+        }
       }
-      await authRepository.logout();
+
+      // 2. Safe cleanup of active listeners
+      try {
+        if (Get.isRegistered<ListenerRegistryService>()) {
+          ListenerRegistryService.to.cleanupOnLogout();
+        }
+      } catch (e) {
+        AppLogger.warning("ListenerRegistryService cleanup warning on logout: $e");
+      }
+
+      // 3. Clear all admin tokens, sessions, and cached roles from local storage
+      try {
+        if (Get.isRegistered<LocalStorageSource>()) {
+          final storage = Get.find<LocalStorageSource>();
+          await storage.clearAdminToken();
+          await storage.clearAdminSessionStartedAt();
+          await storage.clearAdminCachedRole();
+        }
+      } catch (e) {
+        AppLogger.warning("LocalStorage cleanup warning on logout: $e");
+      }
+
+      // 4. Sign out from Firebase Auth
+      try {
+        await authRepository.logout();
+      } catch (e) {
+        AppLogger.warning("Auth repository logout warning: $e");
+      }
+      try {
+        if (FirebaseAuth.instance.currentUser != null) {
+          await FirebaseAuth.instance.signOut();
+        }
+      } catch (e) {
+        AppLogger.warning("Direct FirebaseAuth signOut warning: $e");
+      }
+
+      // 5. Reset all in-memory admin reactive states
+      rxIsLoggedIn.value = false;
+      rxUserRole.value = '';
+      rxAdminRole.value = null;
+      rxAdminBootstrapped.value = false;
+
+      // 6. Navigate directly to login screen
+      Get.offAllNamed(AppRoutes.login);
+    } catch (e) {
+      AppLogger.error("Logout caught unexpected error", e);
+      // Guaranteed fallback: reset in-memory state and redirect
       rxIsLoggedIn.value = false;
       rxUserRole.value = '';
       rxAdminRole.value = null;
       rxAdminBootstrapped.value = false;
       Get.offAllNamed(AppRoutes.login);
-    } catch (e) {
-      Get.snackbar("Error", e.toString());
     } finally {
       isLoading.value = false;
     }

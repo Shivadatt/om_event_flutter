@@ -54,16 +54,7 @@ class AdminAuthMiddleware extends GetMiddleware {
     }
 
     // ── 2. Check In-Memory Role Authorization ─────────────────────────────
-    final role = auth.rxAdminRole.value?.roleType ?? auth.rxUserRole.value;
-    final isStaffOrAdmin = auth.rxAdminRole.value != null ||
-        role == AppRoles.superAdmin ||
-        role == AppRoles.demoAdmin ||
-        role == 'admin' ||
-        role == 'manager' ||
-        role == 'staff';
-
-    // If logged in as staff/admin and within 24-hour session, allow access immediately
-    if (auth.rxIsLoggedIn.value && isStaffOrAdmin) {
+    if (auth.rxIsLoggedIn.value && auth.isStaffOrAdmin) {
       return null;
     }
 
@@ -73,13 +64,9 @@ class AdminAuthMiddleware extends GetMiddleware {
       if (Get.isRegistered<LocalStorageSource>()) {
         final localStorage = Get.find<LocalStorageSource>();
         final cachedRole = localStorage.getAdminCachedRole();
-        final isCachedStaffOrAdmin = cachedRole == AppRoles.superAdmin ||
-            cachedRole == AppRoles.demoAdmin ||
-            cachedRole == 'admin' ||
-            cachedRole == 'manager' ||
-            cachedRole == 'staff';
+        final isCachedStaffOrAdmin = AppRoles.isAdminRole(cachedRole);
 
-        if (isCachedStaffOrAdmin || isStaffOrAdmin) {
+        if (isCachedStaffOrAdmin || auth.isStaffOrAdmin) {
           auth.rxIsLoggedIn.value = true;
           if (cachedRole != null && auth.rxUserRole.value.isEmpty) {
             auth.rxUserRole.value = cachedRole;
@@ -87,9 +74,13 @@ class AdminAuthMiddleware extends GetMiddleware {
           return null; // Session valid & authorized — allow access
         }
       }
+
+      // If active Firebase user is authenticated but NOT admin/staff, they are a CUSTOMER
+      // Redirect customers attempting to access admin routes directly to Customer Lounge
+      return const RouteSettings(name: AppRoutes.customerDashboard);
     }
 
-    // ── 4. Unauthenticated or Unauthorized — Redirect to Login ─────────────
+    // ── 4. Unauthenticated — Redirect to Admin Login ───────────────────────
     final encodedRoute = Uri.encodeComponent(route ?? '');
     return RouteSettings(
       name: '${AppRoutes.login}?redirect=$encodedRoute',

@@ -4,10 +4,9 @@ extension LocalNotificationQueueExtension on LocalNotificationTriggerService {
   /// 2. Local Queue Runner: Processes notification queue changes.
   /// PRODUCTION SAFETY: Only runs in debug builds. In production, the Supabase Edge Function processes the queue.
   void processQueueSnapshot(QuerySnapshot<Map<String, dynamic>> snap) async {
-    if (!kDebugMode) {
-      AppLogger.info('LocalNotificationTriggerService: Queue runner disabled in Release build — Supabase handles this.', layer: LogLayer.service, className: 'LocalNotificationQueueExtension', methodName: 'processQueueSnapshot');
-      return;
-    }
+    // Disabled in client to protect Firestore daily write quota.
+    // Queue processing is handled exclusively by serverless backend / edge functions.
+    return;
     for (var doc in snap.docs) {
       final data = doc.data();
       final taskId = doc.id;

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class SupabaseStorageSource {
@@ -24,24 +25,38 @@ class SupabaseStorageSource {
       '${cleanUrl}storage/v1/object/$activeBucket/$filePath',
     );
 
-    final response = await http.post(
-      uploadUrl,
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-        'ApiKey': apiKey,
-        'Content-Type': contentType,
-        'x-upsert': 'true',
-      },
-      body: fileBytes,
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      // Returns the public URL for serving
-      return '${cleanUrl}storage/v1/object/public/$activeBucket/$filePath';
-    } else {
-      throw Exception(
-        'Failed to upload file to Supabase Storage: ${response.body}',
+    debugPrint('[SUPABASE_UPLOAD][START] bucket=$activeBucket path=$filePath bytes=${fileBytes.length}');
+    try {
+      final response = await http.post(
+        uploadUrl,
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'ApiKey': apiKey,
+          'Content-Type': contentType,
+          'x-upsert': 'true',
+        },
+        body: fileBytes,
+      ).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {
+          throw Exception('Supabase storage upload timed out after 12 seconds');
+        },
       );
+
+      debugPrint('[SUPABASE_UPLOAD][RESPONSE] status=${response.statusCode}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final publicUrl = '${cleanUrl}storage/v1/object/public/$activeBucket/$filePath';
+        debugPrint('[SUPABASE_UPLOAD][SUCCESS] url=$publicUrl');
+        return publicUrl;
+      } else {
+        debugPrint('[SUPABASE_UPLOAD][FAILED] status=${response.statusCode} body=${response.body}');
+        throw Exception(
+          'Failed to upload file to Supabase Storage: ${response.body}',
+        );
+      }
+    } catch (e) {
+      debugPrint('[SUPABASE_UPLOAD][ERROR] $e');
+      rethrow;
     }
   }
 }

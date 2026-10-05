@@ -192,12 +192,13 @@ class HomeSliverAppBar extends StatelessWidget {
         }),
         const SizedBox(width: 16),
         Obx(() {
-          final isLoggedIn = authCtrl.rxIsLoggedIn.value;
+          final isCustomerLoggedIn = authCtrl.isAuthenticatedCustomer;
+
           if (isDesktop) {
             return _TextHoverButton(
-              label: isLoggedIn ? "CLIENT PORTAL" : "CLIENT LOGIN",
+              label: "CLIENT PORTAL",
               onPressed: () {
-                if (isLoggedIn) {
+                if (isCustomerLoggedIn) {
                   Get.toNamed(AppRoutes.customerDashboard);
                 } else {
                   Get.dialog(
@@ -212,11 +213,12 @@ class HomeSliverAppBar extends StatelessWidget {
           } else {
             return IconButton(
               icon: Icon(
-                isLoggedIn ? Icons.dashboard_outlined : Icons.person_outline,
+                isCustomerLoggedIn ? Icons.dashboard_outlined : Icons.person_outline,
                 color: AppColors.primaryAccent,
               ),
+              tooltip: "Client Portal",
               onPressed: () {
-                if (isLoggedIn) {
+                if (isCustomerLoggedIn) {
                   Get.toNamed(AppRoutes.customerDashboard);
                 } else {
                   Get.dialog(

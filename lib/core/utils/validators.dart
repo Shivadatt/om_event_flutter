@@ -1,3 +1,9 @@
+/// Centralized phone normalization function for OM Events.
+/// Ensures all phone numbers are normalized to 10 digits.
+String normalizeCustomerPhone(String raw) {
+  return AppValidators.cleanPhone(raw);
+}
+
 class AppValidators {
   static String cleanPhone(String phone) {
     // Strip non-digit characters

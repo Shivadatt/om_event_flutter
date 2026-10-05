@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../core/config/app_routes.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../controllers/customer_auth_controller.dart';
 
@@ -25,6 +26,17 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
   bool isLogin = true;
   bool isEmailLoading = false;
   bool isGoogleLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (authController.isAuthenticatedCustomer && widget.onSuccess == null) {
+        Get.offAllNamed(AppRoutes.customerDashboard);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -153,8 +165,12 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                       navigateHome: widget.onSuccess == null,
                     );
                   }
-                  if (success && widget.onSuccess != null) {
-                    widget.onSuccess!();
+                  if (success) {
+                    if (widget.onSuccess != null) {
+                      widget.onSuccess!();
+                    } else {
+                      Get.offAllNamed(AppRoutes.customerDashboard);
+                    }
                   }
                 } finally {
                   if (mounted) {
