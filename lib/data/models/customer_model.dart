@@ -17,6 +17,8 @@ class CustomerModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  final String type;
+
   CustomerModel({
     required this.id,
     required this.name,
@@ -33,6 +35,7 @@ class CustomerModel {
     required this.mapLocation,
     required this.createdAt,
     required this.updatedAt,
+    this.type = 'Individual',
   });
 
   factory CustomerModel.fromJson(Map<String, dynamic> json, String id) {
@@ -48,6 +51,8 @@ class CustomerModel {
 
     final createdRaw = json['created_at'] ?? json['createdAt'];
     final updatedRaw = json['updated_at'] ?? json['updatedAt'];
+
+    final parsedType = (json['type'] ?? json['customer_type'] ?? json['client_type'] ?? 'Individual').toString().trim();
 
     return CustomerModel(
       id: id,
@@ -65,6 +70,7 @@ class CustomerModel {
       mapLocation: (json['map_location'] ?? json['mapLocation'] ?? '').toString().trim(),
       createdAt: DateParser.parse(createdRaw ?? updatedRaw),
       updatedAt: DateParser.parse(updatedRaw ?? createdRaw),
+      type: parsedType.isNotEmpty ? parsedType : 'Individual',
     );
   }
 
@@ -87,6 +93,7 @@ class CustomerModel {
       'map_location': mapLocation,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'type': type,
     };
   }
 }

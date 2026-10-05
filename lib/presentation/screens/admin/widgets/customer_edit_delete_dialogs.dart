@@ -140,6 +140,7 @@ class _CustomerCreateDialogState extends State<CustomerCreateDialog> {
   final cityCtrl = TextEditingController();
   final stateCtrl = TextEditingController();
   final locCtrl = TextEditingController();
+  String selectedType = 'Individual';
 
   bool isSaving = false;
 
@@ -207,6 +208,7 @@ class _CustomerCreateDialogState extends State<CustomerCreateDialog> {
       city: cityCtrl.text.trim(),
       state: stateCtrl.text.trim(),
       mapLocation: locCtrl.text.trim(),
+      type: selectedType,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -266,6 +268,50 @@ class _CustomerCreateDialogState extends State<CustomerCreateDialog> {
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: borderColor, width: 1.2)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primaryAccent, width: 1.5)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeDropdown(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color textColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final Color inputFill = isDark ? const Color(0xFF1A1715) : const Color(0xFFFAF8F5);
+    final Color borderColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('CLIENT TYPE', style: AppTheme.sansBody(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.primaryAccent, letterSpacing: 1.0)),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: inputFill,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor, width: 1.2),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedType,
+                dropdownColor: isDark ? const Color(0xFF1A1715) : const Color(0xFFFAF8F5),
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primaryAccent),
+                items: const [
+                  DropdownMenuItem(value: 'Individual', child: Text('Individual')),
+                  DropdownMenuItem(value: 'Business', child: Text('Business')),
+                  DropdownMenuItem(value: 'Corporate', child: Text('Corporate')),
+                  DropdownMenuItem(value: 'VIP', child: Text('VIP')),
+                ],
+                onChanged: (val) {
+                  if (val != null) setState(() => selectedType = val);
+                },
+                style: AppTheme.sansBody(fontSize: 14, color: textColor),
+              ),
             ),
           ),
         ],
@@ -380,6 +426,7 @@ class _CustomerCreateDialogState extends State<CustomerCreateDialog> {
                         hint: 'e.g., https://maps.google.com/...',
                         prefixIcon: Icon(Icons.pin_drop_outlined, color: AppColors.primaryAccent.withValues(alpha: 0.6), size: 18),
                       ),
+                      _buildTypeDropdown(context),
                     ],
                   ),
                 ),
@@ -442,6 +489,7 @@ class _CustomerEditDialogState extends State<CustomerEditDialog> {
   late final TextEditingController cityCtrl;
   late final TextEditingController stateCtrl;
   late final TextEditingController locCtrl;
+  late String selectedType;
 
   bool isSaving = false;
 
@@ -454,6 +502,7 @@ class _CustomerEditDialogState extends State<CustomerEditDialog> {
     cityCtrl = TextEditingController(text: widget.customer.city);
     stateCtrl = TextEditingController(text: widget.customer.state);
     locCtrl = TextEditingController(text: widget.customer.mapLocation);
+    selectedType = widget.customer.type.isNotEmpty ? widget.customer.type : 'Individual';
   }
 
   @override
@@ -494,6 +543,7 @@ class _CustomerEditDialogState extends State<CustomerEditDialog> {
       dateOfBirth: widget.customer.dateOfBirth,
       profileImageUrl: widget.customer.profileImageUrl,
       mapLocation: locCtrl.text.trim(),
+      type: selectedType,
       createdAt: widget.customer.createdAt,
       updatedAt: DateTime.now(),
     );
@@ -551,6 +601,50 @@ class _CustomerEditDialogState extends State<CustomerEditDialog> {
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: borderColor, width: 1.2)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primaryAccent, width: 1.5)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeDropdown(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color textColor = isDark ? AppColors.darkInk : AppColors.lightInk;
+    final Color inputFill = isDark ? const Color(0xFF1A1715) : const Color(0xFFFAF8F5);
+    final Color borderColor = isDark ? AppColors.darkLine : AppColors.lightLine;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('CLIENT TYPE', style: AppTheme.sansBody(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.primaryAccent, letterSpacing: 1.0)),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: inputFill,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor, width: 1.2),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedType,
+                dropdownColor: isDark ? const Color(0xFF1A1715) : const Color(0xFFFAF8F5),
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primaryAccent),
+                items: const [
+                  DropdownMenuItem(value: 'Individual', child: Text('Individual')),
+                  DropdownMenuItem(value: 'Business', child: Text('Business')),
+                  DropdownMenuItem(value: 'Corporate', child: Text('Corporate')),
+                  DropdownMenuItem(value: 'VIP', child: Text('VIP')),
+                ],
+                onChanged: (val) {
+                  if (val != null) setState(() => selectedType = val);
+                },
+                style: AppTheme.sansBody(fontSize: 14, color: textColor),
+              ),
             ),
           ),
         ],
@@ -656,6 +750,7 @@ class _CustomerEditDialogState extends State<CustomerEditDialog> {
                         hint: 'e.g., https://maps.google.com/...',
                         prefixIcon: Icon(Icons.pin_drop_outlined, color: AppColors.primaryAccent.withValues(alpha: 0.6), size: 18),
                       ),
+                      _buildTypeDropdown(context),
                     ],
                   ),
                 ),

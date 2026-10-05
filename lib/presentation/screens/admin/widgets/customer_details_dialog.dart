@@ -186,6 +186,8 @@ class _CustomerDetailsDialogState extends State<CustomerDetailsDialog> with Sing
           children: [
             _detailRow("Name", widget.customer.name),
             const Divider(height: 1),
+            _detailRow("Client Type", widget.customer.type),
+            const Divider(height: 1),
             _detailRow("Phone Number", widget.customer.phone),
             const Divider(height: 1),
             _detailRow("Email", widget.customer.email),
