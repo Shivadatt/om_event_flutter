@@ -191,26 +191,25 @@ class HomeSliverAppBar extends StatelessWidget {
           );
         }),
         const SizedBox(width: 16),
-        Obx(() {
-          final isCustomerLoggedIn = authCtrl.isAuthenticatedCustomer;
-
-          if (isDesktop) {
-            return _TextHoverButton(
-              label: "CLIENT PORTAL",
-              onPressed: () {
-                if (isCustomerLoggedIn) {
-                  Get.toNamed(AppRoutes.customerDashboard);
-                } else {
-                  Get.dialog(
-                    const Dialog(
-                      backgroundColor: Colors.transparent,
-                      child: CustomerAuthBox(),
-                    ),
-                  );
-                }
-              },
-            );
-          } else {
+        if (isDesktop)
+          _TextHoverButton(
+            label: "CLIENT PORTAL",
+            onPressed: () {
+              if (authCtrl.isAuthenticatedCustomer) {
+                Get.toNamed(AppRoutes.customerDashboard);
+              } else {
+                Get.dialog(
+                  const Dialog(
+                    backgroundColor: Colors.transparent,
+                    child: CustomerAuthBox(),
+                  ),
+                );
+              }
+            },
+          )
+        else
+          Obx(() {
+            final isCustomerLoggedIn = authCtrl.isAuthenticatedCustomer;
             return IconButton(
               icon: Icon(
                 isCustomerLoggedIn ? Icons.dashboard_outlined : Icons.person_outline,
@@ -218,7 +217,7 @@ class HomeSliverAppBar extends StatelessWidget {
               ),
               tooltip: "Client Portal",
               onPressed: () {
-                if (isCustomerLoggedIn) {
+                if (authCtrl.isAuthenticatedCustomer) {
                   Get.toNamed(AppRoutes.customerDashboard);
                 } else {
                   Get.dialog(
@@ -230,8 +229,7 @@ class HomeSliverAppBar extends StatelessWidget {
                 }
               },
             );
-          }
-        }),
+          }),
         const SizedBox(width: 24),
       ],
     );

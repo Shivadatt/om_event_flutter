@@ -26,11 +26,13 @@ class CustomerAuthController extends GetxController {
   StreamSubscription<User?>? _authSubscription;
 
   bool get isAuthenticatedCustomer {
+    final loggedIn = rxIsLoggedIn.value;
+    final profile = rxCustomerProfile.value;
+    if (!loggedIn) return false;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) return false;
     // Admins and staff are strictly forbidden from having customer lounge access
     if (AuthRouteHelper.isCurrentAdminOrStaff()) return false;
-    final profile = rxCustomerProfile.value;
     if (profile == null) return false;
     if (profile.id.startsWith('guest_')) return false;
     return true;
