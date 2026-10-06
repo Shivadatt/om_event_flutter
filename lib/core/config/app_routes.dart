@@ -25,6 +25,7 @@ import '../../presentation/screens/admin/business_details_screen.dart';
 import '../../presentation/bindings/business_details_binding.dart';
 import '../constants/app_routes.dart';
 import '../../presentation/screens/customer/auth/customer_auth_screen.dart';
+import '../../presentation/screens/customer/auth/customer_complete_invite_screen.dart';
 import '../../presentation/screens/customer/dashboard/customer_dashboard_screen.dart';
 import '../../presentation/screens/admin/customer_portal_admin_dashboard.dart';
 import '../../presentation/screens/admin/admin_kpi_dashboard_screen.dart';
@@ -91,6 +92,10 @@ class AppRouter {
     GetPage(
       name: AppRoutes.customerLogin,
       page: () => const CustomerAuthScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.customerCompleteInvite,
+      page: () => const CustomerCompleteInviteScreen(),
     ),
     GetPage(
       name: AppRoutes.customerDashboard,

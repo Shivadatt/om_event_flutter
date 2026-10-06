@@ -22,6 +22,7 @@ class AppRoutes {
   static const String adminProfile = '/admin/profile';
   static const String docs = '/docs';
   static const String customerLogin = '/client-login';
+  static const String customerCompleteInvite = '/customer/complete-invite';
   static const String customerDashboard = '/dashboard';
   static const String customerPortalAdmin = '/admin/customer-portal';
   static const String adminKpis = '/admin/kpis';

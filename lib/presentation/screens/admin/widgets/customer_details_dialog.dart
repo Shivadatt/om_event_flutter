@@ -5,6 +5,7 @@ import '../../../../core/config/app_theme.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../data/models/customer_model.dart';
+import '../../../../core/services/customer_auth_provisioning_service.dart';
 import '../../../controllers/admin_controller.dart';
 
 class CustomerDetailsDialog extends StatefulWidget {
@@ -23,11 +24,91 @@ class CustomerDetailsDialog extends StatefulWidget {
 
 class _CustomerDetailsDialogState extends State<CustomerDetailsDialog> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late bool _isLoginEnabled;
+  bool _isProcessingAuth = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _isLoginEnabled = widget.customer.loginEnabled;
+  }
+
+  Future<void> _sendPortalInvite() async {
+    if (widget.customer.email.isEmpty) {
+      Get.snackbar(
+        "Email Required",
+        "A valid email address is required to send client portal invitations.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade900,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    setState(() => _isProcessingAuth = true);
+    try {
+      final res = await CustomerAuthProvisioningService.sendPortalInvite(
+        phone: widget.customer.phone,
+        email: widget.customer.email,
+        name: widget.customer.name,
+      );
+      if (res.success) {
+        setState(() => _isLoginEnabled = true);
+        Get.snackbar(
+          "Invitation Dispatched",
+          res.message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF132219),
+          colorText: const Color(0xFFD4AF37),
+          duration: const Duration(seconds: 5),
+        );
+      } else {
+        Get.snackbar(
+          "Could Not Send Invitation",
+          res.message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade900,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingAuth = false);
+    }
+  }
+
+  Future<void> _toggleLogin(bool enable) async {
+    setState(() => _isProcessingAuth = true);
+    try {
+      final ok = await CustomerAuthProvisioningService.toggleCustomerLogin(
+        phone: widget.customer.phone,
+        enable: enable,
+      );
+      if (!ok) {
+        Get.snackbar(
+          "Update Failed",
+          "Could not update client login status.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade900,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      setState(() => _isLoginEnabled = enable);
+      await widget.controller.loadCustomers();
+
+      Get.snackbar(
+        "Client Portal Status",
+        enable ? "Client login has been enabled." : "Client login has been disabled.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF132219),
+        colorText: const Color(0xFFD4AF37),
+      );
+    } finally {
+      if (mounted) setState(() => _isProcessingAuth = false);
+    }
   }
 
   @override
@@ -207,6 +288,135 @@ class _CustomerDetailsDialogState extends State<CustomerDetailsDialog> with Sing
               const Divider(height: 1),
               _detailRow("Map Location", widget.customer.mapLocation),
             ],
+            const SizedBox(height: 20),
+            // Client Portal Access Section (Phase 6 & 7)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF132219) : const Color(0xFFF3EFEA),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primaryAccent.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.vpn_key_outlined,
+                            size: 16,
+                            color: AppColors.primaryAccent,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "CLIENT PORTAL LOGIN",
+                            style: AppTheme.sansBody(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryAccent,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _isLoginEnabled
+                              ? Colors.green.withValues(alpha: 0.15)
+                              : Colors.red.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _isLoginEnabled ? Colors.green : Colors.red,
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          _isLoginEnabled ? "Enabled" : "Disabled",
+                          style: AppTheme.sansBody(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: _isLoginEnabled ? Colors.green : Colors.red,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.customer.email.isNotEmpty
+                        ? "Linked Email: ${widget.customer.email}"
+                        : "No email address configured. An email is required for portal login.",
+                    style: AppTheme.sansBody(
+                      fontSize: 11,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (_isProcessingAuth)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryAccent),
+                        ),
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        if (_isLoginEnabled && widget.customer.email.isNotEmpty)
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.send_rounded, size: 14),
+                            label: const Text("Send Portal Invite"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryAccent,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              textStyle: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                            onPressed: _sendPortalInvite,
+                          ),
+                        if (_isLoginEnabled)
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.block_rounded, size: 14, color: AppColors.error),
+                            label: const Text("Disable Client Login", style: TextStyle(color: AppColors.error)),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.error, width: 0.8),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () => _toggleLogin(false),
+                          )
+                        else if (widget.customer.email.isNotEmpty)
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.check_circle_outline, size: 14),
+                            label: const Text("Enable Client Login"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryAccent,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              textStyle: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                            onPressed: () => _toggleLogin(true),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

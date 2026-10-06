@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../../core/config/app_routes.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../controllers/customer_auth_controller.dart';
@@ -44,6 +45,48 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
     passCtrl.dispose();
     nameCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = emailCtrl.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      Get.snackbar(
+        "Email Required",
+        "Please enter your email address to receive a password reset link.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.amber.shade900,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      Get.snackbar(
+        "Password Reset Sent",
+        "Instructions to reset your password have been sent to $email.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF132219),
+        colorText: const Color(0xFFD4AF37),
+        duration: const Duration(seconds: 5),
+      );
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar(
+        "Reset Request Note",
+        e.message ?? "Could not send password reset email.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade900,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        "Reset Error",
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade900,
+        colorText: Colors.white,
+      );
+    }
   }
 
   Widget _buildGoogleIcon() {
@@ -144,7 +187,30 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
               _buildTextField(emailCtrl, "Email Address", Icons.email_outlined),
               const SizedBox(height: 16),
               _buildTextField(passCtrl, "Password", Icons.lock_outline, obscureText: true),
-              const SizedBox(height: 28),
+              if (isLogin) ...[
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: (isEmailLoading || isGoogleLoading || authController.isLoading.value)
+                        ? null
+                        : _handleForgotPassword,
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFC9A77E),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    ),
+                    child: Text(
+                      "Forgot Password?",
+                      style: AppTheme.sansBody(
+                        fontSize: 12,
+                        color: const Color(0xFFC9A77E),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
               _buildSubmitButton(isLogin ? "Login" : "Register", () async {
                 setState(() {
                   isEmailLoading = true;

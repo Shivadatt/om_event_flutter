@@ -10,43 +10,55 @@ const db = admin.firestore();
 
 /**
  * Helper to extract and verify the Firebase ID Token from Authorization header.
+ * Strictly verifies admin/staff role using Firestore data, never trusting client flags.
  */
 async function authenticateAdminCaller(req) {
-  console.log("[CREATE_CUSTOMER_AUTH][AUTH] Extracting and verifying Authorization header");
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw new Error("Missing or invalid Authorization header");
+    console.warn("[CREATE_CUSTOMER_LOGIN][ADMIN_VERIFY] Missing or invalid Authorization header");
+    const err = new Error("Missing or invalid Authorization header");
+    err.status = 401;
+    throw err;
   }
   const idToken = authHeader.split("Bearer ")[1].trim();
   const decodedToken = await admin.auth().verifyIdToken(idToken);
-  console.log("[CREATE_CUSTOMER_AUTH][AUTH] Token verified successfully for UID:", decodedToken.uid);
+  console.log(`[CREATE_CUSTOMER_LOGIN][ADMIN_VERIFY] Token verified for UID: ${decodedToken.uid}`);
 
-  // Check admin authorization
-  console.log("[CREATE_CUSTOMER_AUTH][ADMIN_CHECK] Checking admin authorization for UID:", decodedToken.uid);
   let isAuthorized = false;
 
+  // Check admin collection
   const adminDoc = await db.collection("admin").doc(decodedToken.uid).get();
   if (adminDoc.exists) {
     const data = adminDoc.data();
     const role = String(data?.roleType || data?.role || "").toLowerCase();
-    console.log("[CREATE_CUSTOMER_AUTH][ADMIN_CHECK] Admin record found with role:", role);
     if (["admin", "super_admin", "staff", "demo_admin"].includes(role)) {
       isAuthorized = true;
     }
   }
 
-  // Fallback bootstrap admin email
+  // Check users collection fallback
+  if (!isAuthorized) {
+    const userDoc = await db.collection("users").doc(decodedToken.uid).get();
+    if (userDoc.exists) {
+      const data = userDoc.data();
+      const role = String(data?.role || "").toLowerCase();
+      if (["admin", "super_admin", "staff", "demo_admin"].includes(role)) {
+        isAuthorized = true;
+      }
+    }
+  }
+
+  // Fallback bootstrap admin emails
   const callerEmail = String(decodedToken.email || "").toLowerCase().trim();
   if (
     ["admin@omevents.in", "demo@omevents.in", "omeventsanddecorators@gmail.com"].includes(callerEmail)
   ) {
-    console.log("[CREATE_CUSTOMER_AUTH][ADMIN_CHECK] Authorized via bootstrap admin email:", callerEmail);
     isAuthorized = true;
   }
 
   if (!isAuthorized) {
-    console.warn("[CREATE_CUSTOMER_AUTH][ADMIN_CHECK] Caller is not authorized as admin:", decodedToken.uid);
-    const err = new Error("Forbidden: Admin or Super Admin privileges required");
+    console.warn(`[CREATE_CUSTOMER_LOGIN][ADMIN_VERIFY] Forbidden: UID ${decodedToken.uid} lacks admin privileges`);
+    const err = new Error("Forbidden: Admin or Staff privileges required");
     err.status = 403;
     throw err;
   }
@@ -55,45 +67,43 @@ async function authenticateAdminCaller(req) {
 }
 
 /**
- * Core customer login creation handler.
+ * Normalizes phone number to canonical 10-digit format.
  */
-async function handleCustomerLoginCreation(req, res) {
-  console.log("[CREATE_CUSTOMER_AUTH][START] Request received with method:", req.method);
+function normalizePhone(rawPhone) {
+  const digits = String(rawPhone || "").replace(/\D/g, "");
+  return digits.length >= 10 ? digits.substring(digits.length - 10) : digits;
+}
 
+/**
+ * Core handler: createCustomerLogin
+ * Provisions Firebase Authentication for a customer without passwords,
+ * links to canonical customers/{phone}, and generates secure password setup link.
+ */
+async function handleCreateCustomerLogin(req, res) {
   if (req.method === "OPTIONS") {
     return res.status(204).send("");
   }
-
   if (req.method !== "POST") {
-    console.warn("[CREATE_CUSTOMER_AUTH][ERROR] Method not allowed:", req.method);
     return res.status(405).json({ status: "error", error: "Method not allowed" });
   }
 
-  // 1. Authenticate caller
+  console.log("[CREATE_CUSTOMER_LOGIN][REQUEST] Incoming customer login provisioning request");
+
+  // 1. Authenticate & verify admin caller
   let caller;
   try {
     caller = await authenticateAdminCaller(req);
   } catch (err) {
     const status = err.status || 401;
-    console.error("[CREATE_CUSTOMER_AUTH][AUTH] Authentication/Authorization failed:", err.message);
     return res.status(status).json({ status: "error", error: err.message });
   }
 
-  // 2. Parse & Validate input payload
-  console.log("[CREATE_CUSTOMER_AUTH][VALIDATION] Parsing input payload");
+  // 2. Parse & validate input
   const body = req.body || {};
-  const rawPhone = String(body.phone || "").trim();
-  const rawEmail = String(body.email || "").trim().toLowerCase();
-  const tempPassword = String(body.temporaryPassword || "");
-  const fullName = String(body.fullName || "Valued Client").trim();
-  const isExistingCustomer = Boolean(body.isExistingCustomer);
-
-  // Normalize phone to exactly 10 digits
-  const phoneDigits = rawPhone.replace(/\D/g, "");
-  const normalizedPhone =
-    phoneDigits.length >= 10 ? phoneDigits.substring(phoneDigits.length - 10) : phoneDigits;
-
-  console.log(`[CREATE_CUSTOMER_AUTH][VALIDATION] Validating customer: phone=${normalizedPhone}, email=${rawEmail}, passwordProvided=${tempPassword.length >= 8}`);
+  const rawPhone = body.customerPhone || body.phone || "";
+  const rawEmail = String(body.customerEmail || body.email || "").trim().toLowerCase();
+  const fullName = String(body.customerName || body.fullName || body.name || "Valued Client").trim();
+  const normalizedPhone = normalizePhone(rawPhone);
 
   if (normalizedPhone.length !== 10) {
     return res.status(400).json({ status: "error", error: "Please enter a valid 10-digit phone number." });
@@ -104,35 +114,45 @@ async function handleCustomerLoginCreation(req, res) {
     return res.status(400).json({ status: "error", error: "A valid email address is required for client login." });
   }
 
-  if (!tempPassword || tempPassword.length < 8) {
-    return res.status(400).json({ status: "error", error: "Temporary password must be at least 8 characters long." });
-  }
+  console.log(`[CREATE_CUSTOMER_LOGIN][CUSTOMER_LOOKUP] Checking canonical record customers/${normalizedPhone}`);
 
-  // 3. Duplicate checks in Firestore
+  // 3. Find canonical customer record: customers/{normalizedPhone}
   const customerDocRef = db.collection("customers").doc(normalizedPhone);
   const customerDocSnap = await customerDocRef.get();
 
-  if (!isExistingCustomer && customerDocSnap.exists) {
-    const existingData = customerDocSnap.data();
-    if (existingData?.auth_uid && existingData?.login_enabled) {
-      console.warn("[CREATE_CUSTOMER_AUTH][VALIDATION] Customer already exists with active login:", normalizedPhone);
-      return res.status(409).json({
-        status: "error",
-        error: "Customer with this phone number already exists with an active login.",
-      });
-    }
+  if (!customerDocSnap.exists) {
+    console.warn(`[CREATE_CUSTOMER_LOGIN][CUSTOMER_LOOKUP] Customer not found: ${normalizedPhone}`);
+    return res.status(404).json({
+      status: "error",
+      error: "Customer record not found. Please create the customer in directory first.",
+    });
   }
 
-  // Duplicate email check in customers collection
-  const emailSnap = await db
-    .collection("customers")
-    .where("email", "==", rawEmail)
-    .limit(5)
-    .get();
+  const customerData = customerDocSnap.data() || {};
 
+  // Check if auth_uid already exists and login is active
+  if (customerData.auth_uid && customerData.login_enabled === true) {
+    console.log(`[CREATE_CUSTOMER_LOGIN][CUSTOMER_LOOKUP] Login already enabled for customers/${normalizedPhone} (UID: ${customerData.auth_uid})`);
+    let existingSetupLink = "";
+    try {
+      existingSetupLink = await admin.auth().generatePasswordResetLink(rawEmail);
+    } catch (_) {}
+
+    return res.status(200).json({
+      status: "already_enabled",
+      auth_uid: customerData.auth_uid,
+      login_enabled: true,
+      setup_link: existingSetupLink,
+      message: "Client login is already enabled for this customer.",
+    });
+  }
+
+  // 4. Duplicate email check in customers collection
+  console.log(`[CREATE_CUSTOMER_LOGIN][EMAIL_CHECK] Checking for email collisions: ${rawEmail}`);
+  const emailSnap = await db.collection("customers").where("email", "==", rawEmail).limit(5).get();
   for (const doc of emailSnap.docs) {
     if (doc.id !== normalizedPhone) {
-      console.warn("[CREATE_CUSTOMER_AUTH][VALIDATION] Email already linked to another customer record:", rawEmail);
+      console.warn(`[CREATE_CUSTOMER_LOGIN][EMAIL_CHECK] Collision: Email linked to doc ${doc.id}`);
       return res.status(409).json({
         status: "error",
         error: "This email is already linked to another customer record.",
@@ -140,72 +160,53 @@ async function handleCustomerLoginCreation(req, res) {
     }
   }
 
-  // 4. Firebase Admin Auth creation
-  console.log("[CREATE_CUSTOMER_AUTH][FIREBASE_ADMIN] Initializing Auth user creation via Firebase Admin SDK");
+  // 5. Firebase Authentication user lookup or creation
+  console.log(`[CREATE_CUSTOMER_LOGIN][AUTH_CREATE] Resolving Firebase Auth user for: ${rawEmail}`);
   let authUid = "";
-  let isNewlyCreatedAuthUser = false;
+  let isNewlyCreated = false;
 
   try {
-    let existingAuthUser = null;
+    let existingUser = null;
     try {
-      console.log("[CREATE_CUSTOMER_AUTH][AUTH_LOOKUP] Checking if Firebase Auth user already exists for:", rawEmail);
-      existingAuthUser = await admin.auth().getUserByEmail(rawEmail);
-      console.log("[CREATE_CUSTOMER_AUTH][AUTH_LOOKUP] Existing Firebase Auth user found with UID:", existingAuthUser.uid);
+      existingUser = await admin.auth().getUserByEmail(rawEmail);
     } catch (e) {
-      if (e.code !== "auth/user-not-found") {
-        console.error("[CREATE_CUSTOMER_AUTH][AUTH_LOOKUP] Error during user lookup:", e);
-        throw e;
-      }
-      console.log("[CREATE_CUSTOMER_AUTH][AUTH_LOOKUP] No existing Firebase Auth user found. Creating new user.");
+      if (e.code !== "auth/user-not-found") throw e;
     }
 
-    if (existingAuthUser) {
-      if (customerDocSnap.exists) {
-        const custData = customerDocSnap.data();
-        if (custData?.auth_uid && custData.auth_uid !== existingAuthUser.uid) {
-          console.warn("[CREATE_CUSTOMER_AUTH][AUTH_CREATE] Conflict: Email belongs to different Auth user not linked to this client");
-          return res.status(409).json({
-            status: "error",
-            error: "This email belongs to another Firebase Auth user not linked to this client.",
-          });
-        }
+    if (existingUser) {
+      // If customer already had a different auth_uid, reject conflict
+      if (customerData.auth_uid && customerData.auth_uid !== existingUser.uid) {
+        console.warn(`[CREATE_CUSTOMER_LOGIN][AUTH_CREATE] Conflict: Email belongs to Auth UID ${existingUser.uid} but customer has ${customerData.auth_uid}`);
+        return res.status(409).json({
+          status: "error",
+          error: "This email belongs to another Firebase Auth user not linked to this client.",
+        });
       }
-      console.log("[CREATE_CUSTOMER_AUTH][AUTH_CREATE] Updating temporary password for existing Auth UID:", existingAuthUser.uid);
-      await admin.auth().updateUser(existingAuthUser.uid, {
-        password: tempPassword,
-        displayName: fullName,
-      });
-      authUid = existingAuthUser.uid;
+      authUid = existingUser.uid;
+      console.log(`[CREATE_CUSTOMER_LOGIN][AUTH_CREATE] Linked existing Firebase Auth user: ${authUid}`);
     } else {
-      console.log("[CREATE_CUSTOMER_AUTH][AUTH_CREATE] Calling admin.auth().createUser for:", rawEmail);
-      const newAuthUser = await admin.auth().createUser({
+      // Create user without password - customer will set password via action link
+      const newUser = await admin.auth().createUser({
         email: rawEmail,
-        password: tempPassword,
         displayName: fullName,
         emailVerified: false,
       });
-      authUid = newAuthUser.uid;
-      isNewlyCreatedAuthUser = true;
-      console.log("[CREATE_CUSTOMER_AUTH][AUTH_CREATE] New Firebase Auth user created successfully with UID:", authUid);
+      authUid = newUser.uid;
+      isNewlyCreated = true;
+      console.log(`[CREATE_CUSTOMER_LOGIN][AUTH_CREATE] Created new Firebase Auth user with UID: ${authUid}`);
     }
 
-    // 5. Firestore Linking (Canonical customers/{phone} and customer_profiles/{authUid})
-    console.log("[CREATE_CUSTOMER_AUTH][FIRESTORE] Linking canonical customers/" + normalizedPhone + " and customer_profiles/" + authUid);
+    // 6. Update canonical Firestore document: customers/{normalizedPhone}
+    console.log(`[CREATE_CUSTOMER_LOGIN][FIRESTORE_LINK] Updating canonical customers/${normalizedPhone} with auth_uid=${authUid}`);
     const nowIso = new Date().toISOString();
     const batch = db.batch();
 
     batch.set(
       customerDocRef,
       {
-        id: normalizedPhone,
-        phone: normalizedPhone,
-        email: rawEmail,
-        name: fullName,
-        full_name: fullName,
         auth_uid: authUid,
         login_enabled: true,
         login_method: "email_password",
-        must_change_password: true,
         login_created_at: nowIso,
         login_enabled_at: nowIso,
         updated_at: nowIso,
@@ -213,6 +214,7 @@ async function handleCustomerLoginCreation(req, res) {
       { merge: true }
     );
 
+    // Sync auxiliary customer_profiles/{authUid}
     const profileRef = db.collection("customer_profiles").doc(authUid);
     batch.set(
       profileRef,
@@ -229,27 +231,36 @@ async function handleCustomerLoginCreation(req, res) {
     );
 
     await batch.commit();
-    console.log("[CREATE_CUSTOMER_AUTH][FIRESTORE] Firestore batch committed successfully");
+    console.log(`[CREATE_CUSTOMER_LOGIN][FIRESTORE_LINK] Canonical document updated successfully`);
 
-    console.log("[CREATE_CUSTOMER_AUTH][SUCCESS] Customer login provisioning completed successfully for UID:", authUid);
+    // 7. Generate Password Setup Link
+    let setupLink = "";
+    try {
+      setupLink = await admin.auth().generatePasswordResetLink(rawEmail);
+      console.log("[CREATE_CUSTOMER_LOGIN][SUCCESS] Password setup link generated");
+    } catch (linkErr) {
+      console.warn("[CREATE_CUSTOMER_LOGIN][SUCCESS] Could not generate reset link directly:", linkErr.message);
+    }
+
+    console.log(`[CREATE_CUSTOMER_LOGIN][SUCCESS] Customer login successfully provisioned: phone=${normalizedPhone}, auth_uid=${authUid}`);
     return res.status(200).json({
       status: "success",
       auth_uid: authUid,
+      login_enabled: true,
+      setup_link: setupLink,
       message: "Customer login provisioned successfully.",
     });
   } catch (error) {
-    console.error("[CREATE_CUSTOMER_AUTH][ERROR] Failure during customer provisioning:", error);
-    // Compensation rollback: delete newly created Auth user if Firestore commit failed
-    if (isNewlyCreatedAuthUser && authUid) {
+    console.error("[CREATE_CUSTOMER_LOGIN][ERROR] Failure during customer provisioning:", error);
+    // Compensation rollback: delete newly created user if Firestore commit failed
+    if (isNewlyCreated && authUid) {
       try {
-        console.warn("[CREATE_CUSTOMER_AUTH][ERROR] Rolling back orphaned Auth user:", authUid);
+        console.warn(`[CREATE_CUSTOMER_LOGIN][ERROR] Rolling back orphaned Auth user: ${authUid}`);
         await admin.auth().deleteUser(authUid);
-        console.warn("[CREATE_CUSTOMER_AUTH][ERROR] Rollback compensation: deleted orphaned Auth user", authUid);
       } catch (delErr) {
-        console.error("[CREATE_CUSTOMER_AUTH][ERROR] Failed rollback delete for", authUid, delErr);
+        console.error(`[CREATE_CUSTOMER_LOGIN][ERROR] Failed rollback for ${authUid}:`, delErr);
       }
     }
-
     const errorMsg = error instanceof Error ? error.message : String(error);
     return res.status(500).json({
       status: "error",
@@ -259,19 +270,93 @@ async function handleCustomerLoginCreation(req, res) {
 }
 
 /**
- * HTTPS endpoint: createCustomerLogin
+ * Core handler: sendCustomerPasswordSetupLink
+ * Verifies admin privileges, validates customer record, and generates/sends password reset link.
+ */
+async function handleSendPasswordSetupLink(req, res) {
+  if (req.method === "OPTIONS") {
+    return res.status(204).send("");
+  }
+  if (req.method !== "POST") {
+    return res.status(405).json({ status: "error", error: "Method not allowed" });
+  }
+
+  console.log("[SEND_PASSWORD_LINK][REQUEST] Request to generate password setup link");
+
+  // 1. Authenticate caller
+  try {
+    await authenticateAdminCaller(req);
+  } catch (err) {
+    const status = err.status || 401;
+    return res.status(status).json({ status: "error", error: err.message });
+  }
+
+  // 2. Validate input
+  const body = req.body || {};
+  const rawPhone = body.customerPhone || body.phone || "";
+  const normalizedPhone = normalizePhone(rawPhone);
+
+  if (normalizedPhone.length !== 10) {
+    return res.status(400).json({ status: "error", error: "Please enter a valid 10-digit phone number." });
+  }
+
+  // 3. Find customer
+  const customerDocSnap = await db.collection("customers").doc(normalizedPhone).get();
+  if (!customerDocSnap.exists) {
+    return res.status(404).json({ status: "error", error: "Customer profile was not found." });
+  }
+
+  const customerData = customerDocSnap.data() || {};
+  const email = String(customerData.email || body.email || "").trim().toLowerCase();
+
+  if (!email) {
+    return res.status(400).json({ status: "error", error: "Customer does not have an email address configured." });
+  }
+
+  if (!customerData.auth_uid) {
+    return res.status(400).json({ status: "error", error: "Customer login has not been provisioned yet." });
+  }
+
+  if (customerData.login_enabled !== true) {
+    return res.status(400).json({ status: "error", error: "Client login is currently disabled for this account." });
+  }
+
+  try {
+    const setupLink = await admin.auth().generatePasswordResetLink(email);
+    console.log(`[SEND_PASSWORD_LINK][SUCCESS] Password reset link generated for ${email}`);
+
+    return res.status(200).json({
+      status: "success",
+      email: email,
+      setup_link: setupLink,
+      message: `Password setup link generated for ${email}.`,
+    });
+  } catch (err) {
+    console.error(`[SEND_PASSWORD_LINK][ERROR] Could not generate link for ${email}:`, err);
+    return res.status(500).json({
+      status: "error",
+      error: `Password setup email could not be sent: ${err.message}`,
+    });
+  }
+}
+
+/**
+ * HTTPS Endpoints (Region: asia-south1)
  */
 exports.createCustomerLogin = functions
   .region("asia-south1")
   .https.onRequest((req, res) => {
-    return cors(req, res, () => handleCustomerLoginCreation(req, res));
+    return cors(req, res, () => handleCreateCustomerLogin(req, res));
   });
 
-/**
- * Alias HTTPS endpoint for backwards compatibility: adminCreateCustomerLogin
- */
 exports.adminCreateCustomerLogin = functions
   .region("asia-south1")
   .https.onRequest((req, res) => {
-    return cors(req, res, () => handleCustomerLoginCreation(req, res));
+    return cors(req, res, () => handleCreateCustomerLogin(req, res));
+  });
+
+exports.sendCustomerPasswordSetupLink = functions
+  .region("asia-south1")
+  .https.onRequest((req, res) => {
+    return cors(req, res, () => handleSendPasswordSetupLink(req, res));
   });

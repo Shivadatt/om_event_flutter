@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/customer_auth_repository.dart';
 import '../../domain/entities/customer_profile.dart';
 import '../../core/config/app_routes.dart';
@@ -161,6 +162,30 @@ class CustomerAuthController extends GetxController {
   Future<bool> registerWithEmail(String fullName, String email, String password, {bool navigateHome = true}) async {
     try {
       isLoading.value = true;
+      final cleanEmail = email.trim().toLowerCase();
+
+      // Duplicate prevention (Phase 8): Check if customer was already provisioned by Admin
+      final existingCustSnap = await FirebaseFirestore.instance
+          .collection('customers')
+          .where('email', isEqualTo: cleanEmail)
+          .limit(1)
+          .get();
+
+      if (existingCustSnap.docs.isNotEmpty) {
+        final custData = existingCustSnap.docs.first.data();
+        if (custData['login_enabled'] == true) {
+          Get.snackbar(
+            "Account Already Exists",
+            "Client Portal access is already enabled for this email. Please use Login, or use Forgot Password to set your password.",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: const Color(0xFF231B1B),
+            colorText: const Color(0xFFFFAA99),
+            duration: const Duration(seconds: 6),
+          );
+          return false;
+        }
+      }
+
       await _authRepository.registerWithEmail(email, password, fullName);
 
       if (AuthRouteHelper.isCurrentAdminOrStaff()) {
