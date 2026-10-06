@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../config/feature_flags.dart';
 import '../../core/constants/app_collections.dart';
 
 class NotificationGatewayService extends GetxService {
@@ -40,6 +41,11 @@ class NotificationGatewayService extends GetxService {
     }, SetOptions(merge: true));
   }
 
+  // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+  // REASON: Not required for current business flow.
+  // DO NOT DELETE - Keep for future reactivation.
+  static const bool notificationsEnabled = FeatureFlags.notifications;
+
   /// Write task to notification outbox queue collection to trigger Cloud Function delivery
   Future<void> queueNotification({
     required String recipient,
@@ -50,6 +56,11 @@ class NotificationGatewayService extends GetxService {
     required String channel,
     Map<String, dynamic>? metadata,
   }) async {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!notificationsEnabled) return;
+
     try {
       await _firestore.collection(AppCollections.notificationQueue).add({
         'recipient': recipient,

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/config/feature_flags.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../../domain/entities/quotation.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
@@ -482,15 +483,28 @@ class _QuotesViewState extends State<QuotesView> {
       ),
       onSelected: (val) {
         if (val == 'compare' && activeQuote.versions.isNotEmpty) {
-          VersionComparisonSheet.show(context, activeQuote);
+          // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+          // REASON: Not required for current business flow.
+          // DO NOT DELETE - Keep for future reactivation.
+          if (FeatureFlags.quotationNegotiation) {
+            VersionComparisonSheet.show(context, activeQuote);
+          }
         } else if (val == 'revision') {
-          widget.onRequestRevision(activeQuote.id);
+          // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+          // REASON: Not required for current business flow.
+          // DO NOT DELETE - Keep for future reactivation.
+          if (FeatureFlags.quotationRevisions) {
+            widget.onRequestRevision(activeQuote.id);
+          }
         } else if (val == 'share') {
           _handleShare(activeQuote);
         }
       },
       itemBuilder: (context) => [
-        if (activeQuote.versions.isNotEmpty)
+        // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+        // REASON: Not required for current business flow.
+        // DO NOT DELETE - Keep for future reactivation.
+        if (FeatureFlags.quotationNegotiation && activeQuote.versions.isNotEmpty)
           const PopupMenuItem(
             value: 'compare',
             child: Row(
@@ -501,16 +515,20 @@ class _QuotesViewState extends State<QuotesView> {
               ],
             ),
           ),
-        const PopupMenuItem(
-          value: 'revision',
-          child: Row(
-            children: [
-              Icon(Icons.edit_note_rounded, color: Color(0xFFD4AF37), size: 16),
-              SizedBox(width: 10),
-              Text("Request Modification", style: TextStyle(color: Colors.white, fontSize: 12)),
-            ],
+        // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+        // REASON: Not required for current business flow.
+        // DO NOT DELETE - Keep for future reactivation.
+        if (FeatureFlags.quotationRevisions)
+          const PopupMenuItem(
+            value: 'revision',
+            child: Row(
+              children: [
+                Icon(Icons.edit_note_rounded, color: Color(0xFFD4AF37), size: 16),
+                SizedBox(width: 10),
+                Text("Request Modification", style: TextStyle(color: Colors.white, fontSize: 12)),
+              ],
+            ),
           ),
-        ),
         const PopupMenuItem(
           value: 'share',
           child: Row(

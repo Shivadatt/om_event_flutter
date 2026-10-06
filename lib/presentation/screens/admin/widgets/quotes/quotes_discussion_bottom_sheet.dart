@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../../core/config/feature_flags.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../domain/entities/quotation.dart';
 import '../../../../../domain/entities/quotation_message.dart';
 import '../../../../controllers/quotation_collaboration_controller.dart';
+import '../../../customer/dashboard/views/quotes/chat_contact_cta_widget.dart';
 
 class QuotesDiscussionBottomSheet extends StatelessWidget {
   final Quotation quote;
@@ -21,6 +23,121 @@ class QuotesDiscussionBottomSheet extends StatelessWidget {
     final Color textColor = isDark ? AppColors.darkInk : AppColors.lightInk;
     final Color subtitleColor = isDark ? AppColors.darkMuted : AppColors.lightMuted;
     final Color paperColor = isDark ? AppColors.darkPaper : AppColors.lightPaper;
+
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.realtimeQuotationChat) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: BoxDecoration(
+          color: paperColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(
+            top: BorderSide(color: isDark ? AppColors.darkLine : AppColors.lightLine, width: 1.5),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "PROPOSAL COORDINATION",
+                      style: AppTheme.sansBody(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryAccent,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Proposal Discussion",
+                      style: AppTheme.serifHeader(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: Icon(Icons.close_rounded, color: subtitleColor),
+                  onPressed: () => Get.back(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.amber, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      "Real-time proposal chat is temporarily disabled for the current business flow. Please contact customer directly via Call or WhatsApp.",
+                      style: AppTheme.sansBody(fontSize: 13, color: subtitleColor),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (quote.customerPhone.isNotEmpty)
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.chat, size: 18),
+                      label: const Text("WhatsApp Client"),
+                      onPressed: () {
+                        final phone = quote.customerPhone.replaceAll(RegExp(r'\D'), '');
+                        final formatted = phone.startsWith('91') ? phone : '91$phone';
+                        launchUrl(Uri.parse('https://wa.me/$formatted'), mode: LaunchMode.externalApplication);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: textColor,
+                        side: BorderSide(color: isDark ? AppColors.darkLine : AppColors.lightLine),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.phone, size: 18),
+                      label: const Text("Call Client"),
+                      onPressed: () {
+                        launchUrl(Uri.parse('tel:${quote.customerPhone}'), mode: LaunchMode.externalApplication);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      );
+    }
 
     final chatController = Get.put(
       QuotationCollaborationController(
@@ -127,6 +244,23 @@ class QuotesDiscussionBottomSheet extends StatelessWidget {
                       );
                     }),
                   ),
+                  // Contact Options CTA (Shown when 2 or more actual chat messages have been exchanged)
+                  Obx(() {
+                    final actualMessageCount = chatController.combinedMessages.where((m) {
+                      final t = m.type.toLowerCase();
+                      final role = m.senderRole.toLowerCase();
+                      return role != 'system' &&
+                          t != 'system' &&
+                          t != 'pricechange' &&
+                          t != 'revision';
+                    }).length;
+
+                    if (actualMessageCount >= 2) {
+                      return const ChatContactCtaWidget();
+                    }
+                    return const SizedBox.shrink();
+                  }),
+
                   Obx(() {
                     if (chatController.isUploading.value) {
                       return Container(

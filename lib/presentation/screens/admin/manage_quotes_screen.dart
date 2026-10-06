@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/formatters.dart';
@@ -254,44 +255,71 @@ class ManageQuotesScreen extends GetView<AdminController> {
                                       } else if (value == 'booking') {
                                         controller.convertQuotationToBooking(quote.id);
                                       } else if (value == 'timeline') {
-                                        _showTimelineBottomSheet(context, quote);
+                                        // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                                        // REASON: Not required for current business flow.
+                                        // DO NOT DELETE - Keep for future reactivation.
+                                        if (FeatureFlags.quotationNegotiation) {
+                                          _showTimelineBottomSheet(context, quote);
+                                        }
                                       } else if (value == 'discussion') {
-                                        _showDiscussionBottomSheet(context, quote);
+                                        // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                                        // REASON: Not required for current business flow.
+                                        // DO NOT DELETE - Keep for future reactivation.
+                                        if (FeatureFlags.realtimeQuotationChat) {
+                                          _showDiscussionBottomSheet(context, quote);
+                                        }
                                       } else if (value == 'compare') {
-                                        _showComparisonBottomSheet(context, quote);
+                                        // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                                        // REASON: Not required for current business flow.
+                                        // DO NOT DELETE - Keep for future reactivation.
+                                        if (FeatureFlags.quotationNegotiation) {
+                                          _showComparisonBottomSheet(context, quote);
+                                        }
                                       }
                                     },
                                     itemBuilder: (context) => [
-                                      PopupMenuItem(
-                                        value: 'timeline',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.timeline_rounded, size: 18, color: textColor),
-                                            const SizedBox(width: 8),
-                                            const Text("Negotiation Timeline"),
-                                          ],
+                                      // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                                      // REASON: Not required for current business flow.
+                                      // DO NOT DELETE - Keep for future reactivation.
+                                      if (FeatureFlags.quotationNegotiation)
+                                        PopupMenuItem(
+                                          value: 'timeline',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.timeline_rounded, size: 18, color: textColor),
+                                              const SizedBox(width: 8),
+                                              const Text("Negotiation Timeline"),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'discussion',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.chat_bubble_outline_rounded, size: 18, color: textColor),
-                                            const SizedBox(width: 8),
-                                            const Text("Proposal Discussion"),
-                                          ],
+                                      // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                                      // REASON: Not required for current business flow.
+                                      // DO NOT DELETE - Keep for future reactivation.
+                                      if (FeatureFlags.realtimeQuotationChat)
+                                        PopupMenuItem(
+                                          value: 'discussion',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.chat_bubble_outline_rounded, size: 18, color: textColor),
+                                              const SizedBox(width: 8),
+                                              const Text("Proposal Discussion"),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'compare',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.compare_arrows_rounded, size: 18, color: textColor),
-                                            const SizedBox(width: 8),
-                                            const Text("Compare Revisions"),
-                                          ],
+                                      // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                                      // REASON: Not required for current business flow.
+                                      // DO NOT DELETE - Keep for future reactivation.
+                                      if (FeatureFlags.quotationNegotiation)
+                                        PopupMenuItem(
+                                          value: 'compare',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.compare_arrows_rounded, size: 18, color: textColor),
+                                              const SizedBox(width: 8),
+                                              const Text("Compare Revisions"),
+                                            ],
+                                          ),
                                         ),
-                                      ),
                                       if (quote.status != QuotationStatus.archived && quote.status != QuotationStatus.completed)
                                         PopupMenuItem(
                                           value: 'archive',
@@ -344,6 +372,13 @@ class ManageQuotesScreen extends GetView<AdminController> {
   }
 
   void _showTimelineBottomSheet(BuildContext context, Quotation quote) {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.quotationNegotiation) {
+      Get.snackbar("Notice", "Negotiation timeline is temporarily disabled.");
+      return;
+    }
     Get.bottomSheet(
       QuotesTimelineBottomSheet(quote: quote),
       isScrollControlled: true,
@@ -351,6 +386,13 @@ class ManageQuotesScreen extends GetView<AdminController> {
   }
 
   void _showDiscussionBottomSheet(BuildContext context, Quotation quote) {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.realtimeQuotationChat) {
+      Get.snackbar("Notice", "Proposal chat is temporarily disabled.");
+      return;
+    }
     Get.bottomSheet(
       QuotesDiscussionBottomSheet(quote: quote),
       isScrollControlled: true,
@@ -358,6 +400,13 @@ class ManageQuotesScreen extends GetView<AdminController> {
   }
 
   void _showComparisonBottomSheet(BuildContext context, Quotation quote) {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.quotationNegotiation) {
+      Get.snackbar("Notice", "Version comparison is temporarily disabled.");
+      return;
+    }
     VersionComparisonSheet.show(context, quote);
   }
 }

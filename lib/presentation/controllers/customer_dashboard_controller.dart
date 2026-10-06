@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../core/config/feature_flags.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/repositories/customer_portal_repository.dart';
@@ -160,7 +161,12 @@ class CustomerDashboardController extends GetxController {
 
     rxLeads.bindStream(_portalRepo.streamCustomerLeads(customerId).handleError(_logErr).map((d) { logFetch('leads', d); return d; }));
     rxQuotations.bindStream(_quotationRepo.streamCustomerQuotations(customerId).handleError(_logErr).map((d) { logFetch('quotations', d); return d; }));
-    rxNotifications.bindStream(_portalRepo.streamCustomerNotifications(customerId).handleError(_logErr).map((d) { logFetch('notifications', d); return d; }));
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (FeatureFlags.notifications) {
+      rxNotifications.bindStream(_portalRepo.streamCustomerNotifications(customerId).handleError(_logErr).map((d) { logFetch('notifications', d); return d; }));
+    }
     rxDocuments.bindStream(_portalRepo.streamCustomerDocuments(customerId).handleError(_logErr).map((d) { logFetch('documents', d); return d; }));
     rxWishlist.bindStream(_portalRepo.streamCustomerWishlist(customerId).handleError(_logErr).map((d) { logFetch('wishlist', d); return List<CustomerWishlist>.from(d); }));
     rxOffers.bindStream(_portalRepo.streamOffers(branch).handleError(_logErr).map((d) { logFetch('offers', d); return d; }));

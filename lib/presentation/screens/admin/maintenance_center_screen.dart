@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../controllers/maintenance_controller.dart';
 
 class MaintenanceCenterScreen extends StatelessWidget {
@@ -41,6 +42,38 @@ class MaintenanceCenterScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+              // REASON: Not required for current business flow.
+              // DO NOT DELETE - Keep for future reactivation.
+              if (!FeatureFlags.advancedMaintenance) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Color(0xFFD97706), size: 22),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "Database Maintenance Center is temporarily disabled for current business flow. Operations cannot be executed.",
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: Color(0xFF92400E),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               if (controller.rxIsProcessing.value) ...[
                 _buildProgressCard(controller),
                 const SizedBox(height: 24),
@@ -188,6 +221,17 @@ class MaintenanceCenterScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   onPressed: () async {
+                    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                    // REASON: Not required for current business flow.
+                    // DO NOT DELETE - Keep for future reactivation.
+                    if (!FeatureFlags.advancedMaintenance) {
+                      Get.snackbar(
+                        "Maintenance Disabled",
+                        "Maintenance actions are temporarily disabled for the current business flow.",
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                      return;
+                    }
                     await controller.runDryRun(title);
                     if (!context.mounted) return;
                     _showDryRunDialog(context, controller, title);
@@ -201,7 +245,20 @@ class MaintenanceCenterScreen extends StatelessWidget {
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  onPressed: () => _confirmExecution(context, controller, title),
+                  onPressed: () {
+                    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                    // REASON: Not required for current business flow.
+                    // DO NOT DELETE - Keep for future reactivation.
+                    if (!FeatureFlags.advancedMaintenance) {
+                      Get.snackbar(
+                        "Maintenance Disabled",
+                        "Maintenance executions are temporarily disabled for the current business flow.",
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                      return;
+                    }
+                    _confirmExecution(context, controller, title);
+                  },
                   child: const Text('Execute'),
                 ),
               ],

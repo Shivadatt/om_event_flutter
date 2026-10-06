@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../controllers/scheduler_health_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,6 +72,38 @@ class SchedulerHealthScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+              // REASON: Not required for current business flow.
+              // DO NOT DELETE - Keep for future reactivation.
+              if (!FeatureFlags.schedulerHealth) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E2735),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.4)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Color(0xFFD4AF37), size: 22),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "Scheduler Health monitoring and live telemetry polling are temporarily disabled for the current business flow.",
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            color: Color(0xFFF0F6FC),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               _buildStatusBar(controller),
               const SizedBox(height: 24),
               _buildSectionHeader('Cron Jobs'),

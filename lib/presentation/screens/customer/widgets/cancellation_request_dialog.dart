@@ -115,7 +115,8 @@ class _CancellationRequestDialogState extends State<CancellationRequestDialog> {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      // Write customer notification to Firestore
+      // Write customer notification to Firestore (temporarily disabled)
+      /*
       try {
         await FirebaseFirestore.instance.collection(AppCollections.customerNotifications).add({
           'customerId': widget.quotation.customerId,
@@ -134,6 +135,7 @@ class _CancellationRequestDialogState extends State<CancellationRequestDialog> {
       } catch (e) {
         AppLogger.warning("Unable to write customer notification: $e");
       }
+      */
 
       // Show local in-app alert
       if (Get.isRegistered<NotificationLocalService>()) {

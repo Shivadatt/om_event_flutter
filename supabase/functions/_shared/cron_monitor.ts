@@ -19,19 +19,15 @@ export interface CronJobRecord {
 const HEALTH_COLLECTION = "cron_health_logs";
 const HEALTH_SUMMARY_COLLECTION = "cron_health_summary";
 
-/** Write a "running" record and return its doc ID for later update. */
+/** Write a "running" record (console only, Firestore writes temporarily disabled). */
 export async function markJobStart(jobName: string): Promise<string> {
   const now = new Date().toISOString();
-  const ref = await db.collection(HEALTH_COLLECTION).add({
-    jobName,
-    status: "running",
-    startedAt: now,
-    updatedAt: now,
-  });
-  return ref.id;
+  console.log(`[CRON START] Job '${jobName}' started at ${now}`);
+  // Return dummy ID so callers can pass it around without Firestore document creation
+  return `job_${Date.now()}`;
 }
 
-/** Update the doc written by markJobStart with success outcome. */
+/** Complete job (console only, Firestore writes temporarily disabled). */
 export async function markJobComplete(
   logId: string,
   jobName: string,
@@ -39,29 +35,10 @@ export async function markJobComplete(
   opts: { processedItems?: number; message?: string } = {}
 ): Promise<void> {
   const durationMs = Date.now() - startMs;
-  const now = new Date().toISOString();
-
-  await db.collection(HEALTH_COLLECTION).doc(logId).update({
-    status: "success",
-    completedAt: now,
-    durationMs,
-    processedItems: opts.processedItems ?? 0,
-    message: opts.message ?? "Completed successfully",
-    updatedAt: now,
-  });
-
-  // Upsert summary doc (last run / next run estimates / running counts)
-  await db.collection(HEALTH_SUMMARY_COLLECTION).doc(jobName).set({
-    jobName,
-    lastStatus: "success",
-    lastRun: now,
-    lastDurationMs: durationMs,
-    lastProcessedItems: opts.processedItems ?? 0,
-    updatedAt: now,
-  }, { merge: true });
+  console.log(`[CRON COMPLETE] Job '${jobName}' finished in ${durationMs}ms (items: ${opts.processedItems ?? 0}, msg: ${opts.message ?? "OK"})`);
 }
 
-/** Update the doc with failure details and increment failure counter. */
+/** Update the job with failure details (console only, Firestore writes temporarily disabled). */
 export async function markJobFailed(
   logId: string,
   jobName: string,
@@ -69,51 +46,14 @@ export async function markJobFailed(
   errorMessage: string
 ): Promise<void> {
   const durationMs = Date.now() - startMs;
-  const now = new Date().toISOString();
-
-  await db.collection(HEALTH_COLLECTION).doc(logId).update({
-    status: "failed",
-    completedAt: now,
-    durationMs,
-    errorMessage,
-    updatedAt: now,
-  });
-
-  // Read existing summary to increment failure count
-  const summaryRef = db.collection(HEALTH_SUMMARY_COLLECTION).doc(jobName);
-  const summarySnap = await summaryRef.get();
-  const existingFailures = summarySnap.exists ? (summarySnap.data()!.totalFailures ?? 0) : 0;
-
-  await summaryRef.set({
-    jobName,
-    lastStatus: "failed",
-    lastRun: now,
-    lastDurationMs: durationMs,
-    lastError: errorMessage,
-    totalFailures: existingFailures + 1,
-    updatedAt: now,
-  }, { merge: true });
+  console.error(`[CRON FAILED] Job '${jobName}' failed after ${durationMs}ms: ${errorMessage}`);
 }
 
-/** Mark job as skipped (e.g., automation disabled). */
+/** Mark job as skipped (console only, Firestore writes temporarily disabled). */
 export async function markJobSkipped(
   logId: string,
   jobName: string,
   reason: string
 ): Promise<void> {
-  const now = new Date().toISOString();
-  await db.collection(HEALTH_COLLECTION).doc(logId).update({
-    status: "skipped",
-    completedAt: now,
-    message: reason,
-    updatedAt: now,
-  });
-
-  await db.collection(HEALTH_SUMMARY_COLLECTION).doc(jobName).set({
-    jobName,
-    lastStatus: "skipped",
-    lastRun: now,
-    lastSkipReason: reason,
-    updatedAt: now,
-  }, { merge: true });
+  console.log(`[CRON SKIPPED] Job '${jobName}' skipped: ${reason}`);
 }

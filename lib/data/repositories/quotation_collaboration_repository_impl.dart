@@ -74,8 +74,10 @@ class QuotationCollaborationRepositoryImpl implements QuotationCollaborationRepo
   }
 
   /// Runs audit log + notification writes in background after message is sent.
-  /// Never throws — failures are silently logged.
+  /// Temporarily disabled to eliminate secondary Firestore writes on chat messages.
   void _postSendSideEffects(QuotationMessage message) {
+    // Early return: Audit logs and notifications temporarily disabled
+    return;
     Future(() async {
       try {
         AppLogger.info("_postSendSideEffects: Fetching quotation doc...", layer: LogLayer.repository, className: "QuotationCollaborationRepositoryImpl", methodName: "_postSendSideEffects");

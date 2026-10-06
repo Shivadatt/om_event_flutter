@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import '../../core/config/feature_flags.dart';
 import '../../core/utils/app_logger.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -111,6 +112,14 @@ class SchedulerHealthController extends GetxController {
   }
 
   void _bindStreams() {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.schedulerHealth) {
+      rxIsLoading.value = false;
+      return;
+    }
+
     rxIsLoading.value = true;
 
     _firestore

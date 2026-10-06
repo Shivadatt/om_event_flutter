@@ -293,6 +293,14 @@ extension CustomerActionsExtension on CustomerDashboardController {
   }
 
   Future<void> requestRevision(String quoteId, String revisionNotes) async {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.quotationRevisions) {
+      Get.snackbar("Notice", "Direct revision requests are temporarily disabled. Please contact us via WhatsApp or Call.");
+      return;
+    }
+
     try {
       isLoading.value = true;
       final db = FirebaseFirestore.instance;

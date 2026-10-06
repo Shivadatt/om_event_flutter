@@ -29,7 +29,20 @@ type OperationType =
   | "Quotation Repair"
   | "Version Repair";
 
+// TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+// REASON: Not required for current business flow.
+// DO NOT DELETE - Keep for future reactivation.
+const ADVANCED_MAINTENANCE_ENABLED = false;
+
 serve(async (req) => {
+  if (!ADVANCED_MAINTENANCE_ENABLED) {
+    console.log('[TEMP DISABLED] Maintenance feature is disabled: run-maintenance-job');
+    return new Response(JSON.stringify({ status: "disabled", message: "Maintenance operations temporarily disabled." }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const authHeader = req.headers.get("Authorization");
   let adminClaims: { user_id: string; email?: string };
   try {

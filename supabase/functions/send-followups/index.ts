@@ -6,7 +6,20 @@ import { markJobStart, markJobComplete, markJobFailed, markJobSkipped } from "..
 const FIREBASE_PROJECT_ID = Deno.env.get("FIREBASE_PROJECT_ID") || "om-event";
 const JOB_NAME = "send-followups";
 
+// TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+// REASON: Not required for current business flow.
+// DO NOT DELETE - Keep for future reactivation.
+const ADVANCED_NOTIFICATIONS_ENABLED = false;
+
 serve(async (req) => {
+  if (!ADVANCED_NOTIFICATIONS_ENABLED) {
+    console.log('[TEMP DISABLED] Notification feature is disabled: send-followups');
+    return new Response(JSON.stringify({ status: "disabled", message: "Notifications temporarily disabled." }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const tStart = Date.now();
   const logId = await markJobStart(JOB_NAME);
   try {

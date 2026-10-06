@@ -159,10 +159,9 @@ extension _NotifCampaignsExtension on _SettingsNotificationsTabState {
   }
 
   Future<void> _executeSegmentedBroadcast() async {
-    if (broadcastTitleCtrl.text.isEmpty || broadcastBodyCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Please enter broadcast details.");
-      return;
-    }
+    // Early return: Notifications temporarily disabled
+    Get.snackbar("Notice", "Notification broadcasts are temporarily disabled.");
+    return;
 
     Query<Map<String, dynamic>> query =
         _firestore.collection(AppCollections.customerProfiles);

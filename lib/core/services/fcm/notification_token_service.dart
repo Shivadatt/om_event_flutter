@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../config/feature_flags.dart';
 import '../../../core/constants/app_collections.dart';
 import '../../utils/app_logger.dart';
 
@@ -87,6 +88,11 @@ class NotificationTokenService extends GetxService {
     }
   }
 
+  // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+  // REASON: Not required for current business flow.
+  // DO NOT DELETE - Keep for future reactivation.
+  static const bool pushNotificationsEnabled = FeatureFlags.notifications;
+
   // ─── Persist ─────────────────────────────────────────────────────────────
 
   /// Upsert token to Supabase (primary) and Firestore (fallback).
@@ -95,7 +101,10 @@ class NotificationTokenService extends GetxService {
     required String role,
     required String token,
   }) async {
-    if (userId.isEmpty || token.isEmpty) return;
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!pushNotificationsEnabled || userId.isEmpty || token.isEmpty) return;
 
     try {
       final prefs = Get.isRegistered<SharedPreferences>() ? Get.find<SharedPreferences>() : null;
@@ -171,6 +180,9 @@ class NotificationTokenService extends GetxService {
     required String token,
     required String deviceId,
   }) async {
+    // Early return: Push notifications & token writes temporarily disabled
+    if (!pushNotificationsEnabled) return;
+
     try {
       await _firestore
           .collection(AppCollections.notificationTokens)

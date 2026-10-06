@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../core/config/feature_flags.dart';
 import '../../domain/entities/quotation_message.dart';
 import '../../domain/repositories/quotation_collaboration_repository.dart';
 import '../../core/utils/app_logger.dart';
@@ -38,6 +39,13 @@ class QuotationCollaborationController extends GetxController {
   void onInit() {
     super.onInit();
     
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.realtimeQuotationChat) {
+      return;
+    }
+
     // Bind real-time stream of messages
     rxMessages.bindStream(_collaborationRepo.streamMessages(quotationId));
     
@@ -77,6 +85,14 @@ class QuotationCollaborationController extends GetxController {
   }
 
   Future<void> sendTextMessage() async {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.realtimeQuotationChat) {
+      Get.snackbar("Notice", "Real-time in-app chat is temporarily disabled. Please contact us via WhatsApp or Call.");
+      return;
+    }
+
     final text = textController.text.trim();
     if (text.isEmpty) return;
 
@@ -118,6 +134,13 @@ class QuotationCollaborationController extends GetxController {
   }
 
   Future<void> pickAndUploadAttachment() async {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.realtimeQuotationChat) {
+      Get.snackbar("Notice", "Attachments and chat are temporarily disabled. Please share files via WhatsApp.");
+      return;
+    }
     try {
       AppLogger.info("pickAndUploadAttachment: Opening file picker...", layer: LogLayer.controller, className: "QuotationCollaborationController", methodName: "pickAndUploadAttachment");
       final result = await FilePicker.pickFiles(

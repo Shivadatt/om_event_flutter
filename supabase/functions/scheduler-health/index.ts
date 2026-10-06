@@ -10,7 +10,20 @@ const FIREBASE_PROJECT_ID = Deno.env.get("FIREBASE_PROJECT_ID") || "om-event";
 // Also reads the last 20 individual health log entries for each job.
 // Called by the Admin Scheduler Health Dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
+// TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+// REASON: Not required for current business flow.
+// DO NOT DELETE - Keep for future reactivation.
+const ADVANCED_SCHEDULER_HEALTH_ENABLED = false;
+
 serve(async (req) => {
+  if (!ADVANCED_SCHEDULER_HEALTH_ENABLED) {
+    console.log('[TEMP DISABLED] Scheduler health feature is disabled: scheduler-health');
+    return new Response(JSON.stringify({ status: "disabled", message: "Scheduler health temporarily disabled." }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const authHeader = req.headers.get("Authorization");
     await verifyFirebaseToken(authHeader, FIREBASE_PROJECT_ID);

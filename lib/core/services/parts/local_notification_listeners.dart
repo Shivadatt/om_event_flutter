@@ -4,6 +4,13 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
   /// Receives leads updates from ListenerRegistryService.
   void handleLeadsSnapshot(QuerySnapshot<Map<String, dynamic>> snap) {
     if (!kDebugMode) return;
+    if (!hasInitialLeadsSnapshotLoaded) {
+      for (final doc in snap.docs) {
+        knownLeadIds.add(doc.id);
+      }
+      hasInitialLeadsSnapshotLoaded = true;
+      return;
+    }
     for (final doc in snap.docs) {
       if (!knownLeadIds.contains(doc.id)) {
         knownLeadIds.add(doc.id);
@@ -28,6 +35,24 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
   }
 
   void _processQuotationChanges(QuerySnapshot<Map<String, dynamic>> snap) {
+    // 1. Initial snapshot guard: populate in-memory status map without triggering any notifications
+    if (!hasInitialQuotationSnapshotLoaded) {
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final status = (data['status'] ?? '').toString();
+        lastKnownQuotationStatuses[doc.id] = status;
+      }
+      hasInitialQuotationSnapshotLoaded = true;
+      AppLogger.info(
+        "LocalNotificationTriggerService: Initialized ${snap.docs.length} quotation statuses without triggering startup notifications.",
+        layer: LogLayer.service,
+        className: "LocalNotificationListenersExtension",
+        methodName: "_processQuotationChanges",
+      );
+      return;
+    }
+
+    // 2. Subsequent delta snapshots: process real-time status transitions or new submissions
     for (final doc in snap.docs) {
       final data = doc.data();
       final status = (data['status'] ?? '').toString();
@@ -177,29 +202,8 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
     required String description,
     Map<String, String>? params,
   }) {
-    NotificationGatewayService.to.queueNotification(
-      recipient: 'admin@omevents.com',
-      recipientId: 'admin_main',
-      type: eventType,
-      title: 'Om Events Alert: $eventType',
-      body: description,
-      channel: 'email',
-      metadata: {'variables': params ?? {}},
-    );
-
-    NotificationGatewayService.to.queueNotification(
-      recipient: '9512149944',
-      recipientId: 'admin_main',
-      type: eventType,
-      title: 'WhatsApp Alert',
-      body: description,
-      channel: 'whatsapp',
-      metadata: {
-        'templateName': 'admin_alerts',
-        'parameters': [eventType, description],
-        'variables': params ?? {},
-      },
-    );
+    // Early return: Notifications temporarily disabled
+    return;
   }
 
   void _queueCustomerNotification({
@@ -215,46 +219,7 @@ extension LocalNotificationListenersExtension on LocalNotificationTriggerService
     String? bookingId,
     String? publicBookingId,
   }) {
-    _firestore.collection(AppCollections.customerNotifications).add({
-      'customerId': customerId,
-      'title': title,
-      'body': body,
-      'type': type ?? 'Alert',
-      'bookingId': bookingId ?? '',
-      'publicBookingId': publicBookingId ?? '',
-      'isRead': false,
-      'read': false,
-      'branch': 'Kadi',
-      'priority': 'normal',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    if (email.isNotEmpty) {
-      NotificationGatewayService.to.queueNotification(
-        recipient: email,
-        recipientId: customerId,
-        type: 'Customer Alert',
-        title: title,
-        body: body,
-        channel: 'email',
-        metadata: {'variables': variables ?? {}},
-      );
-    }
-
-    if (phone.isNotEmpty) {
-      NotificationGatewayService.to.queueNotification(
-        recipient: phone,
-        recipientId: customerId,
-        type: 'Customer Alert',
-        title: 'WhatsApp Alert',
-        body: body,
-        channel: 'whatsapp',
-        metadata: {
-          'templateName': whatsappTemplate,
-          'parameters': whatsappParams,
-          'variables': variables ?? {},
-        },
-      );
-    }
+    // Early return: Notifications temporarily disabled
+    return;
   }
 }

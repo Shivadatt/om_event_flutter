@@ -11,6 +11,7 @@ import 'package:om_event/core/utils/validators.dart';
 import 'widgets/admin_back_button.dart';
 import 'widgets/admin_layout.dart';
 import 'widgets/settings_notifications_tab.dart';
+import 'package:om_event/core/config/feature_flags.dart';
 import 'maintenance_center_screen.dart';
 import 'scheduler_health_screen.dart';
 
@@ -355,34 +356,65 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
               style: AppTheme.sansBody(fontSize: 14, color: subColor),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryAccentColor,
-                foregroundColor: txtColor,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+            // REASON: Not required for current business flow.
+            // DO NOT DELETE - Keep for future reactivation.
+            if (FeatureFlags.advancedMaintenance) ...[
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryAccentColor,
+                  foregroundColor: txtColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => Get.to(() => const MaintenanceCenterScreen()),
+                child: const Text(
+                  "Open Maintenance Center",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
-              onPressed: () => Get.to(() => const MaintenanceCenterScreen()),
-              child: const Text(
-                "Open Maintenance Center",
-                style: TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(height: 16),
+            ],
+            // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+            // REASON: Not required for current business flow.
+            // DO NOT DELETE - Keep for future reactivation.
+            if (FeatureFlags.schedulerHealth) ...[
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryAccentColor,
+                  side: BorderSide(color: primaryAccentColor.withValues(alpha: 0.6)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.schedule_rounded, size: 18),
+                onPressed: () => Get.to(() => const SchedulerHealthScreen()),
+                label: const Text(
+                  "Scheduler Health Dashboard",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: primaryAccentColor,
-                side: BorderSide(color: primaryAccentColor.withValues(alpha: 0.6)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ],
+            if (!FeatureFlags.advancedMaintenance && !FeatureFlags.schedulerHealth)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.amber, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "Advanced Maintenance & Scheduler Health tools are temporarily disabled for the current business flow.",
+                        style: AppTheme.sansBody(fontSize: 13, color: subColor),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              icon: const Icon(Icons.schedule_rounded, size: 18),
-              onPressed: () => Get.to(() => const SchedulerHealthScreen()),
-              label: const Text(
-                "Scheduler Health Dashboard",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
           ],
         );
       default:

@@ -79,6 +79,8 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     required String body,
     required String type,
   }) async {
+    // Early return: Notifications temporarily disabled
+    return;
     if (customerId.isEmpty) return;
     try {
       await _firestore.collection(AppCollections.customerNotifications).add({

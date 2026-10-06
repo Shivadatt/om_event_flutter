@@ -33,8 +33,24 @@ extension CustomerSyncExtension on CustomerDashboardController {
           await db.collection(AppCollections.customerProfiles).doc(profile.id).update({
             'phone': syncPhone,
           });
-          // Update local state
-          _authController.checkAuthStatus();
+          // Update in-memory profile directly without calling _authController.checkAuthStatus(),
+          // which would flip rxCustomerProfile and cause ever() to recursively invoke syncMasterData.
+          rxProfile.value = CustomerProfileModel(
+            id: profile.id,
+            fullName: profile.fullName,
+            phone: syncPhone,
+            email: profile.email,
+            gender: profile.gender,
+            dateOfBirth: profile.dateOfBirth,
+            address: profile.address,
+            city: profile.city,
+            state: profile.state,
+            pincode: profile.pincode,
+            branch: profile.branch,
+            profileImageUrl: profile.profileImageUrl,
+            createdAt: profile.createdAt,
+            lastLogin: profile.lastLogin,
+          );
         }
       } catch (e) {
         // Silent error

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/config/feature_flags.dart';
 import '../../core/services/supabase_edge_functions.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,6 +48,14 @@ class MaintenanceController extends GetxController {
   /// Writes cancel=true to the running job's Firestore doc.
   /// The Edge Function polls this flag and stops gracefully after the current batch.
   Future<void> cancelOperation() async {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.advancedMaintenance) {
+      rxStatusMessage.value = 'Maintenance operations are temporarily disabled.';
+      return;
+    }
+
     if (rxCurrentJobId.value.isEmpty) {
       rxStatusMessage.value = 'No active job to cancel';
       return;
@@ -68,6 +77,14 @@ class MaintenanceController extends GetxController {
   /// Runs a dry-run estimation via the Edge Function.
   /// No Firestore writes are made; the function just counts and estimates.
   Future<void> runDryRun(String operationType) async {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.advancedMaintenance) {
+      rxStatusMessage.value = 'Maintenance dry runs are temporarily disabled.';
+      return;
+    }
+
     if (rxIsProcessing.value) return;
     rxIsProcessing.value = true;
     _resetStats();
@@ -108,6 +125,13 @@ class MaintenanceController extends GetxController {
 
   /// Executes the live migration on the server. Polls Firestore for progress.
   Future<void> executeMigration(String operationType) async {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.advancedMaintenance) {
+      rxStatusMessage.value = 'Maintenance executions are temporarily disabled.';
+      return;
+    }
     if (rxIsProcessing.value) return;
     rxIsProcessing.value = true;
     _resetStats();

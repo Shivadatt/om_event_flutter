@@ -107,6 +107,8 @@ class AdminCustomerPortalController extends GetxController {
     required String type,
     String branch = '',
   }) async {
+    // Early return: Notifications temporarily disabled
+    return;
     final model = CustomerNotificationModel(
       id: '',
       customerId: customerId,

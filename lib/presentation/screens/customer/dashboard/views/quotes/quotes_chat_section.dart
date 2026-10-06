@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:om_event/core/config/feature_flags.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/domain/entities/quotation.dart';
 import 'package:om_event/presentation/controllers/quotation_collaboration_controller.dart';
 import 'quotes_chat_bubble.dart';
+import 'chat_contact_cta_widget.dart';
 
 /// Full-width Collaboration & Discussions workspace matching Option 2 Modern Card Style.
 /// Displays an authentic real-time chat interface with message bubbles, customer/coordinator
@@ -20,31 +22,120 @@ class QuotesChatSection extends StatefulWidget {
 }
 
 class _QuotesChatSectionState extends State<QuotesChatSection> {
-  late final QuotationCollaborationController _chatController;
+  QuotationCollaborationController? _chatController;
 
   @override
   void initState() {
     super.initState();
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    final currentUserName = FirebaseAuth.instance.currentUser?.displayName;
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (FeatureFlags.realtimeQuotationChat) {
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      final currentUserName = FirebaseAuth.instance.currentUser?.displayName;
 
-    _chatController = Get.put(
-      QuotationCollaborationController(
-        quotationId: widget.activeQuote.id,
-        senderId: widget.activeQuote.customerId.isNotEmpty
-            ? widget.activeQuote.customerId
-            : (currentUserId ?? 'client_user'),
-        senderName: widget.activeQuote.customerName.isNotEmpty
-            ? widget.activeQuote.customerName
-            : (currentUserName ?? 'Client'),
-        senderRole: 'client',
-      ),
-      tag: widget.activeQuote.id,
-    );
+      _chatController = Get.put(
+        QuotationCollaborationController(
+          quotationId: widget.activeQuote.id,
+          senderId: widget.activeQuote.customerId.isNotEmpty
+              ? widget.activeQuote.customerId
+              : (currentUserId ?? 'client_user'),
+          senderName: widget.activeQuote.customerName.isNotEmpty
+              ? widget.activeQuote.customerName
+              : (currentUserName ?? 'Client'),
+          senderRole: 'client',
+        ),
+        tag: widget.activeQuote.id,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.realtimeQuotationChat || _chatController == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Eyebrow Section Title ─────────────────────────────────────────────
+          Text(
+            "DIRECT CONTACT & COORDINATION",
+            style: AppTheme.sansBody(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFD4AF37),
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // ── Proposal Assistance Contact Card ─────────────────────────────────
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFF111713),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0x2BD4AF37), width: 1.0),
+              boxShadow: const [
+                BoxShadow(color: Color(0x33000000), blurRadius: 14, offset: Offset(0, 4)),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF0F1512),
+                    border: Border(bottom: BorderSide(color: Color(0x1AD4AF37), width: 1)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4CAF50),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "PROPOSAL ASSISTANCE",
+                        style: GoogleFonts.italiana(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFD4AF37),
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Text(
+                    "Have questions regarding this proposal or need customizations? Reach out directly via WhatsApp or Instagram for immediate coordination with our planning team.",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                const ChatContactCtaWidget(),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    final chatCtrl = _chatController!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -108,7 +199,7 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
                       ],
                     ),
                     Obx(() {
-                      final count = _chatController.combinedMessages.length;
+                      final count = chatCtrl.combinedMessages.length;
                       return Text(
                         count == 0 ? "No messages yet" : "$count ${count == 1 ? 'message' : 'messages'}",
                         style: const TextStyle(
@@ -128,7 +219,7 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
                 color: const Color(0xFF0C110E),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Obx(() {
-                  final messages = _chatController.combinedMessages;
+                  final messages = chatCtrl.combinedMessages;
 
                   // Empty State: Professional invitation to start discussion
                   if (messages.isEmpty) {
@@ -173,7 +264,7 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
 
                   // Active Conversation Feed
                   return ListView.builder(
-                    controller: _chatController.scrollController,
+                    controller: chatCtrl.scrollController,
                     physics: const BouncingScrollPhysics(),
                     itemCount: messages.length,
                     itemBuilder: (context, idx) {
@@ -185,9 +276,26 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
                 }),
               ),
 
+              // Contact Options CTA (Shown after 2 actual chat messages have been exchanged)
+              Obx(() {
+                final actualMessageCount = chatCtrl.combinedMessages.where((m) {
+                  final t = m.type.toLowerCase();
+                  final role = m.senderRole.toLowerCase();
+                  return role != 'system' &&
+                      t != 'system' &&
+                      t != 'pricechange' &&
+                      t != 'revision';
+                }).length;
+
+                if (actualMessageCount >= 2) {
+                  return const ChatContactCtaWidget();
+                }
+                return const SizedBox.shrink();
+              }),
+
               // 3. Upload Progress Indicator
               Obx(() {
-                if (_chatController.isUploading.value) {
+                if (chatCtrl.isUploading.value) {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     color: const Color(0x1AD4AF37),
@@ -219,7 +327,7 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
                     // Attachment Action
                     IconButton(
                       icon: const Icon(Icons.attach_file_rounded, color: Color(0xFFD4AF37), size: 20),
-                      onPressed: () => _chatController.pickAndUploadAttachment(),
+                      onPressed: () => chatCtrl.pickAndUploadAttachment(),
                       tooltip: "Attach Floorplan or Reference",
                       constraints: const BoxConstraints(),
                       padding: const EdgeInsets.all(8),
@@ -229,7 +337,7 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
                     // Text Input Field
                     Expanded(
                       child: TextField(
-                        controller: _chatController.textController,
+                        controller: chatCtrl.textController,
                         style: const TextStyle(color: Colors.white, fontSize: 13),
                         decoration: const InputDecoration(
                           hintText: "Type a message or request a modification...",
@@ -238,18 +346,18 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
                           isDense: true,
                           contentPadding: EdgeInsets.symmetric(vertical: 10),
                         ),
-                        onSubmitted: (_) => _chatController.sendTextMessage(),
+                        onSubmitted: (_) => chatCtrl.sendTextMessage(),
                       ),
                     ),
                     const SizedBox(width: 8),
 
                     // Send Button with dynamic state & loading indicator
                     ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _chatController.textController,
+                      valueListenable: chatCtrl.textController,
                       builder: (context, value, _) {
                         final hasText = value.text.trim().isNotEmpty;
                         return Obx(() {
-                          if (_chatController.isSending.value) {
+                          if (chatCtrl.isSending.value) {
                             return const SizedBox(
                               width: 32,
                               height: 32,
@@ -276,7 +384,7 @@ class _QuotesChatSectionState extends State<QuotesChatSection> {
                                 size: 16,
                               ),
                               padding: EdgeInsets.zero,
-                              onPressed: hasText ? () => _chatController.sendTextMessage() : null,
+                              onPressed: hasText ? () => chatCtrl.sendTextMessage() : null,
                               tooltip: "Send Message",
                             ),
                           );

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/utils/app_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'token_service.dart';
 
 /// Manages FCM permission requests, token lifecycle, and refresh.
@@ -61,6 +62,9 @@ class FcmNotificationService extends GetxService {
     }
   }
 
+  /// Temporary feature flag: Push notifications & token writes are temporarily disabled
+  static const bool pushNotificationsEnabled = false;
+
   // ─── Token ───────────────────────────────────────────────────────────────
 
   /// Full FCM init for a signed-in user.
@@ -68,7 +72,8 @@ class FcmNotificationService extends GetxService {
   /// - Fetches token and saves to Supabase + Firestore
   /// - Listens for automatic token refresh
   Future<void> initializeUserFcm(String userId, {String role = 'customer'}) async {
-    if (userId.isEmpty) return;
+    // Early return: Push notifications & token registration temporarily disabled
+    if (!pushNotificationsEnabled || userId.isEmpty) return;
 
     final granted = await requestPermissions();
     if (!granted) {
@@ -112,6 +117,21 @@ class FcmNotificationService extends GetxService {
 
   /// Saves token to both Supabase (primary) and Firestore (fallback).
   Future<void> _persistToken(String userId, String role, String token) async {
+    // Early return: Push notifications & token writes temporarily disabled
+    if (!pushNotificationsEnabled) return;
+
+    // Check if token has changed to prevent redundant database writes on app launch
+    try {
+      if (Get.isRegistered<SharedPreferences>()) {
+        final prefs = Get.find<SharedPreferences>();
+        final cached = prefs.getString('cached_fcm_token_$userId');
+        if (cached == token) {
+          AppLogger.info('FCM: Token unchanged for user=$userId, skipping duplicate database write.');
+          return;
+        }
+      }
+    } catch (_) {}
+
     // 1. Supabase notification_tokens (per-device upsert, no duplicates)
     try {
       if (Get.isRegistered<TokenService>()) {
@@ -137,6 +157,11 @@ class FcmNotificationService extends GetxService {
         'platform': kIsWeb ? 'web' : 'mobile',
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      if (Get.isRegistered<SharedPreferences>()) {
+        final prefs = Get.find<SharedPreferences>();
+        await prefs.setString('cached_fcm_token_$userId', token);
+      }
     } catch (e) {
       AppLogger.error('FCM: Firestore token save failed', e);
     }
@@ -164,6 +189,13 @@ class FcmNotificationService extends GetxService {
     } catch (_) {
       // Non-fatal
     }
+
+    try {
+      if (Get.isRegistered<SharedPreferences>()) {
+        final prefs = Get.find<SharedPreferences>();
+        await prefs.remove('cached_fcm_token_$userId');
+      }
+    } catch (_) {}
 
     rxToken.value = '';
     AppLogger.info('FCM: token cleared for user=$userId');

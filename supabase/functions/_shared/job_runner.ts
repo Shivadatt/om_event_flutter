@@ -183,34 +183,13 @@ async function executeWithTimeout(
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function acquireLock(jobName: string): Promise<boolean> {
-  try {
-    const lockRef = db.collection(LOCKS_COLLECTION).doc(jobName);
-    const snap = await lockRef.get();
-
-    if (snap.exists) {
-      const data = snap.data()!;
-      const lockedAt = new Date(data.lockedAt as string).getTime();
-      // Stale lock: expired TTL — break it
-      if (Date.now() - lockedAt < LOCK_TTL_MS) {
-        return false; // Another instance holds a valid lock
-      }
-    }
-
-    await lockRef.set({
-      jobName,
-      lockedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + LOCK_TTL_MS).toISOString(),
-    });
-    return true;
-  } catch (_) {
-    return false; // Fail safe: don't run if lock can't be acquired
-  }
+  // Lock writes temporarily disabled to prevent Firestore writes
+  return true;
 }
 
 async function releaseLock(jobName: string): Promise<void> {
-  try {
-    await db.collection(LOCKS_COLLECTION).doc(jobName).delete();
-  } catch (_) {}
+  // Lock writes temporarily disabled to prevent Firestore writes
+  return;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

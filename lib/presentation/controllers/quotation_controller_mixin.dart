@@ -41,6 +41,8 @@ mixin QuotationControllerMixin on GetxController, QuotationEditorStateMixin {
       final customerId = data['customerId'] ?? data['customer_id'] ?? '';
       
       if (customerId.isNotEmpty) {
+        // Temporarily disabled: customer_notifications write
+        /*
         await db.collection(AppCollections.customerNotifications).add({
           'customerId': customerId,
           'title': 'New Message from Studio',
@@ -50,6 +52,7 @@ mixin QuotationControllerMixin on GetxController, QuotationEditorStateMixin {
           'createdAt': DateTime.now().toIso8601String(),
           'branch': data['location'] ?? '',
         });
+        */
       }
       Get.snackbar("Message Sent", "Proposal message sent successfully.");
     } catch (e) {

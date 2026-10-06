@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import '../../config/feature_flags.dart';
 import '../../utils/app_logger.dart';
 import 'notification_permission_service.dart';
 import 'notification_token_service.dart';
@@ -53,6 +54,11 @@ class FcmService extends GetxService {
 
   // ─── Public API ──────────────────────────────────────────────────────────
 
+  // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+  // REASON: Not required for current business flow.
+  // DO NOT DELETE - Keep for future reactivation.
+  static const bool notificationsEnabled = FeatureFlags.notifications;
+
   /// Full FCM initialization flow for a signed-in user.
   ///
   /// Steps:
@@ -64,7 +70,13 @@ class FcmService extends GetxService {
     required String userId,
     required String role,
   }) async {
-    if (userId.isEmpty) return;
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!notificationsEnabled || userId.isEmpty) {
+      AppLogger.info('FcmService: Push notifications temporarily disabled. Skipping FCM initialization.');
+      return;
+    }
 
     AppLogger.info('FcmService: starting init for user=$userId role=$role');
 

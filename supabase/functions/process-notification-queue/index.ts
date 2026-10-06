@@ -19,7 +19,20 @@ const WHATSAPP_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID") || "";
 const SENDER_EMAIL = Deno.env.get("SENDER_EMAIL") || "notifications@omevents.com";
 const BATCH_SIZE = 50; // Process at most 50 per run
 
+// TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+// REASON: Not required for current business flow.
+// DO NOT DELETE - Keep for future reactivation.
+const ADVANCED_NOTIFICATIONS_ENABLED = false;
+
 serve(async (req) => {
+  if (!ADVANCED_NOTIFICATIONS_ENABLED) {
+    console.log('[TEMP DISABLED] Notification feature is disabled: process-notification-queue');
+    return new Response(JSON.stringify({ status: "disabled", message: "Notifications temporarily disabled." }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const authHeader = req.headers.get("Authorization");
   try {
     await verifyFirebaseToken(authHeader, FIREBASE_PROJECT_ID);

@@ -295,7 +295,7 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
           createdAt: DateTime.now(),
           lastLogin: DateTime.now(),
         );
-        await saveCustomerProfile(fallbackProfile).catchError((_) {});
+        // Return fallback profile in-memory without initiating an unsolicited Firestore write on read
         return fallbackProfile;
       }
 

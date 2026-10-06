@@ -214,6 +214,8 @@ class QuotationRevisionsDelegate {
       try {
         final customerId = updatedQuotation.customerId;
         if (customerId.isNotEmpty) {
+          // Temporarily disabled: customer_notifications write
+          /*
           await _db.collection(AppCollections.customerNotifications).add({
             'customerId': customerId,
             'title': 'Proposal Updated',
@@ -224,6 +226,7 @@ class QuotationRevisionsDelegate {
             'branch': updatedQuotation.location,
             'quotationId': quotation.id,
           });
+          */
 
           await _db.collection(AppCollections.customerActivity).add({
             'customerId': customerId,

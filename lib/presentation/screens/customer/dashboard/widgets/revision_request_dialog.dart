@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/config/feature_flags.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
@@ -101,6 +102,18 @@ class _RevisionRequestDialogState extends State<RevisionRequestDialog> {
                     elevation: 4,
                   ),
                   onPressed: () {
+                    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+                    // REASON: Not required for current business flow.
+                    // DO NOT DELETE - Keep for future reactivation.
+                    if (!FeatureFlags.quotationRevisions) {
+                      Get.back();
+                      Get.snackbar(
+                        'Revision Request Disabled',
+                        'Direct revision requests are temporarily disabled. Please contact us directly via WhatsApp or Call.',
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                      return;
+                    }
                     widget.controller.requestRevision(widget.quoteId, revisionCtrl.text);
                     Get.back();
                     Get.snackbar(

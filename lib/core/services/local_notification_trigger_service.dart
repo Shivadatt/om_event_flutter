@@ -7,6 +7,7 @@ import '../../core/constants/app_collections.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/entities/quotation.dart';
 import '../../data/models/quotation_model.dart';
+// ignore: unused_import
 import 'notification_gateway_service.dart';
 import 'fcm_notification_service.dart';
 
@@ -23,6 +24,8 @@ class LocalNotificationTriggerService extends GetxService {
   final Random _random = Random();
   final Map<String, String> lastKnownQuotationStatuses = {};
   final Set<String> knownLeadIds = {};
+  bool hasInitialQuotationSnapshotLoaded = false;
+  bool hasInitialLeadsSnapshotLoaded = false;
 
   @override
   void onClose() {
@@ -48,12 +51,16 @@ class LocalNotificationTriggerService extends GetxService {
     _schedulerTimer = null;
     lastKnownQuotationStatuses.clear();
     knownLeadIds.clear();
+    hasInitialQuotationSnapshotLoaded = false;
+    hasInitialLeadsSnapshotLoaded = false;
     AppLogger.info("LocalNotificationTriggerService: Terminated trigger services and simulator timers.", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "teardown");
   }
 
-  /// 3. Cron Scheduler Simulator (Debug Mode Only)
   // ignore: unused_element
   void _startLocalSchedulerSimulator() {
+    // Early return: Notifications & simulators temporarily disabled
+    return;
+    /*
     if (!kDebugMode) {
       AppLogger.info("LocalNotificationTriggerService: Local Scheduler Simulator disabled in Release build.", layer: LogLayer.service, className: "LocalNotificationTriggerService", methodName: "_startLocalSchedulerSimulator");
       return;
@@ -98,8 +105,10 @@ class LocalNotificationTriggerService extends GetxService {
         await batch.commit();
       } catch (_) {}
     });
+    */
   }
 
+  // ignore: unused_element
   Future<void> _runAutomationSettingsCheck() async {
     try {
       final settingsSnap = await _firestore
@@ -275,6 +284,8 @@ class LocalNotificationTriggerService extends GetxService {
     required String body,
     required String type,
   }) async {
+    // Early return: Notifications temporarily disabled
+    return;
     try {
       await _firestore.collection(AppCollections.notificationQueue).add({
         'recipient': recipient,

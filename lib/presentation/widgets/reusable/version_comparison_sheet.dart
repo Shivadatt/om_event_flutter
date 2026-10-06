@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/entities/quotation.dart';
@@ -12,6 +13,18 @@ class VersionComparisonSheet extends StatefulWidget {
   const VersionComparisonSheet({super.key, required this.quotation});
 
   static void show(BuildContext context, Quotation quotation) {
+    // TEMP DISABLED - OM EVENTS ADVANCED FEATURE
+    // REASON: Not required for current business flow.
+    // DO NOT DELETE - Keep for future reactivation.
+    if (!FeatureFlags.quotationNegotiation) {
+      Get.snackbar(
+        "Notice",
+        "Version comparison is temporarily disabled for current business flow.",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
     Get.bottomSheet(
       VersionComparisonSheet(quotation: quotation),
       isScrollControlled: true,
