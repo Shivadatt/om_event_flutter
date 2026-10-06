@@ -161,13 +161,13 @@ class AppRouter {
     ),
     GetPage(
       name: AppRoutes.systemSettings,
-      page: () => const SystemSettingsScreen(),
+      page: () => const AdminLayout(child: SystemSettingsScreen()),
       binding: AdminBinding(),
       middlewares: [AdminAuthMiddleware()],
     ),
     GetPage(
       name: AppRoutes.businessDetails,
-      page: () => const BusinessDetailsScreen(),
+      page: () => const AdminLayout(child: BusinessDetailsScreen()),
       binding: BusinessDetailsBinding(),
       middlewares: [AdminAuthMiddleware()],
     ),

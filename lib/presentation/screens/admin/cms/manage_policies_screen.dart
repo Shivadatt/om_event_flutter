@@ -58,19 +58,42 @@ class _ManagePoliciesScreenState extends State<ManagePoliciesScreen>
 
   Future<void> _loadPolicies() async {
     try {
+      Map<String, dynamic> legal = {};
+
+      // 1. Primary: load from canonical settings/business_info
       final doc = await _firestore
           .collection(AppCollections.settings)
-          .doc('business_details')
+          .doc('business_info')
           .get();
-      if (doc.exists) {
+      if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
-        final legal = Map<String, dynamic>.from(data['legal'] ?? {});
-        _bookingCtrl.text = legal['termsAndConditions'] ?? '';
-        _cancellationCtrl.text = legal['cancellationPolicy'] ?? '';
-        _privacyCtrl.text = legal['privacyPolicy'] ?? '';
-        _termsCtrl.text = legal['termsAndConditions'] ?? '';
-        _refundCtrl.text = legal['refundPolicy'] ?? '';
+        final source = data['published'] ?? data['draft'] ?? data;
+        if (source is Map && source['legal'] is Map) {
+          legal = Map<String, dynamic>.from(source['legal'] as Map);
+        } else if (data['legal'] is Map) {
+          legal = Map<String, dynamic>.from(data['legal'] as Map);
+        }
       }
+
+      // 2. Fallback: if business_info does not contain legal yet, load from legacy business_details
+      if (legal.isEmpty) {
+        final legacyDoc = await _firestore
+            .collection(AppCollections.settings)
+            .doc('business_details')
+            .get();
+        if (legacyDoc.exists && legacyDoc.data() != null) {
+          final legacyData = legacyDoc.data()!;
+          if (legacyData['legal'] is Map) {
+            legal = Map<String, dynamic>.from(legacyData['legal'] as Map);
+          }
+        }
+      }
+
+      _bookingCtrl.text = legal['termsAndConditions'] ?? '';
+      _cancellationCtrl.text = legal['cancellationPolicy'] ?? '';
+      _privacyCtrl.text = legal['privacyPolicy'] ?? '';
+      _termsCtrl.text = legal['termsAndConditions'] ?? '';
+      _refundCtrl.text = legal['refundPolicy'] ?? '';
     } catch (e) {
       Get.snackbar('Error', 'Failed to load policies: $e');
     } finally {
@@ -81,16 +104,32 @@ class _ManagePoliciesScreenState extends State<ManagePoliciesScreen>
   Future<void> _savePolicies() async {
     setState(() => _isSaving = true);
     try {
+      final legalData = {
+        'termsAndConditions': _termsCtrl.text.trim(),
+        'cancellationPolicy': _cancellationCtrl.text.trim(),
+        'privacyPolicy': _privacyCtrl.text.trim(),
+        'refundPolicy': _refundCtrl.text.trim(),
+      };
+
+      // 1. Save to canonical settings/business_info consumed by public customer app
+      await _firestore
+          .collection(AppCollections.settings)
+          .doc('business_info')
+          .set({
+        'legal': legalData,
+        'draft': {'legal': legalData},
+        'published': {'legal': legalData},
+        'meta': {
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+      }, SetOptions(merge: true));
+
+      // 2. Dual-write to settings/business_details for complete backward compatibility
       await _firestore
           .collection(AppCollections.settings)
           .doc('business_details')
           .set({
-        'legal': {
-          'termsAndConditions': _termsCtrl.text.trim(),
-          'cancellationPolicy': _cancellationCtrl.text.trim(),
-          'privacyPolicy': _privacyCtrl.text.trim(),
-          'refundPolicy': _refundCtrl.text.trim(),
-        },
+        'legal': legalData,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 

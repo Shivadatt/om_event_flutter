@@ -35,7 +35,9 @@ class ReviewModel extends Review {
       customerName: json['customer_name'] ?? json['customerName'] ?? '',
       eventName: json['event_name'] ?? json['eventName'] ?? '',
       rating: json['rating'] ?? 5,
-      comment: json['comment'] ?? '',
+      comment: (json['comment'] != null && json['comment'].toString().isNotEmpty)
+          ? json['comment'].toString()
+          : (json['reviewText'] ?? '').toString(),
       imageUrl: json['image_url'] ?? json['imageUrl'] ?? '',
       isVerified: json['is_verified'] ?? json['isVerified'] ?? false,
       isPublished: json['is_published'] ?? json['isPublished'] ?? false,

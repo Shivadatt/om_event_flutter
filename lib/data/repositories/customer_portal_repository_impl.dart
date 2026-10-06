@@ -98,14 +98,61 @@ class CustomerPortalRepositoryImpl implements CustomerPortalRepository {
   @override
   Future<void> submitCustomerReview(
       String customerId, String quotationId, String reviewText, double rating) async {
+    String customerName = 'Valued Customer';
+    String eventName = 'Event Decor';
+    String experienceId = '';
+
+    try {
+      if (customerId.isNotEmpty) {
+        final custDoc = await _firestore.collection(AppCollections.customers).doc(customerId).get();
+        if (custDoc.exists && custDoc.data() != null) {
+          final cd = custDoc.data()!;
+          customerName = cd['fullName'] ?? cd['name'] ?? customerName;
+        }
+      }
+      if (quotationId.isNotEmpty) {
+        final quoteDoc = await _firestore.collection(AppCollections.quotations).doc(quotationId).get();
+        if (quoteDoc.exists && quoteDoc.data() != null) {
+          final qd = quoteDoc.data()!;
+          final items = qd['items'];
+          if (items is List && items.isNotEmpty && items.first is Map) {
+            eventName = items.first['name'] ?? eventName;
+            experienceId = items.first['experienceId'] ?? '';
+          }
+        }
+      }
+    } catch (_) {}
+
+    final now = DateTime.now();
+
+    // 1. Canonical write to AppCollections.reviews (moderated in Admin Studio)
+    await _firestore.collection(AppCollections.reviews).add({
+      'customer_name': customerName,
+      'event_name': eventName,
+      'rating': rating,
+      'comment': reviewText,
+      'image_url': '',
+      'is_verified': true,
+      'is_published': false, // Requires admin moderation before public display
+      'experience_id': experienceId,
+      'quotation_id': quotationId,
+      'customer_id': customerId,
+      'created_at': now.toIso8601String(),
+      'is_featured': false,
+      'display_order': 1,
+      'is_active': true,
+    });
+
+    // 2. Dual-write to customer_reviews for complete backward compatibility
     final docRef = _firestore.collection(AppCollections.customerReviews).doc();
     await docRef.set({
       'customerId': customerId,
       'quotationId': quotationId,
+      'customerName': customerName,
       'reviewText': reviewText,
       'rating': rating,
-      'status': 'Pending',
-      'createdAt': DateTime.now().toIso8601String(),
+      'status': 'Pending Moderation',
+      'createdAt': now.toIso8601String(),
     });
   }
 

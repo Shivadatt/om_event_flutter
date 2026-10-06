@@ -205,6 +205,60 @@ extension _SettingsOperationsFormExtension on _SystemSettingsScreenState {
           "LEGAL POLICIES & TERMS",
           style: GoogleFonts.italiana(fontSize: 24),
         ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF152621),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFC9A77E).withValues(alpha: 0.35)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.policy_outlined, color: Color(0xFFC9A77E), size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      "Centrally Managed in Policies CMS",
+                      style: AppTheme.sansBody(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Customer-facing policy documents (Booking, Cancellation, Terms of Service, Refund, and Privacy policies) are canonically managed in the dedicated Policies CMS.",
+                style: AppTheme.sansBody(
+                  fontSize: 12,
+                  color: Colors.white70,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC9A77E),
+                  foregroundColor: const Color(0xFF0F1B18),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                icon: const Icon(Icons.launch_outlined, size: 16),
+                label: const Text(
+                  "OPEN POLICIES CMS",
+                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0, fontSize: 12),
+                ),
+                onPressed: () => Get.toNamed(AppRoutes.managePolicies),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 24),
         _field("Privacy Policy", _policyPrivacy),
         _field("Terms of Service", _policyTerms),

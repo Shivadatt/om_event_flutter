@@ -22,6 +22,75 @@ class AdminAuthMiddleware extends GetMiddleware {
   @override
   int? get priority => 1;
 
+  static const Map<String, String> _routePermissions = {
+    AppRoutes.manageCategories: 'can_manage_categories',
+    AppRoutes.manageExperiences: 'can_manage_items',
+    AppRoutes.manageCustomers: 'can_manage_customers',
+    AppRoutes.manageLeads: 'can_manage_leads',
+    AppRoutes.manageQuotes: 'can_manage_quotes',
+    AppRoutes.manageUsers: 'can_manage_users',
+    AppRoutes.businessDetails: 'can_manage_settings',
+    AppRoutes.systemSettings: 'can_manage_settings',
+  };
+
+  static String? _getRequiredPermission(String? route) {
+    if (route == null) return null;
+    var cleanRoute = route.split('?').first.split('#').first.trim();
+    if (cleanRoute.length > 1 && cleanRoute.endsWith('/')) {
+      cleanRoute = cleanRoute.substring(0, cleanRoute.length - 1);
+    }
+    if (_routePermissions.containsKey(cleanRoute)) {
+      return _routePermissions[cleanRoute];
+    }
+    for (final entry in _routePermissions.entries) {
+      if (cleanRoute.startsWith('${entry.key}/')) {
+        return entry.value;
+      }
+    }
+    return null;
+  }
+
+  RouteSettings? _checkRoutePermission(AuthController auth, String? route) {
+    final requiredPermission = _getRequiredPermission(route);
+    if (requiredPermission == null) {
+      return null;
+    }
+
+    final admin = auth.rxAdminRole.value;
+    final isSuperAdmin =
+        auth.rxUserRole.value == 'super_admin' || admin?.roleType == 'super_admin';
+    if (isSuperAdmin) {
+      return null;
+    }
+
+    if (admin != null) {
+      if (!admin.hasPermission(requiredPermission)) {
+        _notifyAccessDenied();
+        return const RouteSettings(name: AppRoutes.adminDashboard);
+      }
+      return null;
+    }
+
+    // Role is not yet loaded or user lacks permission — deny route access
+    _notifyAccessDenied();
+    return const RouteSettings(name: AppRoutes.adminDashboard);
+  }
+
+  void _notifyAccessDenied() {
+    Future.microtask(() {
+      if (Get.isSnackbarOpen != true) {
+        Get.snackbar(
+          "Access Denied",
+          "You do not have permission to access this section.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF2A1515),
+          colorText: Colors.redAccent,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    });
+  }
+
   @override
   RouteSettings? redirect(String? route) {
     if (!Get.isRegistered<AuthController>()) {
@@ -55,6 +124,8 @@ class AdminAuthMiddleware extends GetMiddleware {
 
     // ── 2. Check In-Memory Role Authorization ─────────────────────────────
     if (auth.rxIsLoggedIn.value && auth.isStaffOrAdmin) {
+      final permCheck = _checkRoutePermission(auth, route);
+      if (permCheck != null) return permCheck;
       return null;
     }
 
@@ -71,6 +142,8 @@ class AdminAuthMiddleware extends GetMiddleware {
           if (cachedRole != null && auth.rxUserRole.value.isEmpty) {
             auth.rxUserRole.value = cachedRole;
           }
+          final permCheck = _checkRoutePermission(auth, route);
+          if (permCheck != null) return permCheck;
           return null; // Session valid & authorized — allow access
         }
       }

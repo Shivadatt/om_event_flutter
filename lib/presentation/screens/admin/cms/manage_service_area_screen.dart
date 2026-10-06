@@ -30,21 +30,43 @@ class _ManageServiceAreaScreenState extends State<ManageServiceAreaScreen> {
 
   Future<void> _loadBranches() async {
     try {
+      List<Map<String, dynamic>> loadedBranches = [];
+
+      // 1. Primary: load from canonical settings/business_info
       final doc = await _firestore
           .collection(AppCollections.settings)
-          .doc('business_details')
+          .doc('business_info')
           .get();
-      if (doc.exists) {
+      if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
-        final rawBranches = data['branches'];
-        if (rawBranches is List) {
-          setState(() {
-            _branches = List<Map<String, dynamic>>.from(
-              rawBranches.map((e) => Map<String, dynamic>.from(e as Map)),
-            );
-          });
+        final source = data['published'] ?? data['draft'] ?? data;
+        final rawBranches = source['branches'] ?? source['officeBranches'];
+        if (rawBranches is List && rawBranches.isNotEmpty) {
+          loadedBranches = List<Map<String, dynamic>>.from(
+            rawBranches.map((e) => Map<String, dynamic>.from(e as Map)),
+          );
         }
       }
+
+      // 2. Fallback: if not found, load from legacy settings/business_details
+      if (loadedBranches.isEmpty) {
+        final legacyDoc = await _firestore
+            .collection(AppCollections.settings)
+            .doc('business_details')
+            .get();
+        if (legacyDoc.exists && legacyDoc.data() != null) {
+          final rawBranches = legacyDoc.data()!['branches'];
+          if (rawBranches is List) {
+            loadedBranches = List<Map<String, dynamic>>.from(
+              rawBranches.map((e) => Map<String, dynamic>.from(e as Map)),
+            );
+          }
+        }
+      }
+
+      setState(() {
+        _branches = loadedBranches;
+      });
     } catch (e) {
       Get.snackbar('Error', 'Failed to load service areas: $e');
     } finally {
@@ -55,6 +77,20 @@ class _ManageServiceAreaScreenState extends State<ManageServiceAreaScreen> {
   Future<void> _saveBranches() async {
     setState(() => _isSaving = true);
     try {
+      // 1. Save to canonical settings/business_info (streamed by BusinessDetailsService)
+      await _firestore
+          .collection(AppCollections.settings)
+          .doc('business_info')
+          .set({
+        'branches': _branches,
+        'draft': {'branches': _branches},
+        'published': {'branches': _branches},
+        'meta': {
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+      }, SetOptions(merge: true));
+
+      // 2. Dual-write to settings/business_details for complete backward compatibility
       await _firestore
           .collection(AppCollections.settings)
           .doc('business_details')

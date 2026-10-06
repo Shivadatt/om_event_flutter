@@ -434,6 +434,21 @@ mixin SettingsOperations {
       'termsOfService': policies.termsOfService,
       'refundPolicy': policies.refundPolicy,
     });
+    final legalData = {
+      'privacyPolicy': policies.privacyPolicy,
+      'termsAndConditions': policies.termsOfService,
+      'refundPolicy': policies.refundPolicy,
+    };
+    await _getDocRef('business_info').set({
+      'legal': legalData,
+      'draft': {'legal': legalData},
+      'published': {'legal': legalData},
+      'meta': {'updatedAt': DateTime.now().toIso8601String()},
+    }, SetOptions(merge: true));
+    await _getDocRef('business_details').set({
+      'legal': legalData,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> saveValidation(ValidationSettings validation) async {
