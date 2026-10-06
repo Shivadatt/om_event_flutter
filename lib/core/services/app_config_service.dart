@@ -106,7 +106,9 @@ class AppConfigService extends GetxService {
   }
 
   StreamSubscription<T> _bindStream<T>(Stream<T> stream, Rx<T> rxVar) {
-    return stream.listen(
+    // take(1) populates rxVar with cached/server settings and closes the subscription immediately,
+    // avoiding 23 persistent open Firestore snapshot listeners.
+    return stream.take(1).listen(
       (data) => rxVar.value = data,
       onError: (e) {
         // Silently swallow or debug print to prevent RethrownDartError crashes in DDC

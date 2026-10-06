@@ -119,11 +119,58 @@
       justify-content:center;
       background: #0F0D0B;
       z-index:9999;
-      transition:opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
     }
     
-    /* Background video elements */
+    .splash-brand {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .splash-title {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      color: #D4AF37;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .splash-subtitle {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .splash-bar {
+      width: 140px;
+      height: 2px;
+      background: rgba(212, 175, 55, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+    .splash-progress {
+      width: 50%;
+      height: 100%;
+      background: #D4AF37;
+      border-radius: 2px;
+      animation: splash-shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes splash-shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(250%); }
+    }
+
+    /* Optional video background (lazy loaded, non-blocking) */
     video#splash-video {
       position: absolute;
       inset: 0;
@@ -131,76 +178,52 @@
       height: 100%;
       object-fit: cover;
       z-index: 1;
-      opacity: 1; /* Shows the video directly and immediately */
+      opacity: 0.6;
     }
 
     #flutter-loading-screen.hidden{opacity:0;pointer-events:none}
   </style>
 </head>
 <body>
-  <!-- Native splash shown immediately — zero flicker, no blank white -->
+  <!-- Native splash shown immediately — zero flicker, luxury gold & black identity -->
   <div id="flutter-loading-screen" aria-label="Loading Om Events…" role="progressbar">
-    <!-- Video background -->
-    <video id="splash-video" autoplay muted playsinline preload="auto">
-      <source src="splash_screen.mp4" type="video/mp4">
+    <div class="splash-brand">
+      <div class="splash-title">OM EVENTS</div>
+      <div class="splash-subtitle">Celebrations, thoughtfully composed</div>
+      <div class="splash-bar"><div class="splash-progress"></div></div>
+    </div>
+    <!-- Video background loaded asynchronously without blocking Flutter initialization -->
+    <video id="splash-video" autoplay muted playsinline preload="none">
       <source src="https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/splash_screen.mp4" type="video/mp4">
     </video>
   </div>
 
   <script>
-    var isFlutterReady = false;
-    var isMinTimePassed = false;
     var splashRemoved = false;
 
     function removeSplash() {
-      if (isFlutterReady && isMinTimePassed && !splashRemoved) {
+      if (!splashRemoved) {
         splashRemoved = true;
         var splash = document.getElementById('flutter-loading-screen');
         if (splash) {
           splash.classList.add('hidden');
-          setTimeout(function () { splash.remove(); }, 600);
+          setTimeout(function () { splash.remove(); }, 500);
         }
       }
     }
 
-    // Remove splash once Flutter engine signals it is ready
+    // Immediately remove splash once Flutter engine renders its first frame (zero artificial delay)
     window.addEventListener('flutter-first-frame', function() {
-      isFlutterReady = true;
       removeSplash();
     });
 
-    // Start the 4-second timer ONLY when the video actually starts playing.
-    // M-3 FIX: Reduced from 10s to 4s — Flutter is typically ready before this fires.
-    var video = document.getElementById('splash-video');
-    if (video) {
-      video.addEventListener('playing', function() {
-        setTimeout(function() {
-          isMinTimePassed = true;
-          removeSplash();
-        }, 4000); // 4 seconds of actual video play time
-      });
-    } else {
-      // Fallback if video is missing
-      setTimeout(function() {
-        isMinTimePassed = true;
-        removeSplash();
-      }, 4000);
-    }
+    // Safety fallback in case flutter-first-frame is delayed or missed
+    window.addEventListener('load', function() {
+      setTimeout(removeSplash, 4000);
+    });
   </script>
 
-  <!-- Register Firebase Messaging Service Worker for background push notifications -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/firebase-messaging-sw.js', { scope: '/' })
-        .then(function (registration) {
-          console.log('[SW] Firebase Messaging SW registered:', registration.scope);
-        })
-        .catch(function (err) {
-          console.warn('[SW] Firebase Messaging SW registration failed:', err);
-        });
-    }
-  </script>
+  <!-- Push notifications are disabled in feature flags; service worker registration skipped for performance -->
 
   <script src="flutter_bootstrap.js" async></script>
 </body>

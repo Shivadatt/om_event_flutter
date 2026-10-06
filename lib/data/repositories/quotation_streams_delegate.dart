@@ -47,44 +47,30 @@ class QuotationStreamsDelegate {
     }
   }
 
-  /// Streams all quotations.
+  /// Streams all quotations (optimized: zero N+1 sub-queries).
   Stream<List<Quotation>> streamAllQuotations() {
     return _db
         .collection('quotations')
         .snapshots()
-        .asyncMap((snap) async {
-          final futures = snap.docs.map((doc) async {
-            final model = QuotationModel.fromJson(doc.data(), doc.id);
-            final versions = await helpersDelegate.getVersionsForQuotation(
-              doc.id,
-              model.legacyVersionHistory,
-              model.items,
-            );
-            return model.copyWith(versions: versions);
+        .map((snap) {
+          final quotesList = snap.docs.map((doc) {
+            return QuotationModel.fromJson(doc.data(), doc.id);
           }).toList();
-          final List<Quotation> quotesList = await Future.wait(futures);
           quotesList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return quotesList;
         });
   }
 
-  /// Streams customer quotations.
+  /// Streams customer quotations (optimized: zero N+1 sub-queries).
   Stream<List<Quotation>> streamCustomerQuotations(String customerId) {
     return _db
         .collection('quotations')
         .where('customerId', isEqualTo: customerId)
         .snapshots()
-        .asyncMap((snap) async {
-          final futures = snap.docs.map((doc) async {
-            final model = QuotationModel.fromJson(doc.data(), doc.id);
-            final versions = await helpersDelegate.getVersionsForQuotation(
-              doc.id,
-              model.legacyVersionHistory,
-              model.items,
-            );
-            return model.copyWith(versions: versions);
+        .map((snap) {
+          final quotesList = snap.docs.map((doc) {
+            return QuotationModel.fromJson(doc.data(), doc.id);
           }).toList();
-          final List<Quotation> quotesList = await Future.wait(futures);
           quotesList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return quotesList;
         });

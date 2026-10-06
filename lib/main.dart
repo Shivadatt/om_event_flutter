@@ -66,12 +66,14 @@ void main() async {
     }),
   ]);
 
-  // Await initial Firebase Auth state restoration on Flutter Web (IndexedDB)
+  // Non-blocking initial Firebase Auth check — BootstrapService handles reactive auth post-mount
   try {
-    await FirebaseAuth.instance.authStateChanges().first.timeout(
-      const Duration(milliseconds: 1000),
-      onTimeout: () => FirebaseAuth.instance.currentUser,
-    );
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.authStateChanges().first.timeout(
+        const Duration(milliseconds: 100),
+        onTimeout: () => FirebaseAuth.instance.currentUser,
+      );
+    }
   } catch (_) {}
 
   runApp(const OmEventsApp());

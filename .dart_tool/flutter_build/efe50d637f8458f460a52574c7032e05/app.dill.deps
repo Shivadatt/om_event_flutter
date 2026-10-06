@@ -3023,6 +3023,7 @@ file:///D:/om_event_python/om_event/.dart_tool/package_config.json
 file:///D:/om_event_python/om_event/lib/core/config/app_routes.dart
 file:///D:/om_event_python/om_event/lib/core/config/app_theme.dart
 file:///D:/om_event_python/om_event/lib/core/config/constants.dart
+file:///D:/om_event_python/om_event/lib/core/config/feature_flags.dart
 file:///D:/om_event_python/om_event/lib/core/constants/app_assets.dart
 file:///D:/om_event_python/om_event/lib/core/constants/app_branches.dart
 file:///D:/om_event_python/om_event/lib/core/constants/app_buckets.dart
@@ -3367,6 +3368,7 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/overview_view.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/preferences_view.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/profile_view.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/chat_contact_cta_widget.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/digital_consent_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/proposal_financial_card.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/views/quotes/proposal_mobile_accordion.dart

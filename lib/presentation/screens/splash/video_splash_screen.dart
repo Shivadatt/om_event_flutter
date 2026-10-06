@@ -33,31 +33,29 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
   Future<void> _initVideo() async {
     final options = VideoPlayerOptions(mixWithOthers: true);
 
-    // 1. Attempt local video first
     try {
-      final localCtrl = VideoPlayerController.networkUrl(
-        Uri.parse(_localVideoPath),
+      final remoteCtrl = VideoPlayerController.networkUrl(
+        Uri.parse(_remoteVideoUrl),
         videoPlayerOptions: options,
       );
-      await localCtrl.initialize();
+      await remoteCtrl.initialize();
       if (!mounted) {
-        localCtrl.dispose();
+        remoteCtrl.dispose();
         return;
       }
-      _controller = localCtrl;
+      _controller = remoteCtrl;
     } catch (_) {
-      // 2. Fallback to verified Supabase remote video asset
       try {
-        final remoteCtrl = VideoPlayerController.networkUrl(
-          Uri.parse(_remoteVideoUrl),
+        final localCtrl = VideoPlayerController.networkUrl(
+          Uri.parse(_localVideoPath),
           videoPlayerOptions: options,
         );
-        await remoteCtrl.initialize();
+        await localCtrl.initialize();
         if (!mounted) {
-          remoteCtrl.dispose();
+          localCtrl.dispose();
           return;
         }
-        _controller = remoteCtrl;
+        _controller = localCtrl;
       } catch (_) {}
     }
 

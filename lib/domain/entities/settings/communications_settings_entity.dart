@@ -169,7 +169,7 @@ class VideoSettings {
           'Atmospheric Lighting',
           'Grand Walkway Styling'
         ],
-        'videoAsset': 'assets/videos/wedding-showcase.mp4',
+        'videoAsset': 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/wedding-showcase.mp4',
         'posterAsset': 'assets/images/wedding-stage.jpg',
       },
       {
@@ -182,7 +182,7 @@ class VideoSettings {
           'Synchronized release system',
           'Joyous outdoor celebration'
         ],
-        'videoAsset': 'assets/videos/Balloonblast.mp4',
+        'videoAsset': 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/Balloonblast.mp4',
         'posterAsset': 'assets/images/BaloonBlast.jpg',
       }
     ]);

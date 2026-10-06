@@ -3,7 +3,6 @@ class AppAssets {
   AppAssets._();
 
   static const String _imagesBase = 'assets/images';
-  static const String _videosBase = 'assets/videos';
 
   // ── Images ────────────────────────────────────────────────────────────────
   static const String imageBirthday = '$_imagesBase/birthday.jpg';
@@ -28,7 +27,8 @@ class AppAssets {
       '$_imagesBase/luxury-evening-decor.jpg';
 
   // ── Videos ────────────────────────────────────────────────────────────────
-  static const String videoBalloonBlast = '$_videosBase/Balloonblast.mp4';
+  static const String videoBalloonBlast =
+      'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/Balloonblast.mp4';
   static const String videoWeddingShowcase =
-      '$_videosBase/wedding-showcase.mp4';
+      'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/wedding-showcase.mp4';
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
@@ -89,12 +88,10 @@ class InitialBinding extends Bindings {
     Get.put<FirebaseAuth>(FirebaseAuth.instance, permanent: true);
     final firestore = FirebaseFirestore.instance;
     try {
-      if (!kIsWeb) {
-        firestore.settings = const Settings(
-          persistenceEnabled: true,
-          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-        );
-      }
+      firestore.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
     } catch (_) {}
     Get.put<FirebaseFirestore>(firestore, permanent: true);
 

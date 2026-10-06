@@ -37,6 +37,7 @@ class _ExperienceCardState extends State<ExperienceCard> {
       return Image.asset(
         url,
         fit: BoxFit.cover,
+        cacheWidth: 600,
         errorBuilder:
             (_, __, ___) => ItemVisualPlaceholder(
               title: title,
@@ -48,6 +49,7 @@ class _ExperienceCardState extends State<ExperienceCard> {
     return Image.network(
       url,
       fit: BoxFit.cover,
+      cacheWidth: 600,
       errorBuilder:
           (_, __, ___) => ItemVisualPlaceholder(
             title: title,

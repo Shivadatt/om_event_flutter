@@ -67,47 +67,20 @@ class _CatalogMeshPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CatalogMeshPainter oldDelegate) =>
-      oldDelegate.animValue != animValue;
+  bool shouldRepaint(covariant _CatalogMeshPainter oldDelegate) => false;
 }
 
-class CatalogSectionBackground extends StatefulWidget {
+class CatalogSectionBackground extends StatelessWidget {
   final Widget child;
   const CatalogSectionBackground({super.key, required this.child});
 
   @override
-  State<CatalogSectionBackground> createState() => _CatalogSectionBackgroundState();
-}
-
-class _CatalogSectionBackgroundState extends State<CatalogSectionBackground>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 20),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _CatalogMeshPainter(animValue: _controller.value),
-          child: widget.child,
-        );
-      },
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: const _CatalogMeshPainter(animValue: 0.5),
+        child: child,
+      ),
     );
   }
 }
