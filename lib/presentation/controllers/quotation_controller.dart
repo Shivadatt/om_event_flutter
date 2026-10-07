@@ -17,6 +17,7 @@ import '../../core/utils/error_mapper.dart';
 import 'customer_auth_controller.dart';
 import 'cart_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 part 'parts/quotation_pricing.dart';
 part 'parts/quotation_actions.dart';

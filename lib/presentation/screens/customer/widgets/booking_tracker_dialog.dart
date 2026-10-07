@@ -68,13 +68,45 @@ class _BookingTrackerDialogState extends State<BookingTrackerDialog> {
     });
 
     try {
-      final querySnap = await FirebaseFirestore.instance
-          .collection('quotations')
-          .where('publicId', isEqualTo: refId)
-          .limit(1)
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+      // 1. If customer is authenticated, attempt reading their owned quotation
+      if (currentUserId != null) {
+        try {
+          final querySnap = await FirebaseFirestore.instance
+              .collection('quotations')
+              .where('publicId', isEqualTo: refId)
+              .limit(1)
+              .get();
+
+          if (querySnap.docs.isNotEmpty) {
+            final doc = querySnap.docs.first;
+            final model = QuotationModel.fromJson(doc.data(), doc.id);
+            if (model.customerId == currentUserId) {
+              bool phoneMatched = true;
+              if (cleanPhone.isNotEmpty) {
+                final docPhone = AppValidators.cleanPhone(model.customerPhone);
+                phoneMatched = docPhone.endsWith(cleanPhone) || cleanPhone.endsWith(docPhone);
+              }
+              setState(() {
+                _foundQuotation = model;
+                _isPhoneVerified = phoneMatched;
+              });
+              return;
+            }
+          }
+        } catch (_) {
+          // If query fails (e.g. not owner), fallback to public safe timeline projection
+        }
+      }
+
+      // 2. Public Tracker Projection (P1 FIX: Zero PII, no quotation enumeration)
+      final timelineDoc = await FirebaseFirestore.instance
+          .collection('booking_timelines')
+          .doc(refId)
           .get();
 
-      if (querySnap.docs.isEmpty) {
+      if (!timelineDoc.exists) {
         setState(() {
           _errorMessage =
               "No booking request found for Reference ID '$refId'. Please verify your ID format (e.g. OM-20260928-104).";
@@ -82,30 +114,66 @@ class _BookingTrackerDialogState extends State<BookingTrackerDialog> {
         return;
       }
 
-      final doc = querySnap.docs.first;
-      final model = QuotationModel.fromJson(doc.data(), doc.id);
-
-      // Verify phone number matches if provided
+      final data = timelineDoc.data() ?? {};
+      final phoneLast4 = (data['phoneLast4'] ?? '').toString();
       bool phoneMatched = false;
+
       if (cleanPhone.isNotEmpty) {
-        final docPhone = AppValidators.cleanPhone(model.customerPhone);
-        if (!docPhone.endsWith(cleanPhone) && !cleanPhone.endsWith(docPhone)) {
+        if (phoneLast4.isNotEmpty && cleanPhone.endsWith(phoneLast4)) {
+          phoneMatched = true;
+        } else {
           setState(() {
             _errorMessage =
                 "The phone number provided does not match the record for this booking ID.";
           });
           return;
         }
-        phoneMatched = true;
       }
 
-      // Check if logged in customer matches
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-      final isOwner = currentUserId != null && currentUserId == model.customerId;
+      final eventDate = DateTime.tryParse(data['eventDate'] ?? '') ?? DateTime.now();
+      final rawStatusStr = data['status'] ?? 'published';
+      final status = QuotationStatus.fromString(rawStatusStr);
+      final serviceName = data['serviceName'] ?? 'Event Decor';
+      final double grandTotal = (data['grandTotal'] as num?)?.toDouble() ?? 0.0;
+
+      // Construct safe model containing strictly tracker-safe fields (zero PII)
+      final safeProjection = Quotation(
+        id: refId,
+        publicId: refId,
+        customerPhone: phoneLast4.isNotEmpty ? '******$phoneLast4' : 'Protected',
+        customerName: data['maskedName'] ?? 'Valued Client',
+        eventDate: eventDate,
+        eventTime: data['eventTime'] ?? '',
+        location: data['maskedVenue'] ?? 'Protected Location',
+        notes: '',
+        subtotal: grandTotal,
+        discount: 0,
+        deliveryCharge: 0,
+        travelCharge: 0,
+        gstPercent: 0,
+        gstAmount: 0,
+        grandTotal: grandTotal,
+        pdfUrl: '',
+        status: status,
+        items: [
+          QuotationItem(
+            experienceId: '',
+            name: serviceName,
+            quantity: 1,
+            unitPrice: grandTotal,
+            color: '',
+            theme: '',
+            notes: '',
+          ),
+        ],
+        createdAt: eventDate,
+        updatedAt: DateTime.now(),
+        customerId: '',
+      );
 
       setState(() {
-        _foundQuotation = model;
-        _isPhoneVerified = phoneMatched || isOwner;
+        _foundQuotation = safeProjection;
+        _isPhoneVerified = phoneMatched;
       });
     } catch (e) {
       setState(() {

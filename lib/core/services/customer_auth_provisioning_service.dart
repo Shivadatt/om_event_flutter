@@ -127,10 +127,10 @@ class CustomerAuthProvisioningService {
     final actionCodeSettings = ActionCodeSettings(
       url: redirectUrl,
       handleCodeInApp: true,
-      androidPackageName: 'com.example.om_event',
+      androidPackageName: 'com.om.event',
       androidInstallApp: true,
       androidMinimumVersion: '12',
-      iOSBundleId: 'com.example.omEvent',
+      iOSBundleId: 'com.omevents.omEvent',
     );
 
     // 5. Store pending email locally (for browser completion on the same device)

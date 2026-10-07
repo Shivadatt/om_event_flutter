@@ -80,26 +80,77 @@ service cloud.firestore {
 
     // Quotations: Access control and client field validation rules
     match /quotations/{quotationId} {
-      allow create: if isAdminOrStaff() || 
-                    (isAuthenticated() && request.resource.data.customerId == request.auth.uid);
+      // P0 FIX: Customers can never create a pre-confirmed or completed quotation, nor write admin confirmation fields
+      allow create: if isAdminOrStaff() || (
+        isAuthenticated() && 
+        request.resource.data.customerId == request.auth.uid &&
+        request.resource.data.status != 'bookingConfirmed' &&
+        request.resource.data.status != 'completed' &&
+        !request.resource.data.keys().hasAny([
+          'confirmedAt', 'confirmedBy', 'confirmedByAdminId',
+          'cancellationApprovedAt', 'cancellationApprovedBy'
+        ])
+      );
+      // P1 FIX: Quotations collection is strictly private to Admin/Staff or the authenticated owner.
+      // Denies public/unauthenticated reads and collection-wide enumeration.
       allow get: if isAdminOrStaff() || 
-                 (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
-                 resource.data.status == 'bookingConfirmed' ||
-                 (resource.data.public_id != null && resource.data.public_id != '') ||
-                 (resource.data.publicId != null && resource.data.publicId != '');
+                 (isAuthenticated() && resource.data.customerId == request.auth.uid);
       allow list: if isAdminOrStaff() || 
-                  (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
-                  resource.data.status == 'bookingConfirmed';
+                  (isAuthenticated() && resource.data.customerId == request.auth.uid);
+      // P0 FIX: Strict customer transition validation.
+      // Customers may NEVER set status = bookingConfirmed, completed, or cancelled,
+      // and cannot tamper with admin, confirmation, date-locking, or pricing fields.
       allow update: if isAdminOrStaff() || (
         isAuthenticated() && 
         resource.data.customerId == request.auth.uid && 
+        (
+          request.resource.data.status == resource.data.status ||
+          (
+            resource.data.status != 'bookingConfirmed' &&
+            request.resource.data.status in ['acceptedByClient', 'rejectedByClient', 'revisionRequested', 'viewed']
+          )
+        ) &&
+        (resource.data.status == 'bookingConfirmed' || request.resource.data.status != 'bookingConfirmed') &&
+        request.resource.data.status != 'completed' &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'status', 'updated_at', 'updatedAt', 
           'customerAction', 'customerActionAt', 'customerViewedAt', 
-          'revisionReason', 'revisionMessage'
+          'revisionReason', 'revisionMessage',
+          'acceptedAt', 'acceptedVersion', 'acceptedAmount', 'acceptedBy',
+          'acceptedDevice', 'acceptedIp', 'consentTextVersion',
+          'cancellation_reason', 'cancellation_requested_at'
+        ]) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'confirmedAt', 'confirmedBy', 'confirmedByAdminId',
+          'normalized_event_date', 'public_id', 'publicId',
+          'cancellationApprovedAt', 'cancellationApprovedBy',
+          'cancellationStatus', 'cancellation_status',
+          'adminNotes', 'internalNotes', 'operationalNotes',
+          'bookingDetails', 'staffAssignment', 'logistics',
+          'isFinancialLocked', 'isPermanentlyLocked',
+          'depositPaid', 'totalPrice', 'grandTotal', 'subtotal', 'discount',
+          'deliveryCharge', 'travelCharge', 'gstPercent', 'gstAmount',
+          'eventDate', 'event_date', 'eventTime', 'event_time', 'location',
+          'items', 'pdfUrl', 'customerId'
         ])
       );
       allow delete: if isAdminOrStaff();
+    }
+
+    // P2 FIX: Atomic date-locks for confirmed bookings.
+    // Deterministic key: booked_dates/{YYYY-MM-DD}.
+    // Readable publicly for live calendar availability; only admin/staff can create/delete locks.
+    match /booked_dates/{dateId} {
+      allow read: if true;
+      allow write: if isAdminOrStaff();
+    }
+
+    // P1 FIX: Safe public booking tracker projection (no PII, no listing/enumeration).
+    // Document ID matches publicId (e.g. OM-20261010-001).
+    match /booking_timelines/{publicId} {
+      allow get: if true;
+      allow list: if false; // Enumeration / collection listing strictly denied!
+      allow write: if isAdminOrStaff() || isAuthenticated();
     }
 
     // Quotation drafts: Only authenticated users can access their drafts

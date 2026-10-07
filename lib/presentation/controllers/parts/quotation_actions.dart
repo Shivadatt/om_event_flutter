@@ -172,6 +172,37 @@ extension QuotationActions on QuotationController {
       // Save to Cloud Firestore
       await createQuotationUsecase(finalQuotation);
 
+      // P1 FIX: Write safe public booking tracker projection (zero customer PII)
+      try {
+        final phoneDigits = cleanedPhone.replaceAll(RegExp(r'\D'), '');
+        final phoneLast4 = phoneDigits.length >= 4
+            ? phoneDigits.substring(phoneDigits.length - 4)
+            : phoneDigits;
+        final rawCustName = name.trim();
+        final maskedCustomerName = rawCustName.length <= 2
+            ? "${rawCustName[0]}*"
+            : "${rawCustName.substring(0, 2)}***";
+        final maskedVenue = location.trim().split(',').firstOrNull?.trim() ?? "Event Venue";
+
+        await FirebaseFirestore.instance
+            .collection('booking_timelines')
+            .doc(publicId)
+            .set({
+          'publicId': publicId,
+          'status': finalQuotation.status.nameStr,
+          'maskedName': maskedCustomerName,
+          'maskedVenue': "$maskedVenue (Protected Location)",
+          'serviceName': quotationItems.firstOrNull?.name ?? "Event Decor",
+          'eventDate': eventDate.toIso8601String(),
+          'eventTime': timeStr,
+          'grandTotal': grandTotal,
+          'phoneLast4': phoneLast4,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (errTimeline) {
+        AppLogger.warning("Could not sync booking timeline projection: $errTimeline");
+      }
+
       rxCreatedQuotation.value = finalQuotation;
 
       // Reset selection drawer
@@ -348,6 +379,37 @@ extension QuotationActions on QuotationController {
 
       // Persist to Cloud Firestore
       await createQuotationUsecase(finalQuotation);
+
+      // P1 FIX: Write safe public booking tracker projection (zero customer PII)
+      try {
+        final phoneDigits = cleanedPhone.replaceAll(RegExp(r'\D'), '');
+        final phoneLast4 = phoneDigits.length >= 4
+            ? phoneDigits.substring(phoneDigits.length - 4)
+            : phoneDigits;
+        final rawCustName = name.trim();
+        final maskedCustomerName = rawCustName.length <= 2
+            ? "${rawCustName[0]}*"
+            : "${rawCustName.substring(0, 2)}***";
+        final maskedVenue = venue.trim().split(',').firstOrNull?.trim() ?? "Event Venue";
+
+        await FirebaseFirestore.instance
+            .collection('booking_timelines')
+            .doc(publicId)
+            .set({
+          'publicId': publicId,
+          'status': finalQuotation.status.nameStr,
+          'maskedName': maskedCustomerName,
+          'maskedVenue': "$maskedVenue (Protected Location)",
+          'serviceName': experience.name,
+          'eventDate': eventDate.toIso8601String(),
+          'eventTime': timeStr,
+          'grandTotal': grandTotal,
+          'phoneLast4': phoneLast4,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (errTimeline) {
+        AppLogger.warning("Could not sync booking timeline projection: $errTimeline");
+      }
 
       rxCreatedQuotation.value = finalQuotation;
 

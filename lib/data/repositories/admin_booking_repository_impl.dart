@@ -231,21 +231,40 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
       final eventDateRaw = data['event_date'] ?? data['eventDate'];
       final eventDate = DateParser.parseNullable(eventDateRaw);
 
-      if (eventDate != null) {
-        final availResult = await BookingAvailabilityService.to.checkDateAvailability(
-          eventDate,
-          excludeBookingId: bookingId,
-        );
-        if (!availResult.isAvailable) {
-          throw Exception("Cannot confirm booking: ${availResult.reason ?? 'This event date already has another active booking.'}");
+      if (eventDate == null) {
+        throw Exception("Cannot confirm booking: Event date is missing.");
+      }
+
+      // P2 FIX: Atomic confirmed-date lock using deterministic document path: booked_dates/{YYYY-MM-DD}
+      final dateStr = BookingAvailabilityService.normalizeDateString(eventDate);
+      final lockRef = _firestore.collection('booked_dates').doc(dateStr);
+      final lockSnapshot = await tx.get(lockRef);
+
+      if (lockSnapshot.exists) {
+        final lockData = lockSnapshot.data() ?? {};
+        final existingBookingId = lockData['bookingId'] ?? lockData['booking_id'];
+        if (existingBookingId != bookingId) {
+          throw Exception("Cannot confirm booking: Date $dateStr is already locked by confirmed booking ($existingBookingId).");
         }
       }
 
+      // 1. Create atomic lock document
+      tx.set(lockRef, {
+        'date': dateStr,
+        'bookingId': bookingId,
+        'publicId': data['publicId'] ?? data['public_id'] ?? '',
+        'confirmedAt': FieldValue.serverTimestamp(),
+        'confirmedBy': adminName,
+        'confirmedByAdminId': adminId,
+      });
+
+      // 2. Commit booking confirmation atomically
       tx.update(docRef, {
         'status': QuotationStatus.bookingConfirmed.nameStr,
         'confirmedAt': FieldValue.serverTimestamp(),
         'confirmedBy': adminName,
         'confirmedByAdminId': adminId,
+        'normalized_event_date': dateStr,
         'updated_at': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -253,6 +272,16 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     }).then((success) async {
       final quote = await getBookingById(bookingId);
       if (quote != null) {
+        // Update public booking timeline projection if present
+        try {
+          if (quote.publicId.isNotEmpty) {
+            await _firestore.collection('booking_timelines').doc(quote.publicId).set({
+              'status': QuotationStatus.bookingConfirmed.nameStr,
+              'updatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+          }
+        } catch (_) {}
+
         await _recordAuditActivity(
           bookingId: bookingId,
           publicId: quote.publicId,
@@ -327,6 +356,24 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
       final snapshot = await tx.get(docRef);
       if (!snapshot.exists) throw Exception("Booking not found.");
 
+      final data = snapshot.data() ?? {};
+      final eventDateRaw = data['event_date'] ?? data['eventDate'];
+      final eventDate = DateParser.parseNullable(eventDateRaw);
+
+      // P2 FIX: Atomically release the confirmed-date lock when admin approves cancellation
+      if (eventDate != null) {
+        final dateStr = BookingAvailabilityService.normalizeDateString(eventDate);
+        final lockRef = _firestore.collection('booked_dates').doc(dateStr);
+        final lockSnapshot = await tx.get(lockRef);
+        if (lockSnapshot.exists) {
+          final lockData = lockSnapshot.data() ?? {};
+          final existingBookingId = lockData['bookingId'] ?? lockData['booking_id'];
+          if (existingBookingId == bookingId) {
+            tx.delete(lockRef);
+          }
+        }
+      }
+
       tx.update(docRef, {
         'status': QuotationStatus.cancelled.nameStr,
         'cancellation_status': 'approved',
@@ -340,6 +387,15 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     }).then((success) async {
       final quote = await getBookingById(bookingId);
       if (quote != null) {
+        // Sync public booking timeline projection if present
+        try {
+          if (quote.publicId.isNotEmpty) {
+            await _firestore.collection('booking_timelines').doc(quote.publicId).set({
+              'status': QuotationStatus.cancelled.nameStr,
+              'updatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+          }
+        } catch (_) {}
         await _recordAuditActivity(
           bookingId: bookingId,
           publicId: quote.publicId,

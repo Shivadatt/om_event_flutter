@@ -109,7 +109,7 @@ class _CancellationRequestDialogState extends State<CancellationRequestDialog> {
       final fullReason = "$_selectedReason${_notesCtrl.text.trim().isNotEmpty ? ' — ${_notesCtrl.text.trim()}' : ''}";
 
       await docRef.update({
-        'status': QuotationStatus.cancelled.name,
+        'customerAction': 'cancellation_requested',
         'cancellation_reason': fullReason,
         'cancellation_requested_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
@@ -140,8 +140,8 @@ class _CancellationRequestDialogState extends State<CancellationRequestDialog> {
       // Show local in-app alert
       if (Get.isRegistered<NotificationLocalService>()) {
         NotificationLocalService.to.show(
-          title: "Booking Cancelled",
-          body: "Booking ${widget.quotation.publicId} has been cancelled per your request.",
+          title: "Cancellation Request Submitted",
+          body: "Cancellation request for ${widget.quotation.publicId} is under review.",
         );
       }
 
@@ -149,8 +149,8 @@ class _CancellationRequestDialogState extends State<CancellationRequestDialog> {
         Navigator.of(context).pop();
         widget.onCancelled();
         Get.snackbar(
-          "Cancellation Processed",
-          "Booking ${widget.quotation.publicId} status has been updated to Cancelled.",
+          "Cancellation Request Submitted",
+          "Your cancellation request for ${widget.quotation.publicId} has been received and will be reviewed by our team.",
           backgroundColor: const Color(0xFF152621),
           colorText: const Color(0xFFD4AF37),
           duration: const Duration(seconds: 4),

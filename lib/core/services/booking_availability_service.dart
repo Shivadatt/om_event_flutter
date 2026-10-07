@@ -144,7 +144,31 @@ class BookingAvailabilityService extends GetxService {
     // CANONICAL RULE: Only status == "bookingConfirmed" blocks the date.
     final targetDateStr = normalizeDateString(date);
 
-    // Strategy 1: Targeted query on normalized_event_date with bookingConfirmed status
+    // Strategy 0: Authoritative deterministic atomic lock check (booked_dates/{YYYY-MM-DD})
+    try {
+      final lockDoc = await _firestore.collection('booked_dates').doc(targetDateStr).get();
+      if (lockDoc.exists) {
+        final lockData = lockDoc.data() ?? {};
+        final lockedBookingId = lockData['bookingId']?.toString();
+        final lockedPublicId = lockData['publicId']?.toString();
+        if (excludeBookingId == null ||
+            (lockedBookingId != excludeBookingId && lockedPublicId != excludeBookingId)) {
+          AppLogger.info(
+            "Date $targetDateStr is blocked by atomic date lock: booked_dates/$targetDateStr (booking: $lockedBookingId)",
+            layer: LogLayer.service,
+            className: "BookingAvailabilityService",
+            methodName: "checkDateAvailability",
+          );
+          return DateAvailabilityResult.booked(
+            "This date ($targetDateStr) is already booked. Please select another date.",
+          );
+        }
+      }
+    } catch (errLock) {
+      AppLogger.warning("Authoritative booked_dates lock query check: $errLock");
+    }
+
+    // Strategy 1: Targeted query on normalized_event_date with bookingConfirmed status (Legacy Fallback)
     try {
       final snapNorm = await _firestore
           .collection(AppCollections.quotations)
