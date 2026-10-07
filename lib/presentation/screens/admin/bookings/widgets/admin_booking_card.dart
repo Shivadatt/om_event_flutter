@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/config/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/utils/formatters.dart';
 import '../../../../../domain/entities/quotation.dart';
 import 'admin_booking_details_dialog.dart';
-import 'admin_cancellation_review_dialog.dart';
 
 class AdminBookingCard extends StatelessWidget {
   final Quotation booking;
+  final bool isGridCard;
 
-  const AdminBookingCard({super.key, required this.booking});
+  const AdminBookingCard({
+    super.key,
+    required this.booking,
+    this.isGridCard = false,
+  });
 
   Color _getStatusColor(QuotationStatus status) {
     switch (status) {
@@ -16,16 +20,16 @@ class AdminBookingCard extends StatelessWidget {
       case QuotationStatus.draft:
       case QuotationStatus.viewed:
       case QuotationStatus.republished:
-        return const Color(0xFFF59E0B);
+        return const Color(0xFFECC24A);
       case QuotationStatus.acceptedByClient:
-        return const Color(0xFF3B82F6);
       case QuotationStatus.bookingConfirmed:
       case QuotationStatus.inProgress:
-        return const Color(0xFF10B981);
+        return const Color(0xFF4EBA7A);
       case QuotationStatus.completed:
-        return const Color(0xFFD4AF37);
+        return const Color(0xFFECC24A);
       case QuotationStatus.cancelled:
       case QuotationStatus.rejectedByClient:
+      case QuotationStatus.expired:
         return const Color(0xFFEF4444);
       default:
         return Colors.white54;
@@ -34,120 +38,222 @@ class AdminBookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final goldColor = const Color(0xFFD4AF37);
-    final serviceName = booking.items.firstOrNull?.name ?? "Event Decor";
-    final packageName = booking.items.firstOrNull?.theme ?? (booking.bookingDetails ?? "Standard");
-    final isCancRequested = booking.customerAction == 'cancellation_requested' && booking.status != QuotationStatus.cancelled;
+    const goldColor = Color(0xFFECC24A);
+    final isCancRequested = booking.customerAction == 'cancellation_requested' &&
+        booking.status != QuotationStatus.cancelled;
+    final statusCol = _getStatusColor(booking.status);
+    final statusLabel = isCancRequested
+        ? "CANCELLATION REQ"
+        : (booking.status == QuotationStatus.bookingConfirmed
+            ? "CONFIRMED"
+            : (booking.status == QuotationStatus.acceptedByClient
+                ? "ACCEPTED"
+                : booking.status.name.toUpperCase()));
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF122018),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF1E332B), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                booking.publicId,
-                style: AppTheme.sansBody(fontSize: 13, color: goldColor, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(booking.status).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _getStatusColor(booking.status)),
-                ),
-                child: Text(
-                  isCancRequested ? "CANCELLATION REQ" : booking.status.name.toUpperCase(),
-                  style: AppTheme.sansBody(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: isCancRequested ? const Color(0xFFEF4444) : _getStatusColor(booking.status),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            booking.customerName,
-            style: AppTheme.sansBody(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            booking.customerPhone,
-            style: AppTheme.sansBody(fontSize: 11, color: Colors.white54),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "$serviceName • $packageName",
-            style: AppTheme.sansBody(fontSize: 12, color: Colors.white70),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.event_outlined, size: 13, color: Color(0xFFD4AF37)),
-              const SizedBox(width: 4),
-              Text(
-                "${AppFormatters.formatDate(booking.eventDate)} at ${booking.eventTime}",
-                style: AppTheme.sansBody(fontSize: 11, color: Colors.white70),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.location_on_outlined, size: 13, color: Color(0xFFD4AF37)),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  booking.location,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.sansBody(fontSize: 11, color: Colors.white60),
-                ),
-              ),
-            ],
-          ),
-          const Divider(color: Color(0xFF1E332B), height: 16),
-          Row(
-            children: [
-              Text(
-                AppFormatters.formatCurrency(booking.grandTotal),
-                style: AppTheme.sansBody(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              if (isCancRequested)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: OutlinedButton(
-                    onPressed: () => showAdminCancellationReviewDialog(context, booking),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFEF4444)),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    final serviceName = booking.items.firstOrNull?.name ?? "Event Decor";
+    final initial = booking.customerName.isNotEmpty ? booking.customerName[0].toUpperCase() : "C";
+
+    return InkWell(
+      onTap: () => showAdminBookingDetailsDialog(context, booking),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: isGridCard ? EdgeInsets.zero : const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0C1914),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: goldColor.withValues(alpha: 0.18), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Top Row: Booking ID + Status Badge
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    booking.publicId.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11.5,
+                      color: goldColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.6,
                     ),
-                    child: const Text("Review Cancel", style: TextStyle(fontSize: 11, color: Color(0xFFEF4444))),
                   ),
                 ),
-              ElevatedButton(
-                onPressed: () => showAdminBookingDetailsDialog(context, booking),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: goldColor,
-                  foregroundColor: const Color(0xFF0F1B18),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isCancRequested
+                        ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                        : statusCol.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isCancRequested
+                          ? const Color(0xFFEF4444)
+                          : statusCol.withValues(alpha: 0.7),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      color: isCancRequested ? const Color(0xFFEF4444) : statusCol,
+                    ),
+                  ),
                 ),
-                child: const Text("View Details", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Customer Name & Phone
+            Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF162B20),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: goldColor.withValues(alpha: 0.4), width: 0.8),
+                  ),
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: goldColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        booking.customerName.isNotEmpty ? booking.customerName : "Unnamed Customer",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if (booking.customerPhone.isNotEmpty)
+                        Text(
+                          booking.customerPhone,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 10, color: Colors.white54),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Service Name
+            Row(
+              children: [
+                const Icon(Icons.celebration_outlined, size: 13, color: goldColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    serviceName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+
+            // Event Date & Time
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 12.5, color: goldColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    "${AppFormatters.formatShortDate(booking.eventDate)} • ${booking.eventTime.isNotEmpty ? booking.eventTime : 'Time TBA'}",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+
+            // Venue / Address
+            Row(
+              children: [
+                const Icon(Icons.location_on_outlined, size: 13, color: goldColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    booking.location.isNotEmpty ? booking.location : "Venue TBA",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Bottom Row: Amount + Details Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  AppFormatters.formatCurrency(booking.grandTotal),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 13.5,
+                    color: goldColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: goldColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    "Details",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF091410),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

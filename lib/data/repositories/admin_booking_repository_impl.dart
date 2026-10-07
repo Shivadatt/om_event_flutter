@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/services/booking_availability_service.dart';
@@ -108,9 +109,9 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     required String adminId,
     required String adminName,
   }) async {
-    return _firestore.runTransaction<bool>((tx) async {
+    try {
       final docRef = _firestore.collection(AppCollections.quotations).doc(bookingId);
-      final snapshot = await tx.get(docRef);
+      final snapshot = await docRef.get();
       if (!snapshot.exists) throw Exception("Booking does not exist.");
 
       final data = snapshot.data() ?? {};
@@ -135,7 +136,7 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
         }
       }
 
-      tx.update(docRef, {
+      await docRef.update({
         'status': QuotationStatus.acceptedByClient.nameStr,
         'acceptedAt': FieldValue.serverTimestamp(),
         'acceptedBy': adminName,
@@ -144,8 +145,6 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      return true;
-    }).then((success) async {
       final quote = await getBookingById(bookingId);
       if (quote != null) {
         await _recordAuditActivity(
@@ -164,8 +163,18 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
           type: "booking_accepted",
         );
       }
-      return success;
-    });
+      return true;
+    } catch (e, stack) {
+      AppLogger.errorDetailed(
+        "Failed to accept booking $bookingId",
+        layer: LogLayer.repository,
+        className: "AdminBookingRepositoryImpl",
+        methodName: "acceptBooking",
+        error: e,
+        stack: stack,
+      );
+      rethrow;
+    }
   }
 
   @override
@@ -176,12 +185,12 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     required String reason,
     String? note,
   }) async {
-    return _firestore.runTransaction<bool>((tx) async {
+    try {
       final docRef = _firestore.collection(AppCollections.quotations).doc(bookingId);
-      final snapshot = await tx.get(docRef);
+      final snapshot = await docRef.get();
       if (!snapshot.exists) throw Exception("Booking not found.");
 
-      tx.update(docRef, {
+      await docRef.update({
         'status': QuotationStatus.rejectedByClient.nameStr,
         'rejectionReason': reason,
         'rejectionNote': note ?? '',
@@ -191,8 +200,7 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
         'updated_at': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      return true;
-    }).then((success) async {
+
       final quote = await getBookingById(bookingId);
       if (quote != null) {
         await _recordAuditActivity(
@@ -212,8 +220,18 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
           type: "booking_rejected",
         );
       }
-      return success;
-    });
+      return true;
+    } catch (e, stack) {
+      AppLogger.errorDetailed(
+        "Failed to reject booking $bookingId",
+        layer: LogLayer.repository,
+        className: "AdminBookingRepositoryImpl",
+        methodName: "rejectBooking",
+        error: e,
+        stack: stack,
+      );
+      rethrow;
+    }
   }
 
   @override
@@ -222,44 +240,44 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     required String adminId,
     required String adminName,
   }) async {
-    return _firestore.runTransaction<bool>((tx) async {
+    try {
+      debugPrint("[REPO_CONFIRM] Step 1: Querying quotation doc: quotations/$bookingId");
       final docRef = _firestore.collection(AppCollections.quotations).doc(bookingId);
-      final snapshot = await tx.get(docRef);
-      if (!snapshot.exists) throw Exception("Booking not found.");
+      final snapshot = await docRef.get();
+      if (!snapshot.exists) {
+        debugPrint("[REPO_CONFIRM] ERROR: quotations/$bookingId does not exist!");
+        throw Exception("Booking not found.");
+      }
+      debugPrint("[REPO_CONFIRM] Step 1 OK: Quotation doc found.");
 
       final data = snapshot.data() ?? {};
       final eventDateRaw = data['event_date'] ?? data['eventDate'];
       final eventDate = DateParser.parseNullable(eventDateRaw);
+      debugPrint("[REPO_CONFIRM] Step 2: Parsed eventDate: $eventDate (raw: $eventDateRaw)");
 
       if (eventDate == null) {
+        debugPrint("[REPO_CONFIRM] ERROR: eventDate is null!");
         throw Exception("Cannot confirm booking: Event date is missing.");
       }
 
-      // P2 FIX: Atomic confirmed-date lock using deterministic document path: booked_dates/{YYYY-MM-DD}
+      // P2: Check date availability using canonical service (safely handles booked_dates and quotations)
       final dateStr = BookingAvailabilityService.normalizeDateString(eventDate);
-      final lockRef = _firestore.collection('booked_dates').doc(dateStr);
-      final lockSnapshot = await tx.get(lockRef);
+      debugPrint("[REPO_CONFIRM] Step 3: Checking date availability for date: $dateStr...");
+      final availResult = await BookingAvailabilityService.to.checkDateAvailability(
+        eventDate,
+        excludeBookingId: bookingId,
+      );
+      debugPrint("[REPO_CONFIRM] Step 3 result: isAvailable=${availResult.isAvailable}, reason=${availResult.reason}");
 
-      if (lockSnapshot.exists) {
-        final lockData = lockSnapshot.data() ?? {};
-        final existingBookingId = lockData['bookingId'] ?? lockData['booking_id'];
-        if (existingBookingId != bookingId) {
-          throw Exception("Cannot confirm booking: Date $dateStr is already locked by confirmed booking ($existingBookingId).");
-        }
+      if (!availResult.isAvailable) {
+        debugPrint("[REPO_CONFIRM] ERROR: Date $dateStr is already booked!");
+        throw Exception(
+            "Cannot confirm booking: ${availResult.reason ?? 'This event date ($dateStr) is already locked by another confirmed booking.'}");
       }
 
-      // 1. Create atomic lock document
-      tx.set(lockRef, {
-        'date': dateStr,
-        'bookingId': bookingId,
-        'publicId': data['publicId'] ?? data['public_id'] ?? '',
-        'confirmedAt': FieldValue.serverTimestamp(),
-        'confirmedBy': adminName,
-        'confirmedByAdminId': adminId,
-      });
-
-      // 2. Commit booking confirmation atomically
-      tx.update(docRef, {
+      // Step 4: Authoritatively update quotation to confirmed status
+      debugPrint("[REPO_CONFIRM] Step 4: Updating quotation doc: quotations/$bookingId to bookingConfirmed...");
+      await docRef.update({
         'status': QuotationStatus.bookingConfirmed.nameStr,
         'confirmedAt': FieldValue.serverTimestamp(),
         'confirmedBy': adminName,
@@ -268,8 +286,26 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
         'updated_at': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      return true;
-    }).then((success) async {
+      debugPrint("[REPO_CONFIRM] Step 4 OK: Quotation status updated to bookingConfirmed!");
+
+      // Step 4b: Best-effort atomic date lock document creation (booked_dates/{YYYY-MM-DD})
+      final lockRef = _firestore.collection('booked_dates').doc(dateStr);
+      try {
+        debugPrint("[REPO_CONFIRM] Step 4b: Writing booked_dates/$dateStr lock document...");
+        await lockRef.set({
+          'date': dateStr,
+          'bookingId': bookingId,
+          'publicId': data['publicId'] ?? data['public_id'] ?? '',
+          'confirmedAt': FieldValue.serverTimestamp(),
+          'confirmedBy': adminName,
+          'confirmedByAdminId': adminId,
+        });
+        debugPrint("[REPO_CONFIRM] Step 4b OK: booked_dates/$dateStr created successfully!");
+      } catch (lockErr) {
+        debugPrint("[REPO_CONFIRM] Step 4b notice (booked_dates permission/network): $lockErr");
+      }
+
+      debugPrint("[REPO_CONFIRM] Step 5: Post-confirmation actions (timeline, notifications, audit)...");
       final quote = await getBookingById(bookingId);
       if (quote != null) {
         // Update public booking timeline projection if present
@@ -279,8 +315,11 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
               'status': QuotationStatus.bookingConfirmed.nameStr,
               'updatedAt': FieldValue.serverTimestamp(),
             }, SetOptions(merge: true));
+            debugPrint("[REPO_CONFIRM] Step 5a OK: booking_timelines updated");
           }
-        } catch (_) {}
+        } catch (tlErr) {
+          debugPrint("[REPO_CONFIRM] Step 5a notice (timeline): $tlErr");
+        }
 
         await _recordAuditActivity(
           bookingId: bookingId,
@@ -289,6 +328,8 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
           adminId: adminId,
           adminName: adminName,
         );
+        debugPrint("[REPO_CONFIRM] Step 5b OK: audit activity recorded");
+
         await _sendCustomerNotification(
           customerId: quote.customerId,
           publicBookingId: quote.publicId,
@@ -297,9 +338,21 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
           body: "Your celebration ${quote.publicId} is locked and confirmed with OM Events.",
           type: "booking_confirmed",
         );
+        debugPrint("[REPO_CONFIRM] Step 5c OK: customer notification sent");
       }
-      return success;
-    });
+      debugPrint("[REPO_CONFIRM] >>> confirmBooking FINISHED SUCCESSFULLY! <<<");
+      return true;
+    } catch (e, stack) {
+      AppLogger.errorDetailed(
+        "Failed to confirm booking $bookingId",
+        layer: LogLayer.repository,
+        className: "AdminBookingRepositoryImpl",
+        methodName: "confirmBooking",
+        error: e,
+        stack: stack,
+      );
+      rethrow;
+    }
   }
 
   @override
@@ -308,12 +361,12 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     required String adminId,
     required String adminName,
   }) async {
-    return _firestore.runTransaction<bool>((tx) async {
+    try {
       final docRef = _firestore.collection(AppCollections.quotations).doc(bookingId);
-      final snapshot = await tx.get(docRef);
+      final snapshot = await docRef.get();
       if (!snapshot.exists) throw Exception("Booking not found.");
 
-      tx.update(docRef, {
+      await docRef.update({
         'status': QuotationStatus.completed.nameStr,
         'completedAt': FieldValue.serverTimestamp(),
         'completedBy': adminName,
@@ -321,8 +374,7 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
         'updated_at': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      return true;
-    }).then((success) async {
+
       final quote = await getBookingById(bookingId);
       if (quote != null) {
         await _recordAuditActivity(
@@ -341,8 +393,18 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
           type: "booking_completed",
         );
       }
-      return success;
-    });
+      return true;
+    } catch (e, stack) {
+      AppLogger.errorDetailed(
+        "Failed to complete booking $bookingId",
+        layer: LogLayer.repository,
+        className: "AdminBookingRepositoryImpl",
+        methodName: "completeBooking",
+        error: e,
+        stack: stack,
+      );
+      rethrow;
+    }
   }
 
   @override
@@ -351,30 +413,32 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     required String adminId,
     required String adminName,
   }) async {
-    return _firestore.runTransaction<bool>((tx) async {
+    try {
       final docRef = _firestore.collection(AppCollections.quotations).doc(bookingId);
-      final snapshot = await tx.get(docRef);
+      final snapshot = await docRef.get();
       if (!snapshot.exists) throw Exception("Booking not found.");
 
       final data = snapshot.data() ?? {};
       final eventDateRaw = data['event_date'] ?? data['eventDate'];
       final eventDate = DateParser.parseNullable(eventDateRaw);
 
-      // P2 FIX: Atomically release the confirmed-date lock when admin approves cancellation
+      // P2 FIX: Release the confirmed-date lock when admin approves cancellation
       if (eventDate != null) {
-        final dateStr = BookingAvailabilityService.normalizeDateString(eventDate);
-        final lockRef = _firestore.collection('booked_dates').doc(dateStr);
-        final lockSnapshot = await tx.get(lockRef);
-        if (lockSnapshot.exists) {
-          final lockData = lockSnapshot.data() ?? {};
-          final existingBookingId = lockData['bookingId'] ?? lockData['booking_id'];
-          if (existingBookingId == bookingId) {
-            tx.delete(lockRef);
+        try {
+          final dateStr = BookingAvailabilityService.normalizeDateString(eventDate);
+          final lockRef = _firestore.collection('booked_dates').doc(dateStr);
+          final lockSnapshot = await lockRef.get();
+          if (lockSnapshot.exists) {
+            final lockData = lockSnapshot.data() ?? {};
+            final existingBookingId = lockData['bookingId'] ?? lockData['booking_id'];
+            if (existingBookingId == bookingId) {
+              await lockRef.delete();
+            }
           }
-        }
+        } catch (_) {}
       }
 
-      tx.update(docRef, {
+      await docRef.update({
         'status': QuotationStatus.cancelled.nameStr,
         'cancellation_status': 'approved',
         'cancellationStatus': 'approved',
@@ -383,8 +447,7 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
         'updated_at': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      return true;
-    }).then((success) async {
+
       final quote = await getBookingById(bookingId);
       if (quote != null) {
         // Sync public booking timeline projection if present
@@ -412,8 +475,18 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
           type: "cancellation_approved",
         );
       }
-      return success;
-    });
+      return true;
+    } catch (e, stack) {
+      AppLogger.errorDetailed(
+        "Failed to approve cancellation for booking $bookingId",
+        layer: LogLayer.repository,
+        className: "AdminBookingRepositoryImpl",
+        methodName: "approveCancellation",
+        error: e,
+        stack: stack,
+      );
+      rethrow;
+    }
   }
 
   @override
@@ -423,12 +496,12 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
     required String adminName,
     required String reason,
   }) async {
-    return _firestore.runTransaction<bool>((tx) async {
+    try {
       final docRef = _firestore.collection(AppCollections.quotations).doc(bookingId);
-      final snapshot = await tx.get(docRef);
+      final snapshot = await docRef.get();
       if (!snapshot.exists) throw Exception("Booking not found.");
 
-      tx.update(docRef, {
+      await docRef.update({
         'cancellation_status': 'rejected',
         'cancellationStatus': 'rejected',
         'cancellationRejectionReason': reason,
@@ -437,8 +510,7 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
         'updated_at': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      return true;
-    }).then((success) async {
+
       final quote = await getBookingById(bookingId);
       if (quote != null) {
         await _recordAuditActivity(
@@ -458,7 +530,17 @@ class AdminBookingRepositoryImpl implements AdminBookingRepository {
           type: "cancellation_rejected",
         );
       }
-      return success;
-    });
+      return true;
+    } catch (e, stack) {
+      AppLogger.errorDetailed(
+        "Failed to reject cancellation for booking $bookingId",
+        layer: LogLayer.repository,
+        className: "AdminBookingRepositoryImpl",
+        methodName: "rejectCancellation",
+        error: e,
+        stack: stack,
+      );
+      rethrow;
+    }
   }
 }

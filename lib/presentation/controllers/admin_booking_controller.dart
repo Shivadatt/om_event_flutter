@@ -1,10 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../core/services/booking_availability_service.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/repositories/admin_booking_repository.dart';
 import 'auth_controller.dart';
+
+enum BookingViewMode {
+  list,
+  grid,
+}
 
 class AdminBookingController extends GetxController {
   final AdminBookingRepository _repository;
@@ -15,10 +21,15 @@ class AdminBookingController extends GetxController {
   final rxAllBookings = <Quotation>[].obs;
   final isLoading = false.obs;
   final isActionSubmitting = false.obs;
+  final submittingAction = ''.obs;
+
+  // View mode (List vs Grid)
+  final viewMode = BookingViewMode.list.obs;
 
   // Filter & Search state
   final selectedStatusTab = 'All'.obs;
   final searchQuery = ''.obs;
+  final searchController = TextEditingController();
   final selectedDateFilter = 'All'.obs;
   final customFromDate = Rxn<DateTime>();
   final customToDate = Rxn<DateTime>();
@@ -39,6 +50,8 @@ class AdminBookingController extends GetxController {
   final upcomingEventsCount = 0.obs;
   final cancellationRequestsCount = 0.obs;
   final completedCount = 0.obs;
+  final rejectedCount = 0.obs;
+  final cancelledCount = 0.obs;
 
   StreamSubscription<List<Quotation>>? _bookingsSub;
 
@@ -49,8 +62,18 @@ class AdminBookingController extends GetxController {
     ever(rxAllBookings, (_) => _calculateKpis());
   }
 
+  void updateSearch(String val) {
+    searchQuery.value = val;
+  }
+
+  void clearSearch() {
+    searchController.clear();
+    searchQuery.value = '';
+  }
+
   @override
   void onClose() {
+    searchController.dispose();
     _bookingsSub?.cancel();
     super.onClose();
   }
@@ -83,6 +106,8 @@ class AdminBookingController extends GetxController {
     int upCount = 0;
     int cancCount = 0;
     int compCount = 0;
+    int rCount = 0;
+    int cancStatusCount = 0;
 
     final now = BookingAvailabilityService.nowIst();
     final todayStart = DateTime.utc(now.year, now.month, now.day);
@@ -110,7 +135,11 @@ class AdminBookingController extends GetxController {
           compCount++;
           break;
         case QuotationStatus.cancelled:
+          cancStatusCount++;
+          break;
         case QuotationStatus.rejectedByClient:
+          rCount++;
+          break;
         case QuotationStatus.expired:
         case QuotationStatus.archived:
         case QuotationStatus.revisionRequested:
@@ -135,6 +164,8 @@ class AdminBookingController extends GetxController {
     cancellationRequestsCount.value = cancCount;
     completedCount.value = compCount;
     upcomingEventsCount.value = upCount;
+    rejectedCount.value = rCount;
+    cancelledCount.value = cancStatusCount;
   }
 
   List<Quotation> get filteredBookings {
@@ -164,19 +195,7 @@ class AdminBookingController extends GetxController {
       list = list.where((b) => b.status == QuotationStatus.cancelled).toList();
     }
 
-    // 2. Search Query
-    final query = searchQuery.value.trim().toLowerCase();
-    if (query.isNotEmpty) {
-      list = list.where((b) {
-        return b.publicId.toLowerCase().contains(query) ||
-            b.customerName.toLowerCase().contains(query) ||
-            b.customerPhone.toLowerCase().contains(query) ||
-            b.location.toLowerCase().contains(query) ||
-            b.items.any((item) => item.name.toLowerCase().contains(query));
-      }).toList();
-    }
-
-    // 3. Date Filter
+    // 2. Date Filter
     final dateFilter = selectedDateFilter.value;
     final nowIst = BookingAvailabilityService.nowIst();
     final today = DateTime.utc(nowIst.year, nowIst.month, nowIst.day);
@@ -210,6 +229,30 @@ class AdminBookingController extends GetxController {
       list = list.where((b) {
         final bDate = BookingAvailabilityService.toIst(b.eventDate);
         return !bDate.isBefore(from) && bDate.isBefore(to);
+      }).toList();
+    }
+
+    // 3. Search Query Filter (Realtime, Case-Insensitive, Trimmed)
+    final query = searchQuery.value.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      list = list.where((b) {
+        final idMatch = b.id.toLowerCase().contains(query) ||
+            b.publicId.toLowerCase().contains(query);
+        final nameMatch = b.customerName.toLowerCase().contains(query);
+        final rawPhone = b.customerPhone.replaceAll(RegExp(r'[^0-9]'), '');
+        final queryDigits = query.replaceAll(RegExp(r'[^0-9]'), '');
+        final phoneMatch = (queryDigits.isNotEmpty && rawPhone.contains(queryDigits)) ||
+            b.customerPhone.toLowerCase().contains(query);
+        final locationMatch = b.location.toLowerCase().contains(query);
+        final serviceMatch = b.items.any((item) =>
+            item.name.toLowerCase().contains(query) ||
+            item.theme.toLowerCase().contains(query) ||
+            item.experienceId.toLowerCase().contains(query) ||
+            item.notes.toLowerCase().contains(query)) ||
+            (b.bookingDetails ?? '').toLowerCase().contains(query);
+        final notesMatch = b.notes.toLowerCase().contains(query);
+
+        return idMatch || nameMatch || phoneMatch || locationMatch || serviceMatch || notesMatch;
       }).toList();
     }
 
@@ -275,6 +318,10 @@ class AdminBookingController extends GetxController {
   }
 
   String _getAdminUid() {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid != null && currentUid.isNotEmpty) {
+      return currentUid;
+    }
     if (Get.isRegistered<AuthController>()) {
       final auth = Get.find<AuthController>();
       return auth.rxAdminRole.value?.uid ?? 'admin';
@@ -282,10 +329,39 @@ class AdminBookingController extends GetxController {
     return 'admin';
   }
 
-  Future<void> acceptBooking(Quotation quote) async {
-    if (isActionSubmitting.value) return;
+  String _extractErrorMessage(dynamic e) {
+    if (e == null) return "An unexpected error occurred.";
+    try {
+      final dynamic boxed = (e as dynamic).error;
+      if (boxed != null) {
+        final bStr = boxed.toString();
+        if (bStr.isNotEmpty && !bStr.contains("converted Future")) {
+          return bStr.replaceAll("Exception: ", "").replaceAll("Error: ", "");
+        }
+        final dynamic boxedMsg = (boxed as dynamic).message;
+        if (boxedMsg != null && boxedMsg.toString().isNotEmpty) {
+          return boxedMsg.toString();
+        }
+      }
+    } catch (_) {}
+    try {
+      final dynamic msg = (e as dynamic).message;
+      if (msg != null && msg.toString().isNotEmpty) {
+        return msg.toString();
+      }
+    } catch (_) {}
+    final raw = e.toString();
+    if (raw.contains("converted Future")) {
+      return "Unable to complete request. Please verify permissions or network connection.";
+    }
+    return raw.replaceAll("Exception: ", "").replaceAll("Error: ", "");
+  }
+
+  Future<bool> acceptBooking(Quotation quote) async {
+    if (isActionSubmitting.value) return false;
     try {
       isActionSubmitting.value = true;
+      submittingAction.value = 'accept';
       final success = await _repository.acceptBooking(
         bookingId: quote.id,
         adminId: _getAdminUid(),
@@ -294,19 +370,24 @@ class AdminBookingController extends GetxController {
       if (success) {
         Get.snackbar("Booking Accepted", "Booking ${quote.publicId} is now accepted.",
             backgroundColor: const Color(0xFF152621), colorText: const Color(0xFFD4AF37));
+        return true;
       }
+      return false;
     } catch (e) {
-      Get.snackbar("Error", e.toString(),
+      Get.snackbar("Error", _extractErrorMessage(e),
           backgroundColor: const Color(0xFF2A1515), colorText: Colors.redAccent);
+      return false;
     } finally {
       isActionSubmitting.value = false;
+      submittingAction.value = '';
     }
   }
 
-  Future<void> rejectBooking(Quotation quote, String reason, String? note) async {
-    if (isActionSubmitting.value) return;
+  Future<bool> rejectBooking(Quotation quote, String reason, String? note) async {
+    if (isActionSubmitting.value) return false;
     try {
       isActionSubmitting.value = true;
+      submittingAction.value = 'reject';
       final success = await _repository.rejectBooking(
         bookingId: quote.id,
         adminId: _getAdminUid(),
@@ -317,40 +398,65 @@ class AdminBookingController extends GetxController {
       if (success) {
         Get.snackbar("Booking Rejected", "Booking ${quote.publicId} status updated.",
             backgroundColor: const Color(0xFF152621), colorText: Colors.white);
+        return true;
       }
+      return false;
     } catch (e) {
-      Get.snackbar("Error", e.toString(),
+      Get.snackbar("Error", _extractErrorMessage(e),
           backgroundColor: const Color(0xFF2A1515), colorText: Colors.redAccent);
+      return false;
     } finally {
       isActionSubmitting.value = false;
+      submittingAction.value = '';
     }
   }
 
-  Future<void> confirmBooking(Quotation quote) async {
-    if (isActionSubmitting.value) return;
+  Future<bool> confirmBooking(Quotation quote) async {
+    if (isActionSubmitting.value) return false;
+    final currentAuthUser = FirebaseAuth.instance.currentUser;
+    debugPrint("==================================================");
+    debugPrint("[CONFIRM_DEBUG] >>> confirmBooking triggered for quote: ${quote.publicId} (${quote.id})");
+    debugPrint("[CONFIRM_DEBUG] Auth User UID: ${currentAuthUser?.uid}");
+    debugPrint("[CONFIRM_DEBUG] Auth User Email: ${currentAuthUser?.email}");
+    debugPrint("[CONFIRM_DEBUG] Auth Is Anonymous: ${currentAuthUser?.isAnonymous}");
+    debugPrint("[CONFIRM_DEBUG] Admin UID: ${_getAdminUid()}");
+    debugPrint("[CONFIRM_DEBUG] Admin Name: ${_getAdminIdentity()}");
+    debugPrint("[CONFIRM_DEBUG] Quote Customer ID: ${quote.customerId}");
+    debugPrint("[CONFIRM_DEBUG] Quote Event Date: ${quote.eventDate}");
+    debugPrint("[CONFIRM_DEBUG] Current Status: ${quote.status.nameStr}");
     try {
       isActionSubmitting.value = true;
+      submittingAction.value = 'confirm';
       final success = await _repository.confirmBooking(
         bookingId: quote.id,
         adminId: _getAdminUid(),
         adminName: _getAdminIdentity(),
       );
+      debugPrint("[CONFIRM_DEBUG] Repository confirmation SUCCESS: $success");
       if (success) {
         Get.snackbar("Booking Confirmed! 🌟", "Booking ${quote.publicId} confirmed.",
             backgroundColor: const Color(0xFF152621), colorText: const Color(0xFFD4AF37));
+        return true;
       }
-    } catch (e) {
-      Get.snackbar("Error", e.toString(),
+      return false;
+    } catch (e, stack) {
+      debugPrint("[CONFIRM_DEBUG] !!! EXCEPTION during confirmBooking: $e");
+      debugPrint("[CONFIRM_DEBUG] Stack trace: $stack");
+      Get.snackbar("Error", _extractErrorMessage(e),
           backgroundColor: const Color(0xFF2A1515), colorText: Colors.redAccent);
+      return false;
     } finally {
       isActionSubmitting.value = false;
+      submittingAction.value = '';
+      debugPrint("==================================================");
     }
   }
 
-  Future<void> completeBooking(Quotation quote) async {
-    if (isActionSubmitting.value) return;
+  Future<bool> completeBooking(Quotation quote) async {
+    if (isActionSubmitting.value) return false;
     try {
       isActionSubmitting.value = true;
+      submittingAction.value = 'complete';
       final success = await _repository.completeBooking(
         bookingId: quote.id,
         adminId: _getAdminUid(),
@@ -359,19 +465,24 @@ class AdminBookingController extends GetxController {
       if (success) {
         Get.snackbar("Marked as Completed", "Booking ${quote.publicId} completed.",
             backgroundColor: const Color(0xFF152621), colorText: const Color(0xFFD4AF37));
+        return true;
       }
+      return false;
     } catch (e) {
-      Get.snackbar("Error", e.toString(),
+      Get.snackbar("Error", _extractErrorMessage(e),
           backgroundColor: const Color(0xFF2A1515), colorText: Colors.redAccent);
+      return false;
     } finally {
       isActionSubmitting.value = false;
+      submittingAction.value = '';
     }
   }
 
-  Future<void> approveCancellation(Quotation quote) async {
-    if (isActionSubmitting.value) return;
+  Future<bool> approveCancellation(Quotation quote) async {
+    if (isActionSubmitting.value) return false;
     try {
       isActionSubmitting.value = true;
+      submittingAction.value = 'cancel_approve';
       final success = await _repository.approveCancellation(
         bookingId: quote.id,
         adminId: _getAdminUid(),
@@ -380,19 +491,24 @@ class AdminBookingController extends GetxController {
       if (success) {
         Get.snackbar("Cancellation Approved", "Booking ${quote.publicId} cancelled.",
             backgroundColor: const Color(0xFF152621), colorText: Colors.white);
+        return true;
       }
+      return false;
     } catch (e) {
-      Get.snackbar("Error", e.toString(),
+      Get.snackbar("Error", _extractErrorMessage(e),
           backgroundColor: const Color(0xFF2A1515), colorText: Colors.redAccent);
+      return false;
     } finally {
       isActionSubmitting.value = false;
+      submittingAction.value = '';
     }
   }
 
-  Future<void> rejectCancellation(Quotation quote, String reason) async {
-    if (isActionSubmitting.value) return;
+  Future<bool> rejectCancellation(Quotation quote, String reason) async {
+    if (isActionSubmitting.value) return false;
     try {
       isActionSubmitting.value = true;
+      submittingAction.value = 'cancel_reject';
       final success = await _repository.rejectCancellation(
         bookingId: quote.id,
         adminId: _getAdminUid(),
@@ -402,12 +518,16 @@ class AdminBookingController extends GetxController {
       if (success) {
         Get.snackbar("Cancellation Rejected", "Cancellation for ${quote.publicId} rejected.",
             backgroundColor: const Color(0xFF152621), colorText: Colors.white);
+        return true;
       }
+      return false;
     } catch (e) {
-      Get.snackbar("Error", e.toString(),
+      Get.snackbar("Error", _extractErrorMessage(e),
           backgroundColor: const Color(0xFF2A1515), colorText: Colors.redAccent);
+      return false;
     } finally {
       isActionSubmitting.value = false;
+      submittingAction.value = '';
     }
   }
 }

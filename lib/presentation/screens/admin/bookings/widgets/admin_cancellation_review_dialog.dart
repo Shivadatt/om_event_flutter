@@ -83,8 +83,10 @@ class AdminCancellationReviewDialog extends StatelessWidget {
               final reason = reasonCtrl.text.trim();
               if (reason.isEmpty) return;
               Navigator.of(ctx).pop();
-              Navigator.of(context).pop();
-              await controller.rejectCancellation(booking, reason);
+              final ok = await controller.rejectCancellation(booking, reason);
+              if (context.mounted && ok) {
+                Navigator.of(context).pop();
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
@@ -194,15 +196,20 @@ class AdminCancellationReviewDialog extends StatelessWidget {
                     onPressed: isSubmitting
                         ? null
                         : () async {
-                            Navigator.of(context).pop();
-                            await controller.approveCancellation(booking);
+                            final ok = await controller.approveCancellation(booking);
+                            if (context.mounted && ok) {
+                              Navigator.of(context).pop();
+                            }
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF10B981),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
-                    child: const Text("APPROVE & CANCEL", style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      isSubmitting ? "PROCESSING..." : "APPROVE & CANCEL",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               );

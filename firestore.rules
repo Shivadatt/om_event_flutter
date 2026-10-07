@@ -7,23 +7,38 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to check user roles prioritizing the admin collection
+    // Dynamic role resolver using safe existence guard
     function getUserRole() {
       return exists(/databases/$(database)/documents/admin/$(request.auth.uid))
-        ? ('roleType' in get(/databases/$(database)/documents/admin/$(request.auth.uid)).data
-            ? get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.roleType
-            : ('role' in get(/databases/$(database)/documents/admin/$(request.auth.uid)).data
-                ? get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.role
-                : 'customer'))
-        : (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && ('role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
-            ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        ? get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.get('roleType', get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.get('role', 'admin'))
+        : (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'customer')
             : 'customer');
     }
-    
-    // Helper function to check if the user is an admin or staff member
+
+    // Dynamic permission check for granular RBAC permissions (e.g. can_manage_quotes)
+    function hasAdminPermission(permissionKey) {
+      return exists(/databases/$(database)/documents/admin/$(request.auth.uid)) &&
+        (
+          get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.get('roleType', '') == 'super_admin' ||
+          get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.get('role', '') == 'super_admin' ||
+          get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.get('permissions', {}).get('can_manage_everything', false) == true ||
+          get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.get('permissions', {}).get(permissionKey, false) == true
+        );
+    }
+
+    // Dynamic role-based authorization check for admin or staff
     function isAdminOrStaff() {
-      return isAuthenticated() && 
-        (getUserRole() == 'admin' || getUserRole() == 'staff' || getUserRole() == 'super_admin' || getUserRole() == 'demo_admin');
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/admin/$(request.auth.uid)) ||
+        (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') in ['admin', 'staff', 'super_admin', 'demo_admin', 'manager']
+        ) ||
+        request.auth.token.get('role', '') in ['admin', 'staff', 'super_admin', 'demo_admin', 'manager'] ||
+        request.auth.token.get('admin', false) == true ||
+        request.auth.token.get('email', '') in ['admin@omevents.in', 'demo@omevents.in', 'admin@gmail.com', 'omeventsanddecorators@gmail.com']
+      );
     }
 
     // Categories: Read is public, write requires administrative staff
@@ -100,7 +115,7 @@ service cloud.firestore {
       // P0 FIX: Strict customer transition validation.
       // Customers may NEVER set status = bookingConfirmed, completed, or cancelled,
       // and cannot tamper with admin, confirmation, date-locking, or pricing fields.
-      allow update: if isAdminOrStaff() || (
+      allow update: if isAdminOrStaff() || hasAdminPermission('can_manage_quotes') || (
         isAuthenticated() && 
         resource.data.customerId == request.auth.uid && 
         (
@@ -139,10 +154,10 @@ service cloud.firestore {
 
     // P2 FIX: Atomic date-locks for confirmed bookings.
     // Deterministic key: booked_dates/{YYYY-MM-DD}.
-    // Readable publicly for live calendar availability; only admin/staff can create/delete locks.
+    // Readable publicly for live calendar availability; admin/staff or authenticated session can create/delete locks.
     match /booked_dates/{dateId} {
       allow read: if true;
-      allow write: if isAdminOrStaff();
+      allow write: if isAdminOrStaff() || isAuthenticated();
     }
 
     // P1 FIX: Safe public booking tracker projection (no PII, no listing/enumeration).
@@ -205,6 +220,12 @@ service cloud.firestore {
       allow read: if isAuthenticated() && getUserRole() == 'admin';
     }
 
+    // Admin Activity: Staff and admin audit log records
+    match /admin_activity/{activityId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAdminOrStaff();
+    }
+
     // Admin Role Mapping
     match /admin/{adminId} {
       allow read: if isAuthenticated() &&
@@ -213,15 +234,11 @@ service cloud.firestore {
           isAdminOrStaff()
         );
 
-      // Allow super admin and demo admin to self-bootstrap their role document
-      allow create: if isAuthenticated() && request.auth.uid == adminId &&
-        (
-          request.auth.token.email == 'admin@omevents.in' || 
-          request.auth.token.email == 'demo@omevents.in' ||
-          request.auth.token.email == 'admin@gmail.com' || 
-          request.auth.token.email == 'omeventsanddecorators@gmail.com' ||
-          isAdminOrStaff()
-        );
+      // Dynamic permission: existing admin/staff can create admin records, or user can self-bootstrap initial record
+      allow create: if isAuthenticated() && (
+        isAdminOrStaff() ||
+        (request.auth.uid == adminId && !exists(/databases/$(database)/documents/admin/$(adminId)))
+      );
 
       allow update, delete: if isAdminOrStaff();
     }
