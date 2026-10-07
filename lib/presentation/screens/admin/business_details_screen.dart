@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/config/app_theme.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_routes.dart';
 import '../../../core/utils/validators.dart';
 import '../../controllers/business_details_controller.dart';
 import '../../../domain/entities/business_details_entity.dart';

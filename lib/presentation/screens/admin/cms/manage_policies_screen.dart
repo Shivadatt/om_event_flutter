@@ -89,7 +89,21 @@ class _ManagePoliciesScreenState extends State<ManagePoliciesScreen>
         }
       }
 
-      _bookingCtrl.text = legal['termsAndConditions'] ?? '';
+      // 3. Fallback: if still empty, check legacy settings/policies document
+      if (legal.isEmpty) {
+        final settingsDoc = await _firestore
+            .collection(AppCollections.settings)
+            .doc('policies')
+            .get();
+        if (settingsDoc.exists && settingsDoc.data() != null) {
+          final sData = settingsDoc.data()!;
+          legal['privacyPolicy'] = sData['privacyPolicy'] ?? '';
+          legal['termsAndConditions'] = sData['termsOfService'] ?? '';
+          legal['refundPolicy'] = sData['refundPolicy'] ?? '';
+        }
+      }
+
+      _bookingCtrl.text = legal['bookingPolicy'] ?? legal['termsAndConditions'] ?? '';
       _cancellationCtrl.text = legal['cancellationPolicy'] ?? '';
       _privacyCtrl.text = legal['privacyPolicy'] ?? '';
       _termsCtrl.text = legal['termsAndConditions'] ?? '';
@@ -104,7 +118,23 @@ class _ManagePoliciesScreenState extends State<ManagePoliciesScreen>
   Future<void> _savePolicies() async {
     setState(() => _isSaving = true);
     try {
+      // Preserve any existing statutory registration numbers stored in legal
+      Map<String, dynamic> existingLegal = {};
+      final docSnap = await _firestore
+          .collection(AppCollections.settings)
+          .doc('business_info')
+          .get();
+      if (docSnap.exists && docSnap.data() != null) {
+        final data = docSnap.data()!;
+        final source = data['published'] ?? data['draft'] ?? data;
+        if (source is Map && source['legal'] is Map) {
+          existingLegal = Map<String, dynamic>.from(source['legal'] as Map);
+        }
+      }
+
       final legalData = {
+        ...existingLegal,
+        'bookingPolicy': _bookingCtrl.text.trim(),
         'termsAndConditions': _termsCtrl.text.trim(),
         'cancellationPolicy': _cancellationCtrl.text.trim(),
         'privacyPolicy': _privacyCtrl.text.trim(),
@@ -133,7 +163,18 @@ class _ManagePoliciesScreenState extends State<ManagePoliciesScreen>
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      Get.snackbar('Saved', 'Policies updated successfully.',
+      // 3. Non-destructively sync to settings/policies so legacy readers remain aligned
+      await _firestore
+          .collection(AppCollections.settings)
+          .doc('policies')
+          .set({
+        'privacyPolicy': _privacyCtrl.text.trim(),
+        'termsOfService': _termsCtrl.text.trim(),
+        'refundPolicy': _refundCtrl.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      Get.snackbar('Saved', 'Policies updated successfully in SSOT.',
           snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       Get.snackbar('Error', 'Failed to save: $e');

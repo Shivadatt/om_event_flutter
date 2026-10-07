@@ -259,24 +259,6 @@ extension _SettingsOperationsFormExtension on _SystemSettingsScreenState {
             ],
           ),
         ),
-        const SizedBox(height: 24),
-        _field("Privacy Policy", _policyPrivacy),
-        _field("Terms of Service", _policyTerms),
-        _field("Refund Policy", _policyRefund),
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed:
-              () => _saveAndPublish('policies', () async {
-                await _repository.savePolicies(
-                  PoliciesSettings(
-                    privacyPolicy: _policyPrivacy.text,
-                    termsOfService: _policyTerms.text,
-                    refundPolicy: _policyRefund.text,
-                  ),
-                );
-              }),
-          child: const Text("Save & Publish Live"),
-        ),
       ],
     );
   }
