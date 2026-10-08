@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/utils/booking_status_helper.dart';
 import '../../../../../core/utils/formatters.dart';
 import '../../../../../domain/entities/quotation.dart';
 import '../../../../controllers/admin_booking_controller.dart';
@@ -21,27 +22,11 @@ class AdminBookingDetailsDialog extends StatelessWidget {
 
   static const goldColor = Color(0xFFECC24A);
 
-  Color _getStatusColor(QuotationStatus status) {
-    switch (status) {
-      case QuotationStatus.published:
-      case QuotationStatus.draft:
-      case QuotationStatus.viewed:
-      case QuotationStatus.republished:
-        return goldColor;
-      case QuotationStatus.acceptedByClient:
-        return const Color(0xFF4EBA7A);
-      case QuotationStatus.bookingConfirmed:
-      case QuotationStatus.inProgress:
-        return const Color(0xFF4EBA7A);
-      case QuotationStatus.completed:
-        return goldColor;
-      case QuotationStatus.cancelled:
-      case QuotationStatus.rejectedByClient:
-      case QuotationStatus.expired:
-        return const Color(0xFFEF4444);
-      default:
-        return Colors.white54;
-    }
+  Color _getStatusColor(Quotation booking, {bool isCancellationRequested = false}) {
+    return BookingStatusHelper.getStatusColor(
+      booking,
+      isCancellationRequested: isCancellationRequested,
+    );
   }
 
   Widget _buildSectionHeader(String title) {
@@ -192,7 +177,12 @@ class AdminBookingDetailsDialog extends StatelessWidget {
         .join('\n')
         .trim();
 
-    final statusCol = _getStatusColor(booking.status);
+    final isCancRequested = booking.customerAction == 'cancellation_requested' &&
+        booking.status != QuotationStatus.cancelled;
+    final statusCol = _getStatusColor(booking, isCancellationRequested: isCancRequested);
+    final statusLabel = isCancRequested
+        ? "CANCELLATION REQ"
+        : BookingStatusHelper.getDisplayBookingStatus(booking).toUpperCase();
 
     return Obx(() {
       final isSubmitting = controller.isActionSubmitting.value;
@@ -248,7 +238,7 @@ class AdminBookingDetailsDialog extends StatelessWidget {
                                     border: Border.all(color: statusCol.withValues(alpha: 0.75), width: 0.8),
                                   ),
                                   child: Text(
-                                    booking.status.name.toUpperCase(),
+                                    statusLabel,
                                     style: TextStyle(
                                       fontSize: 8.5,
                                       fontWeight: FontWeight.w800,

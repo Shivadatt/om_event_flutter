@@ -16,10 +16,6 @@ mixin QuotationControllerMixin on GetxController, QuotationEditorStateMixin {
   /// Updates status of a quotation.
   Future<void> updateQuotation(String id, String status) async {
     try {
-      final targetStatus = QuotationStatus.fromString(status);
-      if (targetStatus == QuotationStatus.acceptedByClient || targetStatus == QuotationStatus.rejectedByClient) {
-        throw Exception("Customer acceptance or rejection must always originate from the Client Portal.");
-      }
       await quotationRepository.updateQuotationStatus(id, status);
       await loadDashboardStats();
       Get.snackbar("Status Updated", "Quotation status updated successfully.");
@@ -67,7 +63,8 @@ mixin QuotationControllerMixin on GetxController, QuotationEditorStateMixin {
       if (quote.status == QuotationStatus.revisionRequested ||
           quote.status == QuotationStatus.published ||
           quote.status == QuotationStatus.viewed ||
-          quote.status == QuotationStatus.republished) {
+          quote.status == QuotationStatus.republished ||
+          quote.status == QuotationStatus.cancelled) {
         await quotationRepository.updateQuotationStatus(quote.id, QuotationStatus.underRevision.nameStr);
       }
 

@@ -3081,6 +3081,7 @@ file:///D:/om_event_python/om_event/lib/core/utils/asset_downloader.dart
 file:///D:/om_event_python/om_event/lib/core/utils/asset_downloader_web.dart
 file:///D:/om_event_python/om_event/lib/core/utils/auth_route_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/booking_communication_helper.dart
+file:///D:/om_event_python/om_event/lib/core/utils/booking_status_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/date_parser.dart
 file:///D:/om_event_python/om_event/lib/core/utils/error_mapper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/formatters.dart

@@ -64,6 +64,7 @@ class Quotation {
 
   // Automation fields
   final List<String> sentReminders;
+  final bool manualStatusOverride;
 
   const Quotation({
     required this.id,
@@ -113,6 +114,7 @@ class Quotation {
     this.acceptedIp,
     this.consentTextVersion,
     this.sentReminders = const [],
+    this.manualStatusOverride = false,
   }) : assert(customerId != '', 'customerId cannot be empty');
 
   // Backward compatibility getters for Client Portal integration
@@ -168,6 +170,7 @@ class Quotation {
     String? acceptedIp,
     String? consentTextVersion,
     List<String>? sentReminders,
+    bool? manualStatusOverride,
   }) {
     return Quotation(
       id: id ?? this.id,
@@ -217,6 +220,7 @@ class Quotation {
       acceptedIp: acceptedIp ?? this.acceptedIp,
       consentTextVersion: consentTextVersion ?? this.consentTextVersion,
       sentReminders: sentReminders ?? this.sentReminders,
+      manualStatusOverride: manualStatusOverride ?? this.manualStatusOverride,
     );
   }
 
@@ -269,6 +273,7 @@ class Quotation {
       acceptedIp: null,
       consentTextVersion: null,
       sentReminders: sentReminders,
+      manualStatusOverride: manualStatusOverride,
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/utils/booking_status_helper.dart';
 import '../../../../../core/utils/formatters.dart';
 import '../../../../../domain/entities/quotation.dart';
 import 'admin_booking_details_dialog.dart';
@@ -27,38 +28,16 @@ class _AdminBookingTableState extends State<AdminBookingTable> {
     super.dispose();
   }
 
-  Color _getStatusColor(QuotationStatus status) {
-    switch (status) {
-      case QuotationStatus.published:
-      case QuotationStatus.draft:
-      case QuotationStatus.viewed:
-      case QuotationStatus.republished:
-        return goldColor;
-      case QuotationStatus.acceptedByClient:
-      case QuotationStatus.bookingConfirmed:
-      case QuotationStatus.inProgress:
-        return const Color(0xFF4EBA7A);
-      case QuotationStatus.completed:
-        return goldColor;
-      case QuotationStatus.cancelled:
-      case QuotationStatus.rejectedByClient:
-      case QuotationStatus.expired:
-        return const Color(0xFFEF4444);
-      default:
-        return Colors.white54;
-    }
+  Color _getStatusColor(Quotation booking, {bool isCancellationRequested = false}) {
+    return BookingStatusHelper.getStatusColor(
+      booking,
+      isCancellationRequested: isCancellationRequested,
+    );
   }
 
   String _getStatusLabel(Quotation booking, bool isCancRequested) {
     if (isCancRequested) return "CANCELLATION REQ";
-    switch (booking.status) {
-      case QuotationStatus.bookingConfirmed:
-        return "CONFIRMED";
-      case QuotationStatus.acceptedByClient:
-        return "ACCEPTED";
-      default:
-        return booking.status.name.toUpperCase();
-    }
+    return BookingStatusHelper.getDisplayBookingStatus(booking).toUpperCase();
   }
 
   Widget _buildTableHeader() {
@@ -101,7 +80,7 @@ class _AdminBookingTableState extends State<AdminBookingTable> {
   Widget _buildTableRow(BuildContext context, Quotation b) {
     final serviceName = b.items.firstOrNull?.name ?? "Event Decor";
     final isCancRequested = b.customerAction == 'cancellation_requested' && b.status != QuotationStatus.cancelled;
-    final statusCol = _getStatusColor(b.status);
+    final statusCol = _getStatusColor(b, isCancellationRequested: isCancRequested);
     final statusLabel = _getStatusLabel(b, isCancRequested);
     final initial = b.customerName.isNotEmpty ? b.customerName[0].toUpperCase() : "C";
 

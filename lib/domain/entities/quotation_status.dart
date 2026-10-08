@@ -121,6 +121,7 @@ class QuotationStatusTransitions {
       case QuotationStatus.expired:
         return to == QuotationStatus.republished ||
             to == QuotationStatus.cancelled ||
+            to == QuotationStatus.underRevision ||
             to == QuotationStatus.draft ||
             to == QuotationStatus.archived;
       case QuotationStatus.archived:
@@ -128,8 +129,13 @@ class QuotationStatusTransitions {
             to == QuotationStatus.revisionRequested ||
             to == QuotationStatus.underRevision ||
             to == QuotationStatus.republished;
-      case QuotationStatus.completed:
       case QuotationStatus.cancelled:
+        return to == QuotationStatus.underRevision ||
+            to == QuotationStatus.republished ||
+            to == QuotationStatus.draft ||
+            to == QuotationStatus.expired ||
+            to == QuotationStatus.archived;
+      case QuotationStatus.completed:
         return false;
     }
   }

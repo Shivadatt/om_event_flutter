@@ -96,6 +96,7 @@ class QuotationModel extends Quotation {
     super.acceptedIp,
     super.consentTextVersion,
     super.sentReminders = const [],
+    super.manualStatusOverride = false,
   });
 
   factory QuotationModel.fromJson(
@@ -170,6 +171,7 @@ class QuotationModel extends Quotation {
       acceptedIp: json['acceptedIp'],
       consentTextVersion: json['consentTextVersion'],
       sentReminders: List<String>.from(json['sentReminders'] ?? json['sent_reminders'] ?? []),
+      manualStatusOverride: json['manual_status_override'] as bool? ?? json['manualStatusOverride'] as bool? ?? false,
     );
   }
 
@@ -236,6 +238,7 @@ class QuotationModel extends Quotation {
       'acceptedIp': acceptedIp,
       'consentTextVersion': consentTextVersion,
       'sentReminders': sentReminders,
+      'manual_status_override': manualStatusOverride,
     };
   }
 }

@@ -6,15 +6,22 @@ class DateParser {
     if (value is DateTime) return value;
     if (value is Timestamp) return value.toDate();
 
-    try {
-      if (value.runtimeType.toString().contains('Timestamp')) {
-        return (value as dynamic).toDate();
-      }
-    } catch (_) {}
-
     if (value is String) {
       return DateTime.tryParse(value) ?? DateTime.now();
     }
+
+    try {
+      if (value is Map) {
+        final sec = value['_seconds'] ?? value['seconds'];
+        if (sec is num) {
+          return DateTime.fromMillisecondsSinceEpoch((sec * 1000).toInt(), isUtc: true);
+        }
+      }
+      final dyn = value as dynamic;
+      final res = dyn.toDate();
+      if (res is DateTime) return res;
+    } catch (_) {}
+
     return DateTime.now();
   }
 
@@ -23,15 +30,22 @@ class DateParser {
     if (value is DateTime) return value;
     if (value is Timestamp) return value.toDate();
 
-    try {
-      if (value.runtimeType.toString().contains('Timestamp')) {
-        return (value as dynamic).toDate();
-      }
-    } catch (_) {}
-
     if (value is String) {
       return DateTime.tryParse(value);
     }
+
+    try {
+      if (value is Map) {
+        final sec = value['_seconds'] ?? value['seconds'];
+        if (sec is num) {
+          return DateTime.fromMillisecondsSinceEpoch((sec * 1000).toInt(), isUtc: true);
+        }
+      }
+      final dyn = value as dynamic;
+      final res = dyn.toDate();
+      if (res is DateTime) return res;
+    } catch (_) {}
+
     return null;
   }
 }

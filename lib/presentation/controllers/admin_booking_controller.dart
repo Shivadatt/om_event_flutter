@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../core/services/booking_availability_service.dart';
+import '../../core/utils/booking_status_helper.dart';
 import '../../domain/entities/quotation.dart';
 import '../../domain/repositories/admin_booking_repository.dart';
 import 'auth_controller.dart';
@@ -117,7 +118,9 @@ class AdminBookingController extends GetxController {
         cancCount++;
       }
 
-      switch (b.status) {
+      final eff = BookingStatusHelper.getEffectiveQuotationStatus(b);
+
+      switch (eff) {
         case QuotationStatus.published:
         case QuotationStatus.draft:
         case QuotationStatus.viewed:
@@ -151,9 +154,9 @@ class AdminBookingController extends GetxController {
       final eventIst = BookingAvailabilityService.toIst(b.eventDate);
       final eventDayStart = DateTime.utc(eventIst.year, eventIst.month, eventIst.day);
       if (!eventDayStart.isBefore(todayStart) &&
-          (b.status == QuotationStatus.bookingConfirmed ||
-              b.status == QuotationStatus.acceptedByClient ||
-              b.status == QuotationStatus.inProgress)) {
+          (eff == QuotationStatus.bookingConfirmed ||
+              eff == QuotationStatus.acceptedByClient ||
+              eff == QuotationStatus.inProgress)) {
         upCount++;
       }
     }
@@ -174,25 +177,33 @@ class AdminBookingController extends GetxController {
     // 1. Status Filter
     final tab = selectedStatusTab.value;
     if (tab == 'Pending') {
-      list = list.where((b) =>
-          b.status == QuotationStatus.published ||
-          b.status == QuotationStatus.draft ||
-          b.status == QuotationStatus.viewed ||
-          b.status == QuotationStatus.republished).toList();
+      list = list.where((b) {
+        final eff = BookingStatusHelper.getEffectiveQuotationStatus(b);
+        return eff == QuotationStatus.published ||
+            eff == QuotationStatus.draft ||
+            eff == QuotationStatus.viewed ||
+            eff == QuotationStatus.republished;
+      }).toList();
     } else if (tab == 'Accepted') {
-      list = list.where((b) => b.status == QuotationStatus.acceptedByClient).toList();
-    } else if (tab == 'Confirmed') {
       list = list.where((b) =>
-          b.status == QuotationStatus.bookingConfirmed ||
-          b.status == QuotationStatus.inProgress).toList();
+          BookingStatusHelper.getEffectiveQuotationStatus(b) == QuotationStatus.acceptedByClient).toList();
+    } else if (tab == 'Confirmed') {
+      list = list.where((b) {
+        final eff = BookingStatusHelper.getEffectiveQuotationStatus(b);
+        return eff == QuotationStatus.bookingConfirmed ||
+            eff == QuotationStatus.inProgress;
+      }).toList();
     } else if (tab == 'Cancellation Requests') {
       list = list.where(_isCancellationPending).toList();
     } else if (tab == 'Rejected') {
-      list = list.where((b) => b.status == QuotationStatus.rejectedByClient).toList();
+      list = list.where((b) =>
+          BookingStatusHelper.getEffectiveQuotationStatus(b) == QuotationStatus.rejectedByClient).toList();
     } else if (tab == 'Completed') {
-      list = list.where((b) => b.status == QuotationStatus.completed).toList();
+      list = list.where((b) =>
+          BookingStatusHelper.getEffectiveQuotationStatus(b) == QuotationStatus.completed).toList();
     } else if (tab == 'Cancelled') {
-      list = list.where((b) => b.status == QuotationStatus.cancelled).toList();
+      list = list.where((b) =>
+          BookingStatusHelper.getEffectiveQuotationStatus(b) == QuotationStatus.cancelled).toList();
     }
 
     // 2. Date Filter

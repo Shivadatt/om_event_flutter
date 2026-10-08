@@ -6,6 +6,7 @@ import '../../../core/config/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../core/utils/pdf_helper.dart';
+import '../../../core/utils/booking_status_helper.dart';
 import '../../controllers/quotation_controller.dart';
 import 'widgets/admin_back_button.dart';
 import 'widgets/admin_layout.dart';
@@ -44,6 +45,7 @@ class ManageQuotesScreen extends GetView<AdminController> {
         return greenColor;
       case QuotationStatus.expired:
       case QuotationStatus.rejectedByClient:
+      case QuotationStatus.cancelled:
         return redColor;
       case QuotationStatus.draft:
       case QuotationStatus.archived:
@@ -186,7 +188,8 @@ class ManageQuotesScreen extends GetView<AdminController> {
   }
 
   Widget _buildQuotationCard(BuildContext context, Quotation quote) {
-    final statusColor = _getStatusColor(quote.status);
+    final effectiveStatus = BookingStatusHelper.getEffectiveQuotationStatus(quote);
+    final statusColor = _getStatusColor(effectiveStatus);
     const goldColor = Color(0xFFECC24A);
 
     return Container(
@@ -227,7 +230,7 @@ class ManageQuotesScreen extends GetView<AdminController> {
                   border: Border.all(color: statusColor.withValues(alpha: 0.35), width: 0.9),
                 ),
                 child: Text(
-                  quote.status.nameStr.toUpperCase(),
+                  effectiveStatus.nameStr.toUpperCase(),
                   style: TextStyle(
                     fontSize: 8.5,
                     fontWeight: FontWeight.w800,
@@ -248,7 +251,7 @@ class ManageQuotesScreen extends GetView<AdminController> {
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: quote.status.nameStr,
+                    value: effectiveStatus.nameStr,
                     dropdownColor: const Color(0xFF0C1914),
                     icon: Icon(Icons.arrow_drop_down_rounded, size: 16, color: statusColor),
                     style: TextStyle(
@@ -258,9 +261,7 @@ class ManageQuotesScreen extends GetView<AdminController> {
                       letterSpacing: 0.5,
                     ),
                     isDense: true,
-                    items: QuotationStatus.values
-                        .where((s) => s == quote.status || (s != QuotationStatus.acceptedByClient && s != QuotationStatus.rejectedByClient))
-                        .map((s) => DropdownMenuItem(
+                    items: QuotationStatus.values.map((s) => DropdownMenuItem(
                       value: s.nameStr,
                       child: Text(
                         s.nameStr.toUpperCase(),

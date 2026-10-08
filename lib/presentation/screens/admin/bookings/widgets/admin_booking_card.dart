@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/utils/booking_status_helper.dart';
 import '../../../../../core/utils/formatters.dart';
 import '../../../../../domain/entities/quotation.dart';
 import 'admin_booking_details_dialog.dart';
@@ -14,41 +15,18 @@ class AdminBookingCard extends StatelessWidget {
     this.isGridCard = false,
   });
 
-  Color _getStatusColor(QuotationStatus status) {
-    switch (status) {
-      case QuotationStatus.published:
-      case QuotationStatus.draft:
-      case QuotationStatus.viewed:
-      case QuotationStatus.republished:
-        return const Color(0xFFECC24A);
-      case QuotationStatus.acceptedByClient:
-      case QuotationStatus.bookingConfirmed:
-      case QuotationStatus.inProgress:
-        return const Color(0xFF4EBA7A);
-      case QuotationStatus.completed:
-        return const Color(0xFFECC24A);
-      case QuotationStatus.cancelled:
-      case QuotationStatus.rejectedByClient:
-      case QuotationStatus.expired:
-        return const Color(0xFFEF4444);
-      default:
-        return Colors.white54;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     const goldColor = Color(0xFFECC24A);
     final isCancRequested = booking.customerAction == 'cancellation_requested' &&
         booking.status != QuotationStatus.cancelled;
-    final statusCol = _getStatusColor(booking.status);
+    final statusCol = BookingStatusHelper.getStatusColor(
+      booking,
+      isCancellationRequested: isCancRequested,
+    );
     final statusLabel = isCancRequested
         ? "CANCELLATION REQ"
-        : (booking.status == QuotationStatus.bookingConfirmed
-            ? "CONFIRMED"
-            : (booking.status == QuotationStatus.acceptedByClient
-                ? "ACCEPTED"
-                : booking.status.name.toUpperCase()));
+        : BookingStatusHelper.getDisplayBookingStatus(booking).toUpperCase();
 
     final serviceName = booking.items.firstOrNull?.name ?? "Event Decor";
     final initial = booking.customerName.isNotEmpty ? booking.customerName[0].toUpperCase() : "C";

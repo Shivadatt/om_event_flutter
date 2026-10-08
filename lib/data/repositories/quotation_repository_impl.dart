@@ -159,10 +159,18 @@ class QuotationRepositoryImpl implements QuotationRepository {
   @override
   Future<void> updateQuotationStatus(String id, String status) async {
     try {
-      await FirebaseFirestore.instance.collection(AppCollections.quotations).doc(id).update({
+      final updateData = <String, dynamic>{
         'status': status,
+        'manual_status_override': true,
         'updated_at': DateTime.now().toIso8601String(),
-      });
+      };
+      if (status != QuotationStatus.cancelled.nameStr) {
+        updateData['cancellation_reason'] = FieldValue.delete();
+        updateData['cancellationReason'] = FieldValue.delete();
+        updateData['cancellation_type'] = FieldValue.delete();
+        updateData['cancellation_status'] = FieldValue.delete();
+      }
+      await FirebaseFirestore.instance.collection(AppCollections.quotations).doc(id).update(updateData);
       AppLogger.success("Quotation status updated to $status", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "updateQuotationStatus");
     } catch (e, stack) {
       AppLogger.errorDetailed("Failed to update status", layer: LogLayer.repository, className: "QuotationRepositoryImpl", methodName: "updateQuotationStatus", error: e, stack: stack);
