@@ -65,8 +65,11 @@ class AppImage extends StatelessWidget {
         ? (height! * 2).toInt()
         : null;
 
+    final safeUrl = url.contains(' ') ? Uri.encodeFull(url) : url;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return CachedNetworkImage(
-      imageUrl: url,
+      imageUrl: safeUrl,
       width: width,
       height: height,
       fit: fit,
@@ -76,23 +79,23 @@ class AppImage extends StatelessWidget {
       placeholder: (context, url) =>
           placeholder ??
           Shimmer.fromColors(
-            baseColor: Colors.grey.shade200,
-            highlightColor: Colors.grey.shade50,
+            baseColor: isDark ? const Color(0xFF14201A) : Colors.grey.shade200,
+            highlightColor: isDark ? const Color(0xFF1E2E24) : Colors.grey.shade50,
             child: Container(
               width: width ?? double.infinity,
               height: height ?? double.infinity,
-              color: Colors.white,
+              color: isDark ? const Color(0xFF101915) : Colors.white,
             ),
           ),
       errorWidget: (context, url, error) =>
           placeholder ??
           Container(
-            color: Colors.grey.shade100,
+            color: isDark ? const Color(0xFF101915) : Colors.grey.shade100,
             width: width,
             height: height,
-            child: const Icon(
+            child: Icon(
               Icons.broken_image_outlined,
-              color: Colors.grey,
+              color: isDark ? Colors.white24 : Colors.grey,
             ),
           ),
     );

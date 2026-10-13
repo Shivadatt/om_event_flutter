@@ -17,6 +17,11 @@ class CategoryModel extends Category {
   static String sanitizeImageUrl(String slug, String url) {
     if (url.isEmpty) return '';
 
+    // Fix incorrect duplicate mapping where 'proposal' was assigned birthday image in Firestore
+    if (slug.toLowerCase() == 'proposal' && (url.contains('birthday.jpg') || url.contains('birthday'))) {
+      return 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/proposal-candles.jpg';
+    }
+
     if (url.startsWith('assets/images/')) {
       final fileName = url.split('/').last;
       return 'https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/thumbnails/images/$fileName';
