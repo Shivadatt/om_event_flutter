@@ -8,9 +8,10 @@ import 'widgets/admin_back_button.dart';
 import 'widgets/admin_layout.dart';
 import 'widgets/experience_list_tile.dart';
 import 'widgets/experience_form_dialog.dart';
+import 'widgets/luxury_gold_waves_painter.dart';
 
-/// Manage Experiences (Catalog) screen redesigned to match the
-/// Option 2 Modern Card Style reference design:
+/// Manage Experiences (Catalog) screen redesigned to match
+/// Option 4 Premium Detailed Style reference design:
 /// - Compact page header with eyebrow, title, subtitle & solid gold "+ Add Experience" action
 /// - Single unified toolbar with dynamic status filter pills (All, Active, Featured, Hidden)
 /// - Integrated compact search field, sort dropdown (Latest, Price, Rating, etc.) & Grid/List view toggles
@@ -53,9 +54,9 @@ class _ManageExperiencesScreenState extends State<ManageExperiencesScreen> {
   }
 
   int _getCrossAxisCount(double width) {
-    if (width >= 1200) return 4; // 4 columns on desktop (Option 2 exact match)
-    if (width >= 880) return 3;  // 3 columns on laptop / large tablet
-    if (width >= 580) return 2;  // 2 columns on tablet
+    if (width >= 960) return 4;  // 4 columns on desktop (Option 4 exact match)
+    if (width >= 700) return 3;  // 3 columns on medium desktop / laptop
+    if (width >= 460) return 2;  // 2 columns on tablet
     return 1;                    // 1 column on mobile
   }
 
@@ -72,134 +73,150 @@ class _ManageExperiencesScreenState extends State<ManageExperiencesScreen> {
               backgroundColor: Colors.transparent,
               elevation: 0,
             ),
-      body: Obx(() {
-        final allItems = controller.rxExperiences;
-
-        if (controller.isLoadingExperiences.value && allItems.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(_goldColor),
-            ),
-          );
-        }
-
-        // Calculate dynamic counts
-        final totalCount = allItems.length;
-        final activeCount = allItems.where((e) => e.isActive).length;
-        final featuredCount = allItems.where((e) => e.isFeatured).length;
-        final hiddenCount = totalCount - activeCount;
-
-        // Apply search and status filters
-        final filtered = allItems.where((item) {
-          if (_selectedFilter == 'active' && !item.isActive) return false;
-          if (_selectedFilter == 'featured' && !item.isFeatured) return false;
-          if (_selectedFilter == 'hidden' && item.isActive) return false;
-
-          if (_searchQuery.isNotEmpty) {
-            final matchName = item.name.toLowerCase().contains(_searchQuery);
-            final matchCategory = item.categoryName.toLowerCase().contains(_searchQuery);
-            final matchDesc = item.description.toLowerCase().contains(_searchQuery);
-            final matchSlug = item.slug.toLowerCase().contains(_searchQuery);
-            return matchName || matchCategory || matchDesc || matchSlug;
-          }
-          return true;
-        }).toList();
-
-        // Apply sorting
-        switch (_selectedSort) {
-          case 'price_asc':
-            filtered.sort((a, b) => a.effectivePrice.compareTo(b.effectivePrice));
-            break;
-          case 'price_desc':
-            filtered.sort((a, b) => b.effectivePrice.compareTo(a.effectivePrice));
-            break;
-          case 'rating':
-            filtered.sort((a, b) => b.rating.compareTo(a.rating));
-            break;
-          case 'popular':
-            filtered.sort((a, b) => b.popularity.compareTo(a.popularity));
-            break;
-          case 'name':
-            filtered.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-            break;
-          case 'latest':
-          default:
-            // Keeps natural Firestore order or reverse order if keyed
-            break;
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── 1. Page Header (Experiences Title & + Add Button) ──
-              _buildPageHeader(context),
-              const SizedBox(height: 14),
-
-              // ── 2. Unified Filter, Search & View Controls Toolbar ──
-              _buildToolbar(
-                totalCount: totalCount,
-                activeCount: activeCount,
-                featuredCount: featuredCount,
-                hiddenCount: hiddenCount,
+      body: Stack(
+        children: [
+          // ── Option 4 Background Luxury Gold Wave Ribbons ──────────────
+          const Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: LuxuryGoldWavesPainter(),
               ),
-              const SizedBox(height: 18),
+            ),
+          ),
 
-              // ── 3. High-Density Catalog Grid / List ───────────────
-              Expanded(
-                child: filtered.isEmpty
-                    ? _buildEmptyState()
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          if (!_isGridView) {
-                            return ListView.builder(
-                              padding: const EdgeInsets.only(bottom: 24),
-                              itemCount: filtered.length,
-                              itemBuilder: (context, index) {
-                                final item = filtered[index];
-                                return ExperienceListTile(
-                                  item: item,
-                                  isDark: true,
-                                  controller: controller,
-                                  isListView: true,
-                                  onEdit: () => _showExperienceDialog(context, experience: item),
-                                  onDelete: () => _confirmDelete(item.slug),
+          // ── Main Content Layer ────────────────────────────────────────
+          Positioned.fill(
+            child: Obx(() {
+              final allItems = controller.rxExperiences;
+
+              if (controller.isLoadingExperiences.value && allItems.isEmpty) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(_goldColor),
+                  ),
+                );
+              }
+
+              // Calculate dynamic counts
+              final totalCount = allItems.length;
+              final activeCount = allItems.where((e) => e.isActive).length;
+              final featuredCount = allItems.where((e) => e.isFeatured).length;
+              final hiddenCount = totalCount - activeCount;
+
+              // Apply search and status filters
+              final filtered = allItems.where((item) {
+                if (_selectedFilter == 'active' && !item.isActive) return false;
+                if (_selectedFilter == 'featured' && !item.isFeatured) return false;
+                if (_selectedFilter == 'hidden' && item.isActive) return false;
+
+                if (_searchQuery.isNotEmpty) {
+                  final matchName = item.name.toLowerCase().contains(_searchQuery);
+                  final matchCategory = item.categoryName.toLowerCase().contains(_searchQuery);
+                  final matchDesc = item.description.toLowerCase().contains(_searchQuery);
+                  final matchSlug = item.slug.toLowerCase().contains(_searchQuery);
+                  return matchName || matchCategory || matchDesc || matchSlug;
+                }
+                return true;
+              }).toList();
+
+              // Apply sorting
+              switch (_selectedSort) {
+                case 'price_asc':
+                  filtered.sort((a, b) => a.effectivePrice.compareTo(b.effectivePrice));
+                  break;
+                case 'price_desc':
+                  filtered.sort((a, b) => b.effectivePrice.compareTo(a.effectivePrice));
+                  break;
+                case 'rating':
+                  filtered.sort((a, b) => b.rating.compareTo(a.rating));
+                  break;
+                case 'popular':
+                  filtered.sort((a, b) => b.popularity.compareTo(a.popularity));
+                  break;
+                case 'name':
+                  filtered.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+                  break;
+                case 'latest':
+                default:
+                  // Keeps natural Firestore order or reverse order if keyed
+                  break;
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── 1. Page Header (Experiences Title & + Add Button) ──
+                    _buildPageHeader(context),
+                    const SizedBox(height: 14),
+
+                    // ── 2. Unified Filter, Search & View Controls Toolbar ──
+                    _buildToolbar(
+                      totalCount: totalCount,
+                      activeCount: activeCount,
+                      featuredCount: featuredCount,
+                      hiddenCount: hiddenCount,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── 3. High-Density Catalog Grid / List ───────────────
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? _buildEmptyState()
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                if (!_isGridView) {
+                                  return ListView.builder(
+                                    padding: const EdgeInsets.only(bottom: 24),
+                                    itemCount: filtered.length,
+                                    itemBuilder: (context, index) {
+                                      final item = filtered[index];
+                                      return ExperienceListTile(
+                                        item: item,
+                                        isDark: true,
+                                        controller: controller,
+                                        isListView: true,
+                                        onEdit: () => _showExperienceDialog(context, experience: item),
+                                        onDelete: () => _confirmDelete(item.slug),
+                                      );
+                                    },
+                                  );
+                                }
+
+                                final crossAxisCount = _getCrossAxisCount(constraints.maxWidth);
+
+                                return GridView.builder(
+                                  padding: const EdgeInsets.only(bottom: 24),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    mainAxisExtent: 308, // Option 4 exact card proportions (width:height ~ 3:4, image: 168px)
+                                  ),
+                                  itemCount: filtered.length,
+                                  itemBuilder: (context, index) {
+                                    final item = filtered[index];
+                                    return ExperienceListTile(
+                                      item: item,
+                                      isDark: true,
+                                      controller: controller,
+                                      isListView: false,
+                                      onEdit: () => _showExperienceDialog(context, experience: item),
+                                      onDelete: () => _confirmDelete(item.slug),
+                                    );
+                                  },
                                 );
                               },
-                            );
-                          }
-
-                          final crossAxisCount = _getCrossAxisCount(constraints.maxWidth);
-
-                          return GridView.builder(
-                            padding: const EdgeInsets.only(bottom: 24),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 18,
-                              mainAxisSpacing: 18,
-                              mainAxisExtent: 332, // Exact compact card height matching reference
                             ),
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) {
-                              final item = filtered[index];
-                              return ExperienceListTile(
-                                item: item,
-                                isDark: true,
-                                controller: controller,
-                                isListView: false,
-                                onEdit: () => _showExperienceDialog(context, experience: item),
-                                onDelete: () => _confirmDelete(item.slug),
-                              );
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
+                    ),
+                  ],
+                ),
+              );
+            }),
           ),
-        );
-      }),
+        ],
+      ),
     );
   }
 
@@ -435,7 +452,11 @@ class _ManageExperiencesScreenState extends State<ManageExperiencesScreen> {
         children: [
           filterPills,
           const SizedBox(height: 10),
-          rightControls,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: rightControls,
+          ),
         ],
       );
     }
@@ -493,11 +514,11 @@ class _ManageExperiencesScreenState extends State<ManageExperiencesScreen> {
             ),
             const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF0C1410).withValues(alpha: 0.15)
-                    : Colors.white.withValues(alpha: 0.08),
+                    ? const Color(0xFF0C1410)
+                    : const Color(0xFF16231C),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -505,7 +526,7 @@ class _ManageExperiencesScreenState extends State<ManageExperiencesScreen> {
                 style: GoogleFonts.dmSans(
                   fontSize: 10.5,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? const Color(0xFF0C1410) : _goldColor,
+                  color: _goldColor,
                 ),
               ),
             ),
