@@ -3057,6 +3057,7 @@ file:///D:/om_event_python/om_event/lib/core/services/booking_availability_servi
 file:///D:/om_event_python/om_event/lib/core/services/bootstrap_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/business_details_cache_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/business_details_service.dart
+file:///D:/om_event_python/om_event/lib/core/services/customer_auth_provisioning_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/export_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/fcm/fcm_module.dart
 file:///D:/om_event_python/om_event/lib/core/services/fcm/fcm_service.dart
@@ -3080,6 +3081,7 @@ file:///D:/om_event_python/om_event/lib/core/utils/asset_downloader.dart
 file:///D:/om_event_python/om_event/lib/core/utils/asset_downloader_web.dart
 file:///D:/om_event_python/om_event/lib/core/utils/auth_route_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/booking_communication_helper.dart
+file:///D:/om_event_python/om_event/lib/core/utils/booking_status_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/date_parser.dart
 file:///D:/om_event_python/om_event/lib/core/utils/error_mapper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/formatters.dart
@@ -3295,12 +3297,7 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/biz_det
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/biz_details_other.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/manage_categories_dialogs.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_advanced_form.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_business_branch_card.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_business_contacts.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_business_contacts_add.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_business_contacts_edit.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_business_form.dart
-file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_business_validation.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_dispose.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_fields.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/parts/settings_marketing_form.dart
@@ -3313,6 +3310,7 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/admin/scheduler_hea
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/system_settings_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/add_admin_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_back_button.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_drawer.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_layout.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_role_card.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/admin_sidebar.dart
@@ -3333,6 +3331,7 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/edito
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/experience_form_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/experience_list_tile.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/inquiries_trend_chart.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/luxury_gold_waves_painter.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/parts/experience_form_fields.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/parts/experience_form_media.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/parts/notif_campaigns.dart
@@ -3357,6 +3356,7 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/revie
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/settings_notifications_tab.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/auth/login_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/auth/customer_auth_screen.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/customer/auth/customer_complete_invite_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/auth/widgets/customer_auth_box.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/contact/contact_screen.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/customer/dashboard/customer_dashboard_screen.dart

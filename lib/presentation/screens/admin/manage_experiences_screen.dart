@@ -186,26 +186,42 @@ class _ManageExperiencesScreenState extends State<ManageExperiencesScreen> {
 
                                 final crossAxisCount = _getCrossAxisCount(constraints.maxWidth);
 
-                                return GridView.builder(
+                                return SingleChildScrollView(
                                   padding: const EdgeInsets.only(bottom: 24),
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                    mainAxisExtent: 308, // Option 4 exact card proportions (width:height ~ 3:4, image: 168px)
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: List.generate(crossAxisCount, (colIndex) {
+                                      final columnItems = [
+                                        for (int i = colIndex; i < filtered.length; i += crossAxisCount)
+                                          filtered[i]
+                                      ];
+                                      return Expanded(
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            left: colIndex == 0 ? 0 : 6,
+                                            right: colIndex == crossAxisCount - 1 ? 0 : 6,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              for (final item in columnItems)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(bottom: 12),
+                                                  child: ExperienceListTile(
+                                                    item: item,
+                                                    isDark: true,
+                                                    controller: controller,
+                                                    isListView: false,
+                                                    onEdit: () => _showExperienceDialog(context, experience: item),
+                                                    onDelete: () => _confirmDelete(item.slug),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }),
                                   ),
-                                  itemCount: filtered.length,
-                                  itemBuilder: (context, index) {
-                                    final item = filtered[index];
-                                    return ExperienceListTile(
-                                      item: item,
-                                      isDark: true,
-                                      controller: controller,
-                                      isListView: false,
-                                      onEdit: () => _showExperienceDialog(context, experience: item),
-                                      onDelete: () => _confirmDelete(item.slug),
-                                    );
-                                  },
                                 );
                               },
                             ),
