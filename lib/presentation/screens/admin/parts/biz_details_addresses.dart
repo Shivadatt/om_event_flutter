@@ -8,14 +8,27 @@ extension BusinessDetailsAddresses on BusinessDetailsScreen {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("UNLIMITED ADDRESSES", style: GoogleFonts.italiana(fontSize: 24, color: const Color(0xFFC9A77E))),
+            Text(
+              "UNLIMITED ADDRESSES",
+              style: GoogleFonts.italiana(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFE2B755),
+                letterSpacing: 1.5,
+              ),
+            ),
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: Color(0xFFC9A77E), size: 28),
+              icon: const Icon(Icons.add_circle_outline, color: Color(0xFFE2B755), size: 24),
               onPressed: () => _showAddressDialog(context, controller, null),
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        Container(
+          margin: const EdgeInsets.only(top: 4, bottom: 14),
+          height: 1.5,
+          width: 52,
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
+        ),
         Obx(() {
           if (controller.addresses.isEmpty) {
             return Text("No addresses configured.", style: AppTheme.sansBody(fontSize: 14, color: Colors.grey));
@@ -27,11 +40,11 @@ extension BusinessDetailsAddresses on BusinessDetailsScreen {
             itemBuilder: (context, index) {
               final a = controller.addresses[index];
               return Container(
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.only(bottom: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131D1A),
-                  border: Border.all(color: const Color(0xFF254235)),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFF0F1B18),
+                  border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.28)),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: ListTile(
                   title: Text(a.addressTitle, style: AppTheme.sansBody(fontSize: 16, fontWeight: FontWeight.bold)),

@@ -8,14 +8,27 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("OFFICE BRANCHES", style: GoogleFonts.italiana(fontSize: 24, color: const Color(0xFFC9A77E))),
+            Text(
+              "OFFICE BRANCHES",
+              style: GoogleFonts.italiana(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFE2B755),
+                letterSpacing: 1.5,
+              ),
+            ),
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: Color(0xFFC9A77E), size: 28),
+              icon: const Icon(Icons.add_circle_outline, color: Color(0xFFE2B755), size: 24),
               onPressed: () => _showBranchDialog(context, controller, null),
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        Container(
+          margin: const EdgeInsets.only(top: 4, bottom: 14),
+          height: 1.5,
+          width: 52,
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
+        ),
         Obx(() {
           if (controller.branches.isEmpty) {
             return Text("No branches configured.", style: AppTheme.sansBody(fontSize: 14, color: Colors.grey));
@@ -23,6 +36,7 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
           return ReorderableListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
             itemCount: controller.branches.length,
             onReorderItem: (oldIndex, newIndex) {
               final b = controller.branches.removeAt(oldIndex);
@@ -52,52 +66,131 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
               final b = controller.branches[index];
               return Container(
                 key: ValueKey(b.id),
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131D1A),
-                  border: Border.all(color: const Color(0xFF254235)),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFF0C1511),
+                  border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.22), width: 0.85),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: ListTile(
-                  leading: const Icon(Icons.drag_handle, color: Colors.grey),
-                  title: Text(b.branchName, style: AppTheme.sansBody(fontSize: 16, fontWeight: FontWeight.bold)),
-                  subtitle: Text("${b.cityText} • ${b.phoneNumber}", style: AppTheme.sansBody(fontSize: 12, color: Colors.grey)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Switch(
-                        value: b.isActive,
-                        activeThumbColor: const Color(0xFFC9A77E),
-                        onChanged: (val) {
-                          controller.branches[index] = BranchEntity(
-                            id: b.id,
-                            branchName: b.branchName,
-                            branchManager: b.branchManager,
-                            phoneNumber: b.phoneNumber,
-                            whatsapp: b.whatsapp,
-                            email: b.email,
-                            fullAddress: b.fullAddress,
-                            googleMapUrl: b.googleMapUrl,
-                            latitude: b.latitude,
-                            longitude: b.longitude,
-                            workingHours: b.workingHours,
-                            openingDays: b.openingDays,
-                            displayOrder: b.displayOrder,
-                            isActive: val,
-                            instagram: b.instagram,
-                          );
-                        },
+                child: Row(
+                  children: [
+                    ReorderableDragStartListener(
+                      index: index,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.grab,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: Icon(
+                            Icons.drag_indicator_rounded,
+                            size: 16,
+                            color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
+                          ),
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () => _showBranchDialog(context, controller, index),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            b.branchName,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: b.isActive ? Colors.white : Colors.white54,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "${b.cityText} • ${b.phoneNumber}",
+                            style: GoogleFonts.dmSans(
+                              fontSize: 11,
+                              color: Colors.white38,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => controller.branches.removeAt(index),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 22,
+                          width: 36,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: Switch(
+                              value: b.isActive,
+                              activeThumbColor: const Color(0xFFE2B755),
+                              activeTrackColor: const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                              inactiveThumbColor: Colors.white30,
+                              inactiveTrackColor: Colors.white12,
+                              onChanged: (val) {
+                                controller.branches[index] = BranchEntity(
+                                  id: b.id,
+                                  branchName: b.branchName,
+                                  branchManager: b.branchManager,
+                                  phoneNumber: b.phoneNumber,
+                                  whatsapp: b.whatsapp,
+                                  email: b.email,
+                                  fullAddress: b.fullAddress,
+                                  googleMapUrl: b.googleMapUrl,
+                                  latitude: b.latitude,
+                                  longitude: b.longitude,
+                                  workingHours: b.workingHours,
+                                  openingDays: b.openingDays,
+                                  displayOrder: b.displayOrder,
+                                  isActive: val,
+                                  instagram: b.instagram,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        InkWell(
+                          onTap: () => _showBranchDialog(context, controller, index),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD4AF37).withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.edit_outlined,
+                              color: Color(0xFFE2B755),
+                              size: 13.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        InkWell(
+                          onTap: () => controller.branches.removeAt(index),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                              size: 13.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               );
             },

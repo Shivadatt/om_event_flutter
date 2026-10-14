@@ -7,9 +7,19 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
       children: [
         Text(
           "CONTACT INFORMATION",
-          style: GoogleFonts.italiana(fontSize: 24, color: const Color(0xFFC9A77E)),
+          style: GoogleFonts.italiana(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFE2B755),
+            letterSpacing: 1.5,
+          ),
         ),
-        const SizedBox(height: 24),
+        Container(
+          margin: const EdgeInsets.only(top: 4, bottom: 14),
+          height: 1.5,
+          width: 52,
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
+        ),
         _buildContactManager(
           context: context,
           controller: controller,
@@ -17,7 +27,7 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
           list: controller.phones,
           isPhone: true,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
         _buildContactManager(
           context: context,
           controller: controller,
@@ -25,7 +35,7 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
           list: controller.whatsapps,
           isPhone: true,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
         _buildContactManager(
           context: context,
           controller: controller,
@@ -33,7 +43,7 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
           list: controller.emails,
           isEmail: true,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
         _buildContactManager(
           context: context,
           controller: controller,
@@ -41,7 +51,7 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
           list: controller.customerCares,
           isPhone: true,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
         _buildContactManager(
           context: context,
           controller: controller,
@@ -61,133 +71,314 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
     bool isPhone = false,
     bool isEmail = false,
   }) {
-    return Card(
-      color: const Color(0xFF131D1A),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Color(0xFF254235)),
+    IconData headerIcon;
+    if (isEmail) {
+      headerIcon = Icons.mail_outline_rounded;
+    } else if (title.toLowerCase().contains("whatsapp")) {
+      headerIcon = Icons.forum_outlined;
+    } else if (title.toLowerCase().contains("emergency")) {
+      headerIcon = Icons.emergency_outlined;
+    } else if (title.toLowerCase().contains("care")) {
+      headerIcon = Icons.support_agent_outlined;
+    } else {
+      headerIcon = Icons.phone_outlined;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF080F0C),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.28),
+          width: 0.9,
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: AppTheme.sansBody(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFC9A77E),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    headerIcon,
+                    size: 16,
+                    color: const Color(0xFFE2B755),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline, color: Color(0xFFC9A77E)),
-                  onPressed: () =>
-                      _showContactItemDialog(context, list, null, isPhone, isEmail),
-                ),
-              ],
-            ),
-            const Divider(color: Colors.white10),
-            Obx(() {
-              if (list.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    "No items configured.",
-                    style: AppTheme.sansBody(fontSize: 12, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFE2B755),
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                );
-              }
-              return ReorderableListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: list.length,
-                onReorderItem: (oldIndex, newIndex) {
-                  final item = list.removeAt(oldIndex);
-                  list.insert(newIndex, item);
-                  for (int i = 0; i < list.length; i++) {
-                    final c = list[i];
-                    list[i] = ContactItemEntity(
-                      id: c.id,
-                      label: c.label,
-                      value: c.value,
-                      isPrimary: c.isPrimary,
-                      isActive: c.isActive,
-                      displayOrder: i + 1,
-                    );
-                  }
-                },
-                itemBuilder: (context, index) {
-                  final item = list[index];
-                  return ListTile(
-                    key: ValueKey(item.id),
-                    leading: const Icon(Icons.drag_handle, color: Colors.grey),
-                    title: Row(
-                      children: [
-                        Text(
-                          item.value,
-                          style: AppTheme.sansBody(fontSize: 14, fontWeight: FontWeight.bold),
+                  Obx(() {
+                    if (list.isEmpty) return const SizedBox();
+                    return Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4AF37).withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                          width: 0.7,
                         ),
-                        const SizedBox(width: 8),
-                        if (item.isPrimary)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFC9A77E),
-                              borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        "${list.length}",
+                        style: GoogleFonts.dmSans(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFE2B755),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+              InkWell(
+                onTap: () => _showContactItemDialog(context, list, null, isPhone, isEmail),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFD4AF37).withValues(alpha: 0.45),
+                      width: 0.85,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.add,
+                        size: 13,
+                        color: Color(0xFFE2B755),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "ADD",
+                        style: GoogleFonts.dmSans(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFE2B755),
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Divider(
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.15),
+            height: 16,
+            thickness: 0.8,
+          ),
+          Obx(() {
+            if (list.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Center(
+                  child: Text(
+                    "No items configured yet.",
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11.5,
+                      color: Colors.white30,
+                    ),
+                  ),
+                ),
+              );
+            }
+            return ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: list.length,
+              onReorderItem: (oldIndex, newIndex) {
+                final item = list.removeAt(oldIndex);
+                list.insert(newIndex, item);
+                for (int i = 0; i < list.length; i++) {
+                  final c = list[i];
+                  list[i] = ContactItemEntity(
+                    id: c.id,
+                    label: c.label,
+                    value: c.value,
+                    isPrimary: c.isPrimary,
+                    isActive: c.isActive,
+                    displayOrder: i + 1,
+                  );
+                }
+              },
+              itemBuilder: (context, index) {
+                final item = list[index];
+                return Container(
+                  key: ValueKey(item.id),
+                  margin: const EdgeInsets.symmetric(vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0C1511),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFFD4AF37).withValues(alpha: 0.16),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      // Reorder Drag Handle (Only One Handle)
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.grab,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: Icon(
+                              Icons.drag_indicator_rounded,
+                              size: 16,
+                              color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
                             ),
-                            child: const Text(
-                              "Primary",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      // Text content + primary tag (Flexible, overflow-protected)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    item.value,
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: item.isActive ? Colors.white : Colors.white54,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                                if (item.isPrimary) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFD4AF37),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      "PRIMARY",
+                                      style: GoogleFonts.dmSans(
+                                        color: const Color(0xFF0C1410),
+                                        fontSize: 7.5,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 1.5),
+                            Text(
+                              item.label,
+                              style: GoogleFonts.dmSans(
+                                fontSize: 10.5,
+                                color: Colors.white38,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Trailing controls: Compact Switch, Edit & Delete
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: 22,
+                            width: 36,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: Switch(
+                                value: item.isActive,
+                                activeThumbColor: const Color(0xFFE2B755),
+                                activeTrackColor: const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                                inactiveThumbColor: Colors.white30,
+                                inactiveTrackColor: Colors.white12,
+                                onChanged: (val) {
+                                  list[index] = ContactItemEntity(
+                                    id: item.id,
+                                    label: item.label,
+                                    value: item.value,
+                                    isPrimary: item.isPrimary,
+                                    isActive: val,
+                                    displayOrder: item.displayOrder,
+                                  );
+                                },
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                    subtitle: Text(
-                      item.label,
-                      style: AppTheme.sansBody(fontSize: 12, color: Colors.grey),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Switch(
-                          value: item.isActive,
-                          activeThumbColor: const Color(0xFFC9A77E),
-                          onChanged: (val) {
-                            list[index] = ContactItemEntity(
-                              id: item.id,
-                              label: item.label,
-                              value: item.value,
-                              isPrimary: item.isPrimary,
-                              isActive: val,
-                              displayOrder: item.displayOrder,
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
-                          onPressed: () =>
-                              _showContactItemDialog(context, list, index, isPhone, isEmail),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                          onPressed: () => list.removeAt(index),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            }),
-          ],
-        ),
+                          const SizedBox(width: 6),
+                          InkWell(
+                            onTap: () =>
+                                _showContactItemDialog(context, list, index, isPhone, isEmail),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD4AF37).withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.edit_outlined,
+                                color: Color(0xFFE2B755),
+                                size: 13.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          InkWell(
+                            onTap: () => list.removeAt(index),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.redAccent,
+                                size: 13.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }),
+        ],
       ),
     );
   }
@@ -213,42 +404,41 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF0D1915),
+              backgroundColor: const Color(0xFF0C1511),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Color(0xFFC9A77E)),
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.45)),
               ),
               title: Text(
                 isEditing ? "Edit Contact" : "Add Contact",
-                style: GoogleFonts.italiana(color: const Color(0xFFC9A77E)),
+                style: GoogleFonts.italiana(
+                  color: const Color(0xFFE2B755),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(
-                    controller: valueCtrl,
-                    style: AppTheme.sansBody(fontSize: 14, color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: isEmail ? "Email Address" : "Phone Number",
-                      labelStyle: AppTheme.sansBody(fontSize: 12, color: Colors.white70),
-                      border: const OutlineInputBorder(),
-                    ),
+                  _dialogField(
+                    isEmail ? "Email Address" : "Phone Number",
+                    valueCtrl,
+                    icon: isEmail ? Icons.email_outlined : Icons.phone_outlined,
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: labelCtrl,
-                    style: AppTheme.sansBody(fontSize: 14, color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: "Label (e.g. Sales, Support, Office)",
-                      labelStyle: AppTheme.sansBody(fontSize: 12, color: Colors.white70),
-                      border: const OutlineInputBorder(),
-                    ),
+                  _dialogField(
+                    "Label (e.g. Sales, Support, Office)",
+                    labelCtrl,
+                    icon: Icons.label_outline,
                   ),
-                  const SizedBox(height: 12),
                   CheckboxListTile(
-                    title: Text("Mark as Primary", style: AppTheme.sansBody(fontSize: 13)),
+                    title: Text(
+                      "Mark as Primary",
+                      style: GoogleFonts.dmSans(fontSize: 12.5, color: Colors.white),
+                    ),
                     value: isPrimaryVal,
-                    activeColor: const Color(0xFFC9A77E),
+                    activeColor: const Color(0xFFD4AF37),
+                    checkColor: const Color(0xFF0C1410),
+                    contentPadding: EdgeInsets.zero,
                     onChanged: (val) {
                       setDialogState(() {
                         isPrimaryVal = val ?? false;
@@ -256,9 +446,14 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
                     },
                   ),
                   CheckboxListTile(
-                    title: Text("Is Active", style: AppTheme.sansBody(fontSize: 13)),
+                    title: Text(
+                      "Is Active",
+                      style: GoogleFonts.dmSans(fontSize: 12.5, color: Colors.white),
+                    ),
                     value: isActiveVal,
-                    activeColor: const Color(0xFFC9A77E),
+                    activeColor: const Color(0xFFD4AF37),
+                    checkColor: const Color(0xFF0C1410),
+                    contentPadding: EdgeInsets.zero,
                     onChanged: (val) {
                       setDialogState(() {
                         isActiveVal = val ?? true;
@@ -272,11 +467,11 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
                   onPressed: () => Navigator.pop(context),
                   child: Text(
                     "Cancel",
-                    style: AppTheme.sansBody(fontSize: 13, color: Colors.white54),
+                    style: GoogleFonts.dmSans(fontSize: 12.5, color: Colors.white54),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
+                InkWell(
+                  onTap: () {
                     final valStr = valueCtrl.text.trim();
                     final lblStr = labelCtrl.text.trim();
 
@@ -340,7 +535,25 @@ extension BusinessDetailsContacts on BusinessDetailsScreen {
                     }
                     Navigator.pop(context);
                   },
-                  child: Text(isEditing ? "Save" : "Add"),
+                  borderRadius: BorderRadius.circular(18),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7.5),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFF3C456), Color(0xFFD89B27)],
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(
+                      isEditing ? "SAVE" : "ADD",
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0C1410),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );
