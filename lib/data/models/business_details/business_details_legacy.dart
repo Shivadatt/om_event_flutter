@@ -25,25 +25,12 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
     List<BranchEntity> branches = [];
     final branchesList = json['branches'] as List? ?? json['officeBranches'] as List?;
     if (branchesList != null) {
+      int idx = 0;
       branches = branchesList.map((e) {
         final m = Map<String, dynamic>.from(e);
-        return BranchEntity(
-          id: m['id'] ?? '',
-          branchName: m['branchName'] ?? m['name'] ?? '',
-          branchManager: m['branchManager'] ?? '',
-          phoneNumber: m['phoneNumber'] ?? m['phone'] ?? m['phone1'] ?? '',
-          whatsapp: m['whatsapp'] ?? m['whatsapp_number'] ?? '',
-          email: m['email'] ?? '',
-          fullAddress: m['fullAddress'] ?? m['address'] ?? m['address_line'] ?? '',
-          googleMapUrl: m['googleMapUrl'] ?? m['googleMaps'] ?? '',
-          latitude: m['latitude'] ?? '',
-          longitude: m['longitude'] ?? '',
-          workingHours: m['workingHours'] ?? m['businessHours'] ?? '',
-          openingDays: m['openingDays'] ?? '',
-          displayOrder: m['displayOrder'] ?? m['display_order'] ?? 1,
-          isActive: m['isActive'] ?? m['is_active'] ?? true,
-          instagram: m['instagram'] ?? m['instagram_url'] ?? '',
-        );
+        final item = BranchModel.fromJson(m, idx);
+        idx++;
+        return item;
       }).toList();
     }
 
@@ -310,43 +297,89 @@ extension BusinessDetailsFromJson on BusinessDetailsModel {
       social = SocialMediaEntity.defaultVal();
     }
     
-    final legacySocial = json['socialLinks'] as Map? ?? json;
-    String igKadi = social.instagramKadi.isNotEmpty 
-        ? social.instagramKadi 
-        : (legacySocial['instagram_kadi'] ?? legacySocial['instagramKadi'] ?? json['instagram_kadi'] ?? json['instagramKadi'] ?? '').toString();
-    String igThangadh = social.instagramThangadh.isNotEmpty 
-        ? social.instagramThangadh 
-        : (legacySocial['instagram_thangadh'] ?? legacySocial['instagramThangadh'] ?? json['instagram_thangadh'] ?? json['instagramThangadh'] ?? '').toString();
-    final website = social.website.isNotEmpty 
-        ? social.website 
-        : (legacySocial['website'] ?? json['website'] ?? '').toString();
-    final googleBusiness = social.googleBusinessProfile.isNotEmpty 
-        ? social.googleBusinessProfile 
-        : (legacySocial['google_business_profile'] ?? legacySocial['googleBusinessProfile'] ?? legacySocial['google_business'] ?? json['google_business_profile'] ?? '').toString();
+    String firstNonEmpty(List<dynamic> candidates) {
+      for (final c in candidates) {
+        if (c != null) {
+          final s = c.toString().trim();
+          if (s.isNotEmpty) return s;
+        }
+      }
+      return '';
+    }
 
-    if (igKadi.isEmpty || igThangadh.isEmpty) {
-      for (final branch in branches) {
-        final lowerName = branch.branchName.toLowerCase();
-        final lowerAddress = branch.fullAddress.toLowerCase();
-        if (branch.instagram.isNotEmpty) {
-          if (lowerName.contains('kadi') || lowerAddress.contains('kadi')) {
-            if (igKadi.isEmpty) igKadi = branch.instagram;
-          } else if (lowerName.contains('thangadh') || lowerAddress.contains('thangadh')) {
-            if (igThangadh.isEmpty) igThangadh = branch.instagram;
-          }
+    final legacySocial = json['socialLinks'] is Map ? json['socialLinks'] as Map : json;
+
+    // 1. Resolve Branch Instagram links by actual branch identity
+    String kadiBranchIg = '';
+    String thangadhBranchIg = '';
+    for (final branch in branches) {
+      final idLower = branch.id.toLowerCase();
+      final nameLower = branch.branchName.toLowerCase();
+      final addrLower = branch.fullAddress.toLowerCase();
+      if (branch.instagram.trim().isNotEmpty) {
+        if (idLower.contains('kadi') || nameLower.contains('kadi') || addrLower.contains('kadi') ||
+            idLower.contains('medha') || nameLower.contains('medha') || addrLower.contains('medha')) {
+          if (kadiBranchIg.isEmpty) kadiBranchIg = branch.instagram.trim();
+        } else if (idLower.contains('thangadh') || nameLower.contains('thangadh') || addrLower.contains('thangadh') ||
+            idLower.contains('surajdeval') || nameLower.contains('surajdeval') || addrLower.contains('surajdeval')) {
+          if (thangadhBranchIg.isEmpty) thangadhBranchIg = branch.instagram.trim();
         }
       }
     }
+
+    // 2. Resolve Instagram (Kadi): Branch -> Social Entity -> SocialLinks -> Root
+    final igKadi = firstNonEmpty([
+      kadiBranchIg,
+      social.instagramKadi,
+      legacySocial['instagram_kadi'],
+      legacySocial['instagramKadi'],
+      json['instagram_kadi'],
+      json['instagramKadi'],
+    ]);
+
+    // 3. Resolve Instagram (Thangadh): Branch -> Social Entity -> SocialLinks -> Root -> Legacy Instagram
+    final igThangadh = firstNonEmpty([
+      thangadhBranchIg,
+      social.instagramThangadh,
+      legacySocial['instagram_thangadh'],
+      legacySocial['instagramThangadh'],
+      json['instagram_thangadh'],
+      json['instagramThangadh'],
+      json['instagram'],
+      json['instagram_url'],
+    ]);
+
+    // 4. Resolve Official Website: Social Entity -> SocialLinks -> Root -> SEO Canonical
+    final website = firstNonEmpty([
+      social.website,
+      legacySocial['website'],
+      json['website'],
+      json['official_website'],
+      json['business_website'],
+      json['url'],
+      (json['seo'] is Map) ? json['seo']['canonicalUrl'] : null,
+    ]);
+
+    // 5. Resolve Google Business Profile: Social Entity -> SocialLinks -> Root Google Business
+    final googleBusiness = firstNonEmpty([
+      social.googleBusinessProfile,
+      legacySocial['google_business_profile'],
+      legacySocial['googleBusinessProfile'],
+      legacySocial['google_business'],
+      json['google_business_profile'],
+      json['google_business'],
+      json['googleBusinessProfile'],
+    ]);
 
     social = SocialMediaEntity(
       instagramKadi: igKadi,
       instagramThangadh: igThangadh,
       website: website,
       googleBusinessProfile: googleBusiness,
-      instagram: social.instagram.isNotEmpty ? social.instagram : (legacySocial['instagram'] ?? json['instagram'] ?? '').toString(),
-      facebook: social.facebook.isNotEmpty ? social.facebook : (legacySocial['facebook'] ?? json['facebook'] ?? '').toString(),
-      youtube: social.youtube.isNotEmpty ? social.youtube : (legacySocial['youtube'] ?? json['youtube'] ?? '').toString(),
-      pinterest: social.pinterest.isNotEmpty ? social.pinterest : (legacySocial['pinterest'] ?? json['pinterest'] ?? '').toString(),
+      instagram: firstNonEmpty([social.instagram, legacySocial['instagram'], json['instagram']]),
+      facebook: firstNonEmpty([social.facebook, legacySocial['facebook'], json['facebook']]),
+      youtube: firstNonEmpty([social.youtube, legacySocial['youtube'], json['youtube']]),
+      pinterest: firstNonEmpty([social.pinterest, legacySocial['pinterest'], json['pinterest']]),
     );
 
     // 6. Working Hours

@@ -5,105 +5,210 @@ extension _SettingsBusinessFormExtension on _SystemSettingsScreenState {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("BUSINESS PROFILE", style: GoogleFonts.italiana(fontSize: 24)),
-        const SizedBox(height: 12),
+        // ── 1. Heading matching Option 4 Reference ───────────────────
         Text(
-          "SINGLE SOURCE OF TRUTH (SSOT)",
-          style: AppTheme.sansBody(
-            fontSize: 11,
+          "BUSINESS PROFILE",
+          style: GoogleFonts.italiana(
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFFC9A77E),
+            color: const Color(0xFFE2B755),
             letterSpacing: 1.5,
           ),
         ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF152621),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFC9A77E).withValues(alpha: 0.35)),
+        const SizedBox(height: 3),
+        Text(
+          "SINGLE SOURCE OF TRUTH (SSOT)",
+          style: GoogleFonts.dmSans(
+            fontSize: 8.5,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFFD4AF37),
+            letterSpacing: 1.4,
           ),
-          child: Column(
+        ),
+        Container(
+          margin: const EdgeInsets.only(top: 4, bottom: 14),
+          height: 1.5,
+          width: 52,
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
+        ),
+
+        // ── 2. Information Banner Card (Centrally Managed) ───────────
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF080F0C),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFFD4AF37).withValues(alpha: 0.32),
+              width: 0.95,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.verified_user_outlined, color: Color(0xFFC9A77E), size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
+              // Glowing Gold Rounded Square with Crown Icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF3C456), Color(0xFFD89B27)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD4AF37).withValues(alpha: 0.45),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.workspace_premium_rounded,
+                    size: 26,
+                    color: Color(0xFF0C1410),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                       "Centrally Managed in Business Details Studio",
-                      style: AppTheme.sansBody(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "To guarantee single source of truth integrity across the public client portal, booking flows, and admin studio, business identity (name, company, branding, contact channels, branches, and banking details) is centrally edited in the dedicated Business Details screen.",
-                style: AppTheme.sansBody(
-                  fontSize: 13,
-                  color: Colors.white70,
-                  height: 1.5,
+                    const SizedBox(height: 6),
+                    Text(
+                      "To guarantee single source of truth integrity across the public client portal, booking flows, and admin identity (name, company, branding, contact channels, branches, details) is centrally edited in the dedicated Business Details screen.",
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        color: Colors.white70,
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () => Get.toNamed(AppRoutes.businessDetails),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7.5),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFF3C456), Color(0xFFD89B27)],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.business_center_outlined,
+                              size: 13,
+                              color: Color(0xFF0C1410),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              "OPEN BUSINESS DETAILS STUDIO",
+                              style: GoogleFonts.dmSans(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0C1410),
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC9A77E),
-                  foregroundColor: const Color(0xFF0F1B18),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                icon: const Icon(Icons.business_center_outlined, size: 18),
-                label: const Text(
-                  "OPEN BUSINESS DETAILS STUDIO",
-                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1),
-                ),
-                onPressed: () => Get.toNamed(AppRoutes.businessDetails),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 32),
+
+        const SizedBox(height: 22),
+
+        // ── 3. Current Profile Overview (Read Only) ───────────────────
         Text(
-          "CURRENT PROFILE OVERVIEW (READ-ONLY)",
-          style: GoogleFonts.italiana(fontSize: 18, color: const Color(0xFFC9A77E)),
+          "CURRENT PROFILE OVERVIEW (READ ONLY)",
+          style: GoogleFonts.dmSans(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFFD4AF37),
+            letterSpacing: 1.4,
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF101C19),
+            color: const Color(0xFF080F0C),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(
+              color: const Color(0xFFD4AF37).withValues(alpha: 0.28),
+              width: 0.9,
+            ),
           ),
           child: Column(
             children: [
-              _buildReadOnlySummaryRow("Business Name", _busName.text.isNotEmpty ? _busName.text : "Om Events & Decorators"),
-              const Divider(color: Colors.white10, height: 20),
-              _buildReadOnlySummaryRow("Company Legal Name", _busCompany.text.isNotEmpty ? _busCompany.text : "Om Events & Decorators"),
-              const Divider(color: Colors.white10, height: 20),
-              _buildReadOnlySummaryRow("Support Email", _busEmail.text.isNotEmpty ? _busEmail.text : "omeventsanddecorators@gmail.com"),
-              const Divider(color: Colors.white10, height: 20),
-              _buildReadOnlySummaryRow(
-                "Primary Branch",
-                "${_b1Name.text.isNotEmpty ? _b1Name.text : 'Main Office (Kadi)'}${_b1IsPrimary ? ' (Primary)' : ''}",
+              _buildOverviewRow(
+                icon: Icons.storefront_outlined,
+                label: "Business Name",
+                value: _busName.text.isNotEmpty ? _busName.text : "Om Events & Decorators",
               ),
-              const Divider(color: Colors.white10, height: 20),
-              _buildReadOnlySummaryRow(
-                "Secondary Branch",
-                "${_b2Name.text.isNotEmpty ? _b2Name.text : 'Secondary Office (Thangadh)'}${_b2IsPrimary ? ' (Primary)' : ''}",
+              Divider(color: Colors.white.withValues(alpha: 0.06), height: 12, thickness: 0.7),
+              _buildOverviewRow(
+                icon: Icons.verified_outlined,
+                label: "Company Legal Name",
+                value: _busCompany.text.isNotEmpty ? _busCompany.text : "Om Events & Decorators",
               ),
-              const Divider(color: Colors.white10, height: 20),
-              _buildReadOnlySummaryRow(
-                "Configured Contacts",
-                "${_contactNumbers.length} registered phone number(s)",
+              Divider(color: Colors.white.withValues(alpha: 0.06), height: 12, thickness: 0.7),
+              _buildOverviewRow(
+                icon: Icons.mail_outline_rounded,
+                label: "Support Email",
+                value: _busEmail.text.isNotEmpty ? _busEmail.text : "omeventsanddecorators@gmail.com",
+              ),
+              Divider(color: Colors.white.withValues(alpha: 0.06), height: 12, thickness: 0.7),
+              _buildOverviewRow(
+                icon: Icons.location_on_outlined,
+                label: "Primary Branch",
+                value: "${_b1Name.text.isNotEmpty ? _b1Name.text : 'Kadi (Medha)'}${_b1IsPrimary ? ' (Primary)' : ''}",
+              ),
+              Divider(color: Colors.white.withValues(alpha: 0.06), height: 12, thickness: 0.7),
+              _buildOverviewRow(
+                icon: Icons.apartment_outlined,
+                label: "Secondary Branch",
+                value: "${_b2Name.text.isNotEmpty ? _b2Name.text : 'Thangadh'}${_b2IsPrimary ? ' (Primary)' : ''}",
+              ),
+              Divider(color: Colors.white.withValues(alpha: 0.06), height: 12, thickness: 0.7),
+              _buildOverviewRow(
+                icon: Icons.contact_phone_outlined,
+                label: "Configured Contacts",
+                value: "${_contactNumbers.isNotEmpty ? _contactNumbers.length : 2} registered phone number(s)",
               ),
             ],
           ),
@@ -112,24 +217,42 @@ extension _SettingsBusinessFormExtension on _SystemSettingsScreenState {
     );
   }
 
-  Widget _buildReadOnlySummaryRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 180,
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+  Widget _buildOverviewRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.5),
+      child: Row(
+        children: [
+          Icon(icon, size: 14.5, color: const Color(0xFFE2B755)),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 155,
+            child: Text(
+              label,
+              style: GoogleFonts.dmSans(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: Colors.white70,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.dmSans(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

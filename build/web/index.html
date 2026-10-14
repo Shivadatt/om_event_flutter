@@ -69,7 +69,22 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link id="app-favicon" rel="icon" type="image/png" href="favicon.png"/>
+  <link id="app-shortcut-favicon" rel="shortcut icon" type="image/png" href="favicon.png"/>
+  <script>
+    // Immediately apply cached dynamic favicon before Flutter engine boots to prevent default icon flicker
+    try {
+      var cachedStr = localStorage.getItem('flutter.cached_business_details');
+      if (cachedStr) {
+        var cached = JSON.parse(cachedStr);
+        var fav = (cached.general && cached.general.favicon) || cached.favicon;
+        if (fav && typeof fav === 'string' && fav.trim().startsWith('http')) {
+          var links = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+          links.forEach(function(el) { el.href = fav.trim(); });
+        }
+      }
+    } catch (_) {}
+  </script>
 
   <!-- DNS Prefetch & Preconnect for Firebase & Fonts -->
   <link rel="dns-prefetch" href="https://firestore.googleapis.com">

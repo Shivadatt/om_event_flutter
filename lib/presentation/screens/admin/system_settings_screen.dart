@@ -1,15 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/services/app_config_service.dart';
+import 'package:om_event/core/services/business_details_service.dart';
+import 'package:om_event/domain/entities/business_details_entity.dart';
 import 'package:om_event/domain/entities/settings_entities.dart';
 import 'package:om_event/domain/entities/contact_number_entity.dart';
 import 'package:om_event/domain/repositories/settings_repository.dart';
 import 'widgets/admin_back_button.dart';
 import 'widgets/admin_layout.dart';
 import 'widgets/settings_notifications_tab.dart';
+import 'widgets/luxury_gold_waves_painter.dart';
 import 'package:om_event/core/config/feature_flags.dart';
 import 'maintenance_center_screen.dart';
 import 'scheduler_health_screen.dart';
@@ -157,117 +162,371 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
     }
   }
 
+  static const Color _goldColor = Color(0xFFD4AF37);
+  static const Color _cardBg = Color(0xFF0C1511);
+
+  IconData _getCategoryIcon(String cat) {
+    final c = cat.toLowerCase();
+    if (c.contains('business profile')) return Icons.business_center_outlined;
+    if (c.contains('homepage')) return Icons.auto_stories_outlined;
+    if (c.contains('about')) return Icons.info_outline_rounded;
+    if (c.contains('contact')) return Icons.perm_contact_calendar_outlined;
+    if (c.contains('footer')) return Icons.view_agenda_outlined;
+    if (c.contains('seo')) return Icons.travel_explore_outlined;
+    if (c.contains('theme')) return Icons.palette_outlined;
+    if (c.contains('pricing')) return Icons.monetization_on_outlined;
+    if (c.contains('booking')) return Icons.event_available_outlined;
+    if (c.contains('notification')) return Icons.notifications_outlined;
+    if (c.contains('email')) return Icons.mail_outline_rounded;
+    if (c.contains('sms')) return Icons.sms_outlined;
+    if (c.contains('pdf')) return Icons.picture_as_pdf_outlined;
+    if (c.contains('invoice')) return Icons.receipt_long_outlined;
+    if (c.contains('analytics')) return Icons.analytics_outlined;
+    if (c.contains('admin dashboard')) return Icons.dashboard_outlined;
+    if (c.contains('feature flags')) return Icons.flag_outlined;
+    if (c.contains('maintenance mode')) return Icons.power_settings_new_outlined;
+    if (c.contains('app settings')) return Icons.settings_applications_outlined;
+    if (c.contains('social redirects')) return Icons.share_outlined;
+    if (c.contains('working hours')) return Icons.schedule_outlined;
+    if (c.contains('policy')) return Icons.policy_outlined;
+    if (c.contains('forms validation')) return Icons.checklist_rtl_outlined;
+    if (c.contains('alert messages')) return Icons.warning_amber_rounded;
+    if (c.contains('home section')) return Icons.layers_outlined;
+    if (c.contains('cta')) return Icons.touch_app_outlined;
+    if (c.contains('gallery grid')) return Icons.grid_view_outlined;
+    if (c.contains('video films')) return Icons.video_library_outlined;
+    if (c.contains('reviews filter')) return Icons.rate_review_outlined;
+    if (c.contains('statistics metrics')) return Icons.bar_chart_outlined;
+    if (c.contains('faq')) return Icons.help_outline_rounded;
+    if (c.contains('maintenance center')) return Icons.build_circle_outlined;
+    return Icons.settings_outlined;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final Color primaryAccent = const Color(0xFFD4AF37); // Metallic luxury gold
-    final Color cardColor = isDark ? const Color(0xFF2A241F) : const Color(0xFFFAF6EE); // Luxury surface
-    final Color borderColor = isDark ? const Color(0x26D4AF37) : const Color(0x1F000000);
-    final Color textColor = isDark ? const Color(0xFFF7F2EA) : const Color(0xFF0F0D0B);
-    final Color subtitleColor = isDark ? const Color(0xFFB6ADA4) : const Color(0xFF6B7280);
-
     final bool isInsideDrawer = AdminLayoutScope.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: isInsideDrawer ? null : const AdminBackButton(),
-        automaticallyImplyLeading: !isInsideDrawer,
-        title: Text(
-          "STUDIO SYSTEM SETTINGS",
-          style: AppTheme.sansBody(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: textColor,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
       backgroundColor: Colors.transparent,
-      body: Row(
+      body: Stack(
         children: [
-          // Left floating navigation rail
-          Container(
-            width: 250,
-            margin: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: borderColor, width: 1.2),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final isSelected = index == _selectedIndex;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedIndex = index;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: isSelected ? primaryAccent.withValues(alpha: 0.08) : Colors.transparent,
-                        border: Border(
-                          left: BorderSide(
-                            color: isSelected ? primaryAccent : Colors.transparent,
-                            width: 3,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        _categories[index].toUpperCase(),
-                        style: AppTheme.sansBody(
-                          fontSize: 10,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? primaryAccent : subtitleColor,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
-                  );
-                },
+          // ── 1. Option 4 Luxury Gold Wave Ribbons Background ───────
+          const Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: LuxuryGoldWavesPainter(),
               ),
             ),
           ),
-          
-          // Form content area
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(top: 24, bottom: 24, right: 24),
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: borderColor, width: 1.2),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 16,
-                    offset: Offset(0, 8),
+
+          // ── 2. Main Content Layer ──────────────────────────────────
+          Positioned.fill(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 24,
+                vertical: isMobile ? 12 : 16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Eyebrow Header: STUDIO SYSTEM SETTINGS ───────────
+                  Row(
+                    children: [
+                      if (!isInsideDrawer) ...[
+                        const AdminBackButton(),
+                        const SizedBox(width: 8),
+                      ],
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "STUDIO SYSTEM SETTINGS",
+                            style: GoogleFonts.dmSans(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: _goldColor,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          Text(
+                            "SETTINGS",
+                            style: GoogleFonts.dmSans(
+                              fontSize: 7.5,
+                              fontWeight: FontWeight.w600,
+                              color: _goldColor.withValues(alpha: 0.6),
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ── Responsive Layout: Left Nav + Form Panel ───────
+                  Expanded(
+                    child: isMobile
+                        ? _buildMobileLayout(context)
+                        : _buildDesktopLayout(context, screenWidth),
                   ),
                 ],
-              ),
-              child: SingleChildScrollView(
-                child: _buildFormContent(),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // ── Desktop Layout: Side-by-Side Compact Workspace ─────────────────
+  Widget _buildDesktopLayout(BuildContext context, double screenWidth) {
+    final navWidth = screenWidth < 1100 ? 210.0 : 230.0;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ── Left Navigation Panel (Option 4 Compact Rail) ───────────
+        Container(
+          width: navWidth,
+          decoration: BoxDecoration(
+            color: _cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _goldColor.withValues(alpha: 0.35),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 6, top: 4, bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "STUDIO SYSTEM SETTINGS",
+                      style: GoogleFonts.dmSans(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: _goldColor,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                    Text(
+                      "SETTINGS",
+                      style: GoogleFonts.dmSans(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.w600,
+                        color: _goldColor.withValues(alpha: 0.6),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) {
+                      final isSelected = index == _selectedIndex;
+                      final title = _categories[index];
+                      final icon = _getCategoryIcon(title);
+
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(9),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          margin: const EdgeInsets.symmetric(vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7.5),
+                          decoration: BoxDecoration(
+                            gradient: isSelected
+                                ? const LinearGradient(
+                                    colors: [Color(0xFFE5A93C), Color(0xFFC88A24)],
+                                  )
+                                : null,
+                            color: isSelected ? null : Colors.transparent,
+                            borderRadius: BorderRadius.circular(9),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: _goldColor.withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                icon,
+                                size: 15,
+                                color: isSelected ? const Color(0xFF0C1410) : _goldColor,
+                              ),
+                              const SizedBox(width: 9),
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  style: GoogleFonts.dmSans(
+                                    fontSize: 11.5,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    color: isSelected ? const Color(0xFF0C1410) : Colors.white70,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(width: 14),
+
+        // ── Main Form Area (Option 4 Compact Luxury Container) ──────
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: Container(
+            width: screenWidth >= 1050 ? 640 : (screenWidth - navWidth - 64).clamp(320.0, 640.0),
+            decoration: BoxDecoration(
+              color: _cardBg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: _goldColor.withValues(alpha: 0.35),
+                width: 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: _buildFormContent(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Mobile Layout: Top Horizontal Tab Bar + Form Panel ─────────────
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Top Horizontal Scrollable Tab Bar
+        SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: _categories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            itemBuilder: (context, index) {
+              final isSelected = index == _selectedIndex;
+              final title = _categories[index];
+              final icon = _getCategoryIcon(title);
+
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                borderRadius: BorderRadius.circular(9),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [Color(0xFFE5A93C), Color(0xFFC88A24)],
+                          )
+                        : null,
+                    color: isSelected ? null : _cardBg,
+                    borderRadius: BorderRadius.circular(9),
+                    border: isSelected
+                        ? null
+                        : Border.all(
+                            color: _goldColor.withValues(alpha: 0.25),
+                            width: 0.8,
+                          ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 14,
+                        color: isSelected ? const Color(0xFF0C1410) : _goldColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        title,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11.5,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? const Color(0xFF0C1410) : Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Main Form Panel
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: _cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _goldColor.withValues(alpha: 0.35),
+                width: 1.0,
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: _buildFormContent(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

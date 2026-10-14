@@ -19,6 +19,6 @@ abstract class GalleryRepository {
   /// Updates an existing gallery item document.
   Future<void> updateGalleryItem(GalleryItem item);
 
-  /// Soft-deletes a gallery item by setting [is_active] to false.
-  Future<void> deleteGalleryItem(String id);
+  /// Soft-deletes a gallery item (setting is_active to false), or permanently removes if permanent is true.
+  Future<void> deleteGalleryItem(String id, {bool permanent = false});
 }

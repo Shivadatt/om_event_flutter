@@ -11,7 +11,17 @@ mixin SettingsBusiness {
           final data = doc.data()!;
           final source = data['published'] ?? data['draft'] ?? data;
 
-          final List<dynamic> rawBranches = source['branches'] ?? source['officeBranches'] ?? [];
+          String firstNonEmpty(List<dynamic> candidates) {
+            for (final c in candidates) {
+              if (c != null) {
+                final s = c.toString().trim();
+                if (s.isNotEmpty) return s;
+              }
+            }
+            return '';
+          }
+
+          final List<dynamic> rawBranches = source['branches'] ?? source['officeBranches'] ?? data['branches'] ?? [];
           final officeBranches =
               rawBranches.isNotEmpty
                   ? rawBranches
@@ -24,22 +34,88 @@ mixin SettingsBusiness {
                       .toList()
                   : BusinessProfile.defaultVal().officeBranches;
 
+          // Resolve branch Instagram by identifier
+          String kadiBranchIg = '';
+          String thangadhBranchIg = '';
+          for (final b in officeBranches) {
+            final idLower = b.id.toLowerCase();
+            final nameLower = b.branchName.toLowerCase();
+            final addrLower = b.address.toLowerCase();
+            if (b.instagram.trim().isNotEmpty) {
+              if (idLower.contains('kadi') || nameLower.contains('kadi') || addrLower.contains('kadi') ||
+                  idLower.contains('medha') || nameLower.contains('medha') || addrLower.contains('medha')) {
+                if (kadiBranchIg.isEmpty) kadiBranchIg = b.instagram.trim();
+              } else if (idLower.contains('thangadh') || nameLower.contains('thangadh') || addrLower.contains('thangadh') ||
+                  idLower.contains('surajdeval') || nameLower.contains('surajdeval') || addrLower.contains('surajdeval')) {
+                if (thangadhBranchIg.isEmpty) thangadhBranchIg = b.instagram.trim();
+              }
+            }
+          }
+
           final Map<dynamic, dynamic> rawSocialMap = source['socialLinks'] is Map 
               ? Map<dynamic, dynamic>.from(source['socialLinks']) 
               : (source['social'] is Map ? Map<dynamic, dynamic>.from(source['social']) : <dynamic, dynamic>{});
-          final socialKadi = source['instagram_kadi'] ?? source['instagramKadi'] ?? rawSocialMap['instagram_kadi'] ?? rawSocialMap['instagramKadi'] ?? source['instagram'] ?? '';
-          final socialThangadh = source['instagram_thangadh'] ?? source['instagramThangadh'] ?? rawSocialMap['instagram_thangadh'] ?? rawSocialMap['instagramThangadh'] ?? source['instagram'] ?? '';
+          final Map<dynamic, dynamic> rootSocialMap = data['socialLinks'] is Map 
+              ? Map<dynamic, dynamic>.from(data['socialLinks']) 
+              : (data['social'] is Map ? Map<dynamic, dynamic>.from(data['social']) : <dynamic, dynamic>{});
+
+          final socialKadi = firstNonEmpty([
+            kadiBranchIg,
+            source['instagram_kadi'],
+            source['instagramKadi'],
+            rawSocialMap['instagram_kadi'],
+            rawSocialMap['instagramKadi'],
+            data['instagram_kadi'],
+            data['instagramKadi'],
+            rootSocialMap['instagram_kadi'],
+          ]);
+
+          final socialThangadh = firstNonEmpty([
+            thangadhBranchIg,
+            source['instagram_thangadh'],
+            source['instagramThangadh'],
+            rawSocialMap['instagram_thangadh'],
+            rawSocialMap['instagramThangadh'],
+            data['instagram_thangadh'],
+            data['instagramThangadh'],
+            rootSocialMap['instagram_thangadh'],
+            source['instagram'],
+            source['instagram_url'],
+            data['instagram'],
+            data['instagram_url'],
+          ]);
+
+          final socialWebsite = firstNonEmpty([
+            source['website'],
+            rawSocialMap['website'],
+            data['website'],
+            rootSocialMap['website'],
+            source['official_website'],
+            data['official_website'],
+            (source['seo'] is Map) ? source['seo']['canonicalUrl'] : null,
+          ]);
+
+          final socialGoogleBiz = firstNonEmpty([
+            source['google_business_profile'],
+            source['google_business'],
+            source['googleBusinessProfile'],
+            rawSocialMap['google_business_profile'],
+            rawSocialMap['googleBusinessProfile'],
+            rawSocialMap['google_business'],
+            data['google_business_profile'],
+            data['google_business'],
+            rootSocialMap['google_business_profile'],
+          ]);
+
           final socialLinks = Map<String, String>.from(
             rawSocialMap.map(
               (key, value) => MapEntry(key.toString(), value.toString()),
             ),
           );
-          if (socialKadi.toString().trim().isNotEmpty) {
-            socialLinks['instagram_kadi'] = socialKadi.toString().trim();
-          }
-          if (socialThangadh.toString().trim().isNotEmpty) {
-            socialLinks['instagram_thangadh'] = socialThangadh.toString().trim();
-          }
+          if (socialKadi.isNotEmpty) socialLinks['instagram_kadi'] = socialKadi;
+          if (socialThangadh.isNotEmpty) socialLinks['instagram_thangadh'] = socialThangadh;
+          if (socialWebsite.isNotEmpty) socialLinks['website'] = socialWebsite;
+          if (socialGoogleBiz.isNotEmpty) socialLinks['google_business_profile'] = socialGoogleBiz;
 
           final List<dynamic> rawContacts = source['contactNumbers'] ?? [];
           List<ContactNumberEntity> contactNumbers = [];

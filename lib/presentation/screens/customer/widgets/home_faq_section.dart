@@ -15,6 +15,8 @@ import 'package:om_event/presentation/screens/customer/helpers/customer_dialog_h
 import 'package:om_event/core/utils/booking_communication_helper.dart';
 import 'booking_tracker_dialog.dart';
 import 'package:om_event/presentation/widgets/app_page_container.dart';
+import 'package:om_event/domain/entities/faq_item.dart';
+import 'package:om_event/presentation/controllers/faq_controller.dart';
 
 // ─── Main Unified FAQ Section with Separated Premium Footer ───────────────────
 class FAQSection extends StatefulWidget {
@@ -44,15 +46,6 @@ class _FAQSectionState extends State<FAQSection> {
   String _searchQuery = '';
   String _selectedCategory = 'ALL';
   final Set<int> _expandedIndices = {};
-
-  final List<String> _categories = [
-    'ALL',
-    'BOOKING',
-    'PACKAGES',
-    'LOCATION',
-    'CANCELLATION',
-    'DECORATION',
-  ];
 
   @override
   void dispose() {
@@ -153,25 +146,27 @@ class _FAQSectionState extends State<FAQSection> {
               vertical: isDesktop ? 30.0 : (isTablet ? 24.0 : 20.0),
             ),
             child: Obx(() {
-              final homepage = AppConfigService.to.rxHomepageSettings.value;
-              final rawFaqs = homepage.faqs.isNotEmpty
-                  ? homepage.faqs
-                  : HomepageSettings.defaultVal().faqs;
+              final faqCtrl = Get.isRegistered<FaqController>()
+                  ? Get.find<FaqController>()
+                  : Get.put(FaqController());
+
+              final allFaqs = faqCtrl.rxAllFaqs;
+              final dynamicCategories = faqCtrl.availableCategories;
 
               // Filter by category and search text
-              final filteredFaqs = rawFaqs.where((faq) {
-                final map = Map<String, dynamic>.from(faq);
-                final q = (map['question'] ?? '').toString().toLowerCase();
-                final a = (map['answer'] ?? '').toString().toLowerCase();
-                final cat = (map['category'] ?? '').toString().toUpperCase();
+              final filteredFaqs = allFaqs.where((faq) {
+                if (!faq.isActive) return false;
 
-                final matchesCategory = _selectedCategory == 'ALL' ||
-                    cat == _selectedCategory ||
-                    q.contains(_selectedCategory.toLowerCase());
+                final q = _searchQuery.toLowerCase();
+                final cat = _selectedCategory.toUpperCase();
 
-                final matchesQuery = _searchQuery.isEmpty ||
-                    q.contains(_searchQuery.toLowerCase()) ||
-                    a.contains(_searchQuery.toLowerCase());
+                final matchesCategory = cat == 'ALL' ||
+                    faq.category.toUpperCase() == cat ||
+                    faq.question.toLowerCase().contains(cat.toLowerCase());
+
+                final matchesQuery = q.isEmpty ||
+                    faq.question.toLowerCase().contains(q) ||
+                    faq.answer.toLowerCase().contains(q);
 
                 return matchesCategory && matchesQuery;
               }).toList();
@@ -187,7 +182,10 @@ class _FAQSectionState extends State<FAQSection> {
                         // Left: FAQ eyebrow, title, description, search, filters, support cards
                         Expanded(
                           flex: 48,
-                          child: _buildLeftIntroColumn(isDesktop: true),
+                          child: _buildLeftIntroColumn(
+                            isDesktop: true,
+                            categories: dynamicCategories,
+                          ),
                         ),
                         const SizedBox(width: 32),
 
@@ -203,7 +201,10 @@ class _FAQSectionState extends State<FAQSection> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLeftIntroColumn(isDesktop: false),
+                        _buildLeftIntroColumn(
+                          isDesktop: false,
+                          categories: dynamicCategories,
+                        ),
                         const SizedBox(height: 26),
                         _buildRightFaqGrid(filteredFaqs, isDesktop: false),
                       ],
@@ -223,7 +224,7 @@ class _FAQSectionState extends State<FAQSection> {
   }
 
   // ── LEFT INTRO COLUMN (WIDER & EXPANDED) ───────────────────────────────────
-  Widget _buildLeftIntroColumn({required bool isDesktop}) {
+  Widget _buildLeftIntroColumn({required bool isDesktop, required List<String> categories}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -349,7 +350,7 @@ class _FAQSectionState extends State<FAQSection> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _categories.map((cat) {
+          children: categories.map((cat) {
             final isSelected = _selectedCategory == cat;
             return InkWell(
               onTap: () {
@@ -626,10 +627,19 @@ class _FAQSectionState extends State<FAQSection> {
 
   // ── FAQ CARD ───────────────────────────────────────────────────────────────
   Widget _buildFaqCard(dynamic faq, int index) {
-    final map = Map<String, dynamic>.from(faq);
-    final question = (map['question'] ?? '').toString();
-    final answer = (map['answer'] ?? '').toString();
-    final category = map['category']?.toString();
+    final String question;
+    final String answer;
+    final String? category;
+    if (faq is FaqItem) {
+      question = faq.question;
+      answer = faq.answer;
+      category = faq.category;
+    } else {
+      final map = Map<String, dynamic>.from(faq);
+      question = (map['question'] ?? '').toString();
+      answer = (map['answer'] ?? '').toString();
+      category = map['category']?.toString();
+    }
     final isExpanded = _expandedIndices.contains(index);
     final icon = _getFaqIcon(question, category);
 

@@ -20,6 +20,9 @@ import '../controllers/admin_booking_controller.dart';
 import '../../domain/repositories/gallery_repository.dart';
 import '../../data/repositories/gallery_repository_impl.dart';
 import '../controllers/gallery_controller.dart';
+import '../../domain/repositories/faq_repository.dart';
+import '../../data/repositories/faq_repository_impl.dart';
+import '../controllers/faq_controller.dart';
 
 class AdminBinding extends Bindings {
   @override
@@ -101,6 +104,16 @@ class AdminBinding extends Bindings {
 
     Get.lazyPut<GalleryController>(
       () => GalleryController(),
+      fenix: true,
+    );
+
+    Get.lazyPut<FaqRepository>(
+      () => FaqRepositoryImpl(),
+      fenix: true,
+    );
+
+    Get.lazyPut<FaqController>(
+      () => FaqController(),
       fenix: true,
     );
   }

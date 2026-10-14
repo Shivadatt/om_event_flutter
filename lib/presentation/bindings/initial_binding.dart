@@ -51,6 +51,9 @@ import '../../data/repositories/quotation_repository_impl.dart';
 import '../../domain/repositories/quotation_repository.dart';
 import '../../domain/repositories/quotation_collaboration_repository.dart';
 import '../../data/repositories/quotation_collaboration_repository_impl.dart';
+import '../../domain/repositories/faq_repository.dart';
+import '../../data/repositories/faq_repository_impl.dart';
+import '../controllers/faq_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -256,6 +259,16 @@ class InitialBinding extends Bindings {
 
     Get.lazyPut<GalleryController>(
       () => GalleryController(),
+      fenix: true,
+    );
+
+    Get.lazyPut<FaqRepository>(
+      () => FaqRepositoryImpl(firestore: Get.find<FirebaseFirestore>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<FaqController>(
+      () => FaqController(),
       fenix: true,
     );
   }

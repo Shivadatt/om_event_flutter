@@ -12,71 +12,27 @@ class GalleryRepositoryImpl implements GalleryRepository {
 
   @override
   Stream<List<GalleryItem>> streamGalleryItems() {
-    // Listen to dedicated customer_gallery collection first
+    // Canonical SSOT: Stream active gallery items from AppCollections.items
     return _firestore
-        .collection(AppCollections.customerGallery)
-        .where('is_active', isEqualTo: true)
+        .collection(AppCollections.items)
         .snapshots()
-        .asyncMap((gallerySnap) async {
-      try {
-        final List<GalleryItem> items = [];
-
-        for (final doc in gallerySnap.docs) {
-          items.add(GalleryItem.fromJson(doc.data(), doc.id));
-        }
-
-        // If the dedicated gallery collection is empty or sparse, hydrate from active catalog items
-        if (items.isEmpty) {
-          final itemsSnap = await _firestore
-              .collection(AppCollections.items)
-              .where('is_active', isEqualTo: true)
-              .get();
-
-          for (final doc in itemsSnap.docs) {
-            final data = doc.data();
-            final imgUrl = (data['image_url'] ?? data['imageUrl'] ?? '').toString();
-            if (imgUrl.isEmpty) continue;
-
-            final tagsRaw = data['tags'];
-            final List<String> tags = tagsRaw is List
-                ? List<String>.from(tagsRaw.map((e) => e.toString()))
-                : [];
-
-            items.add(
-              GalleryItem(
-                id: 'exp_${doc.id}',
-                imageUrl: imgUrl,
-                thumbnailUrl: (data['thumbnail_url'] ?? data['thumbnailUrl'] ?? imgUrl).toString(),
-                title: (data['name'] ?? data['title'] ?? 'Luxury Celebration').toString(),
-                description: (data['description'] ?? '').toString(),
-                categoryId: (data['category_id'] ?? data['categoryId'] ?? '').toString(),
-                categoryName: (data['category_name'] ?? data['categoryName'] ?? 'Decor').toString(),
-                serviceId: doc.id,
-                serviceName: (data['name'] ?? '').toString(),
-                tags: tags,
-                isActive: true,
-                sortOrder: (data['popularity'] ?? 0) is int ? data['popularity'] : 0,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
-            );
-          }
-        }
-
-        // Sort by sortOrder descending
-        items.sort((a, b) => b.sortOrder.compareTo(a.sortOrder));
-        return items;
-      } catch (e) {
-        AppLogger.error("GalleryRepositoryImpl stream error: $e");
-        return [];
-      }
+        .map((snap) {
+      final items = snap.docs
+          .map((doc) => GalleryItem.fromJson(doc.data(), doc.id))
+          .where((i) => i.isActive && i.imageUrl.isNotEmpty)
+          .toList();
+      items.sort((a, b) => b.sortOrder.compareTo(a.sortOrder));
+      return items;
+    }).handleError((e) {
+      AppLogger.error("GalleryRepositoryImpl.streamGalleryItems error: $e");
+      return <GalleryItem>[];
     });
   }
 
   @override
   Future<GalleryItem?> getGalleryItemById(String id) async {
     try {
-      final doc = await _firestore.collection(AppCollections.customerGallery).doc(id).get();
+      final doc = await _firestore.collection(AppCollections.items).doc(id).get();
       if (doc.exists && doc.data() != null) {
         return GalleryItem.fromJson(doc.data()!, doc.id);
       }
@@ -91,12 +47,14 @@ class GalleryRepositoryImpl implements GalleryRepository {
 
   @override
   Stream<List<GalleryItem>> streamAllGalleryItems() {
+    // Stream ALL canonical items (both active and inactive) for the admin management view
     return _firestore
-        .collection(AppCollections.customerGallery)
+        .collection(AppCollections.items)
         .snapshots()
         .map((snap) {
       final items = snap.docs
           .map((doc) => GalleryItem.fromJson(doc.data(), doc.id))
+          .where((i) => i.title.isNotEmpty || i.imageUrl.isNotEmpty)
           .toList();
       items.sort((a, b) => b.sortOrder.compareTo(a.sortOrder));
       return items;
@@ -105,34 +63,95 @@ class GalleryRepositoryImpl implements GalleryRepository {
 
   @override
   Future<String> createGalleryItem(GalleryItem item) async {
-    final data = item.toJson();
-    data['created_at'] = FieldValue.serverTimestamp();
-    data['updated_at'] = FieldValue.serverTimestamp();
-    final ref = await _firestore
-        .collection(AppCollections.customerGallery)
-        .add(data);
+    final slug = item.title
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+
+    final data = <String, dynamic>{
+      'name': item.title,
+      'title': item.title,
+      'slug': slug.isNotEmpty ? slug : 'gallery-item-${DateTime.now().millisecondsSinceEpoch}',
+      'image_url': item.imageUrl,
+      'imageUrl': item.imageUrl,
+      'thumbnail_url': item.thumbnailUrl.isNotEmpty ? item.thumbnailUrl : item.imageUrl,
+      'thumbnailUrl': item.thumbnailUrl.isNotEmpty ? item.thumbnailUrl : item.imageUrl,
+      'description': item.description,
+      'category_id': item.categoryId,
+      'categoryId': item.categoryId,
+      'category_name': item.categoryName,
+      'categoryName': item.categoryName,
+      'service_id': item.serviceId,
+      'serviceName': item.serviceName.isNotEmpty ? item.serviceName : item.title,
+      'tags': item.tags,
+      'is_active': item.isActive,
+      'isActive': item.isActive,
+      'is_featured': item.isFeatured,
+      'isFeatured': item.isFeatured,
+      'sort_order': item.sortOrder,
+      'sortOrder': item.sortOrder,
+      'popularity': item.sortOrder,
+      'display_order': item.sortOrder,
+      'price': 0.0,
+      'rating': 5.0,
+      'review_count': 0,
+      'availability': 'available',
+      'created_at': FieldValue.serverTimestamp(),
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+
+    final ref = await _firestore.collection(AppCollections.items).add(data);
     return ref.id;
   }
 
   @override
   Future<void> updateGalleryItem(GalleryItem item) async {
-    final data = item.toJson();
-    data['updated_at'] = FieldValue.serverTimestamp();
+    final data = <String, dynamic>{
+      'name': item.title,
+      'title': item.title,
+      'image_url': item.imageUrl,
+      'imageUrl': item.imageUrl,
+      'thumbnail_url': item.thumbnailUrl.isNotEmpty ? item.thumbnailUrl : item.imageUrl,
+      'thumbnailUrl': item.thumbnailUrl.isNotEmpty ? item.thumbnailUrl : item.imageUrl,
+      'description': item.description,
+      'category_id': item.categoryId,
+      'categoryId': item.categoryId,
+      'category_name': item.categoryName,
+      'categoryName': item.categoryName,
+      if (item.serviceId.isNotEmpty) 'service_id': item.serviceId,
+      if (item.serviceName.isNotEmpty) 'service_name': item.serviceName,
+      'tags': item.tags,
+      'is_active': item.isActive,
+      'isActive': item.isActive,
+      'is_featured': item.isFeatured,
+      'isFeatured': item.isFeatured,
+      'sort_order': item.sortOrder,
+      'sortOrder': item.sortOrder,
+      'popularity': item.sortOrder,
+      'display_order': item.sortOrder,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+
+    // Use SetOptions(merge: true) to safely update metadata without overwriting
+    // any existing catalog fields (e.g. packages, colors, pricing, rating).
     await _firestore
-        .collection(AppCollections.customerGallery)
+        .collection(AppCollections.items)
         .doc(item.id)
-        .update(data);
+        .set(data, SetOptions(merge: true));
   }
 
   @override
-  Future<void> deleteGalleryItem(String id) async {
-    // Soft delete — preserve history, hide from customer views
-    await _firestore
-        .collection(AppCollections.customerGallery)
-        .doc(id)
-        .update({
-      'is_active': false,
-      'updated_at': FieldValue.serverTimestamp(),
-    });
+  Future<void> deleteGalleryItem(String id, {bool permanent = false}) async {
+    if (permanent) {
+      await _firestore.collection(AppCollections.items).doc(id).delete();
+    } else {
+      // Soft delete: set is_active to false so it disappears from customer views
+      // but preserves historical records and relationships in Firestore.
+      await _firestore.collection(AppCollections.items).doc(id).update({
+        'is_active': false,
+        'isActive': false,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+    }
   }
 }

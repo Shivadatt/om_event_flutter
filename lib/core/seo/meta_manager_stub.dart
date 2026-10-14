@@ -4,3 +4,7 @@ import 'seo_models.dart';
 void updateMetadataImpl(SeoMetadata metadata) {
   // No-op on mobile/desktop targets
 }
+
+void updateFaviconImpl(String faviconUrl) {
+  // No-op on mobile/desktop targets
+}

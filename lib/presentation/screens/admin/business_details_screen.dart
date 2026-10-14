@@ -455,7 +455,7 @@ class BusinessDetailsScreen extends GetView<BusinessDetailsController> {
       case 9:
         return _buildMapsTab(controller);
       case 10:
-        return _buildMediaTab(controller);
+        return _buildMediaTab(context, controller);
       default:
         return const SizedBox();
     }
@@ -672,7 +672,12 @@ extension BranchEntityCity on BranchEntity {
   String get cityText {
     final parts = fullAddress.split(',');
     if (parts.length >= 2) {
-      return parts[parts.length - 2].trim();
+      final c = parts[parts.length - 2].trim();
+      if (c.isNotEmpty) return c;
+    }
+    final nameCity = branchName.split('(').first.trim();
+    if (nameCity.isNotEmpty && nameCity.length <= 25) {
+      return nameCity;
     }
     return 'Office';
   }

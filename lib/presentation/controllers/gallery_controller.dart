@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/entities/experience.dart';
@@ -21,46 +22,70 @@ class GalleryController extends GetxController {
   final rxAllGalleryItems = <GalleryItem>[].obs;
   final rxAdminShowAll = true.obs;
   final rxIsAdminLoading = false.obs;
+  final rxAdminError = ''.obs;
+
+  StreamSubscription? _customerSub;
+  StreamSubscription? _adminSub;
 
   @override
   void onInit() {
     super.onInit();
     _bindGalleryStream();
-    // Admin stream is NOT started here — it is lazy.
-    // Call initAdminStream() explicitly from ManageGalleryScreen to avoid
-    // opening an unfiltered Firestore stream for every public gallery visitor.
+  }
+
+  @override
+  void onClose() {
+    _adminSub?.cancel();
+    _customerSub?.cancel();
+    super.onClose();
   }
 
   /// Starts the unfiltered admin stream.
   /// Call this from [ManageGalleryScreen.initState] (once per admin session).
   void initAdminStream() {
-    if (rxAllGalleryItems.isNotEmpty) return; // already bound
+    if (_adminSub != null && rxAllGalleryItems.isNotEmpty) return;
     _bindAdminGalleryStream();
   }
 
   void _bindGalleryStream() {
     rxIsLoading.value = true;
-    rxGalleryItems.bindStream(
-      _galleryRepo.streamGalleryItems().handleError((err) {
-        AppLogger.error("GalleryController stream error", err);
-        rxIsLoading.value = false;
-      }).map((items) {
+    _customerSub?.cancel();
+    _customerSub = _galleryRepo.streamGalleryItems().listen(
+      (items) {
+        rxGalleryItems.assignAll(items);
         rxIsLoading.value = false;
         _populateCategories(items);
-        return items;
-      }),
+      },
+      onError: (err) {
+        AppLogger.error("GalleryController stream error", err);
+        rxIsLoading.value = false;
+      },
     );
   }
 
   void _bindAdminGalleryStream() {
-    rxAllGalleryItems.bindStream(
-      _galleryRepo.streamAllGalleryItems().handleError((err) {
+    rxIsAdminLoading.value = true;
+    rxAdminError.value = '';
+    _adminSub?.cancel();
+    _adminSub = _galleryRepo.streamAllGalleryItems().listen(
+      (items) {
+        rxAllGalleryItems.assignAll(items);
+        rxIsAdminLoading.value = false;
+        rxAdminError.value = '';
+        _populateCategories(items);
+      },
+      onError: (err) {
         AppLogger.error("GalleryController admin stream error", err);
-      }).map((items) {
-        if (rxAdminShowAll.value) return items;
-        return items.where((i) => i.isActive).toList();
-      }),
+        rxIsAdminLoading.value = false;
+        rxAdminError.value = err.toString();
+      },
     );
+  }
+
+  /// Evaluates filtering dynamically so switching 'All' vs 'Active Only' is instantaneous.
+  List<GalleryItem> get displayedAdminGalleryItems {
+    if (rxAdminShowAll.value) return rxAllGalleryItems;
+    return rxAllGalleryItems.where((i) => i.isActive).toList();
   }
 
   void _populateCategories(List<GalleryItem> items) {
@@ -167,11 +192,16 @@ class GalleryController extends GetxController {
     }
   }
 
-  Future<void> deleteGalleryItem(String id) async {
+  Future<void> deleteGalleryItem(String id, {bool permanent = false}) async {
     try {
-      await _galleryRepo.deleteGalleryItem(id);
-      Get.snackbar('Removed', 'Gallery item hidden from website.',
-          snackPosition: SnackPosition.BOTTOM);
+      await _galleryRepo.deleteGalleryItem(id, permanent: permanent);
+      Get.snackbar(
+        permanent ? 'Deleted' : 'Hidden',
+        permanent
+            ? 'Gallery item removed permanently.'
+            : 'Gallery item hidden from customer website.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } catch (e) {
       AppLogger.error("GalleryController.deleteGalleryItem failed", e);
       Get.snackbar('Error', 'Failed to remove gallery item: ${e.toString()}');
@@ -179,20 +209,16 @@ class GalleryController extends GetxController {
   }
 
   Future<void> toggleGalleryItemActive(GalleryItem item) async {
-    final updated = GalleryItem(
-      id: item.id,
-      imageUrl: item.imageUrl,
-      thumbnailUrl: item.thumbnailUrl,
-      title: item.title,
-      description: item.description,
-      categoryId: item.categoryId,
-      categoryName: item.categoryName,
-      serviceId: item.serviceId,
-      serviceName: item.serviceName,
-      tags: item.tags,
+    final updated = item.copyWith(
       isActive: !item.isActive,
-      sortOrder: item.sortOrder,
-      createdAt: item.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    await updateGalleryItem(updated);
+  }
+
+  Future<void> toggleGalleryItemFeatured(GalleryItem item) async {
+    final updated = item.copyWith(
+      isFeatured: !item.isFeatured,
       updatedAt: DateTime.now(),
     );
     await updateGalleryItem(updated);

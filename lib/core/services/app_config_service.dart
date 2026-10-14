@@ -63,7 +63,7 @@ class AppConfigService extends GetxService {
     _unbindPublicStreams();
 
     _publicSubscriptions.addAll([
-      _bindStream(_repo.streamBusiness(), rxBusinessProfile),
+      _bindStream(_repo.streamBusiness(), rxBusinessProfile, continuous: true),
       _bindStream(_repo.streamHomepage(), rxHomepageSettings),
       _bindStream(_repo.streamTheme(), rxThemeSettings),
       _bindStream(_repo.streamSEO(), rxSEOSettings),
@@ -105,10 +105,11 @@ class AppConfigService extends GetxService {
     ]);
   }
 
-  StreamSubscription<T> _bindStream<T>(Stream<T> stream, Rx<T> rxVar) {
+  StreamSubscription<T> _bindStream<T>(Stream<T> stream, Rx<T> rxVar, {bool continuous = false}) {
     // take(1) populates rxVar with cached/server settings and closes the subscription immediately,
-    // avoiding 23 persistent open Firestore snapshot listeners.
-    return stream.take(1).listen(
+    // avoiding persistent open Firestore snapshot listeners for static settings.
+    final targetStream = continuous ? stream : stream.take(1);
+    return targetStream.listen(
       (data) => rxVar.value = data,
       onError: (e) {
         // Silently swallow or debug print to prevent RethrownDartError crashes in DDC

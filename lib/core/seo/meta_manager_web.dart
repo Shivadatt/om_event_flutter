@@ -66,3 +66,42 @@ void _updateJsonLd(String? jsonString) {
     html.document.head?.append(script);
   }
 }
+
+/// Dynamically updates the browser favicon across all relevant icon links.
+void updateFaviconImpl(String faviconUrl) {
+  if (faviconUrl.trim().isEmpty) return;
+  final cleanUrl = faviconUrl.trim();
+
+  String type = 'image/png';
+  final lower = cleanUrl.toLowerCase();
+  if (lower.contains('.ico')) {
+    type = 'image/x-icon';
+  } else if (lower.contains('.svg')) {
+    type = 'image/svg+xml';
+  } else if (lower.contains('.webp')) {
+    type = 'image/webp';
+  } else if (lower.contains('.jpg') || lower.contains('.jpeg')) {
+    type = 'image/jpeg';
+  }
+
+  // Update existing link tags or create if missing, avoiding duplicates
+  _updateFaviconLink('icon', cleanUrl, type);
+  _updateFaviconLink('shortcut icon', cleanUrl, type);
+  _updateFaviconLink('apple-touch-icon', cleanUrl, type);
+}
+
+void _updateFaviconLink(String rel, String href, String type) {
+  final links = html.document.querySelectorAll('link[rel="$rel"]');
+  if (links.isNotEmpty) {
+    for (final el in links) {
+      el.setAttribute('href', href);
+      el.setAttribute('type', type);
+    }
+  } else {
+    final element = html.document.createElement('link');
+    element.setAttribute('rel', rel);
+    element.setAttribute('type', type);
+    element.setAttribute('href', href);
+    html.document.head?.append(element);
+  }
+}

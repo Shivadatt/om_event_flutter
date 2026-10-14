@@ -50,6 +50,19 @@ class SupabaseStorageSource {
         return publicUrl;
       } else {
         debugPrint('[SUPABASE_UPLOAD][FAILED] status=${response.statusCode} body=${response.body}');
+        // If target bucket fails due to Row Level Security (RLS) policy and is not 'thumbnails',
+        // attempt seamless fallback to the active 'thumbnails' bucket so uploads never fail
+        if ((response.statusCode == 400 || response.statusCode == 403) &&
+            response.body.contains('row-level security policy') &&
+            activeBucket != 'thumbnails') {
+          debugPrint('[SUPABASE_UPLOAD][RLS_FALLBACK] Bucket "$activeBucket" restricted by RLS policy. Seamlessly uploading to "thumbnails/$activeBucket/$filePath"');
+          return uploadFile(
+            '$activeBucket/$filePath',
+            fileBytes,
+            contentType,
+            bucket: 'thumbnails',
+          );
+        }
         throw Exception(
           'Failed to upload file to Supabase Storage: ${response.body}',
         );

@@ -11,4 +11,9 @@ class MetaManager {
   static void updateMetadata(SeoMetadata metadata) {
     impl.updateMetadataImpl(metadata);
   }
+
+  /// Updates the browser favicon dynamically across all icon link tags.
+  static void updateFavicon(String faviconUrl) {
+    impl.updateFaviconImpl(faviconUrl);
+  }
 }

@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../domain/entities/business_details_entity.dart';
 import '../../domain/repositories/business_details_repository.dart';
 import '../../core/services/business_details_service.dart';
+import '../../data/datasources/supabase_storage_source.dart';
 
 class BusinessDetailsController extends GetxController {
   final BusinessDetailsRepository _repository = Get.find<BusinessDetailsRepository>();
 
   final isSaving = false.obs;
+
+  // Media Upload States
+  final isUploadingLogo = false.obs;
+  final isUploadingCover = false.obs;
+  final isUploadingFavicon = false.obs;
 
   // Tab Index
   final selectedIndex = 0.obs;
@@ -94,7 +101,11 @@ class BusinessDetailsController extends GetxController {
     // Populate form fields initially from cache/stream
     populateControllers(BusinessDetailsService.to.rxDetails.value);
     // Listen to streaming changes to keep form in sync if updated elsewhere
-    once(BusinessDetailsService.to.rxDetails, (details) => populateControllers(details));
+    ever(BusinessDetailsService.to.rxDetails, (details) {
+      if (!isSaving.value) {
+        populateControllers(details);
+      }
+    });
   }
 
   void populateControllers(BusinessDetailsEntity details) {
@@ -262,6 +273,100 @@ class BusinessDetailsController extends GetxController {
       Get.snackbar("Save Error", "Failed to save: $e", backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isSaving.value = false;
+    }
+  }
+
+  /// Picks an image file and uploads directly to Supabase Storage 'logo' bucket,
+  /// then populates the target controller with the permanent public URL.
+  Future<void> pickAndUploadMedia({
+    required String assetType,
+    required TextEditingController targetCtrl,
+    required RxBool isUploading,
+  }) async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'svg', 'ico'],
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.single;
+      final fileBytes = file.bytes;
+      if (fileBytes == null) {
+        Get.snackbar(
+          "Read Error",
+          "Could not read selected file data. Please select another image.",
+          backgroundColor: Colors.red.shade900,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // 10 MB limit
+      if (file.size > 10 * 1024 * 1024) {
+        Get.snackbar(
+          "File Too Large",
+          "Selected file is ${(file.size / (1024 * 1024)).toStringAsFixed(1)} MB. Max allowed size is 10 MB.",
+          backgroundColor: const Color(0xFF2D1515),
+          colorText: const Color(0xFFE8CC8A),
+        );
+        return;
+      }
+
+      isUploading.value = true;
+
+      final ext = (file.extension ?? file.name.split('.').last).toLowerCase();
+      String contentType = 'image/png';
+      if (ext == 'jpg' || ext == 'jpeg') {
+        contentType = 'image/jpeg';
+      } else if (ext == 'webp') {
+        contentType = 'image/webp';
+      } else if (ext == 'svg') {
+        contentType = 'image/svg+xml';
+      } else if (ext == 'ico') {
+        contentType = 'image/x-icon';
+      }
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final cleanBase = file.name
+          .replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_')
+          .replaceAll('__', '_');
+      final fileName = 'om_event_${assetType}_${timestamp}_$cleanBase';
+      final finalPath = fileName.endsWith('.$ext') ? fileName : '$fileName.$ext';
+
+      final storage = Get.find<SupabaseStorageSource>();
+      final publicUrl = await storage.uploadFile(
+        finalPath,
+        fileBytes,
+        contentType,
+        bucket: 'logo',
+      );
+
+      targetCtrl.text = publicUrl;
+
+      Get.snackbar(
+        "Upload Successful",
+        "${assetType.toUpperCase()} uploaded to Supabase Storage! Click 'Save & Publish CMS' to persist.",
+        backgroundColor: const Color(0xFF0C1511),
+        colorText: const Color(0xFFE2B755),
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
+      );
+    } catch (e) {
+      Get.snackbar(
+        "Upload Failed",
+        "Failed to upload to Supabase: $e",
+        backgroundColor: Colors.red.shade900,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+      );
+    } finally {
+      isUploading.value = false;
     }
   }
 

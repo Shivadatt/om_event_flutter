@@ -44,7 +44,7 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
               for (int i = 0; i < controller.branches.length; i++) {
                 final curr = controller.branches[i];
                 controller.branches[i] = BranchEntity(
-                  id: curr.id,
+                  id: curr.id.isNotEmpty ? curr.id : 'branch_${curr.branchName}_$i',
                   branchName: curr.branchName,
                   branchManager: curr.branchManager,
                   phoneNumber: curr.phoneNumber,
@@ -56,7 +56,7 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
                   longitude: curr.longitude,
                   workingHours: curr.workingHours,
                   openingDays: curr.openingDays,
-                  displayOrder: i + 1,
+                  displayOrder: i,
                   isActive: curr.isActive,
                   instagram: curr.instagram,
                 );
@@ -64,8 +64,9 @@ extension BusinessDetailsBranches on BusinessDetailsScreen {
             },
             itemBuilder: (context, index) {
               final b = controller.branches[index];
+              final itemKey = b.id.isNotEmpty ? b.id : 'branch_${b.branchName}_$index';
               return Container(
-                key: ValueKey(b.id),
+                key: ValueKey(itemKey),
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(

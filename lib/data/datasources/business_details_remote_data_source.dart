@@ -22,11 +22,18 @@ class BusinessDetailsRemoteDataSourceImpl implements BusinessDetailsRemoteDataSo
             return BusinessDetailsEntity.defaultVal();
           }
           final data = snapshot.data()!;
+          final rootBranches = data['branches'];
           final source = data['published'] ?? data['draft'] ?? data;
-          if (source.isEmpty) {
+          if (source is! Map || source.isEmpty) {
             return BusinessDetailsEntity.defaultVal();
           }
-          return BusinessDetailsModel.fromJson(Map<String, dynamic>.from(source));
+          final Map<String, dynamic> merged = Map<String, dynamic>.from(data);
+          merged.addAll(Map<String, dynamic>.from(source));
+          // Canonical source of truth: root 'branches' if present
+          if (rootBranches != null && rootBranches is List && rootBranches.isNotEmpty) {
+            merged['branches'] = rootBranches;
+          }
+          return BusinessDetailsModel.fromJson(merged);
         });
   }
 
@@ -47,6 +54,15 @@ class BusinessDetailsRemoteDataSourceImpl implements BusinessDetailsRemoteDataSo
     await docRef.set({
       'draft': data,
       'published': data,
+      'branches': data['branches'],
+      'logo': data['logo'],
+      'whiteLogo': data['whiteLogo'],
+      'favicon': data['favicon'],
+      'instagram_kadi': details.social.instagramKadi,
+      'instagram_thangadh': details.social.instagramThangadh,
+      'website': details.social.website,
+      'google_business': details.social.googleBusinessProfile,
+      'google_business_profile': details.social.googleBusinessProfile,
       'meta': {
         'version': currentMeta['version'] ?? 1,
         'updatedAt': DateTime.now().toIso8601String(),
