@@ -185,43 +185,35 @@ class _ManageExperiencesScreenState extends State<ManageExperiencesScreen> {
                                 }
 
                                 final crossAxisCount = _getCrossAxisCount(constraints.maxWidth);
+                                const double spacing = 12.0;
+                                final totalSpacing = spacing * (crossAxisCount - 1);
+                                final cardWidth = (constraints.maxWidth - totalSpacing) / crossAxisCount;
+                                final imageHeight = cardWidth / (16 / 9);
+                                const double cardBodyHeight = 134.0;
+                                final cardHeight = (imageHeight + cardBodyHeight + 2.0).ceilToDouble();
 
-                                return SingleChildScrollView(
+                                return GridView.builder(
                                   padding: const EdgeInsets.only(bottom: 24),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: List.generate(crossAxisCount, (colIndex) {
-                                      final columnItems = [
-                                        for (int i = colIndex; i < filtered.length; i += crossAxisCount)
-                                          filtered[i]
-                                      ];
-                                      return Expanded(
-                                        child: Padding(
-                                          padding: EdgeInsets.only(
-                                            left: colIndex == 0 ? 0 : 6,
-                                            right: colIndex == crossAxisCount - 1 ? 0 : 6,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                                            children: [
-                                              for (final item in columnItems)
-                                                Padding(
-                                                  padding: const EdgeInsets.only(bottom: 12),
-                                                  child: ExperienceListTile(
-                                                    item: item,
-                                                    isDark: true,
-                                                    controller: controller,
-                                                    isListView: false,
-                                                    onEdit: () => _showExperienceDialog(context, experience: item),
-                                                    onDelete: () => _confirmDelete(item.slug),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }),
+                                  physics: const BouncingScrollPhysics(),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: spacing,
+                                    mainAxisSpacing: spacing,
+                                    mainAxisExtent: cardHeight,
                                   ),
+                                  itemCount: filtered.length,
+                                  itemBuilder: (context, index) {
+                                    final item = filtered[index];
+                                    return ExperienceListTile(
+                                      key: ValueKey(item.id.isNotEmpty ? item.id : item.slug),
+                                      item: item,
+                                      isDark: true,
+                                      controller: controller,
+                                      isListView: false,
+                                      onEdit: () => _showExperienceDialog(context, experience: item),
+                                      onDelete: () => _confirmDelete(item.slug),
+                                    );
+                                  },
                                 );
                               },
                             ),
