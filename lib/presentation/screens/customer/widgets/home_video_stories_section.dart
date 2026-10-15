@@ -31,9 +31,23 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final bool isDesktopLayout = screenWidth >= 960 && widget.isDesktop;
-    final bool isTabletLayout = screenWidth >= 650 && screenWidth < 960;
-    final bool isMobileLayout = screenWidth < 650;
+    final bool isDesktop = screenWidth >= 1200;
+    final bool isLaptop = screenWidth >= 1024 && screenWidth < 1200;
+    final bool isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final bool isMobile = screenWidth < 600;
+    final bool isTwoColumn = screenWidth >= 1024;
+
+    final double sectionPaddingVertical = isDesktop
+        ? 40.0
+        : (isLaptop ? 32.0 : (isTablet ? 28.0 : 20.0));
+
+    final EdgeInsets cardPadding = isDesktop
+        ? const EdgeInsets.all(36.0)
+        : (isLaptop
+            ? const EdgeInsets.symmetric(horizontal: 28.0, vertical: 26.0)
+            : (isTablet
+                ? const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0)
+                : const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0)));
 
     return Container(
       key: widget.storiesKey,
@@ -41,7 +55,7 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
       color: const Color(0xFF152621), // Secondary Background matching home page
       padding: EdgeInsets.symmetric(
         horizontal: AppPageContainer.horizontalPadding(context),
-        vertical: isDesktopLayout ? 40.0 : 28.0,
+        vertical: sectionPaddingVertical,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -149,41 +163,64 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
                       ),
                     ),
                   ),
-                  // Subtle golden dot matrix accent in upper left background
-                  if (isDesktopLayout)
+                  // Golden dot matrix accent: Desktop/Laptop (upper left-center)
+                  if (isTwoColumn)
                     Positioned(
-                      top: 46,
-                      left: 275,
+                      top: 36,
+                      left: isDesktop ? 300 : 250,
                       child: IgnorePointer(
                         child: _DotMatrixAccent(
                           rows: 4,
                           cols: 4,
-                          color: AppColors.secondaryAccent.withValues(alpha: 0.25),
+                          color: AppColors.secondaryAccent.withValues(alpha: 0.22),
                         ),
                       ),
                     ),
+                  // Golden dot matrix accents: Tablet (both top-left and top-right matching reference)
+                  if (isTablet) ...[
+                    Positioned(
+                      top: 24,
+                      left: 28,
+                      child: IgnorePointer(
+                        child: _DotMatrixAccent(
+                          rows: 4,
+                          cols: 4,
+                          color: AppColors.secondaryAccent.withValues(alpha: 0.22),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 24,
+                      right: 28,
+                      child: IgnorePointer(
+                        child: _DotMatrixAccent(
+                          rows: 4,
+                          cols: 4,
+                          color: AppColors.secondaryAccent.withValues(alpha: 0.22),
+                        ),
+                      ),
+                    ),
+                  ],
                   // Main Content Layout
                   Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isDesktopLayout ? 36.0 : (isTabletLayout ? 24.0 : 18.0),
-                      vertical: isDesktopLayout ? 32.0 : (isTabletLayout ? 24.0 : 20.0),
-                    ),
-                    child: isDesktopLayout
+                    padding: cardPadding,
+                    child: isTwoColumn
                         ? Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Left content (~42%)
+                              // Left content (~42% desktop, ~48% laptop)
                               Expanded(
-                                flex: 9,
+                                flex: isDesktop ? 9 : 10,
                                 child: _buildLeftContent(
                                   activeItem: activeItem,
-                                  isDesktop: true,
+                                  isDesktop: isDesktop,
+                                  isLaptop: isLaptop,
                                 ),
                               ),
-                              const SizedBox(width: 32),
-                              // Right video + 3 thumbnails (~58%)
+                              SizedBox(width: isDesktop ? 36 : 24),
+                              // Right video + 3 thumbnails (~58% desktop, ~52% laptop)
                               Expanded(
-                                flex: 12,
+                                flex: isDesktop ? 12 : 11,
                                 child: _buildRightVideoContent(
                                   activeItem: activeItem,
                                   activeList: activeList,
@@ -195,21 +232,57 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
                             ],
                           )
                         : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              _buildLeftHeader(activeItem: activeItem, isDesktop: false),
-                              const SizedBox(height: 22),
+                              // Brand logo (centered)
+                              _buildBrandLogo(isCentered: true),
+                              SizedBox(height: isTablet ? 16 : 12),
+                              // Eyebrow label (centered)
+                              _buildEyebrow(textAlign: TextAlign.center),
+                              SizedBox(height: isTablet ? 8 : 6),
+                              // Editorial heading (centered)
+                              _buildHeading(
+                                isDesktop: false,
+                                isLaptop: false,
+                                isTablet: isTablet,
+                                isMobile: isMobile,
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: isTablet ? 12 : 10),
+                              // Description (centered with clean line wrapping)
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: isTablet ? 580 : double.infinity,
+                                ),
+                                child: _buildDescription(
+                                  activeItem: activeItem,
+                                  isDesktop: false,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              SizedBox(height: isTablet ? 22 : 16),
+                              // 3 Highlights (centered row matching tablet/mobile reference)
+                              _buildHighlights(
+                                activeItem: activeItem,
+                                isTwoColumn: false,
+                                isTablet: isTablet,
+                                isMobile: isMobile,
+                              ),
+                              SizedBox(height: isTablet ? 24 : 18),
+                              // CTA Button (centered on tablet, prominent on mobile)
+                              _buildCtaButton(
+                                isFullWidth: isMobile,
+                                isCentered: true,
+                              ),
+                              SizedBox(height: isTablet ? 28 : 22),
+                              // Main Video Player + 3 Thumbnails below CTA!
                               _buildRightVideoContent(
                                 activeItem: activeItem,
                                 activeList: activeList,
                                 selectedIndex: clampedIndex,
                                 isDesktop: false,
-                                isMobile: isMobileLayout,
+                                isMobile: isMobile,
                               ),
-                              const SizedBox(height: 24),
-                              _buildHighlights(activeItem: activeItem),
-                              const SizedBox(height: 24),
-                              _buildCtaButton(),
                             ],
                           ),
                   ),
@@ -222,54 +295,47 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
     );
   }
 
-  // ── LEFT COLUMN FULL (DESKTOP) ─────────────────────────────────────────────
+  // ── LEFT COLUMN FULL (DESKTOP / LAPTOP) ────────────────────────────────────
   Widget _buildLeftContent({
     required Map<String, dynamic> activeItem,
     required bool isDesktop,
+    required bool isLaptop,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildBrandLogo(),
-        const SizedBox(height: 18),
-        _buildEyebrow(),
-        const SizedBox(height: 8),
-        _buildHeading(isDesktop: isDesktop),
-        const SizedBox(height: 14),
-        _buildDescription(activeItem: activeItem, isDesktop: isDesktop),
-        const SizedBox(height: 22),
-        _buildHighlights(activeItem: activeItem),
-        const SizedBox(height: 26),
-        _buildCtaButton(),
-      ],
-    );
-  }
-
-  // ── LEFT HEADER (MOBILE / TABLET) ──────────────────────────────────────────
-  Widget _buildLeftHeader({
-    required Map<String, dynamic> activeItem,
-    required bool isDesktop,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildBrandLogo(),
-        const SizedBox(height: 16),
-        _buildEyebrow(),
-        const SizedBox(height: 8),
-        _buildHeading(isDesktop: isDesktop),
-        const SizedBox(height: 12),
-        _buildDescription(activeItem: activeItem, isDesktop: isDesktop),
+        _buildBrandLogo(isCentered: false),
+        SizedBox(height: isDesktop ? 18 : 14),
+        _buildEyebrow(textAlign: TextAlign.start),
+        SizedBox(height: isDesktop ? 8 : 6),
+        _buildHeading(
+          isDesktop: isDesktop,
+          isLaptop: isLaptop,
+          textAlign: TextAlign.start,
+        ),
+        SizedBox(height: isDesktop ? 14 : 10),
+        _buildDescription(
+          activeItem: activeItem,
+          isDesktop: isDesktop,
+          textAlign: TextAlign.start,
+        ),
+        SizedBox(height: isDesktop ? 22 : 16),
+        _buildHighlights(
+          activeItem: activeItem,
+          isTwoColumn: true,
+        ),
+        SizedBox(height: isDesktop ? 26 : 20),
+        _buildCtaButton(isFullWidth: false, isCentered: false),
       ],
     );
   }
 
   // ── BRAND LOGO ─────────────────────────────────────────────────────────────
-  Widget _buildBrandLogo() {
-    return Row(
+  Widget _buildBrandLogo({bool isCentered = false}) {
+    final logoWidget = Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: 42,
@@ -336,12 +402,18 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
         ),
       ],
     );
+
+    if (isCentered) {
+      return Center(child: logoWidget);
+    }
+    return logoWidget;
   }
 
   // ── EYEBROW ────────────────────────────────────────────────────────────────
-  Widget _buildEyebrow() {
+  Widget _buildEyebrow({TextAlign textAlign = TextAlign.start}) {
     return Text(
       "LIVE FROM THE SETUP",
+      textAlign: textAlign,
       style: AppTheme.sansBody(
         fontSize: 10,
         color: AppColors.secondaryAccent, // Champagne Gold
@@ -352,10 +424,19 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
   }
 
   // ── EDITORIAL HEADING ──────────────────────────────────────────────────────
-  Widget _buildHeading({required bool isDesktop}) {
-    final double fontSize = isDesktop ? 33.0 : 26.0;
+  Widget _buildHeading({
+    required bool isDesktop,
+    bool isLaptop = false,
+    bool isTablet = false,
+    bool isMobile = false,
+    TextAlign textAlign = TextAlign.start,
+  }) {
+    final double fontSize = isDesktop
+        ? 33.0
+        : (isLaptop ? 28.0 : (isTablet ? 27.0 : 22.0));
 
     return RichText(
+      textAlign: textAlign,
       text: TextSpan(
         style: GoogleFonts.italiana(
           fontSize: fontSize,
@@ -382,6 +463,7 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
   Widget _buildDescription({
     required Map<String, dynamic> activeItem,
     required bool isDesktop,
+    TextAlign textAlign = TextAlign.start,
   }) {
     final text = (activeItem['description'] != null &&
             activeItem['description'].toString().isNotEmpty)
@@ -390,10 +472,11 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
 
     return Text(
       text,
-      maxLines: 3,
+      textAlign: textAlign,
+      maxLines: 4,
       overflow: TextOverflow.ellipsis,
       style: AppTheme.sansBody(
-        fontSize: isDesktop ? 13.0 : 12.5,
+        fontSize: isDesktop ? 13.0 : 12.0,
         color: AppColors.muted,
         height: 1.55,
       ),
@@ -401,7 +484,12 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
   }
 
   // ── 3 HIGHLIGHTS ───────────────────────────────────────────────────────────
-  Widget _buildHighlights({required Map<String, dynamic> activeItem}) {
+  Widget _buildHighlights({
+    required Map<String, dynamic> activeItem,
+    required bool isTwoColumn,
+    bool isTablet = false,
+    bool isMobile = false,
+  }) {
     final List<String> rawFacts = List<String>.from(activeItem['facts'] ?? []);
 
     final String fact1 = rawFacts.isNotEmpty ? rawFacts[0] : "Decor Setup Walk";
@@ -410,7 +498,7 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
 
     final highlights = [
       _HighlightData(
-        icon: Icons.work_outline,
+        icon: Icons.shopping_bag_outlined,
         line1: _splitFact(fact1)[0],
         line2: _splitFact(fact1)[1],
       ),
@@ -426,54 +514,79 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
       ),
     ];
 
-    // Structured with icon above labels matching Image 2
+    Widget buildItem(_HighlightData h, {required bool isCentered}) {
+      return Column(
+        crossAxisAlignment:
+            isCentered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: isMobile ? 32 : 36,
+            height: isMobile ? 32 : 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF10231E),
+              border: Border.all(
+                color: AppColors.secondaryAccent.withValues(alpha: 0.65),
+                width: 1.2,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              h.icon,
+              size: isMobile ? 15 : 17,
+              color: AppColors.secondaryAccent,
+            ),
+          ),
+          SizedBox(height: isMobile ? 5 : 7),
+          Text(
+            h.line1,
+            textAlign: isCentered ? TextAlign.center : TextAlign.start,
+            style: AppTheme.sansBody(
+              fontSize: isMobile ? 9.5 : 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.15,
+            ),
+          ),
+          Text(
+            h.line2,
+            textAlign: isCentered ? TextAlign.center : TextAlign.start,
+            style: AppTheme.sansBody(
+              fontSize: isMobile ? 9.5 : 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              height: 1.15,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (isTwoColumn) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: highlights.map((h) => buildItem(h, isCentered: false)).toList(),
+      );
+    }
+
+    if (isTablet) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          buildItem(highlights[0], isCentered: true),
+          const SizedBox(width: 48),
+          buildItem(highlights[1], isCentered: true),
+          const SizedBox(width: 48),
+          buildItem(highlights[2], isCentered: true),
+        ],
+      );
+    }
+
+    // Mobile: evenly distributed in a compact horizontal row
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: highlights.map((h) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF10231E),
-                border: Border.all(
-                  color: AppColors.secondaryAccent.withValues(alpha: 0.65),
-                  width: 1.2,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                h.icon,
-                size: 17,
-                color: AppColors.secondaryAccent,
-              ),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              h.line1,
-              style: AppTheme.sansBody(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                height: 1.15,
-              ),
-            ),
-            Text(
-              h.line2,
-              style: AppTheme.sansBody(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                height: 1.15,
-              ),
-            ),
-          ],
-        );
-      }).toList(),
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: highlights.map((h) => buildItem(h, isCentered: true)).toList(),
     );
   }
 
@@ -494,8 +607,8 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
   }
 
   // ── CTA BUTTON ─────────────────────────────────────────────────────────────
-  Widget _buildCtaButton() {
-    return Material(
+  Widget _buildCtaButton({bool isFullWidth = false, bool isCentered = false}) {
+    final button = Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
@@ -510,7 +623,7 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
         },
         borderRadius: BorderRadius.circular(30),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
             color: AppColors.secondaryAccent,
             borderRadius: BorderRadius.circular(30),
@@ -523,7 +636,8 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
             ],
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "EXPLORE DESIGN COLLECTION",
@@ -545,6 +659,17 @@ class _VideoStoriesSectionState extends State<VideoStoriesSection> {
         ),
       ),
     );
+
+    if (isFullWidth) {
+      return Container(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: Center(child: button),
+      );
+    }
+    if (isCentered) {
+      return Center(child: button);
+    }
+    return button;
   }
 
   // ── RIGHT VIDEO CONTENT (FEATURED VIDEO + 3 THUMBNAILS) ────────────────────
@@ -793,7 +918,7 @@ class _FeaturedVideoPlayerState extends State<_FeaturedVideoPlayer> {
           ),
           clipBehavior: Clip.antiAlias,
           child: AspectRatio(
-            aspectRatio: 16 / 10,
+            aspectRatio: 16 / 9,
             child: Stack(
               children: [
                 // Video player or Poster image
@@ -1016,54 +1141,62 @@ class _ThumbnailStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isMobile) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          children: List.generate(items.length, (index) {
-            final item = Map<String, dynamic>.from(items[index]);
-            final posterAsset = item['posterAsset'] ?? '';
-            final isSelected = index == selectedIndex;
+    final gap = isMobile ? 8.0 : 12.0;
 
-            return Padding(
-              padding: EdgeInsets.only(
-                right: index < items.length - 1 ? 12.0 : 0.0,
-              ),
-              child: SizedBox(
-                width: 120,
-                child: _ThumbnailCard(
-                  posterAsset: posterAsset,
-                  isSelected: isSelected,
-                  onTap: () => onSelect(index),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        // Distribute all 3 thumbnails evenly when at least 230px wide
+        if (availableWidth >= 230) {
+          return Row(
+            children: List.generate(items.length, (index) {
+              final item = Map<String, dynamic>.from(items[index]);
+              final posterAsset = item['posterAsset'] ?? '';
+              final isSelected = index == selectedIndex;
+
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index < items.length - 1 ? gap : 0.0,
+                  ),
+                  child: _ThumbnailCard(
+                    posterAsset: posterAsset,
+                    isSelected: isSelected,
+                    onTap: () => onSelect(index),
+                  ),
                 ),
-              ),
-            );
-          }),
-        ),
-      );
-    }
+              );
+            }),
+          );
+        }
 
-    // On Desktop and Tablet: evenly distribute the 3 thumbnails under the main video
-    return Row(
-      children: List.generate(items.length, (index) {
-        final item = Map<String, dynamic>.from(items[index]);
-        final posterAsset = item['posterAsset'] ?? '';
-        final isSelected = index == selectedIndex;
+        // Horizontal scrolling fallback for ultra-narrow screens (< 230px)
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: List.generate(items.length, (index) {
+              final item = Map<String, dynamic>.from(items[index]);
+              final posterAsset = item['posterAsset'] ?? '';
+              final isSelected = index == selectedIndex;
 
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(
-              right: index < items.length - 1 ? 12.0 : 0.0,
-            ),
-            child: _ThumbnailCard(
-              posterAsset: posterAsset,
-              isSelected: isSelected,
-              onTap: () => onSelect(index),
-            ),
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: index < items.length - 1 ? 8.0 : 0.0,
+                ),
+                child: SizedBox(
+                  width: 85,
+                  child: _ThumbnailCard(
+                    posterAsset: posterAsset,
+                    isSelected: isSelected,
+                    onTap: () => onSelect(index),
+                  ),
+                ),
+              );
+            }),
           ),
         );
-      }),
+      },
     );
   }
 }
@@ -1118,7 +1251,7 @@ class _ThumbnailCardState extends State<_ThumbnailCard> {
           ),
           clipBehavior: Clip.antiAlias,
           child: AspectRatio(
-            aspectRatio: 16 / 10,
+            aspectRatio: 16 / 9,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: widget.isSelected ? 1.0 : (_isHovered ? 0.95 : 0.72),

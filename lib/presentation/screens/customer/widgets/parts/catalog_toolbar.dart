@@ -133,7 +133,8 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
 
     final sortWidget = Container(
       height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      width: isWide ? 155 : 145,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF1B2D27).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
@@ -146,25 +147,30 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
         () => DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: controller.sortBy.value,
+            isDense: true,
+            isExpanded: true,
             dropdownColor: const Color(0xFF1B2D27),
-            icon: const Padding(
-              padding: EdgeInsets.only(left: 4.0),
-              child: Icon(
-                Icons.keyboard_arrow_down,
-                size: 15,
-                color: AppColors.secondaryAccent,
-              ),
+            icon: const Icon(
+              Icons.keyboard_arrow_down,
+              size: 15,
+              color: AppColors.secondaryAccent,
             ),
             items: const [
-              DropdownMenuItem(value: 'popular', child: Text("MOST LOVED")),
-              DropdownMenuItem(value: 'latest', child: Text("LATEST")),
+              DropdownMenuItem(
+                value: 'popular',
+                child: Text("MOST LOVED", overflow: TextOverflow.ellipsis),
+              ),
+              DropdownMenuItem(
+                value: 'latest',
+                child: Text("LATEST", overflow: TextOverflow.ellipsis),
+              ),
               DropdownMenuItem(
                 value: 'price_low',
-                child: Text("PRICE: LOW TO HIGH"),
+                child: Text("PRICE: LOW TO HIGH", overflow: TextOverflow.ellipsis),
               ),
               DropdownMenuItem(
                 value: 'price_high',
-                child: Text("PRICE: HIGH TO LOW"),
+                child: Text("PRICE: HIGH TO LOW", overflow: TextOverflow.ellipsis),
               ),
             ],
             onChanged: (val) {
@@ -174,7 +180,7 @@ extension _CatalogToolbarExtension on ExperiencesCatalogSection {
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.white.withValues(alpha: 0.9),
-              letterSpacing: 1.1,
+              letterSpacing: 0.8,
             ),
           ),
         ),

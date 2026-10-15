@@ -106,10 +106,13 @@ class ExperiencesCatalogSection extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final paddingHorizontal = AppPageContainer.horizontalPadding(context);
 
-    final double sectionPaddingVertical = isDesktop ? 32.0 : 20.0;
+    final double sectionPaddingVertical = width >= 960 ? 32.0 : 20.0;
     final double titleSize =
         width >= 700 ? (width * 0.048).clamp(32.0, 48.0) : 28.0;
     final bool isWide = width >= 860;
+    final double containerPadding = width >= 1200
+        ? 26.0
+        : (width >= 960 ? 20.0 : (width >= 600 ? 16.0 : 12.0));
 
     return CatalogSectionBackground(
       child: Container(
@@ -137,7 +140,7 @@ class ExperiencesCatalogSection extends StatelessWidget {
                 ),
               ],
             ),
-            padding: EdgeInsets.all(isDesktop ? 26.0 : 16.0),
+            padding: EdgeInsets.all(containerPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -173,12 +176,23 @@ class ExperiencesCatalogSection extends StatelessWidget {
                     );
                   }
 
-                  final gridCount = width >= 1050
+                  // Responsive grid column count strictly matching Reference Image:
+                  // - Desktop (>= 1200px): 4 columns
+                  // - Laptop (960px - 1199px): 3 columns
+                  // - Tablet (600px - 959px): 2 columns
+                  // - Mobile (< 600px): 1 column
+                  final gridCount = width >= 1200
                       ? 4
-                      : (width >= 720 ? 3 : (width >= 500 ? 2 : 1));
-                  
-                  // childAspectRatio ensures no overflow with Expanded image
-                  final double childAspectRatio = gridCount == 1 ? 1.05 : 0.90;
+                      : (width >= 960
+                          ? 3
+                          : (width >= 600 ? 2 : 1));
+
+                  final double childAspectRatio = gridCount == 1
+                      ? 1.02
+                      : (gridCount == 2 ? 0.90 : 0.88);
+
+                  final double crossSpacing = width >= 1200 ? 16.0 : (width >= 600 ? 12.0 : 10.0);
+                  final double mainSpacing = width >= 1200 ? 18.0 : (width >= 600 ? 14.0 : 12.0);
 
                   final totalItems = controller.rxExperiences.length;
                   final visibleCount = controller.rxVisibleCount.value.clamp(0, totalItems);
@@ -191,8 +205,8 @@ class ExperiencesCatalogSection extends StatelessWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: gridCount,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 16,
+                          crossAxisSpacing: crossSpacing,
+                          mainAxisSpacing: mainSpacing,
                           childAspectRatio: childAspectRatio,
                         ),
                         itemCount: visibleCount,

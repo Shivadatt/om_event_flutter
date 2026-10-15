@@ -283,13 +283,13 @@ class _ExperienceCardDetails extends StatelessWidget {
           Text(
             item.name,
             style: GoogleFonts.italiana(
-              fontSize: 15,
+              fontSize: 14.5,
               fontWeight: FontWeight.bold,
               color: Colors.white,
               height: 1.15,
               letterSpacing: 0.3,
             ),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
@@ -297,43 +297,48 @@ class _ExperienceCardDetails extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    AppFormatters.formatCurrency(item.effectivePrice),
-                    style: AppTheme.sansBody(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppFormatters.formatCurrency(item.effectivePrice),
+                      style: AppTheme.sansBody(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (item.offerPrice != null && item.offerPrice! < item.price) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (item.offerPrice != null && item.offerPrice! < item.price) ...[
+                          Text(
+                            AppFormatters.formatCurrency(item.price),
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              color: AppColors.muted.withValues(alpha: 0.7),
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                        ],
                         Text(
-                          AppFormatters.formatCurrency(item.price),
-                          style: TextStyle(
-                            fontSize: 9.5,
+                          "onwards",
+                          style: AppTheme.sansBody(
+                            fontSize: 9,
                             color: AppColors.muted.withValues(alpha: 0.7),
-                            decoration: TextDecoration.lineThrough,
                           ),
                         ),
-                        const SizedBox(width: 3),
                       ],
-                      Text(
-                        "onwards",
-                        style: AppTheme.sansBody(
-                          fontSize: 9,
-                          color: AppColors.muted.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
