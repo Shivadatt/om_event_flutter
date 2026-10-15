@@ -3053,6 +3053,7 @@ file:///D:/om_event_python/om_event/lib/core/seo/seo_constants.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_manager.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_models.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_routes.dart
+file:///D:/om_event_python/om_event/lib/core/services/app_bootstrap_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/app_config_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/booking_availability_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/bootstrap_service.dart
@@ -3151,6 +3152,7 @@ file:///D:/om_event_python/om_event/lib/data/repositories/contact_number_reposit
 file:///D:/om_event_python/om_event/lib/data/repositories/customer_auth_repository_impl.dart
 file:///D:/om_event_python/om_event/lib/data/repositories/customer_portal_repository_impl.dart
 file:///D:/om_event_python/om_event/lib/data/repositories/customer_repository_impl.dart
+file:///D:/om_event_python/om_event/lib/data/repositories/faq_repository_impl.dart
 file:///D:/om_event_python/om_event/lib/data/repositories/gallery_repository_impl.dart
 file:///D:/om_event_python/om_event/lib/data/repositories/lead_repository_impl.dart
 file:///D:/om_event_python/om_event/lib/data/repositories/mixins/auth_role_repository_mixin.dart
@@ -3184,6 +3186,7 @@ file:///D:/om_event_python/om_event/lib/domain/entities/customer_profile.dart
 file:///D:/om_event_python/om_event/lib/domain/entities/customer_wishlist.dart
 file:///D:/om_event_python/om_event/lib/domain/entities/expense_item.dart
 file:///D:/om_event_python/om_event/lib/domain/entities/experience.dart
+file:///D:/om_event_python/om_event/lib/domain/entities/faq_item.dart
 file:///D:/om_event_python/om_event/lib/domain/entities/gallery_item.dart
 file:///D:/om_event_python/om_event/lib/domain/entities/inventory_item.dart
 file:///D:/om_event_python/om_event/lib/domain/entities/lead.dart
@@ -3213,6 +3216,7 @@ file:///D:/om_event_python/om_event/lib/domain/repositories/contact_number_repos
 file:///D:/om_event_python/om_event/lib/domain/repositories/customer_auth_repository.dart
 file:///D:/om_event_python/om_event/lib/domain/repositories/customer_portal_repository.dart
 file:///D:/om_event_python/om_event/lib/domain/repositories/customer_repository.dart
+file:///D:/om_event_python/om_event/lib/domain/repositories/faq_repository.dart
 file:///D:/om_event_python/om_event/lib/domain/repositories/gallery_repository.dart
 file:///D:/om_event_python/om_event/lib/domain/repositories/lead_repository.dart
 file:///D:/om_event_python/om_event/lib/domain/repositories/notification_repository.dart
@@ -3242,6 +3246,7 @@ file:///D:/om_event_python/om_event/lib/presentation/controllers/customer_auth_c
 file:///D:/om_event_python/om_event/lib/presentation/controllers/customer_controller_mixin.dart
 file:///D:/om_event_python/om_event/lib/presentation/controllers/customer_dashboard_controller.dart
 file:///D:/om_event_python/om_event/lib/presentation/controllers/experience_controller_mixin.dart
+file:///D:/om_event_python/om_event/lib/presentation/controllers/faq_controller.dart
 file:///D:/om_event_python/om_event/lib/presentation/controllers/gallery_controller.dart
 file:///D:/om_event_python/om_event/lib/presentation/controllers/maintenance_controller.dart
 file:///D:/om_event_python/om_event/lib/presentation/controllers/parts/catalog_filter.dart
@@ -3329,6 +3334,7 @@ file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/edito
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/editor/editor_right_panel.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/editor/experience_selector_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/editor/publish_revision_dialog.dart
+file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/experience_card_image.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/experience_form_dialog.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/experience_list_tile.dart
 file:///D:/om_event_python/om_event/lib/presentation/screens/admin/widgets/inquiries_trend_chart.dart

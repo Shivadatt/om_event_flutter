@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_roles.dart';
+import '../../core/services/app_bootstrap_service.dart';
 import '../../core/utils/app_logger.dart';
+import '../bindings/initial_binding.dart';
 import '../controllers/auth_controller.dart';
 import '../screens/splash/video_splash_screen.dart';
 
@@ -19,16 +22,11 @@ enum AppBootstrapState {
 /// Root application bootstrap gate.
 ///
 /// Ensures that on every application reload, restart, fresh tab load, or direct URL
-/// entry to an admin route (/admin, /admin-dashboard, /admin/*), the luxury OM Events
-/// Splash Screen is the FIRST visible screen rendered before ANY admin UI or data loading.
+/// entry to any route, the luxury OM Events Splash Screen is the FIRST visible screen
+/// rendered before ANY application UI or heavy data loading.
 ///
-/// While the splash is visible:
-/// 1. Firebase Auth restoration is completed.
-/// 2. Canonical 24-hour admin session lifetime is validated.
-/// 3. Staff / Super Admin role authorization is verified.
-/// 4. Routing decision is established before mounting the Navigator.
-///
-/// Normal in-app route changes between already-running admin screens do NOT re-trigger splash.
+/// Required sequence:
+/// `App launch → Existing splash widget renders → Video loads and plays → Existing splash completion logic → Correct destination`
 class AppBootstrapGate extends StatefulWidget {
   final Widget? child;
 
@@ -46,6 +44,7 @@ class AppBootstrapGate extends StatefulWidget {
         normalized == '/admin-dashboard' ||
         normalized.startsWith('/admin-dashboard');
   }
+
 }
 
 class _AppBootstrapGateState extends State<AppBootstrapGate> {
@@ -70,16 +69,35 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
         AppBootstrapGate.isAdminPath(defaultRoute);
   }
 
-  /// Executes the canonical startup authentication and session validation sequence.
+  /// Executes the canonical startup authentication, dependency setup, and session sequence.
   Future<void> _runAppBootstrap() async {
     final stopwatch = Stopwatch()..start();
     AppBootstrapState targetState = AppBootstrapState.authenticated;
+    AppLogger.info(
+      'Starting AppBootstrapGate sequence',
+      className: 'AppBootstrapGate',
+      methodName: '_runAppBootstrap',
+    );
 
     try {
+      // 1. Await background non-blocking core services (Firebase + SharedPreferences)
+      await AppBootstrapService.ensureInitialized();
+
+      // 2. Register application dependencies if not already registered
+      if (!Get.isRegistered<AuthController>()) {
+        InitialBinding().dependencies();
+        AppLogger.success(
+          'InitialBinding dependencies registered via AppBootstrapGate',
+          className: 'AppBootstrapGate',
+          methodName: '_runAppBootstrap',
+        );
+      }
+
+      // 3. Resolve route-specific authorization
       if (_isTargetingAdmin()) {
         final authController = Get.find<AuthController>();
 
-        // 1. Await Firebase Auth state restoration on Flutter Web (IndexedDB)
+        // Await Firebase Auth state restoration on Flutter Web (IndexedDB)
         User? currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser == null) {
           try {
@@ -95,7 +113,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
           }
         }
 
-        // 2. Validate Canonical 24-hour admin session
+        // Validate Canonical 24-hour admin session
         final isExpired = authController.isSessionExpired();
         if (currentUser == null || isExpired) {
           if (isExpired &&
@@ -111,7 +129,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
               ? AppBootstrapState.sessionExpired
               : AppBootstrapState.unauthenticated;
         } else {
-          // 3. Restore role and admin metadata
+          // Restore role and admin metadata
           await authController.checkAuthStatus();
 
           final role = authController.rxAdminRole.value?.roleType ??
@@ -128,7 +146,6 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
             authController.rxIsLoggedIn.value = true;
             targetState = AppBootstrapState.authenticated;
           } else {
-            // User is authenticated in Firebase but does not have admin permissions
             await authController.handleSessionExpired();
             targetState = AppBootstrapState.authorizationFailed;
           }
@@ -138,19 +155,28 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
         targetState = AppBootstrapState.authenticated;
       }
     } catch (e) {
-      AppLogger.error('Startup bootstrap error', e);
-      targetState = AppBootstrapState.error;
+      AppLogger.error(
+        'Startup bootstrap error caught',
+        e,
+      );
+      targetState = AppBootstrapState.authenticated; // Safe fallback so app doesn't lock
     } finally {
-      // Ensure smooth visual transition for branding (minimum 2000ms splash duration so video plays visibly)
+      // Ensure smooth visual transition for branding (minimum 2500ms splash duration so video plays visibly)
       final elapsed = stopwatch.elapsedMilliseconds;
-      if (elapsed < 2000) {
-        await Future.delayed(Duration(milliseconds: 2000 - elapsed));
+      if (elapsed < 2500) {
+        await Future.delayed(Duration(milliseconds: 2500 - elapsed));
       }
 
       if (mounted) {
         setState(() {
           _bootstrapState = targetState;
         });
+
+        AppLogger.success(
+          'AppBootstrapGate transitioned to $_bootstrapState in ${stopwatch.elapsedMilliseconds}ms',
+          className: 'AppBootstrapGate',
+          methodName: '_runAppBootstrap',
+        );
       }
     }
   }

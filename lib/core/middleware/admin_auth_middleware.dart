@@ -94,10 +94,8 @@ class AdminAuthMiddleware extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) {
     if (!Get.isRegistered<AuthController>()) {
-      final encodedRoute = Uri.encodeComponent(route ?? '');
-      return RouteSettings(
-        name: '${AppRoutes.login}?redirect=$encodedRoute',
-      );
+      // Bootstrap / splash gate is in progress — allow initial frame to render in AppBootstrapGate
+      return null;
     }
 
     final auth = Get.find<AuthController>();

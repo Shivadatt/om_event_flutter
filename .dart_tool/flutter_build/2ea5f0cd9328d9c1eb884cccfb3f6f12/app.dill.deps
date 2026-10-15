@@ -3053,6 +3053,7 @@ file:///D:/om_event_python/om_event/lib/core/seo/seo_constants.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_manager.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_models.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_routes.dart
+file:///D:/om_event_python/om_event/lib/core/services/app_bootstrap_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/app_config_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/booking_availability_service.dart
 file:///D:/om_event_python/om_event/lib/core/services/bootstrap_service.dart

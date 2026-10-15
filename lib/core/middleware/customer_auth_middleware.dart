@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../config/app_routes.dart';
 import '../utils/auth_route_helper.dart';
+import '../../presentation/controllers/auth_controller.dart';
 
 /// Route guard for customer protected routes (e.g. Dashboard/Client Lounge).
 ///
@@ -17,6 +18,11 @@ class CustomerAuthMiddleware extends GetMiddleware {
 
   @override
   RouteSettings? redirect(String? route) {
+    if (!Get.isRegistered<AuthController>()) {
+      // Bootstrap / splash gate is in progress — allow initial frame to render in AppBootstrapGate
+      return null;
+    }
+
     // ── 1. Intercept Admin / Super Admin / Staff immediately ────────────────
     if (AuthRouteHelper.isCurrentAdminOrStaff()) {
       return const RouteSettings(name: AppRoutes.adminDashboard);

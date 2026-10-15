@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'core/config/app_routes.dart';
 import 'core/config/app_theme.dart';
 import 'core/constants/app_strings.dart';
 import 'dart:ui';
 import 'core/seo/seo_manager.dart';
-import 'core/utils/app_logger.dart';
-import 'presentation/bindings/initial_binding.dart';
+import 'core/services/app_bootstrap_service.dart';
 import 'presentation/widgets/app_bootstrap_gate.dart';
 
-void main() async {
+void main() {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -45,37 +40,10 @@ void main() async {
     return false;
   };
 
-  // Initialize SharedPreferences & Firebase concurrently — saves ~300-500ms vs sequential await
-  await Future.wait([
-    SharedPreferences.getInstance().then((prefs) {
-      Get.put<SharedPreferences>(prefs, permanent: true);
-    }).catchError((e) {
-      AppLogger.error('SharedPreferences initialization failed', e);
-    }),
-    Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).then((_) {
-      AppLogger.success('Firebase initialized successfully');
-      debugPrint('[QUOTA_AUDIT][FIREBASE_PROJECT]\nprojectId=${Firebase.app().options.projectId}');
-      debugPrint('[QUOTA_AUDIT][FIRESTORE_DATABASE]\ndatabaseId=(default)');
-      debugPrint('[CLIENT_CREATE][FIREBASE_PROJECT] projectId: ${Firebase.app().options.projectId}');
-      debugPrint('[CLIENT_CREATE][FIREBASE_APP] appId: ${Firebase.app().options.appId}');
-      debugPrint('[CLIENT_CREATE][FIRESTORE] target collection: customers');
-    }).catchError((e) {
-      AppLogger.error('Firebase initialization failed', e);
-    }),
-  ]);
+  // Kick off non-essential core platform services in background without blocking first frame
+  AppBootstrapService.start();
 
-  // Non-blocking initial Firebase Auth check — BootstrapService handles reactive auth post-mount
-  try {
-    if (FirebaseAuth.instance.currentUser == null) {
-      await FirebaseAuth.instance.authStateChanges().first.timeout(
-        const Duration(milliseconds: 100),
-        onTimeout: () => FirebaseAuth.instance.currentUser,
-      );
-    }
-  } catch (_) {}
-
+  // Render first Flutter frame immediately
   runApp(const OmEventsApp());
 }
 
@@ -91,7 +59,6 @@ class OmEventsApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialBinding: InitialBinding(),
       initialRoute: AppRoutes.home,
       getPages: AppRouter.pages,
       navigatorObservers: [SeoManager()],
