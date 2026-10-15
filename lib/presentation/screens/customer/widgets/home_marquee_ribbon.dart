@@ -62,14 +62,11 @@ class _MarqueeRibbonState extends State<MarqueeRibbon> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDark ? const Color(0xFF101C18) : const Color(0xFFFAF8F5);
-    final borderColor =
-        isDark ? const Color(0xFF1D2A26) : const Color(0xFFE5DFD5);
+    const backgroundColor = Color(0xFF0D1915);
+    const borderColor = Color(0xFF1E2F28);
 
     return Container(
-      height: 54,
+      height: 48,
       decoration: BoxDecoration(
         color: backgroundColor,
         border: Border(
@@ -87,22 +84,23 @@ class _MarqueeRibbonState extends State<MarqueeRibbon> {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(width: 24),
+                const SizedBox(width: 28),
                 Text(
                   item.toUpperCase(),
                   style: GoogleFonts.italiana(
-                    fontSize: 20,
-                    color:
-                        isDark
-                            ? const Color(0xFFFAF8F5)
-                            : const Color(0xFF17201E),
-                    letterSpacing: 3,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFEDE3D2),
+                    letterSpacing: 2.8,
                   ),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: 28),
                 const Text(
                   "✦",
-                  style: TextStyle(color: Color(0xFFD6B080), fontSize: 14),
+                  style: TextStyle(
+                    color: Color(0xFFD6B080),
+                    fontSize: 11,
+                  ),
                 ),
               ],
             );
@@ -112,3 +110,4 @@ class _MarqueeRibbonState extends State<MarqueeRibbon> {
     );
   }
 }
+

@@ -10,21 +10,30 @@ class AnnouncementBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isVerySmall = width < 420;
+
     return Container(
-      height: 32,
+      constraints: const BoxConstraints(minHeight: 32),
       width: double.infinity,
       color: const Color(0xFFB88957),
       alignment: Alignment.center,
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 24 : 12,
+        vertical: isVerySmall ? 6 : 4,
+      ),
       child: Text(
         "NOW ACCEPTING CELEBRATIONS FOR JULY–DECEMBER 2026    •    GUJARAT & BEYOND",
         style: AppTheme.sansBody(
-          fontSize: isDesktop ? 10 : 8,
+          fontSize: isDesktop ? 10 : (isVerySmall ? 8.0 : 8.8),
           color: Colors.white,
           fontWeight: FontWeight.bold,
-          letterSpacing: isDesktop ? 2.0 : 1.0,
+          letterSpacing: isDesktop ? 2.0 : 1.2,
+          height: 1.35,
         ),
         textAlign: TextAlign.center,
       ),
     );
   }
 }
+

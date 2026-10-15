@@ -42,8 +42,8 @@ class HomeScreen extends GetView<CatalogController> {
     final contactKey = GlobalKey();
 
     final width = context.screenWidth;
-    final isDesktop = width >= 1000;
-    final isTablet = width >= 700 && width < 1000;
+    final isDesktop = width >= 1024;
+    final isTablet = width >= 600 && width < 1024;
 
     void scrollToSection(GlobalKey key) {
       final ctx = key.currentContext;

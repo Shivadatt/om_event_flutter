@@ -51,11 +51,17 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isWide = width >= 960;
-    final double pH = AppPageContainer.horizontalPadding(context);
-    final double titleSize = isWide
-        ? (width * 0.038).clamp(42.0, 64.0)
-        : (width * 0.08).clamp(28.0, 42.0);
+    final isTwoColumn = width >= 1024;
+    final isTablet = width >= 600 && width < 1024;
+    final isMobile = width < 600;
+
+    final double pH = isMobile ? 16.0 : (isTablet ? 28.0 : (width < 1280 ? 36.0 : 48.0));
+    final double topPad = isTwoColumn ? (width >= 1440 ? 44.0 : 36.0) : (isTablet ? 32.0 : 24.0);
+    final double bottomPad = isTwoColumn ? (width >= 1440 ? 32.0 : 24.0) : (isTablet ? 24.0 : 18.0);
+
+    final double titleSize = isTwoColumn
+        ? (width >= 1440 ? (width * 0.038).clamp(46.0, 58.0) : (width * 0.034).clamp(38.0, 48.0))
+        : (isTablet ? (width * 0.048).clamp(32.0, 40.0) : (width * 0.076).clamp(26.0, 32.0));
 
     return Container(
       width: double.infinity,
@@ -65,7 +71,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
           const Positioned.fill(child: CustomPaint(painter: GoldGlowPainter())),
           const Positioned.fill(child: CustomPaint(painter: GrainPainter())),
           Padding(
-            padding: EdgeInsets.fromLTRB(pH, isWide ? 40.0 : 28.0, pH, isWide ? 28.0 : 20.0),
+            padding: EdgeInsets.fromLTRB(pH, topPad, pH, bottomPad),
             child: Center(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: AppPageContainer.maxContentWidth),
@@ -83,8 +89,8 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                       ? "Creative decorations for every occasion, designed with love, detail and perfection."
                       : homepage.heroSubtitle;
 
-                  if (isWide) {
-                    // Desktop Split Layout (Matching Option 2 in Reference Image 1)
+                  if (isTwoColumn) {
+                    // Desktop & Laptop Split Layout
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -96,39 +102,47 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                             children: [
                               _buildEyebrow(),
                               const SizedBox(height: 14),
-                              _buildHeading(headingText, titleSize, isWide),
+                              _buildHeading(headingText, titleSize, isWide: true),
                               const SizedBox(height: 14),
-                              _buildSubtitle(subText, isWide),
+                              _buildSubtitle(subText, isWide: true, width: width),
                               const SizedBox(height: 24),
-                              _buildCtaButtons(isWide),
+                              _buildCtaButtons(isTwoColumn: true, isMobile: false),
                               const SizedBox(height: 28),
-                              _buildTrustStats(stats, isWide),
+                              _buildTrustStats(stats, isTwoColumn: true, isMobile: false),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 48),
+                        SizedBox(width: width < 1280 ? 32 : 48),
                         Expanded(
                           flex: 5,
-                          child: _buildVideoShowcase(isMobile: false),
+                          child: _buildVideoShowcase(
+                            isTwoColumn: true,
+                            isMobile: false,
+                            width: width,
+                          ),
                         ),
                       ],
                     );
                   } else {
-                    // Mobile / Tablet Layout (Matching Reference Image 1 Mobile)
+                    // Tablet & Mobile Centered Layout
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         _buildEyebrow(),
                         const SizedBox(height: 14),
-                        _buildHeading(headingText, titleSize, isWide),
+                        _buildHeading(headingText, titleSize, isWide: false),
                         const SizedBox(height: 14),
-                        _buildSubtitle(subText, isWide),
+                        _buildSubtitle(subText, isWide: false, width: width),
                         const SizedBox(height: 22),
-                        _buildCtaButtons(isWide),
+                        _buildCtaButtons(isTwoColumn: false, isMobile: isMobile),
                         const SizedBox(height: 24),
-                        _buildTrustStats(stats, isWide),
+                        _buildTrustStats(stats, isTwoColumn: false, isMobile: isMobile),
                         const SizedBox(height: 28),
-                        _buildVideoShowcase(isMobile: true),
+                        _buildVideoShowcase(
+                          isTwoColumn: false,
+                          isMobile: isMobile,
+                          width: width,
+                        ),
                       ],
                     );
                   }
@@ -171,7 +185,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildHeading(String text, double titleSize, bool isWide) {
+  Widget _buildHeading(String text, double titleSize, {required bool isWide}) {
     return AnimatedBuilder(
       animation: _slideController,
       builder: (context, child) {
@@ -202,16 +216,19 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildSubtitle(String heroSubtitle, bool isWide) {
+  Widget _buildSubtitle(String heroSubtitle, {required bool isWide, required double width}) {
+    final double maxW = isWide ? 540.0 : (width >= 600 ? 580.0 : 380.0);
+    final double fSize = isWide ? (width < 1280 ? 14.0 : 15.0) : (width < 600 ? 13.5 : 14.5);
+
     return AnimatedBuilder(
       animation: _fadeController,
       builder: (context, child) => Opacity(opacity: _fadeController.value, child: child),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 560),
+        constraints: BoxConstraints(maxWidth: maxW),
         child: Text(
           heroSubtitle,
           style: AppTheme.sansBody(
-            fontSize: 15.0,
+            fontSize: fSize,
             color: Colors.white70,
             height: 1.65,
           ),
@@ -221,7 +238,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildCtaButtons(bool isWide) {
+  Widget _buildCtaButtons({required bool isTwoColumn, required bool isMobile}) {
     return AnimatedBuilder(
       animation: _slideController,
       builder: (context, child) {
@@ -231,54 +248,93 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
           child: Transform.translate(offset: Offset(0, slide), child: child),
         );
       },
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 12,
-        alignment: isWide ? WrapAlignment.start : WrapAlignment.center,
-        children: [
-          // Primary Button: EXPLORE OUR SERVICES ->
-          CinematicButton(
-            text: "Explore Our Services →",
-            isPrimary: true,
-            onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
-          ),
-          // Secondary Button: ▶ WATCH VIDEO
-          CinematicButton(
-            text: "▶ Watch Video",
-            isPrimary: false,
-            onPressed: () => CustomerDialogHelper.openLeadDialog(context),
-          ),
-        ],
-      ),
+      child: isMobile
+          ? ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 340),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CinematicButton(
+                    text: "Explore Our Services →",
+                    isPrimary: true,
+                    isFullWidth: true,
+                    onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
+                  ),
+                  const SizedBox(height: 12),
+                  CinematicButton(
+                    text: "▶ Watch Video",
+                    isPrimary: false,
+                    isFullWidth: true,
+                    onPressed: () => CustomerDialogHelper.openLeadDialog(context),
+                  ),
+                ],
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: isTwoColumn ? MainAxisAlignment.start : MainAxisAlignment.center,
+              children: [
+                CinematicButton(
+                  text: "Explore Our Services →",
+                  isPrimary: true,
+                  isFullWidth: false,
+                  onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
+                ),
+                const SizedBox(width: 16),
+                CinematicButton(
+                  text: "▶ Watch Video",
+                  isPrimary: false,
+                  isFullWidth: false,
+                  onPressed: () => CustomerDialogHelper.openLeadDialog(context),
+                ),
+              ],
+            ),
     );
   }
 
-  Widget _buildTrustStats(dynamic stats, bool isWide) {
+  Widget _buildTrustStats(dynamic stats, {required bool isTwoColumn, required bool isMobile}) {
+    final double iconBoxSize = isMobile ? 26 : 30;
+    final double iconSize = isMobile ? 14 : 16;
+    final double countFontSize = isMobile ? 13 : 15;
+    final double labelFontSize = isMobile ? 9.5 : 11;
+    final double spacing = isMobile ? 14 : (isTwoColumn ? 30 : 24);
+
     return AnimatedBuilder(
       animation: _fadeController,
       builder: (context, child) => Opacity(opacity: _fadeController.value, child: child),
       child: Wrap(
-        spacing: 32,
-        runSpacing: 16,
-        alignment: isWide ? WrapAlignment.start : WrapAlignment.center,
+        spacing: spacing,
+        runSpacing: 12,
+        alignment: isTwoColumn ? WrapAlignment.start : WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           _buildStatBadge(
             icon: Icons.star_rounded,
             count: "500+",
             label: "Happy Clients",
+            boxSize: iconBoxSize,
+            iconSize: iconSize,
+            countFontSize: countFontSize,
+            labelFontSize: labelFontSize,
           ),
           _buildStatBadge(
             icon: Icons.celebration_rounded,
             count: "1000+",
             label: "Events Decorated",
+            boxSize: iconBoxSize,
+            iconSize: iconSize,
+            countFontSize: countFontSize,
+            labelFontSize: labelFontSize,
           ),
-          if (isWide)
-            _buildStatBadge(
-              icon: Icons.history_rounded,
-              count: "5+",
-              label: "Years Experience",
-            ),
+          _buildStatBadge(
+            icon: Icons.history_rounded,
+            count: "5+",
+            label: "Years Experience",
+            boxSize: iconBoxSize,
+            iconSize: iconSize,
+            countFontSize: countFontSize,
+            labelFontSize: labelFontSize,
+          ),
         ],
       ),
     );
@@ -288,21 +344,25 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     required IconData icon,
     required String count,
     required String label,
+    required double boxSize,
+    required double iconSize,
+    required double countFontSize,
+    required double labelFontSize,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: boxSize,
+          height: boxSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: const Color(0xFFC8A96E).withValues(alpha: 0.15),
             border: Border.all(color: const Color(0xFFC8A96E).withValues(alpha: 0.4), width: 1.2),
           ),
-          child: Icon(icon, color: const Color(0xFFE8CC8A), size: 16),
+          child: Icon(icon, color: const Color(0xFFE8CC8A), size: iconSize),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -310,7 +370,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
             Text(
               count,
               style: AppTheme.sansBody(
-                fontSize: 15,
+                fontSize: countFontSize,
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
                 height: 1.1,
@@ -319,7 +379,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
             Text(
               label,
               style: AppTheme.sansBody(
-                fontSize: 11,
+                fontSize: labelFontSize,
                 fontWeight: FontWeight.w500,
                 color: AppColors.muted,
                 height: 1.2,
@@ -331,32 +391,48 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildVideoShowcase({required bool isMobile}) {
-    return Container(
-      height: isMobile ? 240 : 420,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFC8A96E).withValues(alpha: 0.35),
-          width: 1.5,
+  Widget _buildVideoShowcase({
+    required bool isTwoColumn,
+    required bool isMobile,
+    required double width,
+  }) {
+    final double maxW = isTwoColumn ? double.infinity : (isMobile ? 480.0 : 720.0);
+    final double aspectRatio = isTwoColumn
+        ? (width >= 1440 ? (16 / 10) : (16 / 10.5))
+        : (isMobile ? (16 / 9.5) : (16 / 9));
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxW),
+        child: AspectRatio(
+          aspectRatio: aspectRatio,
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(isMobile ? 18 : 24),
+              border: Border.all(
+                color: const Color(0xFFC8A96E).withValues(alpha: 0.35),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFC8A96E).withValues(alpha: 0.15),
+                  blurRadius: 32,
+                  offset: const Offset(0, 12),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isMobile ? 16.5 : 22.5),
+              child: const CinematicBackground(),
+            ),
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFC8A96E).withValues(alpha: 0.15),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22.5),
-        child: const CinematicBackground(),
       ),
     );
   }

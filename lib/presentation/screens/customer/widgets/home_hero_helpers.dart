@@ -201,12 +201,14 @@ class CinematicButton extends StatefulWidget {
   final String text;
   final bool isPrimary;
   final VoidCallback onPressed;
+  final bool isFullWidth;
 
   const CinematicButton({
     super.key,
     required this.text,
     required this.isPrimary,
     required this.onPressed,
+    this.isFullWidth = false,
   });
 
   @override
@@ -229,6 +231,8 @@ class _CinematicButtonState extends State<CinematicButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
+          alignment: widget.isFullWidth ? Alignment.center : null,
+          width: widget.isFullWidth ? double.infinity : null,
           transform: Matrix4.translationValues(0.0, _hovered ? -3.0 : 0.0, 0.0),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
           decoration: BoxDecoration(

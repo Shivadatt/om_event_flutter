@@ -79,15 +79,9 @@ class HomeSliverAppBar extends StatelessWidget {
           ),
         ),
       ),
-      leading: isDesktop
-          ? null
-          : IconButton(
-              icon: const Icon(
-                Icons.menu,
-                color: Colors.white,
-              ),
-              onPressed: () => scaffoldKey.currentState?.openDrawer(),
-            ),
+      automaticallyImplyLeading: false,
+      leading: null,
+      titleSpacing: isDesktop ? 24 : 16,
       title: Row(
         children: [
           Container(
@@ -126,7 +120,7 @@ class HomeSliverAppBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -182,16 +176,16 @@ class HomeSliverAppBar extends StatelessWidget {
         ],
       ),
       actions: [
-        const SizedBox(width: 8),
-        Obx(() {
-          final count = cartController.rxCartItems.length;
-          return _SelectionPill(
-            count: count,
-            onTap: () => scaffoldKey.currentState?.openEndDrawer(),
-          );
-        }),
-        const SizedBox(width: 16),
-        if (isDesktop)
+        if (isDesktop) ...[
+          const SizedBox(width: 8),
+          Obx(() {
+            final count = cartController.rxCartItems.length;
+            return _SelectionPill(
+              count: count,
+              onTap: () => scaffoldKey.currentState?.openEndDrawer(),
+            );
+          }),
+          const SizedBox(width: 14),
           _TextHoverButton(
             label: "CLIENT PORTAL",
             onPressed: () {
@@ -206,31 +200,33 @@ class HomeSliverAppBar extends StatelessWidget {
                 );
               }
             },
-          )
-        else
+          ),
+          const SizedBox(width: 24),
+        ] else ...[
           Obx(() {
-            final isCustomerLoggedIn = authCtrl.isAuthenticatedCustomer;
-            return IconButton(
-              icon: Icon(
-                isCustomerLoggedIn ? Icons.dashboard_outlined : Icons.person_outline,
-                color: AppColors.primaryAccent,
-              ),
-              tooltip: "Client Portal",
-              onPressed: () {
-                if (authCtrl.isAuthenticatedCustomer) {
-                  Get.toNamed(AppRoutes.customerDashboard);
-                } else {
-                  Get.dialog(
-                    const Dialog(
-                      backgroundColor: Colors.transparent,
-                      child: CustomerAuthBox(),
-                    ),
-                  );
-                }
-              },
-            );
+            final count = cartController.rxCartItems.length;
+            if (count > 0) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _SelectionPill(
+                  count: count,
+                  onTap: () => scaffoldKey.currentState?.openEndDrawer(),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
           }),
-        const SizedBox(width: 24),
+          IconButton(
+            icon: const Icon(
+              Icons.menu,
+              color: Colors.white,
+              size: 26,
+            ),
+            tooltip: "Navigation Menu",
+            onPressed: () => scaffoldKey.currentState?.openDrawer(),
+          ),
+          const SizedBox(width: 14),
+        ],
       ],
     );
   },
@@ -252,6 +248,12 @@ class _NavHoverLinkState extends State<_NavHoverLink> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 1280;
+    final hPad = isCompact ? (screenWidth < 1120 ? 6.0 : 9.0) : 13.0;
+    final fSize = isCompact ? 9.2 : 10.0;
+    final lSpacing = isCompact ? 1.2 : 2.0;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -261,17 +263,17 @@ class _NavHoverLinkState extends State<_NavHoverLink> {
         highlightColor: Colors.transparent,
         hoverColor: Colors.transparent,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 widget.label.toUpperCase(),
                 style: AppTheme.sansBody(
-                  fontSize: 10,
+                  fontSize: fSize,
                   color: _isHovered ? AppColors.primaryAccent : Colors.white.withValues(alpha: 0.85),
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 2.0,
+                  letterSpacing: lSpacing,
                 ).copyWith(
                   shadows: _isHovered
                       ? [
@@ -287,7 +289,7 @@ class _NavHoverLinkState extends State<_NavHoverLink> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 height: 1.5,
-                width: _isHovered ? 28 : 0,
+                width: _isHovered ? (isCompact ? 20 : 28) : 0,
                 decoration: BoxDecoration(
                   color: AppColors.primaryAccent,
                   boxShadow: [
@@ -320,6 +322,8 @@ class _SelectionPillState extends State<_SelectionPill> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 1280;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -328,8 +332,8 @@ class _SelectionPillState extends State<_SelectionPill> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
+          height: isCompact ? 38 : 42,
+          padding: EdgeInsets.symmetric(horizontal: isCompact ? 13 : 18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             color: _isHovered ? AppColors.primaryAccent.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.02),
@@ -353,10 +357,10 @@ class _SelectionPillState extends State<_SelectionPill> {
               Text(
                 "SELECTION",
                 style: AppTheme.sansBody(
-                  fontSize: 11,
+                  fontSize: isCompact ? 10 : 11,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1.8,
+                  letterSpacing: isCompact ? 1.3 : 1.8,
                 ),
               ),
               const SizedBox(width: 8),
