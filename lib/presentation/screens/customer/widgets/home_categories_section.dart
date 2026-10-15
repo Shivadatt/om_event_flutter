@@ -102,6 +102,11 @@ class _CategoryCardState extends State<CategoryCard> {
     final hasImage = widget.category.imageUrl.isNotEmpty;
     final baseColor = _parseHexColor(widget.category.color);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final double titleFontSize = isMobile ? 13.0 : (screenWidth < 1200 ? 14.0 : 15.5);
+    final double cardPadding = isMobile ? 10.0 : 14.0;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -111,9 +116,9 @@ class _CategoryCardState extends State<CategoryCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          transform: Matrix4.translationValues(0.0, _isHovered ? -6.0 : 0.0, 0.0),
+          transform: Matrix4.translationValues(0.0, _isHovered ? -5.0 : 0.0, 0.0),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: _isHovered
                   ? AppColors.secondaryAccent.withValues(alpha: 0.8)
@@ -131,7 +136,7 @@ class _CategoryCardState extends State<CategoryCard> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16.5),
+            borderRadius: BorderRadius.circular(14.5),
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -219,9 +224,9 @@ class _CategoryCardState extends State<CategoryCard> {
 
                 // Category title at bottom left
                 Positioned(
-                  left: 14,
-                  right: 14,
-                  bottom: 14,
+                  left: cardPadding,
+                  right: cardPadding,
+                  bottom: cardPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -229,7 +234,7 @@ class _CategoryCardState extends State<CategoryCard> {
                       Text(
                         widget.category.name,
                         style: GoogleFonts.italiana(
-                          fontSize: 15.5,
+                          fontSize: titleFontSize,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           height: 1.18,
@@ -262,6 +267,89 @@ class CategoriesSection extends StatelessWidget {
     required this.catalogKey,
   });
 
+  void _onCategoryTap(Category cat) {
+    controller.selectCategory(cat.slug);
+    if (catalogKey.currentContext != null) {
+      Scrollable.ensureVisible(
+        catalogKey.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  Widget _buildGallery(
+    BuildContext context,
+    List<Category> categories,
+    double width,
+    double paddingHorizontal,
+  ) {
+    final isDesktop = width >= 1200;
+    final isLaptop = width >= 960 && width < 1200;
+    final isTablet = width >= 600 && width < 960;
+
+    final double spacing = isDesktop ? 16.0 : (isLaptop ? 12.0 : (isTablet ? 14.0 : 12.0));
+
+    // On Desktop and Laptop: If categories fit in 1 balanced row (up to 6 items)
+    if (width >= 960 && categories.length <= 6) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
+        child: Row(
+          children: List.generate(categories.length, (index) {
+            final cat = categories[index];
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: index > 0 ? spacing : 0),
+                child: AspectRatio(
+                  aspectRatio: 0.88,
+                  child: CategoryCard(
+                    category: cat,
+                    onTap: () => _onCategoryTap(cat),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      );
+    }
+
+    // Tablet & Mobile (or if more than 6 categories on Desktop):
+    // Smooth horizontal scroll view with partially visible trailing cards
+    final double cardWidth = isDesktop
+        ? 210.0
+        : (isLaptop
+            ? 175.0
+            : (isTablet ? 160.0 : 132.0));
+    final double cardHeight = isDesktop
+        ? 245.0
+        : (isLaptop
+            ? 205.0
+            : (isTablet ? 190.0 : 160.0));
+
+    return SizedBox(
+      height: cardHeight,
+      child: ListView.separated(
+        padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => SizedBox(width: spacing),
+        itemBuilder: (context, index) {
+          final cat = categories[index];
+          return SizedBox(
+            width: cardWidth,
+            height: cardHeight,
+            child: CategoryCard(
+              category: cat,
+              onTap: () => _onCategoryTap(cat),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -270,14 +358,13 @@ class CategoriesSection extends StatelessWidget {
         : (width >= 800 ? 32.0 : 20.0);
     final double sectionPaddingVertical = width >= 1000 ? 44.0 : 32.0;
     final double titleSize =
-        width >= 700 ? (width * 0.04).clamp(32.0, 48.0) : 28.0;
+        width >= 700 ? (width * 0.038).clamp(32.0, 48.0) : 26.0;
 
     return CategoriesSectionBackground(
       child: Container(
         key: categoriesKey,
         width: double.infinity,
         padding: EdgeInsets.symmetric(
-          horizontal: paddingHorizontal,
           vertical: sectionPaddingVertical,
         ),
         child: Center(
@@ -286,39 +373,46 @@ class CategoriesSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Header (Centered, matching Image 1)
-                Text(
-                  "BEGIN WITH A FEELING",
-                  style: AppTheme.sansBody(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 3.5,
-                    color: AppColors.secondaryAccent,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: GoogleFonts.italiana(
-                      fontSize: titleSize,
-                      fontWeight: FontWeight.normal,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
-                    ),
+                // Header (Centered, matching Reference Image)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
+                  child: Column(
                     children: [
-                      const TextSpan(text: "WHAT ARE WE "),
-                      TextSpan(
-                        text: "CELEBRATING?",
-                        style: GoogleFonts.italiana(
+                      Text(
+                        "BEGIN WITH A FEELING",
+                        style: AppTheme.sansBody(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 3.5,
                           color: AppColors.secondaryAccent,
-                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: GoogleFonts.italiana(
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                          children: [
+                            const TextSpan(text: "WHAT ARE WE "),
+                            TextSpan(
+                              text: "CELEBRATING?",
+                              style: GoogleFonts.italiana(
+                                color: AppColors.secondaryAccent,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: width >= 1000 ? 28.0 : 20.0),
                 Obx(() {
                   if (controller.isLoadingCategories.value) {
                     return const Center(
@@ -326,47 +420,16 @@ class CategoriesSection extends StatelessWidget {
                     );
                   }
 
-                  if (controller.rxCategories.isEmpty) {
+                  final categories = controller.rxCategories;
+                  if (categories.isEmpty) {
                     return const SizedBox();
                   }
 
-                  // Responsive column count: 6 on large desktop, 4 on medium, 3 on tablet, 2 on mobile
-                  final gridCount = width >= 1150
-                      ? 6
-                      : (width >= 850
-                          ? 4
-                          : (width >= 600
-                              ? 3
-                              : 2));
-
-                  final childAspectRatio = width >= 1150 ? 0.88 : (width >= 600 ? 0.90 : 0.86);
-
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: gridCount,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: childAspectRatio,
-                    ),
-                    itemCount: controller.rxCategories.length,
-                    itemBuilder: (context, index) {
-                      final cat = controller.rxCategories[index];
-                      return CategoryCard(
-                        category: cat,
-                        onTap: () {
-                          controller.selectCategory(cat.slug);
-                          if (catalogKey.currentContext != null) {
-                            Scrollable.ensureVisible(
-                              catalogKey.currentContext!,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeInOut,
-                            );
-                          }
-                        },
-                      );
-                    },
+                  return _buildGallery(
+                    context,
+                    categories,
+                    width,
+                    paddingHorizontal,
                   );
                 }),
               ],
@@ -377,3 +440,4 @@ class CategoriesSection extends StatelessWidget {
     );
   }
 }
+

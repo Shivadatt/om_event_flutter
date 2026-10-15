@@ -10,27 +10,39 @@ extension HomeTabNavigation on HomeScreen {
         return const SizedBox.shrink();
       }
 
+      final screenWidth = MediaQuery.of(context).size.width;
+      final isMobile = screenWidth < 600;
+      final double fabHeight = isMobile ? 40.0 : 46.0;
+      final double fabPadH = isMobile ? 12.0 : 16.0;
+      final double iconSize = isMobile ? 18.0 : 20.0;
+      final double fontSize = isMobile ? 9.0 : 10.0;
+
       if (activeNumbers.length == 1) {
-        return FloatingActionButton.extended(
-          onPressed: () async {
-            final rawNumber = activeNumbers.first.value;
-            final clean = rawNumber.replaceAll(RegExp(r'\D'), '');
-            final number = clean.length == 10 ? '91$clean' : clean;
-            const text = "Hello Om Events, I'd like to plan an event.";
-            final uri = Uri.parse("https://wa.me/$number?text=${Uri.encodeComponent(text)}");
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri);
-            }
-          },
-          backgroundColor: const Color(0xFF2C9B5D),
-          foregroundColor: Colors.white,
-          icon: const Icon(Icons.chat_bubble_outline),
-          label: Text(
-            "WHATSAPP US",
-            style: AppTheme.sansBody(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+        return SizedBox(
+          height: fabHeight,
+          child: FloatingActionButton.extended(
+            onPressed: () async {
+              final rawNumber = activeNumbers.first.value;
+              final clean = rawNumber.replaceAll(RegExp(r'\D'), '');
+              final number = clean.length == 10 ? '91$clean' : clean;
+              const text = "Hello Om Events, I'd like to plan an event.";
+              final uri = Uri.parse("https://wa.me/$number?text=${Uri.encodeComponent(text)}");
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              }
+            },
+            backgroundColor: const Color(0xFF2C9B5D),
+            foregroundColor: Colors.white,
+            elevation: 4,
+            extendedPadding: EdgeInsets.symmetric(horizontal: fabPadH),
+            icon: Icon(Icons.chat_bubble_outline, size: iconSize),
+            label: Text(
+              "WHATSAPP US",
+              style: AppTheme.sansBody(
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
         );
@@ -95,11 +107,11 @@ extension HomeTabNavigation on HomeScreen {
             }).toList();
           },
           child: Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            height: fabHeight,
+            padding: EdgeInsets.symmetric(horizontal: fabPadH),
             decoration: BoxDecoration(
               color: const Color(0xFF2C9B5D),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(fabHeight / 2),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
@@ -111,12 +123,12 @@ extension HomeTabNavigation on HomeScreen {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.chat_bubble_outline, color: Colors.white),
-                const SizedBox(width: 8),
+                Icon(Icons.chat_bubble_outline, color: Colors.white, size: iconSize),
+                SizedBox(width: isMobile ? 6 : 8),
                 Text(
                   "WHATSAPP US",
                   style: AppTheme.sansBody(
-                    fontSize: 10,
+                    fontSize: fontSize,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
