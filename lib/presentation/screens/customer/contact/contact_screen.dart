@@ -382,8 +382,16 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget build(BuildContext context) {
     const goldColor = AppColors.secondaryAccent;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1024;
-    final isTablet = screenWidth >= 700 && screenWidth < 1024;
+    final isDesktop = screenWidth >= 1200;
+    final isLaptop = screenWidth >= 1024 && screenWidth < 1200;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final isMobile = screenWidth < 600;
+
+    final useTwoColumn = screenWidth >= 740;
+    final horizontalPadding = isDesktop
+        ? 32.0
+        : (isLaptop ? 20.0 : (isTablet ? 16.0 : (screenWidth <= 360 ? 8.0 : 12.0)));
+    final verticalPadding = isDesktop ? 40.0 : (isTablet ? 28.0 : 20.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFF060D0A),
@@ -404,19 +412,19 @@ class _ContactScreenState extends State<ContactScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 26,
-              height: 26,
+              width: isMobile ? 22 : 26,
+              height: isMobile ? 22 : 26,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: goldColor, width: 1.2),
                 color: const Color(0xFF0C1914),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   "OE",
                   style: TextStyle(
                     color: goldColor,
-                    fontSize: 10,
+                    fontSize: isMobile ? 8.5 : 10,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -424,37 +432,54 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              "OM EVENTS & DECORATORS",
-              style: GoogleFonts.italiana(
-                fontSize: isDesktop ? 16 : 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-                color: Colors.white,
+            Flexible(
+              child: Text(
+                "OM EVENTS & DECORATORS",
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.italiana(
+                  fontSize: isDesktop ? 16 : (isMobile ? 12 : 14),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: isMobile ? 1.0 : 2.0,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton.icon(
-            key: _appBarWhatsAppKey,
-            onPressed: () => _showWhatsAppMenu(context, sourceKey: _appBarWhatsAppKey),
-            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: Color(0xFF4EBA7A)),
-            label: Text(
-              "WhatsApp",
-              style: AppTheme.sansBody(fontSize: 11, color: const Color(0xFF4EBA7A), fontWeight: FontWeight.bold),
+          if (screenWidth > 380) ...[
+            TextButton.icon(
+              key: _appBarWhatsAppKey,
+              onPressed: () => _showWhatsAppMenu(context, sourceKey: _appBarWhatsAppKey),
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 14, color: Color(0xFF4EBA7A)),
+              label: Text(
+                "WhatsApp",
+                style: AppTheme.sansBody(fontSize: 10.5, color: const Color(0xFF4EBA7A), fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          TextButton.icon(
-            onPressed: () => showBookingTrackerDialog(context),
-            icon: const Icon(Icons.track_changes_rounded, size: 15, color: goldColor),
-            label: Text(
-              "Track",
-              style: AppTheme.sansBody(fontSize: 11, color: goldColor, fontWeight: FontWeight.bold),
+            const SizedBox(width: 4),
+            TextButton.icon(
+              onPressed: () => showBookingTrackerDialog(context),
+              icon: const Icon(Icons.track_changes_rounded, size: 14, color: goldColor),
+              label: Text(
+                "Track",
+                style: AppTheme.sansBody(fontSize: 10.5, color: goldColor, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
+          ] else ...[
+            IconButton(
+              key: _appBarWhatsAppKey,
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 17, color: Color(0xFF4EBA7A)),
+              tooltip: "WhatsApp",
+              onPressed: () => _showWhatsAppMenu(context, sourceKey: _appBarWhatsAppKey),
+            ),
+            IconButton(
+              icon: const Icon(Icons.track_changes_rounded, size: 17, color: goldColor),
+              tooltip: "Track Booking",
+              onPressed: () => showBookingTrackerDialog(context),
+            ),
+          ],
+          SizedBox(width: isMobile ? 6 : 12),
         ],
       ),
       body: SingleChildScrollView(
@@ -462,57 +487,78 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Column(
           children: [
             // ── 1. HERO SECTION (ATMOSPHERIC BACKGROUND & GOLD DIVIDER) ─────
-            _buildHeroSection(context, goldColor, isDesktop),
+            _buildHeroSection(context, goldColor, isDesktop, isTablet, isMobile),
 
-            // ── 2. MAIN TWO-COLUMN CONTENT AREA ─────────────────────────────
+            // ── 2. MAIN TWO-COLUMN OR STACKED CONTENT AREA ──────────────────
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1320),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 32.0 : 16.0,
-                    vertical: isDesktop ? 44.0 : 28.0,
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
                   ),
-                  child: isDesktop
+                  child: useTwoColumn
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Left Column (~56%): Studios + Direct Comm + Social
+                            // Left Column (~53-57%): Studios + Direct Comm + Social
                             Expanded(
-                              flex: 56,
-                              child: _buildLeftContentColumn(context, goldColor, isDesktop),
+                              flex: isDesktop ? 57 : (isLaptop ? 56 : 53),
+                              child: _buildLeftContentColumn(
+                                context,
+                                goldColor,
+                                isDesktop: isDesktop,
+                                isLaptop: isLaptop,
+                                isTablet: isTablet,
+                                isMobile: isMobile,
+                              ),
                             ),
-                            const SizedBox(width: 32),
+                            SizedBox(width: isDesktop ? 28 : (isLaptop ? 20 : 16)),
 
-                            // Right Column (~44%): Send Us an Inquiry Card
+                            // Right Column (~43-47%): Send Us an Inquiry Card
                             Expanded(
-                              flex: 44,
-                              child: _buildInquiryFormCard(context, goldColor),
+                              flex: isDesktop ? 43 : (isLaptop ? 44 : 47),
+                              child: _buildInquiryFormCard(context, goldColor, isMobile),
                             ),
                           ],
                         )
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLeftContentColumn(context, goldColor, isDesktop),
-                            const SizedBox(height: 36),
-                            _buildInquiryFormCard(context, goldColor),
+                            _buildLeftContentColumn(
+                              context,
+                              goldColor,
+                              isDesktop: isDesktop,
+                              isLaptop: isLaptop,
+                              isTablet: isTablet,
+                              isMobile: isMobile,
+                            ),
+                            const SizedBox(height: 24),
+                            _buildInquiryFormCard(context, goldColor, isMobile),
                           ],
                         ),
                 ),
               ),
             ),
 
-            // ── 3. FULL PREMIUM FOOTER (IMAGE 2 & IMAGE 3 CANONICAL) ────────
+            // ── 3. FULL PREMIUM FOOTER (MATCHING CANONICAL SPECIFICATION) ───
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1320),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 32.0 : 16.0,
+                    horizontal: horizontalPadding,
                     vertical: isDesktop ? 24.0 : 16.0,
                   ),
-                  child: _buildPremiumFooter(context, goldColor, isDesktop, isTablet),
+                  child: _buildPremiumFooter(
+                    context,
+                    goldColor,
+                    isDesktop: isDesktop,
+                    isLaptop: isLaptop,
+                    isTablet: isTablet,
+                    isMobile: isMobile,
+                  ),
                 ),
               ),
             ),
@@ -526,10 +572,16 @@ class _ContactScreenState extends State<ContactScreen> {
   // ============================================================================
   // 1. HERO SECTION (ATMOSPHERIC PHOTO/VIDEO BACKGROUND & CENTER DIVIDER)
   // ============================================================================
-  Widget _buildHeroSection(BuildContext context, Color goldColor, bool isDesktop) {
+  Widget _buildHeroSection(
+    BuildContext context,
+    Color goldColor,
+    bool isDesktop,
+    bool isTablet,
+    bool isMobile,
+  ) {
     return Container(
       width: double.infinity,
-      height: isDesktop ? 300 : 260,
+      constraints: BoxConstraints(minHeight: isDesktop ? 300 : (isTablet ? 270 : 250)),
       decoration: const BoxDecoration(
         color: Color(0xFF091410),
       ),
@@ -563,15 +615,18 @@ class _ContactScreenState extends State<ContactScreen> {
 
           // Top-Right Play Video Button
           Positioned(
-            top: 20,
-            right: 24,
+            top: isMobile ? 12 : 20,
+            right: isMobile ? 14 : 24,
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
                 onTap: () => _showVideoDialog(context),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 10 : 14,
+                    vertical: isMobile ? 5 : 7,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0C1914).withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(20),
@@ -586,12 +641,12 @@ class _ContactScreenState extends State<ContactScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.play_circle_fill_rounded, size: 16, color: goldColor),
-                      const SizedBox(width: 6),
+                      Icon(Icons.play_circle_fill_rounded, size: isMobile ? 14 : 16, color: goldColor),
+                      const SizedBox(width: 5),
                       Text(
                         "Play Video",
                         style: AppTheme.sansBody(
-                          fontSize: 11,
+                          fontSize: isMobile ? 10 : 11,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           letterSpacing: 0.5,
@@ -607,24 +662,28 @@ class _ContactScreenState extends State<ContactScreen> {
           // Center Titles & Decorative Divider
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 14 : 20,
+                vertical: isMobile ? 42 : 36,
+              ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 820),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Eyebrow
                     Text(
                       "CONNECT WITH OUR CREATIVE TEAM",
                       textAlign: TextAlign.center,
                       style: AppTheme.sansBody(
-                        fontSize: 10.5,
+                        fontSize: isMobile ? 9.0 : 10.5,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 2.8,
+                        letterSpacing: isMobile ? 1.8 : 2.8,
                         color: goldColor,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
                     // Main Title
                     RichText(
@@ -634,7 +693,7 @@ class _ContactScreenState extends State<ContactScreen> {
                           TextSpan(
                             text: "Let's Craft Something ",
                             style: GoogleFonts.italiana(
-                              fontSize: isDesktop ? 36 : 27,
+                              fontSize: isDesktop ? 36 : (isTablet ? 30 : 23),
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                               letterSpacing: 0.8,
@@ -643,7 +702,7 @@ class _ContactScreenState extends State<ContactScreen> {
                           TextSpan(
                             text: "Extraordinary.",
                             style: GoogleFonts.italiana(
-                              fontSize: isDesktop ? 36 : 27,
+                              fontSize: isDesktop ? 36 : (isTablet ? 30 : 23),
                               fontWeight: FontWeight.bold,
                               color: goldColor,
                               letterSpacing: 0.8,
@@ -652,26 +711,26 @@ class _ContactScreenState extends State<ContactScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
                     // Subtitle
                     Text(
                       "Whether you're planning a lavish wedding, an intimate milestone birthday, or require custom fabrication, our dual studios in Kadi and Thangadh are ready to assist you.",
                       textAlign: TextAlign.center,
                       style: AppTheme.sansBody(
-                        fontSize: isDesktop ? 12.5 : 11.5,
+                        fontSize: isMobile ? 11.0 : (isTablet ? 11.5 : 12.5),
                         color: Colors.white.withValues(alpha: 0.75),
-                        height: 1.5,
+                        height: 1.45,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
                     // Gold Decorative Divider: ─── ◇ ───
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          width: 48,
+                          width: isMobile ? 36 : 48,
                           height: 1.2,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -693,7 +752,7 @@ class _ContactScreenState extends State<ContactScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          width: 48,
+                          width: isMobile ? 36 : 48,
                           height: 1.2,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -716,7 +775,14 @@ class _ContactScreenState extends State<ContactScreen> {
   // ============================================================================
   // 2. LEFT CONTENT COLUMN (OUR STUDIOS & SHOWROOMS + DIRECT COMMUNICATION)
   // ============================================================================
-  Widget _buildLeftContentColumn(BuildContext context, Color goldColor, bool isDesktop) {
+  Widget _buildLeftContentColumn(
+    BuildContext context,
+    Color goldColor, {
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+  }) {
     final businessPhone = BookingCommunicationHelper.getBusinessPhoneNumber();
     final businessEmail = BookingCommunicationHelper.getBusinessEmail();
 
@@ -725,8 +791,8 @@ class _ContactScreenState extends State<ContactScreen> {
       final social = details.social;
 
       // Canonical Addresses
-      final kadiAddress = "Medha (kadi-kalyanpura road), Kadi, Mehsana, Gujarat 382715";
-      final thangadhAddress = "Thangadh(Surendranagar), Thangadh, Surendranagar, Gujarat 363530";
+      const kadiAddress = "Medha (kadi-kalyanpura road), Kadi, Mehsana, Gujarat 382715";
+      const thangadhAddress = "Thangadh(Surendranagar), Thangadh, Surendranagar, Gujarat 363530";
 
       // Canonical Instagram URLs
       final instagramKadiUrl = social.instagramKadi.trim().isNotEmpty
@@ -754,7 +820,7 @@ class _ContactScreenState extends State<ContactScreen> {
               Text(
                 "OUR STUDIOS & SHOWROOMS",
                 style: GoogleFonts.italiana(
-                  fontSize: 19,
+                  fontSize: isMobile ? 17 : 19,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 0.8,
@@ -765,7 +831,7 @@ class _ContactScreenState extends State<ContactScreen> {
           const SizedBox(height: 4),
           Text(
             "Visit our creative spaces to explore themes, setups and personalised consultations.",
-            style: AppTheme.sansBody(fontSize: 11.5, color: Colors.white60),
+            style: AppTheme.sansBody(fontSize: isMobile ? 11 : 11.5, color: Colors.white60),
           ),
           const SizedBox(height: 14),
 
@@ -776,6 +842,7 @@ class _ContactScreenState extends State<ContactScreen> {
             imageAsset: AppImages.luxuryReception,
             goldColor: goldColor,
             isDesktop: isDesktop,
+            isMobile: isMobile,
             onMapTap: () => StudioLocationsHelper.openInGoogleMaps(kadiAddress),
             onDirectionsTap: () => StudioLocationsHelper.getDirections(kadiAddress),
           ),
@@ -788,6 +855,7 @@ class _ContactScreenState extends State<ContactScreen> {
             imageAsset: AppImages.luxuryEveningDecor,
             goldColor: goldColor,
             isDesktop: isDesktop,
+            isMobile: isMobile,
             onMapTap: () => StudioLocationsHelper.openInGoogleMaps(thangadhAddress),
             onDirectionsTap: () => StudioLocationsHelper.getDirections(thangadhAddress),
           ),
@@ -808,7 +876,7 @@ class _ContactScreenState extends State<ContactScreen> {
               Text(
                 "DIRECT COMMUNICATION",
                 style: GoogleFonts.italiana(
-                  fontSize: 19,
+                  fontSize: isMobile ? 17 : 19,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 0.8,
@@ -819,12 +887,21 @@ class _ContactScreenState extends State<ContactScreen> {
           const SizedBox(height: 4),
           Text(
             "Get in touch with us directly through your preferred channel.",
-            style: AppTheme.sansBody(fontSize: 11.5, color: Colors.white60),
+            style: AppTheme.sansBody(fontSize: isMobile ? 11 : 11.5, color: Colors.white60),
           ),
           const SizedBox(height: 14),
 
           // 4 Direct Communication Cards Grid
-          _buildDirectCommunicationGrid(context, goldColor, businessPhone, businessEmail, isDesktop),
+          _buildDirectCommunicationGrid(
+            context,
+            goldColor,
+            businessPhone,
+            businessEmail,
+            isDesktop: isDesktop,
+            isLaptop: isLaptop,
+            isTablet: isTablet,
+            isMobile: isMobile,
+          ),
           const SizedBox(height: 24),
 
           // Section 3: FOLLOW OUR CELEBRATIONS (TWO INSTAGRAM LINKS)
@@ -847,7 +924,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   goldColor: goldColor,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: _buildInstagramPill(
                   label: "Instagram – Thangadh",
@@ -862,13 +939,14 @@ class _ContactScreenState extends State<ContactScreen> {
     });
   }
 
-  // Studio Card with Image on Left & Action Buttons on Right
+  // Studio Card with Image on Left & Action Buttons on Right (ZERO OVERFLOW)
   Widget _buildStudioCard({
     required String title,
     required String address,
     required String imageAsset,
     required Color goldColor,
     required bool isDesktop,
+    required bool isMobile,
     required VoidCallback onMapTap,
     required VoidCallback onDirectionsTap,
   }) {
@@ -889,9 +967,9 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Left Image (36% width)
+            // Left Image (34% width)
             Expanded(
-              flex: 36,
+              flex: 34,
               child: ClipRRect(
                 borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
                 child: Image.asset(
@@ -905,11 +983,14 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
             ),
 
-            // Right Information (64% width)
+            // Right Information (66% width)
             Expanded(
-              flex: 64,
+              flex: 66,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 12 : 16,
+                  vertical: isMobile ? 10 : 14,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -917,13 +998,15 @@ class _ContactScreenState extends State<ContactScreen> {
                     // Header Row with Title and Action Arrow
                     Row(
                       children: [
-                        Icon(Icons.location_on_outlined, color: goldColor, size: 16),
-                        const SizedBox(width: 6),
+                        Icon(Icons.location_on_outlined, color: goldColor, size: 15),
+                        const SizedBox(width: 5),
                         Expanded(
                           child: Text(
                             title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.italiana(
-                              fontSize: 15.5,
+                              fontSize: isMobile ? 14.5 : 15.5,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                               letterSpacing: 0.3,
@@ -937,10 +1020,10 @@ class _ContactScreenState extends State<ContactScreen> {
                             customBorder: const CircleBorder(),
                             onTap: onDirectionsTap,
                             child: const Padding(
-                              padding: EdgeInsets.all(5),
+                              padding: EdgeInsets.all(4.5),
                               child: Icon(
                                 Icons.chevron_right_rounded,
-                                size: 15,
+                                size: 14,
                                 color: AppColors.secondaryAccent,
                               ),
                             ),
@@ -948,49 +1031,50 @@ class _ContactScreenState extends State<ContactScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
 
-                    // Full Address
+                    // Full Address (natural wrapping, up to 3 lines)
                     Text(
                       address,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: AppTheme.sansBody(
-                        fontSize: 11,
+                        fontSize: isMobile ? 10 : 11,
                         color: Colors.white70,
-                        height: 1.4,
+                        height: 1.35,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
-                    // Action Buttons Row (View Map + Directions)
-                    Row(
+                    // Action Buttons (Wrap ensures ZERO overflow on narrow viewports)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
                         OutlinedButton.icon(
                           onPressed: onMapTap,
-                          icon: Icon(Icons.map_outlined, size: 12, color: goldColor),
+                          icon: Icon(Icons.map_outlined, size: 11, color: goldColor),
                           label: Text(
                             "View Map",
                             style: AppTheme.sansBody(
-                              fontSize: 10.5,
+                              fontSize: 10,
                               color: goldColor,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: goldColor.withValues(alpha: 0.45)),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
-                        const SizedBox(width: 8),
                         ElevatedButton.icon(
                           onPressed: onDirectionsTap,
-                          icon: const Icon(Icons.navigation_outlined, size: 12, color: Color(0xFF091210)),
+                          icon: const Icon(Icons.navigation_outlined, size: 11, color: Color(0xFF091210)),
                           label: Text(
                             "Directions",
                             style: AppTheme.sansBody(
-                              fontSize: 10.5,
+                              fontSize: 10,
                               color: const Color(0xFF091210),
                               fontWeight: FontWeight.bold,
                             ),
@@ -998,9 +1082,9 @@ class _ContactScreenState extends State<ContactScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: goldColor,
                             foregroundColor: const Color(0xFF091210),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
                       ],
@@ -1020,17 +1104,18 @@ class _ContactScreenState extends State<ContactScreen> {
     BuildContext context,
     Color goldColor,
     String primaryPhone,
-    String businessEmail,
-    bool isDesktop,
-  ) {
+    String businessEmail, {
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+  }) {
     final cards = [
-      _buildCommCard(
-        icon: Icons.phone_outlined,
-        title: "Voice Calling",
-        line1: "+91 93135 13156",
-        line2: "+91 95121 49944",
+      _buildVoiceCallingCard(
         goldColor: goldColor,
-        onTap: () => BookingCommunicationHelper.openCall("+91 93135 13156"),
+        isMobile: isMobile,
+        phone1: primaryPhone.isNotEmpty && primaryPhone.contains('93135') ? primaryPhone : "+91 93135 13156",
+        phone2: "+91 95121 49944",
       ),
       _buildCommCard(
         key: _whatsAppCardKey,
@@ -1039,6 +1124,7 @@ class _ContactScreenState extends State<ContactScreen> {
         line1: "Chat with our team for",
         line2: "instant assistance.",
         goldColor: const Color(0xFF4EBA7A),
+        isMobile: isMobile,
         onTap: () => _showWhatsAppMenu(context, sourceKey: _whatsAppCardKey),
       ),
       _buildCommCard(
@@ -1047,6 +1133,7 @@ class _ContactScreenState extends State<ContactScreen> {
         line1: "omeventsanddecorators",
         line2: "@gmail.com",
         goldColor: goldColor,
+        isMobile: isMobile,
         onTap: () => BookingCommunicationHelper.openEmail(),
       ),
       _buildCommCard(
@@ -1055,6 +1142,7 @@ class _ContactScreenState extends State<ContactScreen> {
         line1: "Check delivery zones &",
         line2: "pin codes across Gujarat.",
         goldColor: goldColor,
+        isMobile: isMobile,
         onTap: () => Get.toNamed(AppRoutes.serviceArea),
       ),
     ];
@@ -1072,16 +1160,156 @@ class _ContactScreenState extends State<ContactScreen> {
             .toList(),
       );
     } else {
-      return GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.45,
-        children: cards,
+      // Laptop, Tablet, and Mobile: Balanced 2x2 grid using natural-height rows
+      return Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 10),
+              Expanded(child: cards[1]),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: cards[2]),
+              const SizedBox(width: 10),
+              Expanded(child: cards[3]),
+            ],
+          ),
+        ],
       );
     }
+  }
+
+  Widget _buildVoiceCallingCard({
+    required Color goldColor,
+    required bool isMobile,
+    String phone1 = "+91 93135 13156",
+    String phone2 = "+91 95121 49944",
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0C1914),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: goldColor.withValues(alpha: 0.22), width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 8 : 10,
+          vertical: isMobile ? 10 : 12,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon Header (Primary Call on Tap)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(13),
+                onTap: () => BookingCommunicationHelper.openCall(phone1),
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: goldColor.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: goldColor.withValues(alpha: 0.35)),
+                  ),
+                  child: Icon(Icons.phone_outlined, size: 13, color: goldColor),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Card Title (Primary Call on Tap)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(4),
+                onTap: () => BookingCommunicationHelper.openCall(phone1),
+                child: Text(
+                  "Voice Calling",
+                  style: GoogleFonts.montserrat(
+                    fontSize: isMobile ? 10.5 : 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 3),
+
+            // Phone 1 Independent Click-To-Call Action
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(4),
+                hoverColor: goldColor.withValues(alpha: 0.14),
+                onTap: () => BookingCommunicationHelper.openCall(phone1),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 1.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          phone1,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.sansBody(
+                            fontSize: isMobile ? 9 : 9.5,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Phone 2 Independent Click-To-Call Action
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(4),
+                hoverColor: goldColor.withValues(alpha: 0.14),
+                onTap: () => BookingCommunicationHelper.openCall(phone2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 1.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          phone2,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.sansBody(
+                            fontSize: isMobile ? 9 : 9.5,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildCommCard({
@@ -1091,6 +1319,7 @@ class _ContactScreenState extends State<ContactScreen> {
     required String line1,
     required String line2,
     required Color goldColor,
+    required bool isMobile,
     required VoidCallback onTap,
   }) {
     return Container(
@@ -1113,26 +1342,26 @@ class _ContactScreenState extends State<ContactScreen> {
           borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 10, vertical: isMobile ? 10 : 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 28,
-                  height: 28,
+                  width: 26,
+                  height: 26,
                   decoration: BoxDecoration(
                     color: goldColor.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                     border: Border.all(color: goldColor.withValues(alpha: 0.35)),
                   ),
-                  child: Icon(icon, size: 14, color: goldColor),
+                  child: Icon(icon, size: 13, color: goldColor),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   title,
                   style: GoogleFonts.montserrat(
-                    fontSize: 11,
+                    fontSize: isMobile ? 10.5 : 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -1142,13 +1371,13 @@ class _ContactScreenState extends State<ContactScreen> {
                   line1,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.sansBody(fontSize: 9.5, color: Colors.white70),
+                  style: AppTheme.sansBody(fontSize: isMobile ? 9 : 9.5, color: Colors.white70),
                 ),
                 Text(
                   line2,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.sansBody(fontSize: 9.5, color: Colors.white70),
+                  style: AppTheme.sansBody(fontSize: isMobile ? 9 : 9.5, color: Colors.white70),
                 ),
               ],
             ),
@@ -1181,22 +1410,26 @@ class _ContactScreenState extends State<ContactScreen> {
           borderRadius: BorderRadius.circular(20),
           onTap: () => _safeLaunchUrl(url),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.camera_alt_outlined, size: 15, color: goldColor),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: AppTheme.sansBody(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Icon(Icons.camera_alt_outlined, size: 14, color: goldColor),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.sansBody(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.arrow_outward_rounded, size: 12, color: goldColor),
+                Icon(Icons.arrow_outward_rounded, size: 11, color: goldColor),
               ],
             ),
           ),
@@ -1208,10 +1441,10 @@ class _ContactScreenState extends State<ContactScreen> {
   // ============================================================================
   // 3. RIGHT COLUMN: SEND US AN INQUIRY FORM CARD
   // ============================================================================
-  Widget _buildInquiryFormCard(BuildContext context, Color goldColor) {
+  Widget _buildInquiryFormCard(BuildContext context, Color goldColor, bool isMobile) {
     if (_isSuccess) {
       return Container(
-        padding: const EdgeInsets.all(36),
+        padding: EdgeInsets.all(isMobile ? 24 : 36),
         decoration: BoxDecoration(
           color: const Color(0xFF0C1914),
           borderRadius: BorderRadius.circular(20),
@@ -1280,7 +1513,7 @@ class _ContactScreenState extends State<ContactScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         color: const Color(0xFF091410),
         borderRadius: BorderRadius.circular(20),
@@ -1313,7 +1546,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 Text(
                   "SEND US AN INQUIRY",
                   style: GoogleFonts.italiana(
-                    fontSize: 19,
+                    fontSize: isMobile ? 17 : 19,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 0.8,
@@ -1324,7 +1557,7 @@ class _ContactScreenState extends State<ContactScreen> {
             const SizedBox(height: 4),
             Text(
               "Share your event vision and our lead stylists will prepare a consultation.",
-              style: AppTheme.sansBody(fontSize: 11.5, color: Colors.white54),
+              style: AppTheme.sansBody(fontSize: isMobile ? 11 : 11.5, color: Colors.white54),
             ),
             const SizedBox(height: 18),
 
@@ -1437,13 +1670,15 @@ class _ContactScreenState extends State<ContactScreen> {
                   children: [
                     Icon(Icons.calendar_month_outlined, size: 16, color: goldColor),
                     const SizedBox(width: 10),
-                    Text(
-                      _selectedDate != null
-                          ? "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
-                          : "Select estimated event date (optional)",
-                      style: AppTheme.sansBody(
-                        fontSize: 12.5,
-                        color: _selectedDate != null ? Colors.white : Colors.white38,
+                    Expanded(
+                      child: Text(
+                        _selectedDate != null
+                            ? "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
+                            : "Select estimated event date (optional)",
+                        style: AppTheme.sansBody(
+                          fontSize: 12.5,
+                          color: _selectedDate != null ? Colors.white : Colors.white38,
+                        ),
                       ),
                     ),
                   ],
@@ -1591,9 +1826,16 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   // ============================================================================
-  // 4. FULL PREMIUM FOOTER (IMAGE 2 & IMAGE 3 CANONICAL SPECIFICATION)
+  // 4. FULL PREMIUM FOOTER (RESPONSIVE ACROSS ALL VIEWPORTS)
   // ============================================================================
-  Widget _buildPremiumFooter(BuildContext context, Color goldColor, bool isDesktop, bool isTablet) {
+  Widget _buildPremiumFooter(
+    BuildContext context,
+    Color goldColor, {
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+  }) {
     final originalDetails = BusinessDetailsService.to.rxDetails.value;
     final businessProfile = AppConfigService.to.rxBusinessProfile.value;
 
@@ -1652,7 +1894,7 @@ class _ContactScreenState extends State<ContactScreen> {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: isDesktop
+      child: (isDesktop || isLaptop)
           ? IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1660,49 +1902,54 @@ class _ContactScreenState extends State<ContactScreen> {
                   // Content Columns
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24.0, 20.0, 14.0, 20.0),
+                      padding: EdgeInsets.fromLTRB(
+                        isDesktop ? 24.0 : 18.0,
+                        20.0,
+                        isDesktop ? 14.0 : 10.0,
+                        20.0,
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 1. BRAND BLOCK (flex: 30)
+                          // 1. BRAND BLOCK
                           Expanded(
-                            flex: 30,
+                            flex: isDesktop ? 30 : 26,
                             child: _buildFooterBrandBlock(context, goldColor),
                           ),
-                          const SizedBox(width: 16),
+                          SizedBox(width: isDesktop ? 16 : 10),
 
-                          // 2. EXPLORE (flex: 12)
+                          // 2. EXPLORE
                           Expanded(
-                            flex: 12,
+                            flex: isDesktop ? 12 : 11,
                             child: _buildFooterExploreColumn(goldColor),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 12 : 8),
 
-                          // 3. HELP (flex: 12)
+                          // 3. HELP
                           Expanded(
-                            flex: 12,
+                            flex: isDesktop ? 12 : 15,
                             child: _buildFooterHelpColumn(context, goldColor),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 12 : 8),
 
                           // Divider 1
                           _buildVerticalDivider(goldColor),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 12 : 8),
 
-                          // 4. VISIT US (flex: 22)
+                          // 4. VISIT US
                           Expanded(
                             flex: 22,
                             child: _buildFooterVisitUsColumn(branchLines, goldColor),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 12 : 8),
 
                           // Divider 2
                           _buildVerticalDivider(goldColor),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 12 : 8),
 
-                          // 5. GET IN TOUCH (flex: 24)
+                          // 5. GET IN TOUCH
                           Expanded(
-                            flex: 24,
+                            flex: isDesktop ? 24 : 26,
                             child: _buildFooterGetInTouchColumn(
                               primaryPhone,
                               secondaryPhone,
@@ -1719,47 +1966,112 @@ class _ContactScreenState extends State<ContactScreen> {
 
                   // Integrated Decorative Arch Event Image
                   SizedBox(
-                    width: 145,
+                    width: isDesktop ? 145 : 115,
                     child: _buildFooterDecorativeArch(goldColor),
                   ),
                 ],
               ),
             )
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildFooterBrandBlock(context, goldColor),
-                  const SizedBox(height: 18),
-                  Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
-                  const SizedBox(height: 18),
-                  Row(
+          : isTablet
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: _buildFooterExploreColumn(goldColor)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildFooterHelpColumn(context, goldColor)),
+                      // Top Brand Panel with decorative arch image on right
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildFooterBrandBlock(context, goldColor)),
+                          const SizedBox(width: 18),
+                          SizedBox(
+                            width: 145,
+                            height: 160,
+                            child: _buildFooterDecorativeArch(
+                              goldColor,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
+                      const SizedBox(height: 18),
+                      // Row 1: Explore & Help
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildFooterExploreColumn(goldColor)),
+                          const SizedBox(width: 18),
+                          Expanded(child: _buildFooterHelpColumn(context, goldColor)),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
+                      const SizedBox(height: 18),
+                      // Row 2: Visit Us & Get In Touch
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildFooterVisitUsColumn(branchLines, goldColor)),
+                          const SizedBox(width: 18),
+                          Expanded(
+                            child: _buildFooterGetInTouchColumn(
+                              primaryPhone,
+                              secondaryPhone,
+                              primaryEmail,
+                              instagramKadi,
+                              instagramThangadh,
+                              goldColor,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
-                  const SizedBox(height: 18),
-                  _buildFooterVisitUsColumn(branchLines, goldColor),
-                  const SizedBox(height: 18),
-                  Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
-                  const SizedBox(height: 18),
-                  _buildFooterGetInTouchColumn(
-                    primaryPhone,
-                    secondaryPhone,
-                    primaryEmail,
-                    instagramKadi,
-                    instagramThangadh,
-                    goldColor,
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildFooterBrandBlock(context, goldColor),
+                      const SizedBox(height: 16),
+                      Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
+                      const SizedBox(height: 16),
+                      _buildFooterExploreColumn(goldColor),
+                      const SizedBox(height: 16),
+                      Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
+                      const SizedBox(height: 16),
+                      _buildFooterHelpColumn(context, goldColor),
+                      const SizedBox(height: 16),
+                      Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
+                      const SizedBox(height: 16),
+                      _buildFooterVisitUsColumn(branchLines, goldColor),
+                      const SizedBox(height: 16),
+                      Container(height: 1, color: goldColor.withValues(alpha: 0.18)),
+                      const SizedBox(height: 16),
+                      _buildFooterGetInTouchColumn(
+                        primaryPhone,
+                        secondaryPhone,
+                        primaryEmail,
+                        instagramKadi,
+                        instagramThangadh,
+                        goldColor,
+                      ),
+                      const SizedBox(height: 20),
+                      // Bottom Decorative Arch on Mobile matching Reference
+                      SizedBox(
+                        width: double.infinity,
+                        height: 110,
+                        child: _buildFooterDecorativeArch(
+                          goldColor,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
     );
   }
 
@@ -2018,13 +2330,14 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget _buildFooterLink(String label, VoidCallback onTap) {
+  Widget _buildFooterLink(String label, VoidCallback onTap, {bool allowWrap = true}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 5),
         child: Text(
           label,
+          softWrap: allowWrap,
           style: AppTheme.sansBody(fontSize: 10, color: Colors.white60),
         ),
       ),
@@ -2039,48 +2352,52 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
-  Widget _buildFooterDecorativeArch(Color goldColor) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: ClipRRect(
-            borderRadius: const BorderRadius.horizontal(right: Radius.circular(20)),
+  Widget _buildFooterDecorativeArch(Color goldColor, {BorderRadius? borderRadius, double? height}) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius ?? const BorderRadius.horizontal(right: Radius.circular(20)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Positioned.fill(
             child: Image.asset(
               AppImages.luxuryEveningDecor,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0C1914)),
             ),
           ),
-        ),
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF060907).withValues(alpha: 0.8),
-                  Colors.transparent,
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF060907).withValues(alpha: 0.8),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          bottom: 16,
-          left: 10,
-          right: 10,
-          child: Text(
-            "Make\nEvery Moment\nExtra Special",
-            style: GoogleFonts.italiana(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: goldColor,
-              height: 1.25,
+          Positioned(
+            bottom: 16,
+            left: 10,
+            right: 10,
+            child: Text(
+              "Make\nEvery Moment\nExtra Special",
+              style: GoogleFonts.italiana(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: goldColor,
+                height: 1.25,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

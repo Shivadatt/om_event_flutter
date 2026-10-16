@@ -41,13 +41,56 @@ class HomeSliverAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isIntermediate = screenWidth >= 1024 && screenWidth < 1140;
+    final isNarrowMobile = screenWidth <= 370;
+    final isUltraNarrow = screenWidth < 340;
+
+    final brandColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "OM EVENTS",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.italiana(
+            fontSize: isDesktop
+                ? (isIntermediate ? 14.5 : 17)
+                : (isUltraNarrow ? 13.0 : (isNarrowMobile ? 14.5 : 17)),
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            letterSpacing: isDesktop
+                ? (isIntermediate ? 2.5 : 4)
+                : (isUltraNarrow ? 1.5 : (isNarrowMobile ? 2.2 : 4)),
+          ),
+        ),
+        SizedBox(height: isNarrowMobile ? 1.5 : 3),
+        Text(
+          "CELEBRATIONS, THOUGHTFULLY COMPOSED",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTheme.sansBody(
+            fontSize: isDesktop
+                ? (isIntermediate ? 5.8 : 6.8)
+                : (isUltraNarrow ? 5.0 : (isNarrowMobile ? 5.6 : 6.8)),
+            color: AppColors.primaryAccent,
+            fontWeight: FontWeight.bold,
+            letterSpacing: isDesktop
+                ? (isIntermediate ? 1.0 : 2.0)
+                : (isUltraNarrow ? 0.4 : (isNarrowMobile ? 0.8 : 2.0)),
+          ),
+        ),
+      ],
+    );
+
     return ValueListenableBuilder<bool>(
       valueListenable: isScrolled,
       builder: (context, scrolled, child) {
         return SliverAppBar(
           floating: true,
           pinned: true,
-          toolbarHeight: 84,
+          toolbarHeight: isNarrowMobile ? 76 : 84,
           backgroundColor: scrolled
               ? Colors.black
               : const Color(0xFF0F1B18).withValues(alpha: 0.45),
@@ -81,12 +124,18 @@ class HomeSliverAppBar extends StatelessWidget {
       ),
       automaticallyImplyLeading: false,
       leading: null,
-      titleSpacing: isDesktop ? 24 : 16,
+      titleSpacing: isDesktop
+          ? (isIntermediate ? 12 : 24)
+          : (isNarrowMobile ? (isUltraNarrow ? 8.0 : 10.0) : 16.0),
       title: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: isDesktop
+                ? (isIntermediate ? 34 : 40)
+                : (isUltraNarrow ? 30 : (isNarrowMobile ? 34 : 40)),
+            height: isDesktop
+                ? (isIntermediate ? 34 : 40)
+                : (isUltraNarrow ? 30 : (isNarrowMobile ? 34 : 40)),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -112,7 +161,9 @@ class HomeSliverAppBar extends StatelessWidget {
               child: Text(
                 "OE",
                 style: GoogleFonts.italiana(
-                  fontSize: 14,
+                  fontSize: isDesktop
+                      ? (isIntermediate ? 12 : 14)
+                      : (isUltraNarrow ? 10.5 : (isNarrowMobile ? 12.0 : 14.0)),
                   color: AppColors.primaryAccent,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
@@ -120,32 +171,15 @@ class HomeSliverAppBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "OM EVENTS",
-                style: GoogleFonts.italiana(
-                  fontSize: 17,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                "CELEBRATIONS, THOUGHTFULLY COMPOSED",
-                style: AppTheme.sansBody(
-                  fontSize: 6.8,
-                  color: AppColors.primaryAccent,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2.0,
-                ),
-              ),
-            ],
+          SizedBox(
+            width: isDesktop
+                ? (isIntermediate ? 8 : 14)
+                : (isUltraNarrow ? 6 : (isNarrowMobile ? 8 : 14)),
           ),
+          if (isDesktop)
+            brandColumn
+          else
+            Expanded(child: brandColumn),
           if (isDesktop) ...[
             const Spacer(),
             _NavHoverLink(
@@ -177,17 +211,19 @@ class HomeSliverAppBar extends StatelessWidget {
       ),
       actions: [
         if (isDesktop) ...[
-          const SizedBox(width: 8),
+          SizedBox(width: isIntermediate ? 4 : 8),
           Obx(() {
             final count = cartController.rxCartItems.length;
             return _SelectionPill(
               count: count,
+              isIntermediate: isIntermediate,
               onTap: () => scaffoldKey.currentState?.openEndDrawer(),
             );
           }),
-          const SizedBox(width: 14),
+          SizedBox(width: isIntermediate ? 8 : 14),
           _TextHoverButton(
             label: "CLIENT PORTAL",
+            isIntermediate: isIntermediate,
             onPressed: () {
               if (authCtrl.isAuthenticatedCustomer) {
                 Get.toNamed(AppRoutes.customerDashboard);
@@ -201,15 +237,16 @@ class HomeSliverAppBar extends StatelessWidget {
               }
             },
           ),
-          const SizedBox(width: 24),
+          SizedBox(width: isIntermediate ? 14 : 24),
         ] else ...[
           Obx(() {
             final count = cartController.rxCartItems.length;
             if (count > 0) {
               return Padding(
-                padding: const EdgeInsets.only(right: 8),
+                padding: EdgeInsets.only(right: isNarrowMobile ? 4 : 8),
                 child: _SelectionPill(
                   count: count,
+                  isIntermediate: isNarrowMobile,
                   onTap: () => scaffoldKey.currentState?.openEndDrawer(),
                 ),
               );
@@ -217,15 +254,20 @@ class HomeSliverAppBar extends StatelessWidget {
             return const SizedBox.shrink();
           }),
           IconButton(
-            icon: const Icon(
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(
+              minWidth: isNarrowMobile ? 36 : 40,
+              minHeight: isNarrowMobile ? 36 : 40,
+            ),
+            icon: Icon(
               Icons.menu,
               color: Colors.white,
-              size: 26,
+              size: isNarrowMobile ? 24 : 26,
             ),
             tooltip: "Navigation Menu",
             onPressed: () => scaffoldKey.currentState?.openDrawer(),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: isUltraNarrow ? 6 : (isNarrowMobile ? 10 : 14)),
         ],
       ],
     );
@@ -249,10 +291,20 @@ class _NavHoverLinkState extends State<_NavHoverLink> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isIntermediate = screenWidth >= 1024 && screenWidth < 1140;
     final isCompact = screenWidth < 1280;
-    final hPad = isCompact ? (screenWidth < 1120 ? 6.0 : 9.0) : 13.0;
-    final fSize = isCompact ? 9.2 : 10.0;
-    final lSpacing = isCompact ? 1.2 : 2.0;
+    final double hPad;
+    final double fSize;
+    final double lSpacing;
+    if (isIntermediate) {
+      hPad = screenWidth < 1080 ? 4.0 : 5.0;
+      fSize = 8.5;
+      lSpacing = 0.8;
+    } else {
+      hPad = isCompact ? (screenWidth < 1120 ? 6.0 : 9.0) : 13.0;
+      fSize = isCompact ? 9.2 : 10.0;
+      lSpacing = isCompact ? 1.2 : 2.0;
+    }
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -289,7 +341,7 @@ class _NavHoverLinkState extends State<_NavHoverLink> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 height: 1.5,
-                width: _isHovered ? (isCompact ? 20 : 28) : 0,
+                width: _isHovered ? (isIntermediate ? 18 : (isCompact ? 20 : 28)) : 0,
                 decoration: BoxDecoration(
                   color: AppColors.primaryAccent,
                   boxShadow: [
@@ -311,7 +363,12 @@ class _NavHoverLinkState extends State<_NavHoverLink> {
 class _SelectionPill extends StatefulWidget {
   final int count;
   final VoidCallback onTap;
-  const _SelectionPill({required this.count, required this.onTap});
+  final bool isIntermediate;
+  const _SelectionPill({
+    required this.count,
+    required this.onTap,
+    this.isIntermediate = false,
+  });
 
   @override
   State<_SelectionPill> createState() => _SelectionPillState();
@@ -323,7 +380,14 @@ class _SelectionPillState extends State<_SelectionPill> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isIntermediate = widget.isIntermediate || (screenWidth >= 1024 && screenWidth < 1140);
     final isCompact = screenWidth < 1280;
+    final double pillHeight = isIntermediate ? 34 : (isCompact ? 38 : 42);
+    final double pillHPad = isIntermediate ? 10 : (isCompact ? 13 : 18);
+    final double fontSize = isIntermediate ? 9.2 : (isCompact ? 10 : 11);
+    final double letterSpacing = isIntermediate ? 1.0 : (isCompact ? 1.3 : 1.8);
+    final double badgeSize = isIntermediate ? 19 : 22;
+    final double badgeFont = isIntermediate ? 9.0 : 10.0;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -332,8 +396,8 @@ class _SelectionPillState extends State<_SelectionPill> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          height: isCompact ? 38 : 42,
-          padding: EdgeInsets.symmetric(horizontal: isCompact ? 13 : 18),
+          height: pillHeight,
+          padding: EdgeInsets.symmetric(horizontal: pillHPad),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             color: _isHovered ? AppColors.primaryAccent.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.02),
@@ -357,16 +421,16 @@ class _SelectionPillState extends State<_SelectionPill> {
               Text(
                 "SELECTION",
                 style: AppTheme.sansBody(
-                  fontSize: isCompact ? 10 : 11,
+                  fontSize: fontSize,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: isCompact ? 1.3 : 1.8,
+                  letterSpacing: letterSpacing,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Container(
-                width: 22,
-                height: 22,
+                width: badgeSize,
+                height: badgeSize,
                 decoration: const BoxDecoration(
                   color: AppColors.primaryAccent,
                   shape: BoxShape.circle,
@@ -375,7 +439,7 @@ class _SelectionPillState extends State<_SelectionPill> {
                 child: Text(
                   '${widget.count}',
                   style: AppTheme.sansBody(
-                    fontSize: 10,
+                    fontSize: badgeFont,
                     color: const Color(0xFF0F1B18),
                     fontWeight: FontWeight.bold,
                   ),
@@ -392,7 +456,12 @@ class _SelectionPillState extends State<_SelectionPill> {
 class _TextHoverButton extends StatefulWidget {
   final String label;
   final VoidCallback onPressed;
-  const _TextHoverButton({required this.label, required this.onPressed});
+  final bool isIntermediate;
+  const _TextHoverButton({
+    required this.label,
+    required this.onPressed,
+    this.isIntermediate = false,
+  });
 
   @override
   State<_TextHoverButton> createState() => _TextHoverButtonState();
@@ -403,18 +472,30 @@ class _TextHoverButtonState extends State<_TextHoverButton> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isIntermediate = widget.isIntermediate || (screenWidth >= 1024 && screenWidth < 1140);
+    final double fontSize = isIntermediate ? 8.8 : 10.0;
+    final double letterSpacing = isIntermediate ? 1.0 : 2.0;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: TextButton(
+        style: isIntermediate
+            ? TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              )
+            : null,
         onPressed: widget.onPressed,
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 200),
           style: AppTheme.sansBody(
-            fontSize: 10,
+            fontSize: fontSize,
             color: _isHovered ? Colors.white : AppColors.primaryAccent,
             fontWeight: FontWeight.bold,
-            letterSpacing: 2.0,
+            letterSpacing: letterSpacing,
           ).copyWith(
             shadows: _isHovered
                 ? [

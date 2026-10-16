@@ -222,6 +222,16 @@ class _CinematicButtonState extends State<CinematicButton> {
   Widget build(BuildContext context) {
     const goldColor = Color(0xFFC8A96E);
     const goldLight = Color(0xFFE8CC8A);
+    final width = MediaQuery.of(context).size.width;
+    final isIntermediate = width >= 1024 && width < 1140;
+    final isNarrow = width <= 370;
+    final isUltraNarrow = width < 340;
+    final double hPad = widget.isFullWidth
+        ? (isUltraNarrow ? 12.0 : (isNarrow ? 14.0 : 20.0))
+        : (isIntermediate ? 18 : 28);
+    final double vPad = isNarrow ? 12.0 : (isIntermediate ? 13 : 15);
+    final double fontSize = isUltraNarrow ? 9.2 : (isNarrow ? 10.0 : (isIntermediate ? 10 : 11));
+    final double letterSpacing = isUltraNarrow ? 1.0 : (isNarrow ? 1.4 : (isIntermediate ? 1.4 : 2.2));
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -234,7 +244,7 @@ class _CinematicButtonState extends State<CinematicButton> {
           alignment: widget.isFullWidth ? Alignment.center : null,
           width: widget.isFullWidth ? double.infinity : null,
           transform: Matrix4.translationValues(0.0, _hovered ? -3.0 : 0.0, 0.0),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
+          padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             gradient: widget.isPrimary
@@ -267,10 +277,10 @@ class _CinematicButtonState extends State<CinematicButton> {
           child: Text(
             widget.text.toUpperCase(),
             style: AppTheme.sansBody(
-              fontSize: 11,
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
               color: widget.isPrimary ? const Color(0xFF0F1B18) : Colors.white,
-              letterSpacing: 2.2,
+              letterSpacing: letterSpacing,
             ),
           ),
         ),

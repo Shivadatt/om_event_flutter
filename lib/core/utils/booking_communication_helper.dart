@@ -291,10 +291,14 @@ class BookingCommunicationHelper {
         ? normalizePhone(phone)
         : getBusinessPhoneNumber();
     final uri = Uri.parse("tel:+$targetPhone");
-    if (await canLaunchUrl(uri)) {
+    try {
+      if (await canLaunchUrl(uri)) {
+        return await launchUrl(uri);
+      }
       return await launchUrl(uri);
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 
   /// Launches email composer.

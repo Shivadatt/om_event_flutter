@@ -54,14 +54,33 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     final isTwoColumn = width >= 1024;
     final isTablet = width >= 600 && width < 1024;
     final isMobile = width < 600;
+    final isIntermediate = width >= 1024 && width < 1140;
+    final isNarrowMobile = width <= 370;
+    final isUltraNarrow = width < 340;
 
-    final double pH = isMobile ? 16.0 : (isTablet ? 28.0 : (width < 1280 ? 36.0 : 48.0));
-    final double topPad = isTwoColumn ? (width >= 1440 ? 44.0 : 36.0) : (isTablet ? 32.0 : 24.0);
-    final double bottomPad = isTwoColumn ? (width >= 1440 ? 32.0 : 24.0) : (isTablet ? 24.0 : 18.0);
+    final double pH = isMobile
+        ? (isUltraNarrow ? 10.0 : (isNarrowMobile ? 12.0 : 16.0))
+        : (isTablet
+            ? 28.0
+            : (isIntermediate ? 24.0 : (width < 1280 ? 36.0 : 48.0)));
+    final double topPad = isTwoColumn
+        ? (width >= 1440 ? 44.0 : (isIntermediate ? 30.0 : 36.0))
+        : (isTablet ? 32.0 : (isNarrowMobile ? 20.0 : 24.0));
+    final double bottomPad = isTwoColumn
+        ? (width >= 1440 ? 32.0 : (isIntermediate ? 20.0 : 24.0))
+        : (isTablet ? 24.0 : (isNarrowMobile ? 16.0 : 18.0));
 
     final double titleSize = isTwoColumn
-        ? (width >= 1440 ? (width * 0.038).clamp(46.0, 58.0) : (width * 0.034).clamp(38.0, 48.0))
-        : (isTablet ? (width * 0.048).clamp(32.0, 40.0) : (width * 0.076).clamp(26.0, 32.0));
+        ? (width >= 1440
+            ? (width * 0.038).clamp(46.0, 58.0)
+            : (isIntermediate
+                ? (width * 0.032).clamp(32.0, 38.0)
+                : (width * 0.034).clamp(38.0, 48.0)))
+        : (isTablet
+            ? (width * 0.048).clamp(32.0, 40.0)
+            : (isNarrowMobile
+                ? (width * 0.070).clamp(21.0, 25.0)
+                : (width * 0.076).clamp(26.0, 32.0)));
 
     return Container(
       width: double.infinity,
@@ -100,19 +119,19 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _buildEyebrow(),
+                              _buildEyebrow(width),
                               const SizedBox(height: 14),
                               _buildHeading(headingText, titleSize, isWide: true),
                               const SizedBox(height: 14),
                               _buildSubtitle(subText, isWide: true, width: width),
                               const SizedBox(height: 24),
-                              _buildCtaButtons(isTwoColumn: true, isMobile: false),
+                              _buildCtaButtons(isTwoColumn: true, isMobile: false, isIntermediate: isIntermediate),
                               const SizedBox(height: 28),
-                              _buildTrustStats(stats, isTwoColumn: true, isMobile: false),
+                              _buildTrustStats(stats, isTwoColumn: true, isMobile: false, isIntermediate: isIntermediate),
                             ],
                           ),
                         ),
-                        SizedBox(width: width < 1280 ? 32 : 48),
+                        SizedBox(width: isIntermediate ? 22 : (width < 1280 ? 32 : 48)),
                         Expanded(
                           flex: 5,
                           child: _buildVideoShowcase(
@@ -128,7 +147,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _buildEyebrow(),
+                        _buildEyebrow(width),
                         const SizedBox(height: 14),
                         _buildHeading(headingText, titleSize, isWide: false),
                         const SizedBox(height: 14),
@@ -155,29 +174,41 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildEyebrow() {
+  Widget _buildEyebrow(double width) {
+    final isNarrow = width <= 370;
+    final isUltraNarrow = width < 340;
+    final double dotSize = isNarrow ? 6.0 : 8.0;
+    final double dotGap = isNarrow ? 6.0 : 8.0;
+    final double fontSize = isUltraNarrow ? 8.2 : (isNarrow ? 9.0 : 10.5);
+    final double letterSpacing = isUltraNarrow ? 1.0 : (isNarrow ? 1.8 : 3.5);
+
     return AnimatedBuilder(
       animation: _fadeController,
       builder: (context, child) => Opacity(opacity: _fadeController.value, child: child),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: dotSize,
+            height: dotSize,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.secondaryAccent,
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            "BESPOKE EVENT DESIGN • AHMEDABAD",
-            style: AppTheme.sansBody(
-              fontSize: 10.5,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 3.5,
-              color: AppColors.secondaryAccent,
+          SizedBox(width: dotGap),
+          Flexible(
+            child: Text(
+              "BESPOKE EVENT DESIGN • AHMEDABAD",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.sansBody(
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+                letterSpacing: letterSpacing,
+                color: AppColors.secondaryAccent,
+              ),
             ),
           ),
         ],
@@ -218,7 +249,9 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
 
   Widget _buildSubtitle(String heroSubtitle, {required bool isWide, required double width}) {
     final double maxW = isWide ? 540.0 : (width >= 600 ? 580.0 : 380.0);
-    final double fSize = isWide ? (width < 1280 ? 14.0 : 15.0) : (width < 600 ? 13.5 : 14.5);
+    final double fSize = isWide
+        ? (width < 1280 ? 14.0 : 15.0)
+        : (width <= 370 ? (width < 340 ? 12.0 : 12.8) : (width < 600 ? 13.5 : 14.5));
 
     return AnimatedBuilder(
       animation: _fadeController,
@@ -238,7 +271,11 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildCtaButtons({required bool isTwoColumn, required bool isMobile}) {
+  Widget _buildCtaButtons({
+    required bool isTwoColumn,
+    required bool isMobile,
+    bool isIntermediate = false,
+  }) {
     return AnimatedBuilder(
       animation: _slideController,
       builder: (context, child) {
@@ -270,9 +307,10 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                 ],
               ),
             )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: isTwoColumn ? MainAxisAlignment.start : MainAxisAlignment.center,
+          : Wrap(
+              spacing: isIntermediate ? 12 : 16,
+              runSpacing: 10,
+              alignment: isTwoColumn ? WrapAlignment.start : WrapAlignment.center,
               children: [
                 CinematicButton(
                   text: "Explore Our Services →",
@@ -280,7 +318,6 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                   isFullWidth: false,
                   onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
                 ),
-                const SizedBox(width: 16),
                 CinematicButton(
                   text: "▶ Watch Video",
                   isPrimary: false,
@@ -292,12 +329,21 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildTrustStats(dynamic stats, {required bool isTwoColumn, required bool isMobile}) {
-    final double iconBoxSize = isMobile ? 26 : 30;
-    final double iconSize = isMobile ? 14 : 16;
-    final double countFontSize = isMobile ? 13 : 15;
-    final double labelFontSize = isMobile ? 9.5 : 11;
-    final double spacing = isMobile ? 14 : (isTwoColumn ? 30 : 24);
+  Widget _buildTrustStats(
+    dynamic stats, {
+    required bool isTwoColumn,
+    required bool isMobile,
+    bool isIntermediate = false,
+  }) {
+    final width = MediaQuery.of(context).size.width;
+    final isNarrow = !isTwoColumn && width <= 370;
+    final double iconBoxSize = isMobile ? (isNarrow ? 24 : 26) : 30;
+    final double iconSize = isMobile ? (isNarrow ? 13 : 14) : 16;
+    final double countFontSize = isMobile ? (isNarrow ? 12 : 13) : 15;
+    final double labelFontSize = isMobile ? (isNarrow ? 8.8 : 9.5) : 11;
+    final double spacing = isMobile
+        ? (isNarrow ? 10 : 14)
+        : (isIntermediate ? 18 : (isTwoColumn ? 30 : 24));
 
     return AnimatedBuilder(
       animation: _fadeController,
