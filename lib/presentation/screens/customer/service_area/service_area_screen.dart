@@ -116,9 +116,18 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1024;
-    final isTablet = screenWidth >= 700 && screenWidth < 1024;
+    final isDesktop = screenWidth >= 1200;
+    final isLaptop = screenWidth >= 1024 && screenWidth < 1200;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final isMobile = screenWidth < 600;
     const goldColor = Color(0xFFD4AF37);
+
+    final horizontalPadding = isDesktop
+        ? 20.0
+        : (isLaptop ? 16.0 : (isTablet ? 14.0 : (screenWidth <= 360 ? 6.0 : 10.0)));
+    final containerPadding = isDesktop
+        ? 22.0
+        : (isLaptop ? 18.0 : (isTablet ? 16.0 : (screenWidth <= 360 ? 10.0 : 12.0)));
 
     return Scaffold(
       backgroundColor: const Color(0xFF060D0A),
@@ -142,20 +151,29 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
             ),
             title: Text(
               "SERVICE AREA & COVERAGE",
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.italiana(
-                fontSize: isDesktop ? 17 : 14,
+                fontSize: isDesktop ? 17 : (isMobile ? 13 : 15),
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                letterSpacing: 2,
+                letterSpacing: isMobile ? 1.2 : 2.0,
               ),
             ),
             actions: [
-              TextButton.icon(
-                icon: const Icon(Icons.track_changes_rounded, size: 15, color: Colors.white70),
-                label: Text("TRACK BOOKING", style: AppTheme.sansBody(fontSize: 10.5, color: Colors.white70, fontWeight: FontWeight.bold)),
-                onPressed: () => showBookingTrackerDialog(context),
-              ),
-              const SizedBox(width: 16),
+              if (screenWidth > 380)
+                TextButton.icon(
+                  icon: const Icon(Icons.track_changes_rounded, size: 15, color: Colors.white70),
+                  label: Text("TRACK BOOKING",
+                      style: AppTheme.sansBody(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.bold)),
+                  onPressed: () => showBookingTrackerDialog(context),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.track_changes_rounded, size: 18, color: Colors.white70),
+                  tooltip: "Track Booking",
+                  onPressed: () => showBookingTrackerDialog(context),
+                ),
+              SizedBox(width: isMobile ? 8 : 16),
             ],
           ),
 
@@ -163,87 +181,121 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1180),
+                constraints: const BoxConstraints(maxWidth: 1200),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 20 : 12,
+                    horizontal: horizontalPadding,
                     vertical: isDesktop ? 16 : 10,
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF08120E),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: goldColor.withValues(alpha: 0.22),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          blurRadius: 28,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    padding: EdgeInsets.all(isDesktop ? 22 : 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top Header Row matching Image 2
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "GUJARAT & BEYOND",
-                              style: AppTheme.sansBody(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                                color: goldColor,
-                                letterSpacing: 2.2,
-                              ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final availableWidth = constraints.maxWidth;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF08120E),
+                          borderRadius: BorderRadius.circular(isMobile ? 16 : 22),
+                          border: Border.all(
+                            color: goldColor.withValues(alpha: 0.22),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              blurRadius: 28,
+                              offset: const Offset(0, 8),
                             ),
+                          ],
+                        ),
+                        padding: EdgeInsets.all(containerPadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Top Header Row matching Reference
                             Row(
-                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(Icons.home_outlined, size: 13, color: goldColor.withValues(alpha: 0.8)),
-                                const SizedBox(width: 5),
                                 Text(
-                                  "SERVICE AREA & COVERAGE",
+                                  "GUJARAT & BEYOND",
                                   style: AppTheme.sansBody(
-                                    fontSize: 10,
+                                    fontSize: isMobile ? 9.5 : 10.5,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white70,
-                                    letterSpacing: 1.5,
+                                    color: goldColor,
+                                    letterSpacing: isMobile ? 1.4 : 2.2,
+                                  ),
+                                ),
+                                Flexible(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.home_outlined, size: 12, color: goldColor.withValues(alpha: 0.8)),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          "SERVICE AREA & COVERAGE",
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTheme.sansBody(
+                                            fontSize: isMobile ? 8.5 : 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white70,
+                                            letterSpacing: isMobile ? 0.8 : 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
+
+                            SizedBox(height: isMobile ? 12 : 16),
+
+                            // HERO SECTION (Left Content + Gujarat Map)
+                            _buildHeroSection(
+                              isDesktop: isDesktop,
+                              isLaptop: isLaptop,
+                              isTablet: isTablet,
+                              isMobile: isMobile,
+                              goldColor: goldColor,
+                            ),
+
+                            SizedBox(height: isMobile ? 20 : 24),
+
+                            // PHYSICAL CREATIVE STUDIOS SECTION
+                            _buildStudiosSection(
+                              isDesktop: isDesktop,
+                              isLaptop: isLaptop,
+                              isTablet: isTablet,
+                              isMobile: isMobile,
+                              availableWidth: availableWidth,
+                              goldColor: goldColor,
+                            ),
+
+                            SizedBox(height: isMobile ? 20 : 24),
+
+                            // COVERAGE ZONES SECTION (3 CARDS — BALANCED GRID ON TABLET / ROW ON DESKTOP & LAPTOP)
+                            _buildCoverageZonesSection(
+                              isDesktop: isDesktop,
+                              isLaptop: isLaptop,
+                              isTablet: isTablet,
+                              isMobile: isMobile,
+                              availableWidth: availableWidth,
+                              goldColor: goldColor,
+                            ),
+
+                            SizedBox(height: isMobile ? 22 : 26),
+
+                            // COMPACT BOTTOM CTA CARD
+                            _buildBottomCtaCard(
+                              goldColor: goldColor,
+                              isMobile: isMobile,
+                            ),
+
+                            const SizedBox(height: 8),
                           ],
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // HERO SECTION (Left Content + Gujarat Map)
-                        _buildHeroSection(isDesktop: isDesktop, isTablet: isTablet, goldColor: goldColor),
-
-                        const SizedBox(height: 24),
-
-                        // PHYSICAL CREATIVE STUDIOS SECTION
-                        _buildStudiosSection(isDesktop: isDesktop, isTablet: isTablet, goldColor: goldColor),
-
-                        const SizedBox(height: 24),
-
-                        // COVERAGE ZONES SECTION (3 EQUAL CARDS — ZERO OVERFLOW)
-                        _buildCoverageZonesSection(isDesktop: isDesktop, isTablet: isTablet, goldColor: goldColor),
-
-                        const SizedBox(height: 26),
-
-                        // COMPACT BOTTOM CTA CARD
-                        _buildBottomCtaCard(goldColor: goldColor),
-
-                        const SizedBox(height: 8),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -259,7 +311,9 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
   // ==========================================
   Widget _buildHeroSection({
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
+    required bool isMobile,
     required Color goldColor,
   }) {
     final leftContent = Column(
@@ -272,7 +326,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
               TextSpan(
                 text: "Service Locations\n",
                 style: GoogleFonts.italiana(
-                  fontSize: isDesktop ? 32 : (isTablet ? 28 : 24),
+                  fontSize: isDesktop ? 32 : (isLaptop ? 30 : (isTablet ? 28 : (isMobile ? 24 : 26))),
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   height: 1.15,
@@ -282,7 +336,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
               TextSpan(
                 text: "& Coverage",
                 style: GoogleFonts.italiana(
-                  fontSize: isDesktop ? 32 : (isTablet ? 28 : 24),
+                  fontSize: isDesktop ? 32 : (isLaptop ? 30 : (isTablet ? 28 : (isMobile ? 24 : 26))),
                   fontWeight: FontWeight.bold,
                   color: goldColor,
                   height: 1.15,
@@ -294,24 +348,30 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Subtitle matching Image 2
+        // Subtitle matching Reference
         Text(
           "Operating dual creative studios in Kadi and Thangadh, OM Events & Decorators orchestrates across Ahmedabad, Gandhinagar, Mehsana, Surendranagar, and premier destinations throughout Gujarat.",
           style: AppTheme.sansBody(
-            fontSize: 12.5,
+            fontSize: isMobile ? 12.0 : 12.5,
             color: Colors.white70,
             height: 1.45,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: isMobile ? 14 : 16),
 
         // Compact Venue Coverage Search Card
-        _buildVenueSearchCard(goldColor: goldColor),
+        _buildVenueSearchCard(goldColor: goldColor, isMobile: isMobile),
 
-        const SizedBox(height: 16),
+        SizedBox(height: isMobile ? 14 : 16),
 
-        // Compact 4 Feature Highlights Row matching Image 2
-        _buildFeatureHighlights(goldColor: goldColor, isDesktop: isDesktop),
+        // 4 Feature Highlights
+        _buildFeatureHighlights(
+          goldColor: goldColor,
+          isDesktop: isDesktop,
+          isLaptop: isLaptop,
+          isTablet: isTablet,
+          isMobile: isMobile,
+        ),
       ],
     );
 
@@ -320,19 +380,19 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
       onCitySelected: (cityName) => _checkCoverage(cityName),
     );
 
-    if (isDesktop) {
+    if (isDesktop || isLaptop) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 42,
+            flex: isDesktop ? 44 : 46,
             child: leftContent,
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: isDesktop ? 20 : 16),
           Expanded(
-            flex: 58,
+            flex: isDesktop ? 56 : 54,
             child: SizedBox(
-              height: 400,
+              height: isDesktop ? 400 : 380,
               child: rightMap,
             ),
           ),
@@ -343,9 +403,9 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           leftContent,
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           SizedBox(
-            height: isTablet ? 380 : 340,
+            height: isTablet ? 380 : 300,
             child: rightMap,
           ),
         ],
@@ -356,9 +416,12 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
   // ==========================================
   // VENUE COVERAGE SEARCH CARD
   // ==========================================
-  Widget _buildVenueSearchCard({required Color goldColor}) {
+  Widget _buildVenueSearchCard({required Color goldColor, required bool isMobile}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 10 : 14,
+        vertical: isMobile ? 10 : 12,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF0B1713),
         borderRadius: BorderRadius.circular(14),
@@ -395,10 +458,10 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                     onSubmitted: (_) => _checkCoverage(),
                     decoration: InputDecoration(
                       hintText: "e.g. Kadi, 382715, Ahmedabad...",
-                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
+                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 11.5),
                       filled: true,
                       fillColor: const Color(0xFF060F0C),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: goldColor.withValues(alpha: 0.2)),
@@ -420,7 +483,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                   onTap: () => _checkCoverage(),
                   child: Container(
                     height: 38,
-                    width: 40,
+                    width: 38,
                     alignment: Alignment.center,
                     child: const Icon(
                       Icons.search_rounded,
@@ -513,9 +576,15 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
   }
 
   // ==========================================
-  // COMPACT 4 FEATURE HIGHLIGHTS ROW (MATCHING IMAGE 2)
+  // 4 FEATURE HIGHLIGHTS (RESPONSIVE ROW / 2x2 GRID)
   // ==========================================
-  Widget _buildFeatureHighlights({required Color goldColor, required bool isDesktop}) {
+  Widget _buildFeatureHighlights({
+    required Color goldColor,
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+  }) {
     final items = [
       (
         icon: Icons.verified_outlined,
@@ -539,19 +608,24 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
       ),
     ];
 
-    Widget buildItem({required IconData icon, required String line1, required String line2}) {
+    Widget buildItem({
+      required IconData icon,
+      required String line1,
+      required String line2,
+      bool compact = false,
+    }) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: compact ? 24 : 26,
+            height: compact ? 24 : 26,
             decoration: BoxDecoration(
               color: goldColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
               border: Border.all(color: goldColor.withValues(alpha: 0.35)),
             ),
-            child: Icon(icon, size: 13, color: goldColor),
+            child: Icon(icon, size: compact ? 12 : 13, color: goldColor),
           ),
           const SizedBox(width: 6),
           Flexible(
@@ -562,7 +636,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                 Text(
                   line1,
                   style: AppTheme.sansBody(
-                    fontSize: 10,
+                    fontSize: compact ? 9.5 : 10,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                     height: 1.15,
@@ -571,7 +645,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                 Text(
                   line2,
                   style: AppTheme.sansBody(
-                    fontSize: 9.5,
+                    fontSize: compact ? 9.0 : 9.5,
                     color: Colors.white60,
                     height: 1.15,
                   ),
@@ -586,18 +660,50 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
     if (isDesktop) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: items.map((it) => Expanded(child: buildItem(icon: it.icon, line1: it.line1, line2: it.line2))).toList(),
-      );
-    } else {
-      return Wrap(
-        spacing: 12,
-        runSpacing: 10,
         children: items
-            .map((it) => SizedBox(
-                  width: 150,
+            .map((it) => Expanded(
                   child: buildItem(icon: it.icon, line1: it.line1, line2: it.line2),
                 ))
             .toList(),
+      );
+    } else if (isLaptop) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: items
+            .map((it) => Expanded(
+                  child: buildItem(icon: it.icon, line1: it.line1, line2: it.line2, compact: true),
+                ))
+            .toList(),
+      );
+    } else if (isTablet) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: items
+            .map((it) => Expanded(
+                  child: buildItem(icon: it.icon, line1: it.line1, line2: it.line2),
+                ))
+            .toList(),
+      );
+    } else {
+      // Mobile (320px - 599px): Balanced 2x2 grid
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: buildItem(icon: items[0].icon, line1: items[0].line1, line2: items[0].line2, compact: true)),
+              const SizedBox(width: 10),
+              Expanded(child: buildItem(icon: items[1].icon, line1: items[1].line1, line2: items[1].line2, compact: true)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: buildItem(icon: items[2].icon, line1: items[2].line1, line2: items[2].line2, compact: true)),
+              const SizedBox(width: 10),
+              Expanded(child: buildItem(icon: items[3].icon, line1: items[3].line1, line2: items[3].line2, compact: true)),
+            ],
+          ),
+        ],
       );
     }
   }
@@ -607,7 +713,10 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
   // ==========================================
   Widget _buildStudiosSection({
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
+    required bool isMobile,
+    required double availableWidth,
     required Color goldColor,
   }) {
     final studios = StudioLocationsHelper.getPublicStudios();
@@ -625,6 +734,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
       primaryCoverage: "Mehsana, Gandhinagar & North Ahmedabad",
       imageAsset: AppImages.luxuryReception,
       goldColor: goldColor,
+      isMobile: isMobile,
       onArrowTap: () => StudioLocationsHelper.openInGoogleMaps(kadiStudio.fullAddress),
     );
 
@@ -634,8 +744,11 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
       primaryCoverage: "Surendranagar, Wadhwan, Chotila & Surroundings",
       imageAsset: AppImages.luxuryEveningDecor,
       goldColor: goldColor,
+      isMobile: isMobile,
       onArrowTap: () => StudioLocationsHelper.openInGoogleMaps(thangadhStudio.fullAddress),
     );
+
+    final showSideBySide = (isDesktop || isLaptop || (isTablet && availableWidth >= 680));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,14 +756,14 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
         Text(
           "Our Physical Creative Studios",
           style: GoogleFonts.italiana(
-            fontSize: isDesktop ? 21 : 18,
+            fontSize: isDesktop ? 21 : (isLaptop ? 20 : (isTablet ? 19 : 18)),
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.4,
           ),
         ),
         const SizedBox(height: 12),
-        if (isDesktop || isTablet)
+        if (showSideBySide)
           Row(
             children: [
               Expanded(child: card1),
@@ -676,10 +789,11 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
     required String primaryCoverage,
     required String imageAsset,
     required Color goldColor,
+    required bool isMobile,
     required VoidCallback onArrowTap,
   }) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 125),
+      constraints: const BoxConstraints(minHeight: 122),
       decoration: BoxDecoration(
         color: const Color(0xFF0C1914),
         borderRadius: BorderRadius.circular(16),
@@ -696,9 +810,9 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 38% Card Width Image
+            // 36% Card Width Image
             Expanded(
-              flex: 38,
+              flex: 36,
               child: ClipRRect(
                 borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
                 child: Image.asset(
@@ -712,16 +826,19 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
               ),
             ),
 
-            // 62% Card Width Information
+            // 64% Card Width Information
             Expanded(
-              flex: 62,
+              flex: 64,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 12 : 14,
+                  vertical: isMobile ? 10 : 11,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Studio Header with icon and arrow button
+                    // Studio Header with icon, title and arrow button
                     Row(
                       children: [
                         Container(
@@ -730,18 +847,19 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                             color: goldColor.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.storefront_rounded, color: goldColor, size: 13),
+                          child: Icon(Icons.storefront_rounded, color: goldColor, size: 12),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             title,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.italiana(
-                              fontSize: 14.5,
+                              fontSize: isMobile ? 13.5 : 14.5,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
+                              height: 1.15,
                             ),
                           ),
                         ),
@@ -756,7 +874,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                               padding: EdgeInsets.all(5),
                               child: Icon(
                                 Icons.arrow_forward_rounded,
-                                size: 13,
+                                size: 12,
                                 color: Color(0xFF091210),
                               ),
                             ),
@@ -765,15 +883,15 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
 
-                    // Address
+                    // Address with natural wrapping
                     Text(
                       address,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: AppTheme.sansBody(
-                        fontSize: 10.5,
+                        fontSize: isMobile ? 10 : 10.5,
                         color: Colors.white70,
                         height: 1.35,
                       ),
@@ -790,7 +908,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                           TextSpan(
                             text: "Primary Coverage: ",
                             style: AppTheme.sansBody(
-                              fontSize: 10,
+                              fontSize: isMobile ? 9.5 : 10,
                               fontWeight: FontWeight.bold,
                               color: goldColor,
                             ),
@@ -798,7 +916,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                           TextSpan(
                             text: primaryCoverage,
                             style: AppTheme.sansBody(
-                              fontSize: 10,
+                              fontSize: isMobile ? 9.5 : 10,
                               color: Colors.white60,
                             ),
                           ),
@@ -816,11 +934,14 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
   }
 
   // ==========================================
-  // COVERAGE ZONES SECTION (MATCHING IMAGE 2 — ZERO OVERFLOW)
+  // COVERAGE ZONES SECTION (BALANCED GRID ON TABLET / ROW ON DESKTOP & LAPTOP)
   // ==========================================
   Widget _buildCoverageZonesSection({
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
+    required bool isMobile,
+    required double availableWidth,
     required Color goldColor,
   }) {
     final zone1 = _buildZoneCard(
@@ -830,6 +951,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
       allowanceBadge: "₹500 standard delivery",
       badgeColor: const Color(0xFF4EBA7A),
       goldColor: goldColor,
+      isMobile: isMobile,
     );
 
     final zone2 = _buildZoneCard(
@@ -839,6 +961,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
       allowanceBadge: "Nominal travel allowance",
       badgeColor: const Color(0xFFE2C074),
       goldColor: goldColor,
+      isMobile: isMobile,
     );
 
     final zone3 = _buildZoneCard(
@@ -848,7 +971,11 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
       allowanceBadge: "Custom logistics & accommodation",
       badgeColor: const Color(0xFF64B5F6),
       goldColor: goldColor,
+      isMobile: isMobile,
     );
+
+    final showThreeInRow = isDesktop || isLaptop || (isTablet && availableWidth >= 740);
+    final showTwoPlusOne = isTablet && availableWidth < 740;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -858,7 +985,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
             Text(
               "Coverage Zones",
               style: GoogleFonts.italiana(
-                fontSize: isDesktop ? 21 : 18,
+                fontSize: isDesktop ? 21 : (isLaptop ? 20 : (isTablet ? 19 : 18)),
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: 0.4,
@@ -876,7 +1003,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (isDesktop)
+        if (showThreeInRow)
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -888,6 +1015,23 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                 Expanded(child: zone3),
               ],
             ),
+          )
+        else if (showTwoPlusOne)
+          Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: zone1),
+                    const SizedBox(width: 12),
+                    Expanded(child: zone2),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              zone3,
+            ],
           )
         else
           Column(
@@ -910,9 +1054,13 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
     required String allowanceBadge,
     required Color badgeColor,
     required Color goldColor,
+    required bool isMobile,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 14,
+        vertical: isMobile ? 10 : 12,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF0C1914),
         borderRadius: BorderRadius.circular(16),
@@ -929,19 +1077,18 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Icon on left + (Title + Locations) on right (Matches Image 2)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: goldColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   border: Border.all(color: goldColor.withValues(alpha: 0.35)),
                 ),
-                child: Icon(icon, size: 16, color: goldColor),
+                child: Icon(icon, size: 15, color: goldColor),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -951,7 +1098,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                     Text(
                       title,
                       style: GoogleFonts.italiana(
-                        fontSize: 14,
+                        fontSize: isMobile ? 13.5 : 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 0.2,
@@ -963,7 +1110,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                     Text(
                       locations,
                       style: AppTheme.sansBody(
-                        fontSize: 10.5,
+                        fontSize: isMobile ? 10 : 10.5,
                         color: Colors.white70,
                         height: 1.3,
                       ),
@@ -984,8 +1131,9 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
             ),
             child: Text(
               allowanceBadge,
+              softWrap: true,
               style: AppTheme.sansBody(
-                fontSize: 10,
+                fontSize: 9.5,
                 color: badgeColor,
                 fontWeight: FontWeight.bold,
               ),
@@ -999,12 +1147,18 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
   // ==========================================
   // COMPACT BOTTOM CTA CARD
   // ==========================================
-  Widget _buildBottomCtaCard({required Color goldColor}) {
+  Widget _buildBottomCtaCard({
+    required Color goldColor,
+    required bool isMobile,
+  }) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 24,
+            vertical: isMobile ? 14 : 18,
+          ),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1E19),
             borderRadius: BorderRadius.circular(16),
@@ -1024,7 +1178,7 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                 "Planning a Celebration in Your City?",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.italiana(
-                  fontSize: 18,
+                  fontSize: isMobile ? 16 : 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -1034,37 +1188,40 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
                 "Our team will personally review your venue location and confirm slot availability.",
                 textAlign: TextAlign.center,
                 style: AppTheme.sansBody(
-                  fontSize: 11.5,
+                  fontSize: isMobile ? 10.5 : 11.5,
                   color: Colors.white60,
                 ),
               ),
               const SizedBox(height: 14),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.calendar_today_outlined, size: 14),
-                label: const Text("BOOK EVENT AT YOUR VENUE"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: goldColor,
-                  foregroundColor: const Color(0xFF091210),
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
-                  textStyle: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.calendar_today_outlined, size: 14),
+                  label: const Text("BOOK EVENT AT YOUR VENUE"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: goldColor,
+                    foregroundColor: const Color(0xFF091210),
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                    textStyle: AppTheme.sansBody(fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () {
+                    Experience? exp;
+                    if (Get.isRegistered<CatalogController>()) {
+                      final experiences = Get.find<CatalogController>().rxExperiences;
+                      if (experiences.isNotEmpty) exp = experiences.first;
+                    }
+                    if (exp != null) {
+                      showCustomerBookingDialog(
+                        context,
+                        experience: exp,
+                        selectedPackage: exp.dynamicPackages.first,
+                      );
+                    } else {
+                      Get.offAllNamed(AppRoutes.home);
+                    }
+                  },
                 ),
-                onPressed: () {
-                  Experience? exp;
-                  if (Get.isRegistered<CatalogController>()) {
-                    final experiences = Get.find<CatalogController>().rxExperiences;
-                    if (experiences.isNotEmpty) exp = experiences.first;
-                  }
-                  if (exp != null) {
-                    showCustomerBookingDialog(
-                      context,
-                      experience: exp,
-                      selectedPackage: exp.dynamicPackages.first,
-                    );
-                  } else {
-                    Get.offAllNamed(AppRoutes.home);
-                  }
-                },
               ),
             ],
           ),
@@ -1075,13 +1232,13 @@ class _ServiceAreaScreenState extends State<ServiceAreaScreen> {
 }
 
 // ============================================================================
-// STYLIZED GUJARAT COVERAGE MAP (MATCHING OPTION 2 REFERENCE)
+// STYLIZED GUJARAT COVERAGE MAP (RESPONSIVE PROPORTIONS & ZERO OVERFLOW)
 // ============================================================================
 enum _MarkerLevel {
-  primaryStudio,    // Kadi, Thangadh
-  majorCoverage,    // Ahmedabad, Gandhinagar, Mehsana, Surendranagar, Rajkot
+  primaryStudio, // Kadi, Thangadh
+  majorCoverage, // Ahmedabad, Gandhinagar, Mehsana, Surendranagar, Rajkot
   extendedCoverage, // Patan, Viramgam, Vadodara
-  destinationEvents,// Surat
+  destinationEvents, // Surat
 }
 
 class _MapCity {
@@ -1133,6 +1290,7 @@ class _GujaratCoverageMap extends StatelessWidget {
             }
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
+            final isSmallScreen = w < 500;
 
             final cities = [
               const _MapCity(name: "Patan", x: 0.49, y: 0.18, level: _MarkerLevel.extendedCoverage, labelOnRight: false),
@@ -1157,12 +1315,16 @@ class _GujaratCoverageMap extends StatelessWidget {
                   ),
                 ),
 
-                // City Markers & Labels
+                // City Markers & Labels (Exact mathematical alignment matching highways & halos)
                 ...cities.map((city) {
-                  final pillWidthOffset = city.labelOnRight ? 6.0 : 72.0;
+                  final isStudio = city.level == _MarkerLevel.primaryStudio;
+                  final markerSize = isStudio ? 16.0 : (city.level == _MarkerLevel.majorCoverage ? 13.0 : 10.0);
+                  // On small screens, keep Gandhinagar label on the left to avoid legend collision
+                  final placeLabelOnRight = (isSmallScreen && city.name == "Gandhinagar") ? false : city.labelOnRight;
 
                   return Positioned(
-                    left: city.x * w - pillWidthOffset,
+                    left: placeLabelOnRight ? city.x * w - (markerSize / 2) : null,
+                    right: !placeLabelOnRight ? (w - (city.x * w + markerSize / 2)) : null,
                     top: city.y * h - 11,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(10),
@@ -1170,14 +1332,14 @@ class _GujaratCoverageMap extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (!city.labelOnRight) ...[
-                            _buildCityPill(city, goldColor),
+                          if (!placeLabelOnRight) ...[
+                            _buildCityPill(city, goldColor, isSmallScreen: isSmallScreen),
                             const SizedBox(width: 4),
                           ],
-                          _buildMarker(city.level, goldColor),
-                          if (city.labelOnRight) ...[
+                          _buildMarker(city.level, goldColor, markerSize),
+                          if (placeLabelOnRight) ...[
                             const SizedBox(width: 4),
-                            _buildCityPill(city, goldColor),
+                            _buildCityPill(city, goldColor, isSmallScreen: isSmallScreen),
                           ],
                         ],
                       ),
@@ -1187,10 +1349,13 @@ class _GujaratCoverageMap extends StatelessWidget {
 
                 // Floating Map Legend (Top-Right)
                 Positioned(
-                  top: 12,
-                  right: 12,
+                  top: isSmallScreen ? 8 : 12,
+                  right: isSmallScreen ? 8 : 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 7 : 10,
+                      vertical: isSmallScreen ? 5 : 7,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF07120E).withValues(alpha: 0.92),
                       borderRadius: BorderRadius.circular(10),
@@ -1205,18 +1370,21 @@ class _GujaratCoverageMap extends StatelessWidget {
                       children: [
                         _buildLegendItem(
                           icon: Container(
-                            width: 8,
-                            height: 8,
+                            width: isSmallScreen ? 7 : 8,
+                            height: isSmallScreen ? 7 : 8,
                             decoration: BoxDecoration(shape: BoxShape.circle, color: goldColor),
-                            child: const Center(child: Icon(Icons.star, size: 5, color: Color(0xFF091210))),
+                            child: Center(
+                              child: Icon(Icons.star, size: isSmallScreen ? 4 : 5, color: const Color(0xFF091210)),
+                            ),
                           ),
                           label: "Primary Studio",
+                          isSmall: isSmallScreen,
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: isSmallScreen ? 3 : 4),
                         _buildLegendItem(
                           icon: Container(
-                            width: 8,
-                            height: 8,
+                            width: isSmallScreen ? 7 : 8,
+                            height: isSmallScreen ? 7 : 8,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: goldColor,
@@ -1226,33 +1394,40 @@ class _GujaratCoverageMap extends StatelessWidget {
                             ),
                           ),
                           label: "Major Coverage",
+                          isSmall: isSmallScreen,
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: isSmallScreen ? 3 : 4),
                         _buildLegendItem(
                           icon: Container(
-                            width: 7,
-                            height: 7,
+                            width: isSmallScreen ? 6 : 7,
+                            height: isSmallScreen ? 6 : 7,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(color: goldColor.withValues(alpha: 0.8), width: 1.2),
                             ),
                             child: Center(
-                              child: Container(width: 2, height: 2, decoration: BoxDecoration(shape: BoxShape.circle, color: goldColor)),
+                              child: Container(
+                                width: 2,
+                                height: 2,
+                                decoration: BoxDecoration(shape: BoxShape.circle, color: goldColor),
+                              ),
                             ),
                           ),
                           label: "Extended Coverage",
+                          isSmall: isSmallScreen,
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: isSmallScreen ? 3 : 4),
                         _buildLegendItem(
                           icon: Container(
-                            width: 5.5,
-                            height: 5.5,
+                            width: isSmallScreen ? 5 : 5.5,
+                            height: isSmallScreen ? 5 : 5.5,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: goldColor.withValues(alpha: 0.45),
                             ),
                           ),
                           label: "Destination Events",
+                          isSmall: isSmallScreen,
                         ),
                       ],
                     ),
@@ -1266,11 +1441,14 @@ class _GujaratCoverageMap extends StatelessWidget {
     );
   }
 
-  Widget _buildCityPill(_MapCity city, Color goldColor) {
+  Widget _buildCityPill(_MapCity city, Color goldColor, {bool isSmallScreen = false}) {
     final isStudio = city.level == _MarkerLevel.primaryStudio;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 5 : 7,
+        vertical: isSmallScreen ? 1.5 : 2,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF07120E).withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(8),
@@ -1278,9 +1456,9 @@ class _GujaratCoverageMap extends StatelessWidget {
           color: isStudio ? goldColor : goldColor.withValues(alpha: 0.75),
           width: 1.0,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black54,
             blurRadius: 3,
           ),
         ],
@@ -1288,20 +1466,20 @@ class _GujaratCoverageMap extends StatelessWidget {
       child: Text(
         city.name,
         style: GoogleFonts.montserrat(
-          fontSize: 9.5,
+          fontSize: isSmallScreen ? 8.5 : 9.5,
           fontWeight: FontWeight.bold,
           color: isStudio ? const Color(0xFFE5C378) : Colors.white,
-          letterSpacing: 0.2,
+          letterSpacing: isSmallScreen ? 0.1 : 0.2,
         ),
       ),
     );
   }
 
-  Widget _buildMarker(_MarkerLevel level, Color goldColor) {
+  Widget _buildMarker(_MarkerLevel level, Color goldColor, double size) {
     if (level == _MarkerLevel.primaryStudio) {
       return Container(
-        width: 16,
-        height: 16,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: goldColor,
@@ -1313,16 +1491,16 @@ class _GujaratCoverageMap extends StatelessWidget {
             ),
           ],
         ),
-        child: const Center(
-          child: Icon(Icons.star, size: 9, color: Color(0xFF091210)),
+        child: Center(
+          child: Icon(Icons.star, size: size * 0.55, color: const Color(0xFF091210)),
         ),
       );
     }
 
     if (level == _MarkerLevel.majorCoverage) {
       return Container(
-        width: 14,
-        height: 14,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: goldColor.withValues(alpha: 0.30),
@@ -1337,8 +1515,8 @@ class _GujaratCoverageMap extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            width: 5,
-            height: 5,
+            width: size * 0.38,
+            height: size * 0.38,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: Color(0xFFE5C378),
@@ -1350,8 +1528,8 @@ class _GujaratCoverageMap extends StatelessWidget {
 
     if (level == _MarkerLevel.extendedCoverage) {
       return Container(
-        width: 11,
-        height: 11,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: goldColor.withValues(alpha: 0.18),
@@ -1365,8 +1543,8 @@ class _GujaratCoverageMap extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            width: 3,
-            height: 3,
+            width: size * 0.3,
+            height: size * 0.3,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: goldColor,
@@ -1378,8 +1556,8 @@ class _GujaratCoverageMap extends StatelessWidget {
 
     // destinationEvents
     return Container(
-      width: 8,
-      height: 8,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: goldColor.withValues(alpha: 0.6),
@@ -1393,16 +1571,16 @@ class _GujaratCoverageMap extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem({required Widget icon, required String label}) {
+  Widget _buildLegendItem({required Widget icon, required String label, bool isSmall = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         icon,
-        const SizedBox(width: 5),
+        SizedBox(width: isSmall ? 4 : 5),
         Text(
           label,
           style: AppTheme.sansBody(
-            fontSize: 9,
+            fontSize: isSmall ? 8.2 : 9,
             color: Colors.white70,
             fontWeight: FontWeight.w500,
           ),
