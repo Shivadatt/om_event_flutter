@@ -83,7 +83,11 @@ class InitialBinding extends Bindings {
 
     // Local Storage Source
     Get.lazyPut<LocalStorageSource>(
-      () => LocalStorageSource(Get.find<SharedPreferences>()),
+      () => LocalStorageSource(
+        Get.isRegistered<SharedPreferences>()
+            ? Get.find<SharedPreferences>()
+            : null,
+      ),
       fenix: true,
     );
 

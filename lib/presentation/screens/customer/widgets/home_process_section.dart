@@ -60,17 +60,38 @@ class ProcessSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isDesktopLayout = width >= 1024 && isDesktop;
-    final bool isTabletLayout = width >= 650 && width < 1024;
-    final bool isMobileLayout = width < 650;
+    final width = MediaQuery.sizeOf(context).width;
+
+    // Strict breakpoints matching responsive design specs
+    final bool isDesktopLayout = width >= 1200;
+    final bool isLaptopLayout = width >= 1024 && width < 1200;
+    final bool isTabletLayout = width >= 600 && width < 1024;
+    final bool isMobileLayout = width < 600;
+
+    final double hPad = isMobileLayout
+        ? (width < 380 ? 10.0 : 14.0)
+        : AppPageContainer.horizontalPadding(context);
+    final double vPad = isDesktopLayout
+        ? 40.0
+        : (isLaptopLayout ? 34.0 : (isTabletLayout ? 28.0 : 20.0));
+
+    final double innerHPad = isDesktopLayout
+        ? 36.0
+        : (isLaptopLayout
+            ? 26.0
+            : (isTabletLayout ? 22.0 : (width < 380 ? 12.0 : 16.0)));
+    final double innerVPad = isDesktopLayout
+        ? 32.0
+        : (isLaptopLayout
+            ? 26.0
+            : (isTabletLayout ? 22.0 : 16.0));
 
     return Container(
       width: double.infinity,
       color: const Color(0xFF152621), // Page background
       padding: EdgeInsets.symmetric(
-        horizontal: AppPageContainer.horizontalPadding(context),
-        vertical: isDesktopLayout ? 40.0 : 28.0,
+        horizontal: hPad,
+        vertical: vPad,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -79,7 +100,7 @@ class ProcessSection extends StatelessWidget {
             decoration: BoxDecoration(
               // Near-black luxury base with deep subtle emerald undertone
               color: const Color(0xFF060907),
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(isMobileLayout ? 16 : 22),
               border: Border.all(
                 color: AppColors.secondaryAccent.withValues(alpha: 0.45),
                 width: 1.3,
@@ -106,7 +127,14 @@ class ProcessSection extends StatelessWidget {
                   right: 0,
                   child: IgnorePointer(
                     child: CustomPaint(
-                      size: Size(isDesktopLayout ? 620 : (isTabletLayout ? 420 : 300), 250),
+                      size: Size(
+                        isDesktopLayout
+                            ? 620
+                            : (isLaptopLayout
+                                ? 500
+                                : (isTabletLayout ? 400 : 280)),
+                        250,
+                      ),
                       painter: _GoldRibbonCurvesPainter(),
                     ),
                   ),
@@ -136,37 +164,47 @@ class ProcessSection extends StatelessWidget {
                 // Main Content
                 Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktopLayout ? 36.0 : (isTabletLayout ? 24.0 : 18.0),
-                    vertical: isDesktopLayout ? 32.0 : (isTabletLayout ? 24.0 : 20.0),
+                    horizontal: innerHPad,
+                    vertical: innerVPad,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ── TOP: Eyebrow + Heading + Subtitle ─────────────────
-                      _buildHeader(isDesktop: isDesktopLayout, isTablet: isTabletLayout),
-                      const SizedBox(height: 22),
+                      _buildHeader(
+                        isDesktop: isDesktopLayout,
+                        isLaptop: isLaptopLayout,
+                        isTablet: isTabletLayout,
+                        isMobile: isMobileLayout,
+                        width: width,
+                      ),
+                      SizedBox(height: isMobileLayout ? 16 : 22),
 
-                      // ── MIDDLE: 4 Process Cards in ONE Row ───────────────
+                      // ── MIDDLE: 4 Process Cards ───────────────────────────
                       _buildProcessCards(
                         isDesktop: isDesktopLayout,
+                        isLaptop: isLaptopLayout,
                         isTablet: isTabletLayout,
                         isMobile: isMobileLayout,
                       ),
-                      const SizedBox(height: 22),
+                      SizedBox(height: isMobileLayout ? 16 : 22),
 
                       // ── BELOW PROCESS: Compact Statistics Strip ───────────
                       _buildStatsBand(
                         isDesktop: isDesktopLayout,
+                        isLaptop: isLaptopLayout,
                         isTablet: isTabletLayout,
                         isMobile: isMobileLayout,
                       ),
-                      const SizedBox(height: 26),
+                      SizedBox(height: isMobileLayout ? 20 : 26),
 
                       // ── BOTTOM: "WHAT OUR CUSTOMERS SAY." + Testimonials ─
                       _buildReviewsSection(
                         isDesktop: isDesktopLayout,
+                        isLaptop: isLaptopLayout,
                         isTablet: isTabletLayout,
                         isMobile: isMobileLayout,
+                        availableWidth: width,
                       ),
                     ],
                   ),
@@ -180,7 +218,13 @@ class ProcessSection extends StatelessWidget {
   }
 
   // ── HEADER ─────────────────────────────────────────────────────────────────
-  Widget _buildHeader({required bool isDesktop, required bool isTablet}) {
+  Widget _buildHeader({
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+    required double width,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -225,7 +269,13 @@ class ProcessSection extends StatelessWidget {
           child: Text(
             "YOUR CELEBRATION,\nWITHOUT THE CHAOS.",
             style: GoogleFonts.italiana(
-              fontSize: isDesktop ? 34.0 : (isTablet ? 28.0 : 23.0),
+              fontSize: isDesktop
+                  ? 34.0
+                  : (isLaptop
+                      ? 29.0
+                      : (isTablet
+                          ? 26.0
+                          : (width < 360 ? 19.0 : 21.5))),
               color: Colors.white,
               fontWeight: FontWeight.w400,
               height: 1.08,
@@ -239,7 +289,7 @@ class ProcessSection extends StatelessWidget {
         Text(
           "Four seamless steps from vision to reality.",
           style: AppTheme.sansBody(
-            fontSize: isDesktop ? 13.0 : 12.0,
+            fontSize: isDesktop ? 13.0 : (isMobile ? 11.5 : 12.0),
             color: const Color(0xFFBAC5C0),
             height: 1.4,
           ),
@@ -251,74 +301,119 @@ class ProcessSection extends StatelessWidget {
   // ── 4 PROCESS CARDS ────────────────────────────────────────────────────────
   Widget _buildProcessCards({
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
     required bool isMobile,
   }) {
-    if (isDesktop) {
-      // 4 Cards in ONE horizontal row on desktop with connector arrows
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          for (int i = 0; i < _steps.length; i++) ...[
-            Expanded(
-              child: _ProcessCard(
-                step: _steps[i],
+    // Desktop and Laptop: 4 Cards in ONE horizontal row with connector arrows
+    if (isDesktop || isLaptop) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (int i = 0; i < _steps.length; i++) ...[
+              Expanded(
+                child: _ProcessCard(
+                  step: _steps[i],
+                  isMobile: false,
+                  isLaptop: isLaptop,
+                ),
               ),
-            ),
-            if (i < _steps.length - 1)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: _ConnectorArrow(color: AppColors.secondaryAccent),
-              ),
+              if (i < _steps.length - 1)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: isLaptop ? 2.0 : 4.0),
+                  child: Center(
+                    child: _ConnectorArrow(color: AppColors.secondaryAccent),
+                  ),
+                ),
+            ],
           ],
-        ],
+        ),
       );
     }
 
+    // Tablet: 2x2 grid with connector arrows in each row
     if (isTablet) {
-      // 2x2 grid on tablet
       return Column(
         children: [
-          Row(
-            children: [
-              Expanded(child: _ProcessCard(step: _steps[0])),
-              const SizedBox(width: 12),
-              Expanded(child: _ProcessCard(step: _steps[1])),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _ProcessCard(
+                    step: _steps[0],
+                    isMobile: false,
+                    isLaptop: false,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Center(
+                    child: _ConnectorArrow(color: AppColors.secondaryAccent),
+                  ),
+                ),
+                Expanded(
+                  child: _ProcessCard(
+                    step: _steps[1],
+                    isMobile: false,
+                    isLaptop: false,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _ProcessCard(step: _steps[2])),
-              const SizedBox(width: 12),
-              Expanded(child: _ProcessCard(step: _steps[3])),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _ProcessCard(
+                    step: _steps[2],
+                    isMobile: false,
+                    isLaptop: false,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Center(
+                    child: _ConnectorArrow(color: AppColors.secondaryAccent),
+                  ),
+                ),
+                Expanded(
+                  child: _ProcessCard(
+                    step: _steps[3],
+                    isMobile: false,
+                    isLaptop: false,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       );
     }
 
-    // Mobile: horizontally scrollable cards so they never wrap into huge vertical cards
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: List.generate(_steps.length, (i) {
-          return Padding(
-            padding: EdgeInsets.only(right: i < _steps.length - 1 ? 12.0 : 0.0),
-            child: SizedBox(
-              width: 220,
-              child: _ProcessCard(step: _steps[i]),
-            ),
-          );
-        }),
-      ),
+    // Mobile: Stacked vertically with full width cards and horizontal internal layout
+    return Column(
+      children: [
+        for (int i = 0; i < _steps.length; i++) ...[
+          _ProcessCard(
+            step: _steps[i],
+            isMobile: true,
+            isLaptop: false,
+          ),
+          if (i < _steps.length - 1) const SizedBox(height: 10),
+        ],
+      ],
     );
   }
 
-  // ── STATS BAND (MATCHING SECOND IMAGE) ─────────────────────────────────────
+  // ── STATS BAND ─────────────────────────────────────────────────────────────
   Widget _buildStatsBand({
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
     required bool isMobile,
   }) {
@@ -357,7 +452,7 @@ class ProcessSection extends StatelessWidget {
 
       return Container(
         padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 24.0 : 16.0,
+          horizontal: (isDesktop || isLaptop) ? (isLaptop ? 18.0 : 24.0) : 14.0,
           vertical: 14.0,
         ),
         decoration: BoxDecoration(
@@ -380,22 +475,35 @@ class ProcessSection extends StatelessWidget {
             ),
           ],
         ),
-        child: isMobile
+        // Tablet & Mobile: 2x2 clean grid with dividers
+        // Desktop & Laptop: 1 horizontal row with vertical dividers
+        child: (isTablet || isMobile)
             ? Column(
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _buildStatCell(statItems[0])),
-                      Container(width: 1, height: 32, color: AppColors.secondaryAccent.withValues(alpha: 0.28)),
-                      Expanded(child: _buildStatCell(statItems[1])),
+                      Expanded(child: _buildStatCell(statItems[0], isMobile: isMobile)),
+                      Container(
+                        width: 1,
+                        height: isMobile ? 30 : 34,
+                        color: AppColors.secondaryAccent.withValues(alpha: 0.28),
+                      ),
+                      Expanded(child: _buildStatCell(statItems[1], isMobile: isMobile)),
                     ],
                   ),
-                  Divider(color: AppColors.secondaryAccent.withValues(alpha: 0.18), height: 16),
+                  Divider(
+                    color: AppColors.secondaryAccent.withValues(alpha: 0.18),
+                    height: isMobile ? 14 : 18,
+                  ),
                   Row(
                     children: [
-                      Expanded(child: _buildStatCell(statItems[2])),
-                      Container(width: 1, height: 32, color: AppColors.secondaryAccent.withValues(alpha: 0.28)),
-                      Expanded(child: _buildStatCell(statItems[3])),
+                      Expanded(child: _buildStatCell(statItems[2], isMobile: isMobile)),
+                      Container(
+                        width: 1,
+                        height: isMobile ? 30 : 34,
+                        color: AppColors.secondaryAccent.withValues(alpha: 0.28),
+                      ),
+                      Expanded(child: _buildStatCell(statItems[3], isMobile: isMobile)),
                     ],
                   ),
                 ],
@@ -410,15 +518,21 @@ class ProcessSection extends StatelessWidget {
                     );
                   }
                   final item = statItems[index ~/ 2];
-                  return Expanded(child: _buildStatCell(item));
+                  return Expanded(
+                    child: _buildStatCell(item, isMobile: false, isLaptop: isLaptop),
+                  );
                 }),
               ),
       );
     });
   }
 
-  // Cell layout in Image 2: Icon + Number on TOP, Label on BOTTOM
-  Widget _buildStatCell(_StatModel s) {
+  // Cell layout: Icon + Number on TOP, Label on BOTTOM
+  Widget _buildStatCell(
+    _StatModel s, {
+    required bool isMobile,
+    bool isLaptop = false,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -429,14 +543,14 @@ class ProcessSection extends StatelessWidget {
           children: [
             Icon(
               s.icon,
-              size: 21,
+              size: isMobile ? 18 : (isLaptop ? 19 : 21),
               color: AppColors.secondaryAccent,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: isMobile ? 6 : 8),
             Text(
               s.number,
               style: GoogleFonts.italiana(
-                fontSize: 21,
+                fontSize: isMobile ? 18 : (isLaptop ? 19 : 21),
                 fontWeight: FontWeight.bold,
                 color: AppColors.secondaryAccent,
                 height: 1.0,
@@ -449,7 +563,7 @@ class ProcessSection extends StatelessWidget {
           s.label,
           textAlign: TextAlign.center,
           style: AppTheme.sansBody(
-            fontSize: 8.5,
+            fontSize: isMobile ? 8.0 : (isLaptop ? 8.0 : 8.5),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.4,
             color: Colors.white.withValues(alpha: 0.88),
@@ -462,8 +576,10 @@ class ProcessSection extends StatelessWidget {
   // ── REVIEWS SECTION ────────────────────────────────────────────────────────
   Widget _buildReviewsSection({
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
     required bool isMobile,
+    required double availableWidth,
   }) {
     final controller = Get.isRegistered<CatalogController>()
         ? Get.find<CatalogController>()
@@ -491,7 +607,13 @@ class ProcessSection extends StatelessWidget {
                 textAlign: TextAlign.center,
                 text: TextSpan(
                   style: GoogleFonts.italiana(
-                    fontSize: isDesktop ? 26.0 : 21.0,
+                    fontSize: isDesktop
+                        ? 26.0
+                        : (isLaptop
+                            ? 24.0
+                            : (isTablet
+                                ? 22.0
+                                : (availableWidth < 360 ? 17.5 : 19.5))),
                     letterSpacing: 1.0,
                     fontWeight: FontWeight.w400,
                   ),
@@ -508,7 +630,7 @@ class ProcessSection extends StatelessWidget {
               Text(
                 "Real experiences shared by our happy clients.",
                 style: AppTheme.sansBody(
-                  fontSize: 12.5,
+                  fontSize: isMobile ? 11.5 : 12.5,
                   color: const Color(0xFFBAC5C0),
                 ),
                 textAlign: TextAlign.center,
@@ -516,7 +638,7 @@ class ProcessSection extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: isMobile ? 16 : 20),
 
         // Carousel of Testimonials
         if (controller != null)
@@ -528,16 +650,20 @@ class ProcessSection extends StatelessWidget {
             return _TestimonialCarousel(
               reviews: reviews,
               isDesktop: isDesktop,
+              isLaptop: isLaptop,
               isTablet: isTablet,
               isMobile: isMobile,
+              availableWidth: availableWidth,
             );
           })
         else
           _TestimonialCarousel(
             reviews: _defaultReviews,
             isDesktop: isDesktop,
+            isLaptop: isLaptop,
             isTablet: isTablet,
             isMobile: isMobile,
+            availableWidth: availableWidth,
           ),
       ],
     );
@@ -600,8 +726,14 @@ final List<Review> _defaultReviews = [
 // ─── Process Card Widget with Cinematic Atmosphere ───────────────────────────
 class _ProcessCard extends StatefulWidget {
   final _StepData step;
+  final bool isMobile;
+  final bool isLaptop;
 
-  const _ProcessCard({required this.step});
+  const _ProcessCard({
+    required this.step,
+    required this.isMobile,
+    required this.isLaptop,
+  });
 
   @override
   State<_ProcessCard> createState() => _ProcessCardState();
@@ -613,6 +745,8 @@ class _ProcessCardState extends State<_ProcessCard> {
   @override
   Widget build(BuildContext context) {
     final s = widget.step;
+    final isMobile = widget.isMobile;
+    final isLaptop = widget.isLaptop;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -620,8 +754,11 @@ class _ProcessCardState extends State<_ProcessCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOut,
-        transform: Matrix4.translationValues(0.0, _hovered ? -4.0 : 0.0, 0.0),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        transform: Matrix4.translationValues(0.0, _hovered ? -3.0 : 0.0, 0.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 14 : (isLaptop ? 12 : 16),
+          vertical: isMobile ? 12 : (isLaptop ? 14 : 16),
+        ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           // Deep near-black base with subtle warm gold/amber atmospheric lighting
@@ -663,7 +800,7 @@ class _ProcessCardState extends State<_ProcessCard> {
         ),
         child: Stack(
           children: [
-            // Soft warm gold ambient glow in upper area matching Image 2
+            // Soft warm gold ambient glow in upper area
             Positioned(
               top: -24,
               left: -24,
@@ -684,143 +821,213 @@ class _ProcessCardState extends State<_ProcessCard> {
               ),
             ),
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Top Row: Number badge + Icon
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Number badge
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.secondaryAccent.withValues(alpha: 0.85),
-                          width: 1.4,
-                        ),
-                        gradient: const RadialGradient(
-                          colors: [
-                            Color(0xFF261D12),
-                            Color(0xFF0C130E),
+            // Card content: Horizontal for mobile, Vertical column for Desktop/Tablet
+            if (isMobile)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Number badge on left
+                  _buildNumberBadge(s.number, isCompact: true),
+                  const SizedBox(width: 12),
+
+                  // Title + Description in center
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                s.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.italiana(
+                                  fontSize: 14.5,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              s.icon,
+                              size: 14,
+                              color: AppColors.secondaryAccent.withValues(alpha: 0.8),
+                            ),
                           ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.secondaryAccent.withValues(alpha: 0.22),
-                            blurRadius: 8,
+                        const SizedBox(height: 3),
+                        Text(
+                          s.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.sansBody(
+                            fontSize: 10.5,
+                            color: const Color(0xFFBAC5C0),
+                            height: 1.35,
                           ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        s.number,
-                        style: GoogleFonts.italiana(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.secondaryAccent,
-                        ),
-                      ),
-                    ),
-                    // Icon in compact rounded square container
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: const Color(0xFF0B1410),
-                        border: Border.all(
-                          color: AppColors.secondaryAccent.withValues(alpha: 0.5),
-                          width: 1.0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.secondaryAccent.withValues(alpha: 0.10),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        s.icon,
-                        size: 16,
-                        color: AppColors.secondaryAccent,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-
-                // Title
-                Text(
-                  s.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.italiana(
-                    fontSize: 16.5,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.35,
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // Description
-                SizedBox(
-                  height: 48,
-                  child: Text(
-                    s.description,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.sansBody(
-                      fontSize: 11.5,
-                      color: const Color(0xFFBAC5C0),
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Bottom Right Arrow Pill
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const RadialGradient(
-                        center: Alignment(-0.2, -0.2),
-                        colors: [
-                          Color(0xFFFFF2B2),
-                          AppColors.secondaryAccent,
-                          Color(0xFFC4952B),
-                        ],
-                        stops: [0.0, 0.7, 1.0],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.secondaryAccent.withValues(alpha: 0.45),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 15,
-                      color: Color(0xFF0B1410),
+                  ),
+                  const SizedBox(width: 10),
+
+                  // Action arrow button on right
+                  _buildArrowPill(isCompact: true),
+                ],
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Row: Number badge + Icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildNumberBadge(s.number, isCompact: isLaptop),
+                      _buildIconBox(s.icon, isCompact: isLaptop),
+                    ],
+                  ),
+                  SizedBox(height: isLaptop ? 10 : 14),
+
+                  // Title
+                  Text(
+                    s.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.italiana(
+                      fontSize: isLaptop ? 15.0 : 16.5,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.35,
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 6),
+
+                  // Description
+                  Expanded(
+                    child: Text(
+                      s.description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.sansBody(
+                        fontSize: isLaptop ? 10.5 : 11.5,
+                        color: const Color(0xFFBAC5C0),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Bottom Right Arrow Pill
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildArrowPill(isCompact: isLaptop),
+                  ),
+                ],
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNumberBadge(String number, {required bool isCompact}) {
+    final size = isCompact ? 32.0 : 36.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: AppColors.secondaryAccent.withValues(alpha: 0.85),
+          width: 1.3,
+        ),
+        gradient: const RadialGradient(
+          colors: [
+            Color(0xFF261D12),
+            Color(0xFF0C130E),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondaryAccent.withValues(alpha: 0.22),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        number,
+        style: GoogleFonts.italiana(
+          fontSize: isCompact ? 13.0 : 14.5,
+          fontWeight: FontWeight.bold,
+          color: AppColors.secondaryAccent,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconBox(IconData icon, {required bool isCompact}) {
+    final size = isCompact ? 28.0 : 32.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFF0B1410),
+        border: Border.all(
+          color: AppColors.secondaryAccent.withValues(alpha: 0.5),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondaryAccent.withValues(alpha: 0.10),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        icon,
+        size: isCompact ? 14 : 16,
+        color: AppColors.secondaryAccent,
+      ),
+    );
+  }
+
+  Widget _buildArrowPill({required bool isCompact}) {
+    final size = isCompact ? 26.0 : 30.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const RadialGradient(
+          center: Alignment(-0.2, -0.2),
+          colors: [
+            Color(0xFFFFF2B2),
+            AppColors.secondaryAccent,
+            Color(0xFFC4952B),
+          ],
+          stops: [0.0, 0.7, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondaryAccent.withValues(alpha: 0.45),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.arrow_forward_rounded,
+        size: isCompact ? 13 : 15,
+        color: const Color(0xFF0B1410),
       ),
     );
   }
@@ -830,14 +1037,18 @@ class _ProcessCardState extends State<_ProcessCard> {
 class _TestimonialCarousel extends StatefulWidget {
   final List<Review> reviews;
   final bool isDesktop;
+  final bool isLaptop;
   final bool isTablet;
   final bool isMobile;
+  final double availableWidth;
 
   const _TestimonialCarousel({
     required this.reviews,
     required this.isDesktop,
+    required this.isLaptop,
     required this.isTablet,
     required this.isMobile,
+    required this.availableWidth,
   });
 
   @override
@@ -857,6 +1068,20 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
   }
 
   @override
+  void didUpdateWidget(covariant _TestimonialCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final pageCount = _getPageCount();
+    if (_currentPage >= pageCount && pageCount > 0) {
+      _currentPage = pageCount - 1;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          _pageController.jumpToPage(_currentPage);
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _stopAutoPlay();
     _pageController.dispose();
@@ -873,11 +1098,13 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
       final pageCount = _getPageCount();
       if (pageCount <= 1) return;
       final nextPage = (_currentPage + 1) % pageCount;
-      _pageController.animateToPage(
-        nextPage,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutCubic,
-      );
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOutCubic,
+        );
+      }
     });
   }
 
@@ -887,8 +1114,11 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
   }
 
   int _getItemsPerPage() {
-    if (widget.isDesktop) return 3;
-    if (widget.isTablet) return 2;
+    // 3 cards on desktop, laptop, and tablet >= 768px (matches tablet 4:3 reference)
+    if (widget.availableWidth >= 768) return 3;
+    // 2 cards on narrow tablet (600px - 767px)
+    if (widget.availableWidth >= 600) return 2;
+    // 1 card on mobile (< 600px)
     return 1;
   }
 
@@ -914,34 +1144,39 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
       pages.add(widget.reviews.sublist(i, end));
     }
 
+    final double cardHeight = widget.isMobile ? 180.0 : (widget.isTablet ? 176.0 : 172.0);
+
     return Column(
       children: [
         Row(
           children: [
-            // Left Chevron Button
-            if (pageCount > 1)
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: _arrowButton(
-                  icon: Icons.chevron_left_rounded,
-                  onPressed: () {
-                    _startAutoPlay();
-                    final prevPage = (_currentPage - 1 + pageCount) % pageCount;
-                    _pageController.animateToPage(
-                      prevPage,
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeInOutCubic,
-                    );
-                  },
-                ),
+            // Left Chevron Button - always visible outside cards, disabled if pageCount <= 1
+            Padding(
+              padding: EdgeInsets.only(right: widget.isMobile ? 4.0 : 8.0),
+              child: _arrowButton(
+                icon: Icons.chevron_left_rounded,
+                isMobile: widget.isMobile,
+                onPressed: pageCount > 1
+                    ? () {
+                        _startAutoPlay();
+                        final prevPage = (_currentPage - 1 + pageCount) % pageCount;
+                        _pageController.animateToPage(
+                          prevPage,
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOutCubic,
+                        );
+                      }
+                    : null,
               ),
+            ),
 
-            // PageView
+            // PageView containing cards
             Expanded(
               child: SizedBox(
-                height: 172,
+                height: cardHeight,
                 child: PageView.builder(
                   controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
                   onPageChanged: (index) {
                     setState(() {
                       _currentPage = index;
@@ -951,12 +1186,18 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
                   itemBuilder: (context, pageIndex) {
                     final pageItems = pages[pageIndex];
                     return Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: List.generate(itemsPerPage, (index) {
                         if (index < pageItems.length) {
                           return Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                              child: _TestimonialCard(review: pageItems[index]),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: widget.isMobile ? 0.0 : 6.0,
+                              ),
+                              child: _TestimonialCard(
+                                review: pageItems[index],
+                                isMobile: widget.isMobile,
+                              ),
                             ),
                           );
                         } else {
@@ -969,89 +1210,104 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
               ),
             ),
 
-            // Right Chevron Button
-            if (pageCount > 1)
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: _arrowButton(
-                  icon: Icons.chevron_right_rounded,
-                  onPressed: () {
+            // Right Chevron Button - always visible outside cards, disabled if pageCount <= 1
+            Padding(
+              padding: EdgeInsets.only(left: widget.isMobile ? 4.0 : 8.0),
+              child: _arrowButton(
+                icon: Icons.chevron_right_rounded,
+                isMobile: widget.isMobile,
+                onPressed: pageCount > 1
+                    ? () {
+                        _startAutoPlay();
+                        final nextPage = (_currentPage + 1) % pageCount;
+                        _pageController.animateToPage(
+                          nextPage,
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOutCubic,
+                        );
+                      }
+                    : null,
+              ),
+            ),
+          ],
+        ),
+
+        // Indicator dots
+        if (pageCount > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 14.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(pageCount, (index) {
+                final isSelected = _currentPage == index;
+                return GestureDetector(
+                  onTap: () {
                     _startAutoPlay();
-                    final nextPage = (_currentPage + 1) % pageCount;
                     _pageController.animateToPage(
-                      nextPage,
+                      index,
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeInOutCubic,
                     );
                   },
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // Indicator dots
-        if (pageCount > 1)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(pageCount, (index) {
-              final isSelected = _currentPage == index;
-              return GestureDetector(
-                onTap: () {
-                  _startAutoPlay();
-                  _pageController.animateToPage(
-                    index,
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOutCubic,
-                  );
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: isSelected ? 18 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(3),
-                    color: isSelected
-                        ? AppColors.secondaryAccent
-                        : Colors.white.withValues(alpha: 0.2),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: isSelected ? 18 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      color: isSelected
+                          ? AppColors.secondaryAccent
+                          : Colors.white.withValues(alpha: 0.2),
+                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
       ],
     );
   }
 
-  Widget _arrowButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _arrowButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required bool isMobile,
+  }) {
+    final isEnabled = onPressed != null;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          width: 32,
-          height: 32,
+          width: isMobile ? 28 : 32,
+          height: isMobile ? 28 : 32,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: const Color(0xFF0A1310),
             border: Border.all(
-              color: AppColors.secondaryAccent.withValues(alpha: 0.52),
+              color: isEnabled
+                  ? AppColors.secondaryAccent.withValues(alpha: 0.52)
+                  : AppColors.secondaryAccent.withValues(alpha: 0.22),
               width: 1.0,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.secondaryAccent.withValues(alpha: 0.1),
-                blurRadius: 8,
-              ),
-            ],
+            boxShadow: isEnabled
+                ? [
+                    BoxShadow(
+                      color: AppColors.secondaryAccent.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                    ),
+                  ]
+                : null,
           ),
           alignment: Alignment.center,
           child: Icon(
             icon,
-            size: 18,
-            color: AppColors.secondaryAccent,
+            size: isMobile ? 16 : 18,
+            color: isEnabled
+                ? AppColors.secondaryAccent
+                : AppColors.secondaryAccent.withValues(alpha: 0.35),
           ),
         ),
       ),
@@ -1062,8 +1318,12 @@ class _TestimonialCarouselState extends State<_TestimonialCarousel> {
 // ─── Testimonial Card Widget ─────────────────────────────────────────────────
 class _TestimonialCard extends StatelessWidget {
   final Review review;
+  final bool isMobile;
 
-  const _TestimonialCard({required this.review});
+  const _TestimonialCard({
+    required this.review,
+    required this.isMobile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1072,7 +1332,10 @@ class _TestimonialCard extends StatelessWidget {
         : review.customerName[0].toUpperCase();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: 12,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF070D0A),
         borderRadius: BorderRadius.circular(14),
@@ -1097,45 +1360,48 @@ class _TestimonialCard extends StatelessWidget {
             children: [
               Row(
                 mainAxisSize: MainAxisSize.min,
-                children: List.generate(5, (index) {
-                  return const Icon(
+                children: List.generate(review.rating.clamp(1, 5), (index) {
+                  return Icon(
                     Icons.star_rounded,
-                    size: 14,
+                    size: isMobile ? 13 : 14,
                     color: AppColors.secondaryAccent,
                   );
                 }),
               ),
               Icon(
                 Icons.format_quote_rounded,
-                size: 22,
+                size: isMobile ? 20 : 22,
                 color: AppColors.secondaryAccent.withValues(alpha: 0.45),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
           // Comment
           Expanded(
-            child: Text(
-              review.comment,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.sansBody(
-                fontSize: 11.5,
-                color: Colors.white.withValues(alpha: 0.92),
-                height: 1.45,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Text(
+                review.comment,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.sansBody(
+                  fontSize: isMobile ? 11.0 : 11.5,
+                  color: Colors.white.withValues(alpha: 0.92),
+                  height: 1.38,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           // Customer Profile Details
           Row(
             children: [
               // Avatar circle with initial
               Container(
-                width: 28,
-                height: 28,
+                width: 26,
+                height: 26,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -1148,7 +1414,7 @@ class _TestimonialCard extends StatelessWidget {
                 child: Text(
                   initials,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.bold,
                     color: AppColors.secondaryAccent,
                   ),
@@ -1170,15 +1436,16 @@ class _TestimonialCard extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    Text(
-                      review.eventName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.sansBody(
-                        fontSize: 9.5,
-                        color: AppColors.muted,
+                    if (review.eventName.isNotEmpty)
+                      Text(
+                        review.eventName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.sansBody(
+                          fontSize: 9.0,
+                          color: AppColors.muted,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),

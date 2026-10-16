@@ -18,6 +18,19 @@ import 'package:om_event/presentation/widgets/app_page_container.dart';
 import 'package:om_event/domain/entities/faq_item.dart';
 import 'package:om_event/presentation/controllers/faq_controller.dart';
 
+// ─── Benefit / Trust Card data model ───────────────────────────────────────
+class _BenefitModel {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  const _BenefitModel({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+}
+
 // ─── Main Unified FAQ Section with Separated Premium Footer ───────────────────
 class FAQSection extends StatefulWidget {
   final bool isDesktop;
@@ -46,6 +59,8 @@ class _FAQSectionState extends State<FAQSection> {
   String _searchQuery = '';
   String _selectedCategory = 'ALL';
   final Set<int> _expandedIndices = {};
+  bool _mobileExploreExpanded = true;
+  bool _mobileHelpExpanded = true;
 
   @override
   void dispose() {
@@ -55,17 +70,25 @@ class _FAQSectionState extends State<FAQSection> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isDesktopLayout = width >= 1024 && widget.isDesktop;
-    final bool isTabletLayout = width >= 650 && width < 1024;
-    final bool isMobileLayout = width < 650;
+    final width = MediaQuery.sizeOf(context).width;
+    final bool isDesktopLayout = width >= 1200;
+    final bool isLaptopLayout = width >= 1024 && width < 1200;
+    final bool isTabletLayout = width >= 600 && width < 1024;
+    final bool isMobileLayout = width < 600;
+
+    final double hPad = isMobileLayout
+        ? (width < 380 ? 10.0 : 14.0)
+        : AppPageContainer.horizontalPadding(context);
+    final double vPad = isDesktopLayout
+        ? 44.0
+        : (isLaptopLayout ? 36.0 : (isTabletLayout ? 30.0 : 20.0));
 
     return Container(
       width: double.infinity,
       color: const Color(0xFF152621), // Page background
       padding: EdgeInsets.symmetric(
-        horizontal: AppPageContainer.horizontalPadding(context),
-        vertical: isDesktopLayout ? 44.0 : 28.0,
+        horizontal: hPad,
+        vertical: vPad,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -73,12 +96,14 @@ class _FAQSectionState extends State<FAQSection> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── SECTION 1: FAQ MAIN SHOWCASE (Target First Image) ─────────
+              // ── SECTION 1: FAQ MAIN SHOWCASE (Target Reference Image) ──────
               _buildFaqMainShowcase(
                 context,
                 isDesktop: isDesktopLayout,
+                isLaptop: isLaptopLayout,
                 isTablet: isTabletLayout,
                 isMobile: isMobileLayout,
+                width: width,
               ),
 
               // ── VERTICAL GAP BETWEEN SECTIONS (40–64px desktop / 40px mobile)
@@ -88,6 +113,7 @@ class _FAQSectionState extends State<FAQSection> {
               _buildSeparateFooter(
                 context,
                 isDesktop: isDesktopLayout,
+                isLaptop: isLaptopLayout,
                 isTablet: isTabletLayout,
                 isMobile: isMobileLayout,
               ),
@@ -99,19 +125,28 @@ class _FAQSectionState extends State<FAQSection> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SECTION 1: FAQ MAIN SHOWCASE (FIRST REFERENCE IMAGE)
+  // SECTION 1: FAQ MAIN SHOWCASE
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildFaqMainShowcase(
     BuildContext context, {
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
     required bool isMobile,
+    required double width,
   }) {
+    final double innerHPad = isDesktop
+        ? 32.0
+        : (isLaptop ? 24.0 : (isTablet ? 20.0 : (width < 380 ? 12.0 : 16.0)));
+    final double innerVPad = isDesktop
+        ? 30.0
+        : (isLaptop ? 26.0 : (isTablet ? 22.0 : 16.0));
+
     return Container(
       decoration: BoxDecoration(
         // Near-black luxury base with deep subtle emerald undertone
         color: const Color(0xFF060907),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 22),
         border: Border.all(
           color: AppColors.secondaryAccent.withValues(alpha: 0.45),
           width: 1.3,
@@ -142,8 +177,8 @@ class _FAQSectionState extends State<FAQSection> {
           // Main Foreground Content
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 32.0 : (isTablet ? 24.0 : 18.0),
-              vertical: isDesktop ? 30.0 : (isTablet ? 24.0 : 20.0),
+              horizontal: innerHPad,
+              vertical: innerVPad,
             ),
             child: Obx(() {
               final faqCtrl = Get.isRegistered<FaqController>()
@@ -174,46 +209,72 @@ class _FAQSectionState extends State<FAQSection> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── TOP: Left Expanded Intro Content + Right 2-Col Grid ───
-                  if (isDesktop)
+                  // Desktop, Laptop & Tablet: 2-Column composition
+                  // Mobile: Stacked vertically
+                  if (isDesktop || isLaptop || isTablet)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Left: FAQ eyebrow, title, description, search, filters, support cards
+                        // Left Column: Eyebrow, title, description, search, chips, benefit cards
                         Expanded(
-                          flex: 48,
+                          flex: isDesktop ? 44 : (isLaptop ? 45 : 46),
                           child: _buildLeftIntroColumn(
-                            isDesktop: true,
+                            isDesktop: isDesktop,
+                            isLaptop: isLaptop,
+                            isTablet: isTablet,
+                            isMobile: false,
                             categories: dynamicCategories,
+                            width: width,
                           ),
                         ),
-                        const SizedBox(width: 32),
+                        SizedBox(width: isDesktop ? 32 : (isLaptop ? 24 : 18)),
 
-                        // Right: 2-Column Grid of FAQ cards matching First Image
+                        // Right Column:
+                        // Desktop & Laptop: 2 subcolumns of FAQ cards
+                        // Tablet: 1 single column of FAQ cards
                         Expanded(
-                          flex: 52,
-                          child: _buildRightFaqGrid(filteredFaqs, isDesktop: true),
+                          flex: isDesktop ? 56 : (isLaptop ? 55 : 54),
+                          child: _buildRightFaqGrid(
+                            filteredFaqs,
+                            useTwoColumns: isDesktop || isLaptop,
+                            isMobile: false,
+                          ),
                         ),
                       ],
                     )
                   else
-                    // Mobile / Tablet Stacked Layout
+                    // Mobile Stacked Layout
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLeftIntroColumn(
                           isDesktop: false,
+                          isLaptop: false,
+                          isTablet: false,
+                          isMobile: true,
                           categories: dynamicCategories,
+                          width: width,
                         ),
-                        const SizedBox(height: 26),
-                        _buildRightFaqGrid(filteredFaqs, isDesktop: false),
+                        const SizedBox(height: 22),
+                        _buildRightFaqGrid(
+                          filteredFaqs,
+                          useTwoColumns: false,
+                          isMobile: true,
+                        ),
                       ],
                     ),
 
-                  const SizedBox(height: 32),
+                  SizedBox(height: isMobile ? 24 : 32),
 
                   // ── BOTTOM OF SECTION 1: Full-Width CTA Conversation Banner ──
-                  _buildCtaBanner(context, isDesktop: isDesktop),
+                  _buildCtaBanner(
+                    context,
+                    isDesktop: isDesktop,
+                    isLaptop: isLaptop,
+                    isTablet: isTablet,
+                    isMobile: isMobile,
+                    width: width,
+                  ),
                 ],
               );
             }),
@@ -223,8 +284,15 @@ class _FAQSectionState extends State<FAQSection> {
     );
   }
 
-  // ── LEFT INTRO COLUMN (WIDER & EXPANDED) ───────────────────────────────────
-  Widget _buildLeftIntroColumn({required bool isDesktop, required List<String> categories}) {
+  // ── LEFT INTRO COLUMN ──────────────────────────────────────────────────────
+  Widget _buildLeftIntroColumn({
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+    required List<String> categories,
+    required double width,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -256,7 +324,13 @@ class _FAQSectionState extends State<FAQSection> {
         RichText(
           text: TextSpan(
             style: GoogleFonts.italiana(
-              fontSize: isDesktop ? 36.0 : 26.0,
+              fontSize: isDesktop
+                  ? 36.0
+                  : (isLaptop
+                      ? 30.0
+                      : (isTablet
+                          ? 25.0
+                          : (width < 360 ? 19.0 : 22.0))),
               fontWeight: FontWeight.w400,
               height: 1.08,
               letterSpacing: 0.6,
@@ -281,20 +355,20 @@ class _FAQSectionState extends State<FAQSection> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         // Description
         Text(
           "Clear information so you can plan your celebration with confidence.",
           style: AppTheme.sansBody(
-            fontSize: 12.5,
+            fontSize: isDesktop ? 12.5 : 11.5,
             color: const Color(0xFFBAC5C0),
             height: 1.45,
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: isMobile ? 16 : 20),
 
-        // Search Input (Wide, Clean, Elegant)
+        // Search Input (Clean, Elegant, Responsive)
         Container(
           height: 42,
           decoration: BoxDecoration(
@@ -316,7 +390,7 @@ class _FAQSectionState extends State<FAQSection> {
             decoration: InputDecoration(
               hintText: "Search questions...",
               hintStyle: AppTheme.sansBody(
-                fontSize: 12.5,
+                fontSize: 12.0,
                 color: const Color(0xFF75857F),
               ),
               prefixIcon: Icon(
@@ -344,12 +418,12 @@ class _FAQSectionState extends State<FAQSection> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
 
-        // Category Filter Pills
+        // Category Filter Pills (Wrapping naturally)
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 7,
+          runSpacing: 7,
           children: categories.map((cat) {
             final isSelected = _selectedCategory == cat;
             return InkWell(
@@ -361,7 +435,7 @@ class _FAQSectionState extends State<FAQSection> {
               borderRadius: BorderRadius.circular(16),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5.5),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5.0),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.secondaryAccent
@@ -377,7 +451,7 @@ class _FAQSectionState extends State<FAQSection> {
                 child: Text(
                   cat,
                   style: AppTheme.sansBody(
-                    fontSize: 10,
+                    fontSize: 9.5,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     letterSpacing: 0.8,
                     color: isSelected
@@ -389,76 +463,124 @@ class _FAQSectionState extends State<FAQSection> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: isMobile ? 18 : 22),
 
-        // Support / Trust Feature Cards (4 Cards in a horizontal row on Desktop)
-        if (isDesktop)
-          Row(
-            children: [
+        // Trust / Feature Benefit Cards
+        _buildBenefitCards(
+          isDesktop: isDesktop,
+          isLaptop: isLaptop,
+          isTablet: isTablet,
+          isMobile: isMobile,
+        ),
+      ],
+    );
+  }
+
+  // ── 4 BENEFIT CARDS ────────────────────────────────────────────────────────
+  Widget _buildBenefitCards({
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+  }) {
+    const cards = [
+      _BenefitModel(
+        icon: Icons.lightbulb_outline_rounded,
+        title: "Quick Answers",
+        description: "Get instant clarity for your doubts.",
+      ),
+      _BenefitModel(
+        icon: Icons.settings_outlined,
+        title: "Plan Confidently",
+        description: "Know every detail before you book.",
+      ),
+      _BenefitModel(
+        icon: Icons.shield_outlined,
+        title: "Transparent",
+        description: "No hidden terms or charges.",
+      ),
+      _BenefitModel(
+        icon: Icons.headset_mic_outlined,
+        title: "Dedicated Support",
+        description: "We're here to help you anytime.",
+      ),
+    ];
+
+    // Desktop and Laptop: 4 Cards in 1 horizontal row
+    if (isDesktop || isLaptop) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (int i = 0; i < cards.length; i++) ...[
               Expanded(
                 child: _buildSupportCard(
-                  icon: Icons.lightbulb_outline_rounded,
-                  title: "Quick Answers",
-                  description: "Get instant clarity for your doubts.",
+                  icon: cards[i].icon,
+                  title: cards[i].title,
+                  description: cards[i].description,
+                  isLaptop: isLaptop,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSupportCard(
-                  icon: Icons.settings_outlined,
-                  title: "Plan Confidently",
-                  description: "Know every detail before you book.",
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSupportCard(
-                  icon: Icons.shield_outlined,
-                  title: "Transparent",
-                  description: "No hidden terms or charges.",
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSupportCard(
-                  icon: Icons.headset_mic_outlined,
-                  title: "Dedicated Support",
-                  description: "We're here to help you anytime.",
-                ),
-              ),
+              if (i < cards.length - 1) SizedBox(width: isLaptop ? 6 : 8),
             ],
-          )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          ],
+        ),
+      );
+    }
+
+    // Tablet & Mobile: Clean 2x2 grid with equal width within each row
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSupportCard(
-                icon: Icons.lightbulb_outline_rounded,
-                title: "Quick Answers",
-                description: "Get instant clarity for your doubts.",
-                width: 140,
+              Expanded(
+                child: _buildSupportCard(
+                  icon: cards[0].icon,
+                  title: cards[0].title,
+                  description: cards[0].description,
+                  isLaptop: false,
+                ),
               ),
-              _buildSupportCard(
-                icon: Icons.settings_outlined,
-                title: "Plan Confidently",
-                description: "Know every detail before you book.",
-                width: 140,
-              ),
-              _buildSupportCard(
-                icon: Icons.shield_outlined,
-                title: "Transparent",
-                description: "No hidden terms or charges.",
-                width: 140,
-              ),
-              _buildSupportCard(
-                icon: Icons.headset_mic_outlined,
-                title: "Dedicated Support",
-                description: "We're here to help you anytime.",
-                width: 140,
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildSupportCard(
+                  icon: cards[1].icon,
+                  title: cards[1].title,
+                  description: cards[1].description,
+                  isLaptop: false,
+                ),
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 8),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildSupportCard(
+                  icon: cards[2].icon,
+                  title: cards[2].title,
+                  description: cards[2].description,
+                  isLaptop: false,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildSupportCard(
+                  icon: cards[3].icon,
+                  title: cards[3].title,
+                  description: cards[3].description,
+                  isLaptop: false,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -467,11 +589,13 @@ class _FAQSectionState extends State<FAQSection> {
     required IconData icon,
     required String title,
     required String description,
-    double? width,
+    required bool isLaptop,
   }) {
     return Container(
-      width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isLaptop ? 6 : 8,
+        vertical: isLaptop ? 10 : 12,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF09120E),
         borderRadius: BorderRadius.circular(12),
@@ -485,8 +609,8 @@ class _FAQSectionState extends State<FAQSection> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: isLaptop ? 24 : 28,
+            height: isLaptop ? 24 : 28,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -495,28 +619,35 @@ class _FAQSectionState extends State<FAQSection> {
               ),
               color: const Color(0xFF0F1E18),
             ),
-            child: Icon(icon, size: 14, color: AppColors.secondaryAccent),
+            alignment: Alignment.center,
+            child: Icon(icon, size: isLaptop ? 12 : 14, color: AppColors.secondaryAccent),
           ),
           const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10.5,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: isLaptop ? 9.5 : 10.5,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.sansBody(
-              fontSize: 8.5,
-              color: const Color(0xFF8E9E97),
-              height: 1.3,
+          Expanded(
+            child: Center(
+              child: Text(
+                description,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.sansBody(
+                  fontSize: isLaptop ? 7.5 : 8.5,
+                  color: const Color(0xFF8E9E97),
+                  height: 1.25,
+                ),
+              ),
             ),
           ),
         ],
@@ -524,8 +655,12 @@ class _FAQSectionState extends State<FAQSection> {
     );
   }
 
-  // ── RIGHT FAQ AREA: 2-COLUMN GRID ──────────────────────────────────────────
-  Widget _buildRightFaqGrid(List<dynamic> filteredFaqs, {required bool isDesktop}) {
+  // ── RIGHT FAQ AREA ─────────────────────────────────────────────────────────
+  Widget _buildRightFaqGrid(
+    List<dynamic> filteredFaqs, {
+    required bool useTwoColumns,
+    required bool isMobile,
+  }) {
     if (filteredFaqs.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
@@ -588,27 +723,27 @@ class _FAQSectionState extends State<FAQSection> {
       );
     }
 
-    if (isDesktop) {
-      // 2-Column Responsive Layout matching First Reference Image
+    if (useTwoColumns) {
+      // 2-Column Responsive Layout for Desktop and Laptop
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left Column
+          // Left Subcolumn
           Expanded(
             child: Column(
               children: [
                 for (int i = 0; i < filteredFaqs.length; i += 2)
-                  _buildFaqCard(filteredFaqs[i], i),
+                  _buildFaqCard(filteredFaqs[i], i, isMobile: false),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          // Right Column
+          // Right Subcolumn
           Expanded(
             child: Column(
               children: [
                 for (int i = 1; i < filteredFaqs.length; i += 2)
-                  _buildFaqCard(filteredFaqs[i], i),
+                  _buildFaqCard(filteredFaqs[i], i, isMobile: false),
               ],
             ),
           ),
@@ -616,17 +751,17 @@ class _FAQSectionState extends State<FAQSection> {
       );
     }
 
-    // Mobile / Tablet 1-Column Layout
+    // Tablet & Mobile: 1-Column full-width layout
     return Column(
       children: [
         for (int i = 0; i < filteredFaqs.length; i++)
-          _buildFaqCard(filteredFaqs[i], i),
+          _buildFaqCard(filteredFaqs[i], i, isMobile: isMobile),
       ],
     );
   }
 
   // ── FAQ CARD ───────────────────────────────────────────────────────────────
-  Widget _buildFaqCard(dynamic faq, int index) {
+  Widget _buildFaqCard(dynamic faq, int index, {required bool isMobile}) {
     final String question;
     final String answer;
     final String? category;
@@ -676,7 +811,10 @@ class _FAQSectionState extends State<FAQSection> {
           },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 12 : 14,
+              vertical: isMobile ? 10 : 12,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -686,8 +824,8 @@ class _FAQSectionState extends State<FAQSection> {
                   children: [
                     // Circular Icon Badge
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: isMobile ? 28 : 32,
+                      height: isMobile ? 28 : 32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
@@ -699,20 +837,20 @@ class _FAQSectionState extends State<FAQSection> {
                       alignment: Alignment.center,
                       child: Icon(
                         icon,
-                        size: 15,
+                        size: isMobile ? 13 : 15,
                         color: AppColors.secondaryAccent,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: isMobile ? 8 : 10),
 
                     // Question Text
                     Expanded(
                       child: Text(
                         question,
-                        maxLines: isExpanded ? null : 2,
+                        maxLines: isExpanded ? null : 3,
                         overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                         style: AppTheme.sansBody(
-                          fontSize: 12.5,
+                          fontSize: isMobile ? 11.5 : 12.5,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                           height: 1.35,
@@ -727,7 +865,7 @@ class _FAQSectionState extends State<FAQSection> {
                       duration: const Duration(milliseconds: 200),
                       child: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        size: 19,
+                        size: isMobile ? 17 : 19,
                         color: AppColors.secondaryAccent,
                       ),
                     ),
@@ -745,7 +883,7 @@ class _FAQSectionState extends State<FAQSection> {
                   Text(
                     answer,
                     style: AppTheme.sansBody(
-                      fontSize: 11.5,
+                      fontSize: isMobile ? 11.0 : 11.5,
                       color: const Color(0xFFC0CAC5),
                       height: 1.5,
                     ),
@@ -792,8 +930,19 @@ class _FAQSectionState extends State<FAQSection> {
     return Icons.help_outline_rounded;
   }
 
-  // ── COMPACT CTA BANNER (INSIDE SECTION 1) ──────────────────────────────────
-  Widget _buildCtaBanner(BuildContext context, {required bool isDesktop}) {
+  // ── COMPACT CTA BANNER ─────────────────────────────────────────────────────
+  Widget _buildCtaBanner(
+    BuildContext context, {
+    required bool isDesktop,
+    required bool isLaptop,
+    required bool isTablet,
+    required bool isMobile,
+    required double width,
+  }) {
+    // On Desktop, Laptop, and Tablet >= 700px, use horizontal Row layout.
+    // On narrower mobile screens (< 700px), use stacked Column layout to prevent overlap.
+    final bool useRowLayout = width >= 700;
+
     return Container(
       key: widget.contactKey,
       decoration: BoxDecoration(
@@ -835,10 +984,10 @@ class _FAQSectionState extends State<FAQSection> {
           // Banner Content
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 30 : 18,
-              vertical: isDesktop ? 20 : 16,
+              horizontal: isDesktop ? 30 : (isTablet ? 22 : 16),
+              vertical: isDesktop ? 20 : (isTablet ? 18 : 16),
             ),
-            child: isDesktop
+            child: useRowLayout
                 ? Row(
                     children: [
                       Expanded(
@@ -859,7 +1008,7 @@ class _FAQSectionState extends State<FAQSection> {
                             Text(
                               "Let’s make room for the unexpected.",
                               style: GoogleFonts.italiana(
-                                fontSize: 23,
+                                fontSize: isDesktop ? 23 : (isLaptop ? 21 : 19),
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -868,20 +1017,20 @@ class _FAQSectionState extends State<FAQSection> {
                             Text(
                               "Tell us the dream, the venue, and the budget outline. We’ll compose a signature celebration together.",
                               style: AppTheme.sansBody(
-                                fontSize: 11.5,
+                                fontSize: isDesktop ? 11.5 : 11.0,
                                 color: const Color(0xFFBAC5C0),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 24),
-                      // Pill Button with Chevron matching First Image
+                      const SizedBox(width: 20),
+                      // Pill Button with Chevron
                       InkWell(
                         onTap: () => CustomerDialogHelper.openLeadDialog(context),
                         borderRadius: BorderRadius.circular(24),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
                           decoration: BoxDecoration(
                             color: AppColors.secondaryAccent,
                             borderRadius: BorderRadius.circular(24),
@@ -923,27 +1072,28 @@ class _FAQSectionState extends State<FAQSection> {
                       Text(
                         "PLANNING SOMETHING SPECIAL?",
                         style: AppTheme.sansBody(
-                          fontSize: 9.5,
+                          fontSize: 9.0,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 2.2,
+                          letterSpacing: 2.0,
                           color: AppColors.secondaryAccent,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
                         "Let’s make room for the unexpected.",
                         style: GoogleFonts.italiana(
-                          fontSize: 19,
+                          fontSize: width < 360 ? 17 : 19,
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
                         "Tell us the dream, the venue, and the budget outline. We’ll compose a signature celebration together.",
                         style: AppTheme.sansBody(
-                          fontSize: 11.0,
+                          fontSize: 10.5,
                           color: const Color(0xFFBAC5C0),
+                          height: 1.35,
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -951,7 +1101,7 @@ class _FAQSectionState extends State<FAQSection> {
                         onTap: () => CustomerDialogHelper.openLeadDialog(context),
                         borderRadius: BorderRadius.circular(24),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                           decoration: BoxDecoration(
                             color: AppColors.secondaryAccent,
                             borderRadius: BorderRadius.circular(24),
@@ -986,12 +1136,13 @@ class _FAQSectionState extends State<FAQSection> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SECTION 2: SEPARATE PREMIUM FOOTER (TARGET FIRST REFERENCE IMAGE)
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ═════════════════════════════════════════════════════════════════════════════
+  // ── FOOTER SECTION (SEPARATE CONTAINER MATCHING REFERENCE IMAGES) ───────────
+  // ═════════════════════════════════════════════════════════════════════════════
   Widget _buildSeparateFooter(
     BuildContext context, {
     required bool isDesktop,
+    required bool isLaptop,
     required bool isTablet,
     required bool isMobile,
   }) {
@@ -1156,11 +1307,11 @@ class _FAQSectionState extends State<FAQSection> {
       } catch (_) {}
     }
 
-    // Enclosed premium panel container matching Second Reference Image (Option 2 Modern Card Style)
+    // Enclosed premium panel container matching Reference Images
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF060907),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 22),
         border: Border.all(
           color: AppColors.secondaryAccent.withValues(alpha: 0.45),
           width: 1.2,
@@ -1179,7 +1330,7 @@ class _FAQSectionState extends State<FAQSection> {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: isDesktop
+      child: (isDesktop || isLaptop)
           ? IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1187,13 +1338,16 @@ class _FAQSectionState extends State<FAQSection> {
                   // ── Foreground Content Columns (flex controlled) ──
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(22.0, 16.0, 12.0, 16.0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isLaptop ? 16.0 : 22.0,
+                        vertical: isLaptop ? 14.0 : 16.0,
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 1. BRAND (flex: 32)
+                          // 1. BRAND
                           Expanded(
-                            flex: 32,
+                            flex: isLaptop ? 27 : 30,
                             child: _buildBrandBlock(
                               context,
                               originalDetails,
@@ -1201,42 +1355,44 @@ class _FAQSectionState extends State<FAQSection> {
                               contactSettings,
                               generalInstaUrl,
                               safeLaunch,
+                              isMobile: false,
+                              isLaptop: isLaptop,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          SizedBox(width: isLaptop ? 10 : 14),
 
-                          // 2. EXPLORE (flex: 12)
+                          // 2. EXPLORE
                           Expanded(
-                            flex: 12,
+                            flex: isLaptop ? 11 : 12,
                             child: _buildExploreColumn(),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isLaptop ? 10 : 12),
 
-                          // 3. HELP (flex: 12)
+                          // 3. HELP
                           Expanded(
-                            flex: 12,
+                            flex: isLaptop ? 15 : 12,
                             child: _buildHelpColumn(context),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isLaptop ? 10 : 12),
 
                           // Subtle Vertical Divider 1
                           _buildVerticalDivider(),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isLaptop ? 10 : 12),
 
-                          // 4. VISIT US (flex: 20)
+                          // 4. VISIT US
                           Expanded(
-                            flex: 20,
+                            flex: isLaptop ? 22 : 22,
                             child: _buildVisitUsColumn(branchLines),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isLaptop ? 10 : 12),
 
                           // Subtle Vertical Divider 2
                           _buildVerticalDivider(),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isLaptop ? 10 : 12),
 
-                          // 5. GET IN TOUCH (flex: 24)
+                          // 5. GET IN TOUCH
                           Expanded(
-                            flex: 24,
+                            flex: isLaptop ? 25 : 24,
                             child: _buildGetInTouchColumn(
                               primaryPhone,
                               secondaryPhone,
@@ -1251,10 +1407,10 @@ class _FAQSectionState extends State<FAQSection> {
                     ),
                   ),
 
-                  // ── Integrated Far-Right Decorative Event Image (~140px, ~12% width) ──
+                  // ── Integrated Far-Right Decorative Event Image ──
                   SizedBox(
-                    width: 140,
-                    child: _buildDecorativeImageLayer(width: 140),
+                    width: isLaptop ? 110 : 140,
+                    child: _buildDecorativeImageLayer(width: isLaptop ? 110 : 140),
                   ),
                 ],
               ),
@@ -1265,35 +1421,58 @@ class _FAQSectionState extends State<FAQSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildBrandBlock(
-                        context,
-                        originalDetails,
-                        businessProfile,
-                        contactSettings,
-                        generalInstaUrl,
-                        safeLaunch,
+                      // Top Brand Panel with decorative image on the right
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: _buildBrandBlock(
+                                context,
+                                originalDetails,
+                                businessProfile,
+                                contactSettings,
+                                generalInstaUrl,
+                                safeLaunch,
+                                isMobile: false,
+                                isTablet: true,
+                                isLaptop: false,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            SizedBox(
+                              width: 170,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: _buildDecorativeImageContent(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 18),
-                      Container(
-                        height: 1,
-                        color: AppColors.secondaryAccent.withValues(alpha: 0.15),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Divider(
+                          color: AppColors.secondaryAccent.withValues(alpha: 0.15),
+                          height: 1,
+                        ),
                       ),
-                      const SizedBox(height: 18),
+                      // Bottom 2x2 Grid of links & details
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(flex: 12, child: _buildExploreColumn()),
-                          const SizedBox(width: 10),
-                          Expanded(flex: 12, child: _buildHelpColumn(context)),
-                          const SizedBox(width: 12),
-                          _buildVerticalDivider(),
-                          const SizedBox(width: 12),
-                          Expanded(flex: 22, child: _buildVisitUsColumn(branchLines)),
-                          const SizedBox(width: 12),
-                          _buildVerticalDivider(),
-                          const SizedBox(width: 12),
+                          Expanded(child: _buildExploreColumn()),
+                          const SizedBox(width: 24),
+                          Expanded(child: _buildHelpColumn(context)),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildVisitUsColumn(branchLines)),
+                          const SizedBox(width: 24),
                           Expanded(
-                            flex: 26,
                             child: _buildGetInTouchColumn(
                               primaryPhone,
                               secondaryPhone,
@@ -1303,137 +1482,218 @@ class _FAQSectionState extends State<FAQSection> {
                               safeLaunch,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          SizedBox(
-                            width: 120,
-                            height: 140,
-                            child: _buildDecorativeImageLayer(width: 120),
-                          ),
                         ],
                       ),
                     ],
                   ),
                 )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildBrandBlock(
-                            context,
-                            originalDetails,
-                            businessProfile,
-                            contactSettings,
-                            generalInstaUrl,
-                            safeLaunch,
-                          ),
-                          const SizedBox(height: 20),
-                          Container(
-                            height: 1,
-                            color: AppColors.secondaryAccent.withValues(alpha: 0.15),
-                          ),
-                          const SizedBox(height: 18),
-                          Wrap(
-                            spacing: 24,
-                            runSpacing: 20,
-                            children: [
-                              SizedBox(width: 140, child: _buildExploreColumn()),
-                              SizedBox(width: 140, child: _buildHelpColumn(context)),
-                              SizedBox(width: double.infinity, child: _buildVisitUsColumn(branchLines)),
-                              SizedBox(
-                                width: double.infinity,
-                                child: _buildGetInTouchColumn(
-                                  primaryPhone,
-                                  secondaryPhone,
-                                  primaryEmail,
-                                  instagramKadi,
-                                  instagramThangadh,
-                                  safeLaunch,
+              : Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. Brand Heading and Subtitle
+                      _buildBrandText(context),
+                      const SizedBox(height: 14),
+
+                      // 2. Full-Width "START A CONVERSATION" button
+                      SizedBox(
+                        width: double.infinity,
+                        child: InkWell(
+                          onTap: () => CustomerDialogHelper.openLeadDialog(context),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondaryAccent,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.secondaryAccent.withValues(alpha: 0.30),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "START A CONVERSATION",
+                                  style: AppTheme.sansBody(
+                                    fontSize: 10.0,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.8,
+                                    color: const Color(0xFF070C0A),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 13,
+                                  color: Color(0xFF070C0A),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // 3. Centered Social Media Icons Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _socialIconButton(
+                            icon: Icons.camera_alt_outlined,
+                            onTap: () => safeLaunch(generalInstaUrl),
+                            isMobile: true,
+                          ),
+                          const SizedBox(width: 10),
+                          _socialIconButton(
+                            icon: Icons.facebook_rounded,
+                            onTap: () => safeLaunch(
+                              originalDetails.social.facebook.isNotEmpty
+                                  ? originalDetails.social.facebook
+                                  : "https://facebook.com",
+                            ),
+                            isMobile: true,
+                          ),
+                          const SizedBox(width: 10),
+                          _socialIconButton(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            onTap: () {
+                              final wa = businessProfile.whatsapp.isNotEmpty
+                                  ? businessProfile.whatsapp
+                                  : contactSettings.whatsapp;
+                              safeLaunch(wa.isNotEmpty ? "https://wa.me/$wa" : "https://whatsapp.com");
+                            },
+                            isMobile: true,
+                          ),
+                          const SizedBox(width: 10),
+                          _socialIconButton(
+                            icon: Icons.play_arrow_rounded,
+                            onTap: () => safeLaunch(
+                              originalDetails.social.youtube.isNotEmpty
+                                  ? originalDetails.social.youtube
+                                  : "https://youtube.com",
+                            ),
+                            isMobile: true,
+                          ),
+                          const SizedBox(width: 10),
+                          _socialIconButton(
+                            icon: Icons.business_center_outlined,
+                            onTap: () {
+                              final site = originalDetails.social.website.isNotEmpty
+                                  ? originalDetails.social.website
+                                  : "https://linkedin.com";
+                              safeLaunch(site);
+                            },
+                            isMobile: true,
                           ),
                         ],
                       ),
-                    ),
-                    // Decorative image as a separate visual block at the bottom on mobile
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(22)),
-                      child: SizedBox(
-                        height: 130,
-                        width: double.infinity,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.asset(
-                              AppImages.luxuryEveningDecor,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center,
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    const Color(0xFF060907),
-                                    const Color(0xFF060907).withValues(alpha: 0.20),
-                                    Colors.transparent,
-                                  ],
-                                  stops: const [0.0, 0.40, 1.0],
-                                ),
-                              ),
-                            ),
-                          ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        child: Divider(
+                          color: AppColors.secondaryAccent.withValues(alpha: 0.15),
+                          height: 1,
                         ),
                       ),
-                    ),
-                  ],
+
+                      // 4. Explore (Collapsible Card)
+                      _buildMobileCollapsibleSection(
+                        title: "EXPLORE",
+                        isExpanded: _mobileExploreExpanded,
+                        onToggle: () => setState(() => _mobileExploreExpanded = !_mobileExploreExpanded),
+                        child: _buildExploreLinksList(),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // 5. Help (Collapsible Card)
+                      _buildMobileCollapsibleSection(
+                        title: "HELP",
+                        isExpanded: _mobileHelpExpanded,
+                        onToggle: () => setState(() => _mobileHelpExpanded = !_mobileHelpExpanded),
+                        child: _buildHelpLinksList(context),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 6. Visit Us
+                      _buildVisitUsColumn(branchLines),
+                      const SizedBox(height: 16),
+
+                      // 7. Get In Touch
+                      _buildGetInTouchColumn(
+                        primaryPhone,
+                        secondaryPhone,
+                        primaryEmail,
+                        instagramKadi,
+                        instagramThangadh,
+                        safeLaunch,
+                      ),
+                      const SizedBox(height: 18),
+
+                      // 8. Decorative Event Image at bottom
+                      Container(
+                        height: 120,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.secondaryAccent.withValues(alpha: 0.35),
+                            width: 1.0,
+                          ),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _buildDecorativeImageContent(),
+                      ),
+                    ],
+                  ),
                 ),
     );
   }
 
-  // ── INTEGRATED DECORATIVE EVENT IMAGE (OPTION 2 STYLE) ─────────────────────
+  // ── INTEGRATED DECORATIVE EVENT IMAGE ──────────────────────────────────────
   Widget _buildDecorativeImageLayer({double width = 250}) {
     return SizedBox(
       width: width,
       child: ClipRRect(
         borderRadius: const BorderRadius.horizontal(right: Radius.circular(22)),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Luxury Evening Decor Photo (Warm candlelit floral canopy setup at night)
-            Image.asset(
-              AppImages.luxuryEveningDecor,
-              fit: BoxFit.cover,
-              alignment: Alignment.centerRight,
-            ),
-            // Smooth Vignette & Gradient Mask on Left Edge
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    const Color(0xFF060907),
-                    const Color(0xFF060907).withValues(alpha: 0.85),
-                    const Color(0xFF060907).withValues(alpha: 0.20),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.28, 0.60, 0.90],
-                ),
-              ),
-            ),
-            // Sweeping Champagne-Gold Curved Lines
-            CustomPaint(
-              painter: _RightImageGoldCurvePainter(),
-            ),
-          ],
-        ),
+        child: _buildDecorativeImageContent(),
       ),
+    );
+  }
+
+  Widget _buildDecorativeImageContent() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          AppImages.luxuryEveningDecor,
+          fit: BoxFit.cover,
+          alignment: Alignment.centerRight,
+        ),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                const Color(0xFF060907),
+                const Color(0xFF060907).withValues(alpha: 0.85),
+                const Color(0xFF060907).withValues(alpha: 0.20),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.28, 0.60, 0.90],
+            ),
+          ),
+        ),
+        CustomPaint(
+          painter: _RightImageGoldCurvePainter(),
+        ),
+      ],
     );
   }
 
@@ -1446,15 +1706,8 @@ class _FAQSectionState extends State<FAQSection> {
     );
   }
 
-  // ── BRAND BLOCK (COLUMN 1) ──────────────────────────────────────────────────
-  Widget _buildBrandBlock(
-    BuildContext context,
-    BusinessDetailsEntity originalDetails,
-    BusinessProfile businessProfile,
-    ContactSettings contactSettings,
-    String generalInstaUrl,
-    void Function(String) safeLaunch,
-  ) {
+  // ── BRAND BLOCK ────────────────────────────────────────────────────────────
+  Widget _buildBrandText(BuildContext context, {bool isTablet = false, bool isLaptop = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1471,7 +1724,7 @@ class _FAQSectionState extends State<FAQSection> {
         RichText(
           text: TextSpan(
             style: GoogleFonts.italiana(
-              fontSize: 22,
+              fontSize: isLaptop ? 20 : (isTablet ? 21 : 22),
               fontWeight: FontWeight.w400,
               height: 1.15,
             ),
@@ -1505,8 +1758,27 @@ class _FAQSectionState extends State<FAQSection> {
             height: 1.35,
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildBrandBlock(
+    BuildContext context,
+    BusinessDetailsEntity originalDetails,
+    BusinessProfile businessProfile,
+    ContactSettings contactSettings,
+    String generalInstaUrl,
+    void Function(String) safeLaunch, {
+    bool isMobile = false,
+    bool isTablet = false,
+    bool isLaptop = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildBrandText(context, isTablet: isTablet, isLaptop: isLaptop),
         const SizedBox(height: 10),
-        // CTA Button & Social Icons on the exact same row (matching Image 2)
+        // CTA Button & Social Icons on the same row
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
@@ -1519,7 +1791,10 @@ class _FAQSectionState extends State<FAQSection> {
                 onTap: () => CustomerDialogHelper.openLeadDialog(context),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.5),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isLaptop ? 8 : 10,
+                    vertical: 5.5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.secondaryAccent,
                     borderRadius: BorderRadius.circular(16),
@@ -1555,7 +1830,7 @@ class _FAQSectionState extends State<FAQSection> {
               ),
               const SizedBox(width: 8),
 
-              // Social Icons Row (Matching Image 2)
+              // Social Icons Row
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1574,15 +1849,6 @@ class _FAQSectionState extends State<FAQSection> {
                   ),
                   const SizedBox(width: 4),
                   _socialIconButton(
-                    icon: Icons.play_arrow_rounded,
-                    onTap: () => safeLaunch(
-                      originalDetails.social.youtube.isNotEmpty
-                          ? originalDetails.social.youtube
-                          : "https://youtube.com",
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  _socialIconButton(
                     icon: Icons.chat_bubble_outline_rounded,
                     onTap: () {
                       final wa = businessProfile.whatsapp.isNotEmpty
@@ -1590,6 +1856,15 @@ class _FAQSectionState extends State<FAQSection> {
                           : contactSettings.whatsapp;
                       safeLaunch(wa.isNotEmpty ? "https://wa.me/$wa" : "https://whatsapp.com");
                     },
+                  ),
+                  const SizedBox(width: 4),
+                  _socialIconButton(
+                    icon: Icons.play_arrow_rounded,
+                    onTap: () => safeLaunch(
+                      originalDetails.social.youtube.isNotEmpty
+                          ? originalDetails.social.youtube
+                          : "https://youtube.com",
+                    ),
                   ),
                   const SizedBox(width: 4),
                   _socialIconButton(
@@ -1610,13 +1885,70 @@ class _FAQSectionState extends State<FAQSection> {
     );
   }
 
-  // ── EXPLORE COLUMN ──────────────────────────────────────────────────────────
-  Widget _buildExploreColumn() {
+  // ── MOBILE COLLAPSIBLE SECTION HELPER ──────────────────────────────────────
+  Widget _buildMobileCollapsibleSection({
+    required String title,
+    required bool isExpanded,
+    required VoidCallback onToggle,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF09120E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.secondaryAccent.withValues(alpha: 0.28),
+          width: 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.sansBody(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.6,
+                      color: AppColors.secondaryAccent,
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.25 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: AppColors.secondaryAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+              child: child,
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ── EXPLORE SECTION ────────────────────────────────────────────────────────
+  Widget _buildExploreLinksList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _footerHeading("EXPLORE"),
-        const SizedBox(height: 9),
         _footerLink("Collections", () {
           final ctx = widget.categoriesKey?.currentContext;
           if (ctx != null) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
@@ -1632,13 +1964,22 @@ class _FAQSectionState extends State<FAQSection> {
     );
   }
 
-  // ── HELP COLUMN ─────────────────────────────────────────────────────────────
-  Widget _buildHelpColumn(BuildContext context) {
+  Widget _buildExploreColumn() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _footerHeading("HELP"),
+        _footerHeading("EXPLORE"),
         const SizedBox(height: 9),
+        _buildExploreLinksList(),
+      ],
+    );
+  }
+
+  // ── HELP SECTION ───────────────────────────────────────────────────────────
+  Widget _buildHelpLinksList(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         _footerLink("Cancellation Policy", () => Get.toNamed(AppRoutes.cancellationPolicy)),
         _footerLink("Contact & Studios", () => Get.toNamed(AppRoutes.contact)),
         _footerLink("Stories", () {
@@ -1647,6 +1988,17 @@ class _FAQSectionState extends State<FAQSection> {
         }),
         _footerLink("Track Booking", () => showBookingTrackerDialog(context)),
         _footerLink("FAQ", () {}),
+      ],
+    );
+  }
+
+  Widget _buildHelpColumn(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _footerHeading("HELP"),
+        const SizedBox(height: 9),
+        _buildHelpLinksList(context),
       ],
     );
   }
@@ -1755,7 +2107,7 @@ class _FAQSectionState extends State<FAQSection> {
           ),
         ),
 
-        // 3. Support Email (Must wrap naturally if required, never truncated, no ellipsis)
+        // 3. Support Email
         Padding(
           padding: const EdgeInsets.only(bottom: 5.0),
           child: Row(
@@ -1803,7 +2155,7 @@ class _FAQSectionState extends State<FAQSection> {
 
         // 5. Instagram – Thangadh
         Padding(
-          padding: const EdgeInsets.only(bottom: 3.0),
+          padding: const EdgeInsets.only(bottom: 5.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -1845,17 +2197,24 @@ class _FAQSectionState extends State<FAQSection> {
       child: _FooterHoverLink(
         title: title,
         onTap: onTap,
+        allowWrap: true,
       ),
     );
   }
 
-  Widget _socialIconButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _socialIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isMobile = false,
+  }) {
+    final size = isMobile ? 32.0 : 22.0;
+    final iconSize = isMobile ? 15.0 : 11.0;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 22,
-        height: 22,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
@@ -1865,7 +2224,7 @@ class _FAQSectionState extends State<FAQSection> {
           color: const Color(0xFF0B1410),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 11, color: AppColors.secondaryAccent),
+        child: Icon(icon, size: iconSize, color: AppColors.secondaryAccent),
       ),
     );
   }
