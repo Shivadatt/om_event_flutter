@@ -20,7 +20,8 @@ enum SplashVideoState {
 ///   3. Remote CDN fallback
 /// - Muted autoplay compliant with all modern browser autoplay restrictions
 /// - Zero indefinite spinner: when video is buffering or in fallback, branded visual is seamlessly shown
-/// - Preserved luxury radial vignette overlay and bottom-right OM Events circular badge
+/// - Preserved luxury radial vignette overlay
+/// - Clean presentation letting official video-embedded logo display without duplicate badge
 /// - No duplicate center branding text
 class VideoSplashScreen extends StatefulWidget {
   final bool isBootstrapGate;
@@ -192,103 +193,120 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0D0B),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // 1. Base Luxury Background — always rendered, eliminating any blank black frame
-          Container(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 1.25,
-                colors: [
-                  Color(0xFF1E1A16), // Warm obsidian / deep bronze
-                  Color(0xFF0F0D0B), // Canonical luxury black
-                ],
-              ),
-            ),
-          ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final double screenW = constraints.maxWidth;
+          final double screenH = constraints.maxHeight;
 
-          // 2. Instant First-Frame Splash Poster — renders synchronously, zero blank wait
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/splash_poster.jpg',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
-          ),
+          // Determine native video resolution and aspect ratio (16:9 standard: 1920x1080)
+          final double videoW;
+          final double videoH;
+          if (_controller != null &&
+              _controller!.value.isInitialized &&
+              _controller!.value.size.width > 0 &&
+              _controller!.value.size.height > 0) {
+            videoW = _controller!.value.size.width;
+            videoH = _controller!.value.size.height;
+          } else {
+            videoW = 1920.0;
+            videoH = 1080.0;
+          }
 
-          // 3. Full-screen Video Cover (when initialized and ready to paint)
-          if (_videoState == SplashVideoState.ready &&
-              _controller != null &&
-              _controller!.value.isInitialized)
-            Positioned.fill(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                clipBehavior: Clip.hardEdge,
-                child: SizedBox(
-                  width: _controller!.value.size.width > 0
-                      ? _controller!.value.size.width
-                      : 1920,
-                  height: _controller!.value.size.height > 0
-                      ? _controller!.value.size.height
-                      : 1080,
-                  child: VideoPlayer(_controller!),
-                ),
-              ),
-            ),
+          final double videoAspect = videoW / (videoH > 0 ? videoH : 1.0);
+          final double screenAspect = screenW / (screenH > 0 ? screenH : 1.0);
 
-          // 4. Luxury Dark Radial Vignette Overlay (always layered for visual depth)
-          Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 1.15,
-                colors: [
-                  Colors.black.withValues(alpha: 0.15),
-                  Colors.black.withValues(alpha: 0.55),
-                ],
-              ),
-            ),
-          ),
+          // Calculate exact aspect-ratio-preserving bounds for BoxFit.cover without distortion
+          // Cover strategy: scale uniformly so that the video completely fills screenW and screenH
+          final double coverW;
+          final double coverH;
+          if (screenAspect > videoAspect) {
+            // Viewport is wider than video (e.g. ultra-wide display)
+            // Scale by width to cover horizontally; vertical overflows and is centered & clipped
+            coverW = screenW;
+            coverH = screenW / videoAspect;
+          } else {
+            // Viewport is taller than video (e.g. laptop, tablet, mobile portrait)
+            // Scale by height to cover vertically; horizontal overflows and is centered & clipped
+            coverH = screenH;
+            coverW = screenH * videoAspect;
+          }
 
-          // 5. Preserved Bottom-Right OM Events Circular Badge (no duplicate center text, NO spinner)
-          Positioned(
-            right: 28,
-            bottom: 28,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFFD4AF37).withValues(alpha: 0.7),
-                  width: 1.5,
-                ),
-                color: const Color(0xFF0F0D0B).withValues(alpha: 0.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Text(
-                  'OE',
-                  style: TextStyle(
-                    fontFamily: 'Italiana',
-                    fontSize: 20,
-                    color: Color(0xFFD4AF37),
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 1.2,
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // 1. Base Luxury Background — obsidian/bronze base eliminating any blank black frame
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.25,
+                    colors: [
+                      Color(0xFF1E1A16), // Warm obsidian / deep bronze
+                      Color(0xFF0F0D0B), // Canonical luxury black
+                    ],
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
+
+              // 2. Full-Screen Video & Poster Cover Container (perfectly centered, zero empty margins)
+              ClipRect(
+                child: OverflowBox(
+                  minWidth: coverW,
+                  maxWidth: coverW,
+                  minHeight: coverH,
+                  maxHeight: coverH,
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: coverW,
+                    height: coverH,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Instant First-Frame Splash Poster — renders synchronously, zero blank wait
+                        Image.asset(
+                          'assets/images/splash_poster.jpg',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        ),
+
+                        // Full-screen Video Player (when initialized and ready to paint)
+                        if (_videoState == SplashVideoState.ready &&
+                            _controller != null &&
+                            _controller!.value.isInitialized)
+                          SizedBox.expand(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: videoW,
+                                height: videoH,
+                                child: VideoPlayer(_controller!),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // 3. Luxury Dark Radial Vignette Overlay (full screen depth)
+              IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 1.15,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.15),
+                        Colors.black.withValues(alpha: 0.55),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
