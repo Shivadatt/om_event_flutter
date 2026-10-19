@@ -98,157 +98,156 @@ class _WishlistViewState extends State<WishlistView> {
   @override
   Widget build(BuildContext context) {
     final catalogCtrl = Get.find<CatalogController>();
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 768;
-    final bool isTablet = screenWidth >= 768 && screenWidth < 1200;
 
-    int crossAxisCount;
-    double childAspectRatio;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final bool isDesktop = availableWidth >= 1024;
+        final bool isTablet = availableWidth >= 640 && availableWidth < 1024;
+        final bool isMobile = availableWidth < 640;
 
-    if (screenWidth >= 1200) {
-      crossAxisCount = 3;
-      childAspectRatio = 0.98; // Controlled image height (~240-260px) + compact footer
-    } else if (isTablet) {
-      crossAxisCount = 2;
-      childAspectRatio = 0.98;
-    } else {
-      crossAxisCount = 1;
-      childAspectRatio = 1.12; // Natural mobile proportion without oversized image
-    }
+        // Grid columns: 2 columns on desktop, laptop, and tablet; 1 column on mobile
+        final int crossAxisCount = (isDesktop || isTablet) ? 2 : 1;
+        // 16:9 landscape image with compact card footer gives ~1.15 to 1.25 aspect ratio
+        final double childAspectRatio = (isDesktop || isTablet) ? 1.18 : 1.12;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 12 : 24,
-        vertical: isMobile ? 16 : 24,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Container(
-            padding: EdgeInsets.all(isMobile ? 16 : 24),
-            decoration: BoxDecoration(
-              color: _darkBoardBg,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: _goldColor.withValues(alpha: 0.24),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
+        final double horizontalPadding = isDesktop ? 24 : (isTablet ? 20 : 12);
+        final double verticalPadding = isDesktop ? 24 : 16;
+        final double boardInnerPadding = isMobile ? 14 : 22;
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
+          ),
+          child: Center(
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(boardInnerPadding),
+              decoration: BoxDecoration(
+                color: _darkBoardBg,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: _goldColor.withValues(alpha: 0.24),
+                  width: 1.2,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Header & Toolbar Row ──────────────────────────────
-                _buildHeaderAndToolbar(context, isMobile: isMobile),
-                const SizedBox(height: 14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Header & Toolbar Row ──────────────────────────────
+                  _buildHeaderAndToolbar(context, isMobile: isMobile),
+                  const SizedBox(height: 14),
 
-                // ── Luxury Ornament Divider ──────────────────────────
-                _buildLuxuryDivider(),
-                const SizedBox(height: 20),
+                  // ── Luxury Ornament Divider ──────────────────────────
+                  _buildLuxuryDivider(),
+                  const SizedBox(height: 20),
 
-                // ── Main Dynamic Wishlist Content ─────────────────────
-                Obx(() {
-                  final allWishlist = widget.controller.rxWishlist.toList();
+                  // ── Main Dynamic Wishlist Content ─────────────────────
+                  Obx(() {
+                    final allWishlist = widget.controller.rxWishlist.toList();
 
-                  if (allWishlist.isEmpty) {
-                    return _buildEmptyState(isSearchFiltered: false);
-                  }
-
-                  // ── Apply Search Query Filter ───────────────────────
-                  final filteredWishlist = allWishlist.where((wish) {
-                    if (_searchQuery.trim().isEmpty) return true;
-                    final q = _searchQuery.toLowerCase().trim();
-                    final exp = catalogCtrl.rxExperiences.firstWhereOrNull(
-                      (e) => e.slug == wish.experienceId || e.id == wish.experienceId,
-                    );
-                    final title = (exp?.name ?? wish.experienceId).toLowerCase();
-                    final category = (exp?.categoryName ?? "DECORATION").toLowerCase();
-                    final themes = (exp?.themes ?? []).join(' ').toLowerCase();
-                    final tags = (exp?.tags ?? []).join(' ').toLowerCase();
-                    return title.contains(q) ||
-                        category.contains(q) ||
-                        themes.contains(q) ||
-                        tags.contains(q);
-                  }).toList();
-
-                  if (filteredWishlist.isEmpty) {
-                    return _buildEmptyState(isSearchFiltered: true);
-                  }
-
-                  // ── Apply Sorting ──────────────────────────────────
-                  filteredWishlist.sort((a, b) {
-                    switch (_currentSort) {
-                      case 'oldest':
-                        return a.addedAt.compareTo(b.addedAt);
-                      case 'name_asc':
-                        final titleA = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == a.experienceId || e.id == a.experienceId)?.name ?? a.experienceId).toLowerCase();
-                        final titleB = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == b.experienceId || e.id == b.experienceId)?.name ?? b.experienceId).toLowerCase();
-                        return titleA.compareTo(titleB);
-                      case 'name_desc':
-                        final titleA = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == a.experienceId || e.id == a.experienceId)?.name ?? a.experienceId).toLowerCase();
-                        final titleB = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == b.experienceId || e.id == b.experienceId)?.name ?? b.experienceId).toLowerCase();
-                        return titleB.compareTo(titleA);
-                      case 'latest':
-                      default:
-                        return b.addedAt.compareTo(a.addedAt);
+                    if (allWishlist.isEmpty) {
+                      return _buildEmptyState(isSearchFiltered: false);
                     }
-                  });
 
-                  if (_isGridView) {
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 18,
-                        mainAxisSpacing: 18,
-                        childAspectRatio: childAspectRatio,
-                      ),
-                      itemCount: filteredWishlist.length,
-                      itemBuilder: (context, index) {
-                        final wish = filteredWishlist[index];
-                        final exp = catalogCtrl.rxExperiences.firstWhereOrNull(
-                          (e) => e.slug == wish.experienceId || e.id == wish.experienceId,
-                        );
-                        final title = exp?.name ?? wish.experienceId;
-                        final category = exp?.categoryName ?? "DECORATION";
-                        final imageUrl = exp?.imageUrl ?? "";
+                    // ── Apply Search Query Filter ───────────────────────
+                    final filteredWishlist = allWishlist.where((wish) {
+                      if (_searchQuery.trim().isEmpty) return true;
+                      final q = _searchQuery.toLowerCase().trim();
+                      final exp = catalogCtrl.rxExperiences.firstWhereOrNull(
+                        (e) => e.slug == wish.experienceId || e.id == wish.experienceId,
+                      );
+                      final title = (exp?.name ?? wish.experienceId).toLowerCase();
+                      final category = (exp?.categoryName ?? "DECORATION").toLowerCase();
+                      final themes = (exp?.themes ?? []).join(' ').toLowerCase();
+                      final tags = (exp?.tags ?? []).join(' ').toLowerCase();
+                      return title.contains(q) ||
+                          category.contains(q) ||
+                          themes.contains(q) ||
+                          tags.contains(q);
+                    }).toList();
 
-                        return _buildGridCard(wish, exp, title, category, imageUrl);
-                      },
-                    );
-                  } else {
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filteredWishlist.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 14),
-                      itemBuilder: (context, index) {
-                        final wish = filteredWishlist[index];
-                        final exp = catalogCtrl.rxExperiences.firstWhereOrNull(
-                          (e) => e.slug == wish.experienceId || e.id == wish.experienceId,
-                        );
-                        final title = exp?.name ?? wish.experienceId;
-                        final category = exp?.categoryName ?? "DECORATION";
-                        final imageUrl = exp?.imageUrl ?? "";
+                    if (filteredWishlist.isEmpty) {
+                      return _buildEmptyState(isSearchFiltered: true);
+                    }
 
-                        return _buildListCard(wish, exp, title, category, imageUrl, isMobile);
-                      },
-                    );
-                  }
-                }),
-              ],
+                    // ── Apply Sorting ──────────────────────────────────
+                    filteredWishlist.sort((a, b) {
+                      switch (_currentSort) {
+                        case 'oldest':
+                          return a.addedAt.compareTo(b.addedAt);
+                        case 'name_asc':
+                          final titleA = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == a.experienceId || e.id == a.experienceId)?.name ?? a.experienceId).toLowerCase();
+                          final titleB = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == b.experienceId || e.id == b.experienceId)?.name ?? b.experienceId).toLowerCase();
+                          return titleA.compareTo(titleB);
+                        case 'name_desc':
+                          final titleA = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == a.experienceId || e.id == a.experienceId)?.name ?? a.experienceId).toLowerCase();
+                          final titleB = (catalogCtrl.rxExperiences.firstWhereOrNull((e) => e.slug == b.experienceId || e.id == b.experienceId)?.name ?? b.experienceId).toLowerCase();
+                          return titleB.compareTo(titleA);
+                        case 'latest':
+                        default:
+                          return b.addedAt.compareTo(a.addedAt);
+                      }
+                    });
+
+                    if (_isGridView) {
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: childAspectRatio,
+                        ),
+                        itemCount: filteredWishlist.length,
+                        itemBuilder: (context, index) {
+                          final wish = filteredWishlist[index];
+                          final exp = catalogCtrl.rxExperiences.firstWhereOrNull(
+                            (e) => e.slug == wish.experienceId || e.id == wish.experienceId,
+                          );
+                          final title = exp?.name ?? wish.experienceId;
+                          final category = exp?.categoryName ?? "DECORATION";
+                          final imageUrl = exp?.imageUrl ?? "";
+
+                          return _buildGridCard(wish, exp, title, category, imageUrl);
+                        },
+                      );
+                    } else {
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredWishlist.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 14),
+                        itemBuilder: (context, index) {
+                          final wish = filteredWishlist[index];
+                          final exp = catalogCtrl.rxExperiences.firstWhereOrNull(
+                            (e) => e.slug == wish.experienceId || e.id == wish.experienceId,
+                          );
+                          final title = exp?.name ?? wish.experienceId;
+                          final category = exp?.categoryName ?? "DECORATION";
+                          final imageUrl = exp?.imageUrl ?? "";
+
+                          return _buildListCard(wish, exp, title, category, imageUrl, isMobile);
+                        },
+                      );
+                    }
+                  }),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
