@@ -8,10 +8,13 @@ class ProposalSummaryCards extends StatelessWidget {
   final Quotation activeQuote;
   final bool isMobile;
 
+  final bool isTablet;
+
   const ProposalSummaryCards({
     super.key,
     required this.activeQuote,
     this.isMobile = false,
+    this.isTablet = false,
   });
 
   @override
@@ -19,7 +22,7 @@ class ProposalSummaryCards extends StatelessWidget {
     final currencyFmt = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
     final budgetStr = currencyFmt.format(activeQuote.amount);
     final eventDateStr = DateFormat('d MMM yyyy').format(activeQuote.eventDate);
-    final branchStr = activeQuote.location.isNotEmpty ? activeQuote.location : "Kadi";
+    final branchStr = activeQuote.location.isNotEmpty ? activeQuote.location : "kadi";
     final designNote = activeQuote.notes.isNotEmpty
         ? activeQuote.notes
         : "Package: Luxury Grande (LUXURY)";
@@ -27,14 +30,41 @@ class ProposalSummaryCards extends StatelessWidget {
         ? activeQuote.publishedBy!
         : "Senior Event Curation Designer";
 
+    // ── MOBILE LAYOUT (<600px) ───────────────────────────────────────────
+    // Row 1: 2-column stats (Budget Valuation, Target Event Date)
+    // Row 2: Studio Branch (full width)
+    // Row 3: Studio Design Note (full width)
+    // Row 4: Coordinator (full width)
     if (isMobile) {
       return Column(
         children: [
-          _buildCompactStat(Icons.payments_outlined, "Budget Valuation", budgetStr),
+          Row(
+            children: [
+              Expanded(
+                child: _buildCompactStat(
+                  Icons.payments_outlined,
+                  "Budget Valuation",
+                  budgetStr,
+                  isCompact: true,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildCompactStat(
+                  Icons.calendar_today_outlined,
+                  "Target Event Date",
+                  eventDateStr,
+                  isCompact: true,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
-          _buildCompactStat(Icons.calendar_today_outlined, "Target Event Date", eventDateStr),
-          const SizedBox(height: 10),
-          _buildCompactStat(Icons.business_outlined, "Studio Branch", branchStr),
+          _buildCompactStat(
+            Icons.storefront_outlined,
+            "Studio Branch",
+            branchStr,
+          ),
           const SizedBox(height: 10),
           _buildNoteCard(designNote),
           const SizedBox(height: 10),
@@ -43,21 +73,92 @@ class ProposalSummaryCards extends StatelessWidget {
       );
     }
 
+    // ── TABLET LAYOUT (600px - 979px) ────────────────────────────────────
+    // Row 1: 2-column cards (Budget Valuation, Target Event Date)
+    // Row 2: 3-column cards (Studio Branch, Studio Design Note, Coordinator)
+    if (isTablet) {
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildCompactStat(
+                  Icons.payments_outlined,
+                  "Budget Valuation",
+                  budgetStr,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildCompactStat(
+                  Icons.calendar_today_outlined,
+                  "Target Event Date",
+                  eventDateStr,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 3,
+                child: _buildCompactStat(
+                  Icons.storefront_outlined,
+                  "Studio Branch",
+                  branchStr,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 4,
+                child: _buildNoteCard(designNote),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 4,
+                child: _buildCoordinatorCard(coordinator),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // ── DESKTOP & LAPTOP LAYOUT (>=980px) ─────────────────────────────────
+    // Row 1: 3 Stat Cards (Budget Valuation, Target Event Date, Studio Branch)
+    // Row 2: Design Note & Coordinator Cards (flex: 6, flex: 4)
     return Column(
       children: [
-        // Row 1: 3 Stat Cards
         Row(
           children: [
-            Expanded(child: _buildCompactStat(Icons.collections_outlined, "Budget Valuation", budgetStr)),
+            Expanded(
+              child: _buildCompactStat(
+                Icons.payments_outlined,
+                "Budget Valuation",
+                budgetStr,
+              ),
+            ),
             const SizedBox(width: 14),
-            Expanded(child: _buildCompactStat(Icons.calendar_today_outlined, "Target Event Date", eventDateStr)),
+            Expanded(
+              child: _buildCompactStat(
+                Icons.calendar_today_outlined,
+                "Target Event Date",
+                eventDateStr,
+              ),
+            ),
             const SizedBox(width: 14),
-            Expanded(child: _buildCompactStat(Icons.storefront_outlined, "Studio Branch", branchStr)),
+            Expanded(
+              child: _buildCompactStat(
+                Icons.storefront_outlined,
+                "Studio Branch",
+                branchStr,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
-
-        // Row 2: Design Note & Coordinator Cards
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -70,9 +171,17 @@ class ProposalSummaryCards extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactStat(IconData icon, String label, String value) {
+  Widget _buildCompactStat(
+    IconData icon,
+    String label,
+    String value, {
+    bool isCompact = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 12 : 16,
+        vertical: isCompact ? 12 : 14,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF131A15),
         borderRadius: BorderRadius.circular(14),
@@ -84,16 +193,16 @@ class ProposalSummaryCards extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: isCompact ? 34 : 38,
+            height: isCompact ? 34 : 38,
             decoration: BoxDecoration(
               color: const Color(0xFF18231C),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0x33D4AF37)),
             ),
-            child: Icon(icon, color: const Color(0xFFD4AF37), size: 19),
+            child: Icon(icon, color: const Color(0xFFD4AF37), size: isCompact ? 17 : 19),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isCompact ? 8 : 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,17 +210,19 @@ class ProposalSummaryCards extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 9.5,
+                  style: TextStyle(
+                    fontSize: isCompact ? 8.5 : 9.5,
                     color: Colors.white38,
                     letterSpacing: 0.3,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
                 Text(
                   value,
                   style: AppTheme.sansBody(
-                    fontSize: 13.5,
+                    fontSize: isCompact ? 12.0 : 13.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),

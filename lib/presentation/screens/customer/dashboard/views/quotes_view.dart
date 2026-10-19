@@ -11,7 +11,6 @@ import '../../../../controllers/customer_dashboard_controller.dart';
 import '../../../../widgets/reusable/version_comparison_sheet.dart';
 import 'quotes/digital_consent_dialog.dart';
 import 'quotes/proposal_financial_card.dart';
-import 'quotes/proposal_mobile_accordion.dart';
 import 'quotes/proposal_summary_cards.dart';
 import 'quotes/quotation_item_card.dart';
 import 'quotes/quotes_chat_section.dart';
@@ -118,8 +117,12 @@ class _QuotesViewState extends State<QuotesView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth;
-        final bool isDesktop = availableWidth >= 860;
-        final double horizontalPadding = isDesktop ? 32.0 : (availableWidth >= 600 ? 24.0 : 16.0);
+        final bool isDesktop = availableWidth >= 1024;
+        final bool isTablet = availableWidth >= 600 && availableWidth < 1024;
+        final bool isMobile = availableWidth < 600;
+
+        // Content padding adapts smoothly from desktop to narrow mobile
+        final double horizontalPadding = isDesktop ? 32.0 : (isTablet ? 20.0 : 12.0);
         final double verticalPadding = isDesktop ? 24.0 : 16.0;
 
         return Padding(
@@ -175,20 +178,32 @@ class _QuotesViewState extends State<QuotesView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── 1. Top Header Section ─────────────────────────────────────
-                    _buildHeader(context, activeQuote, quotations, isDesktop: isDesktop),
+                    _buildHeader(
+                      context,
+                      activeQuote,
+                      quotations,
+                      isDesktop: isDesktop,
+                      isTablet: isTablet,
+                      isMobile: isMobile,
+                    ),
                     const SizedBox(height: 16),
 
-                    // ── 2. Desktop vs Mobile Layout ───────────────────────────────
-                    if (isDesktop) ...[
-                      // Summary cards row (Budget, Date, Branch, Note, Coordinator)
-                      ProposalSummaryCards(activeQuote: activeQuote, isMobile: false),
-                      const SizedBox(height: 20),
+                    // ── 2. Proposal Metadata Summary Cards ─────────────────────────
+                    ProposalSummaryCards(
+                      activeQuote: activeQuote,
+                      isMobile: isMobile,
+                      isTablet: isTablet,
+                    ),
+                    const SizedBox(height: 20),
 
-                      // Collaboration & Discussions Workspace
-                      QuotesChatSection(activeQuote: activeQuote),
-                      const SizedBox(height: 20),
+                    // ── 3. Direct Contact & Coordination (Proposal Assistance) ───
+                    QuotesChatSection(activeQuote: activeQuote),
+                    const SizedBox(height: 20),
 
-                      // Two-Column Lower Workspace (Left: Lifecycle ~45%, Right: Items & Financial ~55%)
+                    // ── 4. Lower Workspace (Proposal Lifecycle & Scenographies) ────
+                    // Side-by-side on desktop, laptop, and tablet (>=640px)
+                    // Vertically stacked on mobile (<640px)
+                    if (availableWidth >= 640)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -200,7 +215,7 @@ class _QuotesViewState extends State<QuotesView> {
                               onDecline: () => _handleDecline(context, activeQuote),
                             ),
                           ),
-                          const SizedBox(width: 20),
+                          const SizedBox(width: 18),
 
                           // Right Column (Included Sceneries + Financial Breakdown)
                           Expanded(
@@ -218,16 +233,25 @@ class _QuotesViewState extends State<QuotesView> {
                             ),
                           ),
                         ],
+                      )
+                    else
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          QuotesTimelineSection(
+                            activeQuote: activeQuote,
+                            onDecline: () => _handleDecline(context, activeQuote),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildIncludedItemsSection(activeQuote),
+                          const SizedBox(height: 16),
+                          ProposalFinancialCard(
+                            activeQuote: activeQuote,
+                            onAccept: () => _handleAccept(context, activeQuote),
+                          ),
+                        ],
                       ),
-                    ] else ...[
-                      // Mobile Accordion Layout
-                      ProposalMobileAccordion(
-                        activeQuote: activeQuote,
-                        controller: widget.controller,
-                        onAccept: () => _handleAccept(context, activeQuote),
-                        onDecline: () => _handleDecline(context, activeQuote),
-                      ),
-                    ],
+
                     const SizedBox(height: 36),
                   ],
                 ),
@@ -245,9 +269,70 @@ class _QuotesViewState extends State<QuotesView> {
     Quotation activeQuote,
     List<Quotation> quotations, {
     required bool isDesktop,
+    required bool isTablet,
+    required bool isMobile,
   }) {
     final statusColor = QuotesViewHelpers.getStatusColor(activeQuote.status);
     final expiryDateStr = DateFormat('d MMM yyyy').format(activeQuote.expiryDate).toUpperCase();
+
+    // Render action buttons (Download PDF, Share, More)
+    Widget buildActionButtons({bool isCompact = false}) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          // Download PDF Button
+          OutlinedButton.icon(
+            icon: Icon(Icons.download_rounded, size: isCompact ? 14 : 16, color: const Color(0xFFE5C378)),
+            label: Text(
+              "Download PDF",
+              style: TextStyle(
+                fontSize: isCompact ? 10.5 : 11.5,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFE5C378),
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0x44D4AF37)),
+              backgroundColor: const Color(0x0DD4AF37),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 12 : 16,
+                vertical: isCompact ? 10 : 12,
+              ),
+            ),
+            onPressed: () => _handleDownloadPdf(activeQuote),
+          ),
+
+          // Share Button
+          OutlinedButton.icon(
+            icon: Icon(Icons.share_outlined, size: isCompact ? 13 : 15, color: const Color(0xFFE5C378)),
+            label: Text(
+              "Share",
+              style: TextStyle(
+                fontSize: isCompact ? 10.5 : 11.5,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFE5C378),
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0x44D4AF37)),
+              backgroundColor: const Color(0x0DD4AF37),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 12 : 16,
+                vertical: isCompact ? 10 : 12,
+              ),
+            ),
+            onPressed: () => _handleShare(activeQuote),
+          ),
+
+          // Overflow Options
+          _buildOverflowMenu(context, activeQuote, isCompact: isCompact),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,7 +340,6 @@ class _QuotesViewState extends State<QuotesView> {
         // Back to Proposals link
         InkWell(
           onTap: () {
-            // Can switch tab or refresh
             Get.snackbar(
               "Design Proposals",
               "Viewing active proposal ${activeQuote.quotationNumber}",
@@ -286,140 +370,159 @@ class _QuotesViewState extends State<QuotesView> {
         ),
         const SizedBox(height: 8),
 
-        // Title and Actions Row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // Left: Title + Badges
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        // Title and Actions Row (Side-by-side on Desktop/Tablet, Actions below on Mobile)
+        if (!isMobile)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Left: Title + Badges
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Design Proposal",
+                      style: GoogleFonts.italiana(
+                        fontSize: isDesktop ? 28 : 23,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        // Proposal Number Badge
+                        Text(
+                          activeQuote.quotationNumber,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFD4AF37),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+
+                        // Status Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                          ),
+                          child: Text(
+                            activeQuote.status.nameStr.toUpperCase(),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+
+                        // Last Valid Info
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF131A15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0x22D4AF37)),
+                          ),
+                          child: Text(
+                            "LAST VALID $expiryDateStr",
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              color: Colors.white54,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
+              // Right: Action buttons
+              buildActionButtons(isCompact: isTablet),
+            ],
+          )
+        else
+          // Mobile Layout: Title + Badges stacked cleanly, then actions below switcher
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Design Proposal",
+                style: GoogleFonts.italiana(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(
-                    "Design Proposal",
-                    style: GoogleFonts.italiana(
-                      fontSize: isDesktop ? 28 : 22,
+                    activeQuote.quotationNumber,
+                    style: const TextStyle(
+                      fontSize: 12.5,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.8,
+                      color: Color(0xFFD4AF37),
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      // Proposal Number Badge
-                      Text(
-                        activeQuote.quotationNumber,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFD4AF37),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-
-                      // Status Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                        ),
-                        child: Text(
-                          activeQuote.status.nameStr.toUpperCase(),
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-
-                      // Last Valid Info
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF131A15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0x22D4AF37)),
-                        ),
-                        child: Text(
-                          "LAST VALID $expiryDateStr",
-                          style: const TextStyle(
-                            fontSize: 9.5,
-                            color: Colors.white54,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Right: Download PDF, Share, and More Actions
-            if (isDesktop) ...[
-              const SizedBox(width: 16),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Download PDF Button
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.download_rounded, size: 16, color: Color(0xFFE5C378)),
-                    label: const Text(
-                      "Download PDF",
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      activeQuote.status.nameStr.toUpperCase(),
                       style: TextStyle(
-                        fontSize: 11.5,
+                        color: statusColor,
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFE5C378),
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0x44D4AF37)),
-                      backgroundColor: const Color(0x0DD4AF37),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onPressed: () => _handleDownloadPdf(activeQuote),
                   ),
-                  const SizedBox(width: 10),
-
-                  // Share Button
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.share_outlined, size: 15, color: Color(0xFFE5C378)),
-                    label: const Text(
-                      "Share",
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFE5C378),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131A15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0x22D4AF37)),
+                    ),
+                    child: Text(
+                      "LAST VALID $expiryDateStr",
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: Colors.white54,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0x44D4AF37)),
-                      backgroundColor: const Color(0x0DD4AF37),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onPressed: () => _handleShare(activeQuote),
                   ),
-                  const SizedBox(width: 10),
-
-                  // Overflow Options
-                  _buildOverflowMenu(context, activeQuote),
                 ],
               ),
             ],
-          ],
-        ),
+          ),
 
         // Quotations switcher pills (matches reference image tabs)
         if (quotations.isNotEmpty) ...[
@@ -458,22 +561,28 @@ class _QuotesViewState extends State<QuotesView> {
             ),
           ),
         ],
+
+        // On mobile, render action buttons directly below switcher pills as shown in reference
+        if (isMobile) ...[
+          const SizedBox(height: 12),
+          buildActionButtons(isCompact: true),
+        ],
       ],
     );
   }
 
-  Widget _buildOverflowMenu(BuildContext context, Quotation activeQuote) {
+  Widget _buildOverflowMenu(BuildContext context, Quotation activeQuote, {bool isCompact = false}) {
     return PopupMenuButton<String>(
       icon: Container(
-        width: 38,
-        height: 38,
+        width: isCompact ? 34 : 38,
+        height: isCompact ? 34 : 38,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: const Color(0x0DD4AF37),
           border: Border.all(color: const Color(0x33D4AF37)),
         ),
-        child: const Center(
-          child: Icon(Icons.more_horiz, color: Colors.white70, size: 18),
+        child: Center(
+          child: Icon(Icons.more_horiz, color: Colors.white70, size: isCompact ? 16 : 18),
         ),
       ),
       color: const Color(0xFF131A15),
