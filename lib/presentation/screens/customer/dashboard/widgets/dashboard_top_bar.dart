@@ -45,9 +45,9 @@ class DashboardTopBar extends StatelessWidget {
       final unread = controller.rxNotifications.where((n) => !n.isRead).length;
 
       return Container(
-        height: effectiveMobile ? 56 : 58,
         padding: EdgeInsets.symmetric(
           horizontal: effectiveMobile ? 12 : (effectiveTablet ? 16 : 24),
+          vertical: effectiveMobile ? 8 : 0,
         ),
         decoration: const BoxDecoration(
           color: Colors.transparent,
@@ -57,30 +57,44 @@ class DashboardTopBar extends StatelessWidget {
         ),
         child: effectiveMobile
             ? _buildMobileBar(customerName, profileImageUrl, unread, goldColor)
-            : effectiveTablet
-                ? _buildTabletBar(customerName, profileImageUrl, unread, goldColor, screenWidth)
-                : _buildDesktopBar(unread, goldColor, screenWidth),
+            : SizedBox(
+                height: effectiveTablet ? 58 : 58,
+                child: effectiveTablet
+                    ? _buildTabletBar(customerName, profileImageUrl, unread, goldColor, screenWidth)
+                    : _buildDesktopBar(unread, goldColor, screenWidth),
+              ),
       );
     });
   }
 
-  // ─── Mobile Top Bar: [☰] [Avatar + Name] [Spacer] [Bell] [Logout] ───
+  // ─── Mobile Top Bar: [☰] [Avatar + Name] [Spacer] [Bell] [Logout] + Search Row ───
   Widget _buildMobileBar(String name, String imageUrl, int unread, Color goldColor) {
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          icon: const Icon(Icons.menu_rounded, color: Color(0xFFDCD6CE), size: 22),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          onPressed: onOpenDrawer,
+        SizedBox(
+          height: 48,
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu_rounded, color: Color(0xFFDCD6CE), size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: onOpenDrawer,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: _buildUserBadge(name, imageUrl, goldColor),
+              ),
+              _buildNotificationButton(unread, goldColor),
+              const SizedBox(width: 4),
+              _buildLogoutButton(),
+            ],
+          ),
         ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: _buildUserBadge(name, imageUrl, goldColor),
-        ),
-        _buildNotificationButton(unread, goldColor),
-        const SizedBox(width: 4),
-        _buildLogoutButton(),
+        const SizedBox(height: 6),
+        _buildSearchBox(goldColor, isCompact: true),
+        const SizedBox(height: 4),
       ],
     );
   }

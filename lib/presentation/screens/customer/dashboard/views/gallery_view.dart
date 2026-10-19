@@ -30,109 +30,182 @@ class GalleryView extends StatefulWidget {
 
 class _GalleryViewState extends State<GalleryView> {
   String selectedFilter = 'ALL';
+  final ScrollController _categoryScrollController = ScrollController();
+  bool _canScrollLeft = false;
+  bool _canScrollRight = false;
 
   static const Color _goldColor = Color(0xFFD4AF37);
   static const Color _darkBg = Color(0xFF070E0B);
 
   @override
+  void initState() {
+    super.initState();
+    _categoryScrollController.addListener(_updateScrollButtons);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollButtons());
+  }
+
+  @override
+  void dispose() {
+    _categoryScrollController.removeListener(_updateScrollButtons);
+    _categoryScrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateScrollButtons() {
+    if (!_categoryScrollController.hasClients) return;
+    final maxScroll = _categoryScrollController.position.maxScrollExtent;
+    final currentScroll = _categoryScrollController.offset;
+    final canLeft = currentScroll > 8;
+    final canRight = currentScroll < (maxScroll - 8);
+
+    if (canLeft != _canScrollLeft || canRight != _canScrollRight) {
+      if (mounted) {
+        setState(() {
+          _canScrollLeft = canLeft;
+          _canScrollRight = canRight;
+        });
+      }
+    }
+  }
+
+  void _scrollCategories(bool forward) {
+    if (!_categoryScrollController.hasClients) return;
+    final target = forward
+        ? (_categoryScrollController.offset + 240).clamp(0.0, _categoryScrollController.position.maxScrollExtent)
+        : (_categoryScrollController.offset - 240).clamp(0.0, _categoryScrollController.position.maxScrollExtent);
+    _categoryScrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final catalogCtrl = Get.find<CatalogController>();
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 640;
 
-    return Obx(() {
-      final availableFilters = _getAvailableFilters(catalogCtrl);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final bool isDesktop = availableWidth >= 1024;
+        final bool isTablet = availableWidth >= 600 && availableWidth < 1024;
+        final bool isMobile = availableWidth < 600;
 
-      final experiences = catalogCtrl.rxExperiences.where((exp) {
-        if (selectedFilter == 'ALL') return true;
-        final f = selectedFilter.toLowerCase();
-        final c = exp.categoryName.toLowerCase();
-        final id = exp.categoryId.toLowerCase();
-        return c.contains(f) || id.contains(f) || f.contains(c);
-      }).toList();
+        final double horizontalPadding = isDesktop ? 24.0 : (isTablet ? 20.0 : 16.0);
+        final double verticalPadding = isDesktop ? 24.0 : 16.0;
 
-      return CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // ── 1. Page Header & Category Filters ──────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 16 : 24,
-                isMobile ? 16 : 24,
-                isMobile ? 16 : 24,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context, isMobile, experiences),
-                  const SizedBox(height: 20),
-                  _buildCategoryFilters(availableFilters),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ),
+        return Obx(() {
+          final availableFilters = _getAvailableFilters(catalogCtrl);
 
-          // ── 2. Gallery Grid (2 Columns Desktop/Tablet, 1 Column Mobile) ────
-          if (experiences.isEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 60),
-                child: Center(
+          final experiences = catalogCtrl.rxExperiences.where((exp) {
+            if (selectedFilter == 'ALL') return true;
+            final f = selectedFilter.toLowerCase();
+            final c = exp.categoryName.toLowerCase();
+            final id = exp.categoryId.toLowerCase();
+            return c.contains(f) || id.contains(f) || f.contains(c);
+          }).toList();
+
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // ── 1. Page Header & Category Filters ──────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    verticalPadding,
+                    horizontalPadding,
+                    0,
+                  ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.photo_library_outlined,
-                        size: 48,
-                        color: _goldColor.withValues(alpha: 0.4),
+                      _buildHeader(
+                        context,
+                        experiences,
+                        isDesktop: isDesktop,
+                        isTablet: isTablet,
+                        isMobile: isMobile,
                       ),
-                      const SizedBox(height: 14),
-                      Text(
-                        "No event gallery collections found for this category.",
-                        style: AppTheme.sansBody(
-                          color: Colors.white60,
-                          fontSize: 13,
-                        ),
+                      const SizedBox(height: 18),
+                      _buildCategoryFilters(
+                        availableFilters,
+                        isDesktop: isDesktop,
+                        isTablet: isTablet,
+                        isMobile: isMobile,
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
               ),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 16 : 24,
-                0,
-                isMobile ? 16 : 24,
-                32,
-              ),
-              sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isMobile ? 1 : 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 16 / 9,
+
+              // ── 2. Gallery Grid (2 Columns Desktop/Tablet, 1 Column Mobile) ────
+              if (experiences.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 60),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.photo_library_outlined,
+                            size: 48,
+                            color: _goldColor.withValues(alpha: 0.4),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            "No event gallery collections found for this category.",
+                            style: AppTheme.sansBody(
+                              color: Colors.white60,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    0,
+                    horizontalPadding,
+                    32,
+                  ),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isMobile ? 1 : 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 16 / 9,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final exp = experiences[index];
+                        return _buildGalleryCard(context, exp, isMobile);
+                      },
+                      childCount: experiences.length,
+                    ),
+                  ),
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final exp = experiences[index];
-                    return _buildGalleryCard(context, exp, isMobile);
-                  },
-                  childCount: experiences.length,
-                ),
-              ),
-            ),
-        ],
-      );
-    });
+            ],
+          );
+        });
+      },
+    );
   }
 
   // ── Header (Title, Subtitle, Description & Download Button) ────────────────
-  Widget _buildHeader(BuildContext context, bool isMobile, List<Experience> experiences) {
+  Widget _buildHeader(
+    BuildContext context,
+    List<Experience> experiences, {
+    required bool isDesktop,
+    required bool isTablet,
+    required bool isMobile,
+  }) {
     if (isMobile) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +213,7 @@ class _GalleryViewState extends State<GalleryView> {
           Text(
             "STUDIO PORTFOLIO",
             style: AppTheme.sansBody(
-              fontSize: 10.5,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
               color: _goldColor,
               letterSpacing: 1.5,
@@ -150,7 +223,7 @@ class _GalleryViewState extends State<GalleryView> {
           Text(
             "Luxury Event Gallery",
             style: GoogleFonts.italiana(
-              fontSize: 26,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
               letterSpacing: 0.6,
@@ -205,7 +278,7 @@ class _GalleryViewState extends State<GalleryView> {
               Text(
                 "Luxury Event Gallery",
                 style: GoogleFonts.italiana(
-                  fontSize: 30,
+                  fontSize: isDesktop ? 29 : 25,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 0.8,
@@ -215,14 +288,14 @@ class _GalleryViewState extends State<GalleryView> {
               Text(
                 "High-quality event setups, curated by our expert designers at OM Events & Decorators.",
                 style: AppTheme.sansBody(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   color: Colors.white70,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 24),
+        const SizedBox(width: 20),
         ElevatedButton.icon(
           icon: const Icon(Icons.download_rounded, size: 16),
           label: const Text("Download All Assets"),
@@ -240,60 +313,142 @@ class _GalleryViewState extends State<GalleryView> {
     );
   }
 
-  // ── Category Filters Row with Matching Icons ──────────────────────────────
-  Widget _buildCategoryFilters(List<String> categories) {
-    return SizedBox(
-      height: 38,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final filter = categories[index];
+  // ── Category Filters: Responsive Multi-Row Wrapping for Tablet/Mobile or Horizontal Scrolling with Arrows for Desktop/Laptop ──
+  Widget _buildCategoryFilters(
+    List<String> categories, {
+    required bool isDesktop,
+    required bool isTablet,
+    required bool isMobile,
+  }) {
+    // On Tablet & Mobile, render responsive multi-row wrapping layout matching screenshot
+    if (isTablet || isMobile) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: categories.map((filter) {
           final isActive = selectedFilter == filter;
           final icon = _getCategoryIcon(filter);
+          return _buildChipWidget(filter, isActive, icon, isCompact: isMobile);
+        }).toList(),
+      );
+    }
 
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => setState(() => selectedFilter = filter),
-              borderRadius: BorderRadius.circular(20),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: isActive ? _goldColor : const Color(0xFF101914),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isActive ? _goldColor : _goldColor.withValues(alpha: 0.3),
-                    width: 1.0,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      icon,
-                      size: 14,
-                      color: isActive ? const Color(0xFF091210) : _goldColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _formatFilterLabel(filter),
-                      style: AppTheme.sansBody(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isActive ? const Color(0xFF091210) : _goldColor,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ],
-                ),
+    // On Desktop & Laptop, render smooth horizontal scroll row with forward/backward arrow controls
+    return SizedBox(
+      height: 38,
+      child: Row(
+        children: [
+          // Left scroll arrow button
+          if (_canScrollLeft)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: _buildArrowButton(
+                icon: Icons.chevron_left_rounded,
+                onTap: () => _scrollCategories(false),
               ),
             ),
-          );
-        },
+
+          // Scrollable category row
+          Expanded(
+            child: ListView.separated(
+              controller: _categoryScrollController,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: categories.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final filter = categories[index];
+                final isActive = selectedFilter == filter;
+                final icon = _getCategoryIcon(filter);
+                return _buildChipWidget(filter, isActive, icon);
+              },
+            ),
+          ),
+
+          // Right scroll arrow button
+          Padding(
+            padding: const EdgeInsets.only(left: 6),
+            child: _buildArrowButton(
+              icon: Icons.chevron_right_rounded,
+              onTap: () => _scrollCategories(true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArrowButton({required IconData icon, required VoidCallback onTap}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: const Color(0xFF101914),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _goldColor.withValues(alpha: 0.35),
+              width: 1.0,
+            ),
+          ),
+          child: Center(
+            child: Icon(icon, color: _goldColor, size: 18),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChipWidget(
+    String filter,
+    bool isActive,
+    IconData icon, {
+    bool isCompact = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => selectedFilter = filter),
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 11 : 14,
+            vertical: isCompact ? 6 : 7,
+          ),
+          decoration: BoxDecoration(
+            color: isActive ? _goldColor : const Color(0xFF101914),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isActive ? _goldColor : _goldColor.withValues(alpha: 0.3),
+              width: 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: isCompact ? 13 : 14,
+                color: isActive ? const Color(0xFF091210) : _goldColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _formatFilterLabel(filter),
+                style: AppTheme.sansBody(
+                  fontSize: isCompact ? 10.5 : 11,
+                  fontWeight: FontWeight.bold,
+                  color: isActive ? const Color(0xFF091210) : _goldColor,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -620,12 +775,17 @@ class _GalleryViewState extends State<GalleryView> {
   IconData _getCategoryIcon(String category) {
     final lower = category.toLowerCase();
     if (lower == 'all') return Icons.grid_view_rounded;
-    if (lower.contains('wedding')) return Icons.favorite_outline_rounded;
+    if (lower.contains('wedding') || lower.contains('engagement')) return Icons.favorite_outline_rounded;
     if (lower.contains('birthday')) return Icons.cake_outlined;
     if (lower.contains('reception')) return Icons.celebration_outlined;
     if (lower.contains('baby')) return Icons.child_friendly_outlined;
+    if (lower.contains('corporate')) return Icons.business_center_outlined;
+    if (lower.contains('surprise') || lower.contains('proposal')) return Icons.auto_awesome_outlined;
+    if (lower.contains('entry') || lower.contains('entries')) return Icons.stars_rounded;
+    if (lower.contains('shrimant') || lower.contains('sanskar') || lower.contains('pujan') || lower.contains('cultural')) {
+      return Icons.temple_hindu_outlined;
+    }
     if (lower.contains('balloon')) return Icons.bubble_chart_outlined;
-    if (lower.contains('pujan') || lower.contains('cultural')) return Icons.temple_hindu_outlined;
     return Icons.auto_awesome_outlined;
   }
 
