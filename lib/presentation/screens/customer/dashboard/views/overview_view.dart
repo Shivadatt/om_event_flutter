@@ -107,36 +107,46 @@ class OverviewView extends StatelessWidget {
           ? profile!.fullName
           : "SHIWA";
 
-      return SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(28, 20, 28, 32),
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ─── 1. Hero / Welcome Card ───
-            _buildHeroCard(context, clientName, goldColor),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final double maxWidth = constraints.maxWidth;
+          final bool isMobile = maxWidth < 600;
+          final bool isTablet = maxWidth >= 600 && maxWidth < 1024;
+          final double hPadding = isMobile ? 12.0 : (isTablet ? 18.0 : 26.0);
+          final double vPadding = isMobile ? 12.0 : 20.0;
 
-            const SizedBox(height: 12),
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(hPadding, vPadding, hPadding, 32),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ─── 1. Hero / Welcome Card ───
+                _buildHeroCard(context, clientName, goldColor, isMobile: isMobile),
 
-            // ─── 2. Compact Festival Special Campaign Bar ───
-            _buildCampaignBar(goldColor),
+                const SizedBox(height: 12),
 
-            const SizedBox(height: 14),
+                // ─── 2. Compact Festival Special Campaign Bar ───
+                _buildCampaignBar(goldColor, isMobile: isMobile),
 
-            // ─── 3. Membership + Quick Stats Row (3 equal-height cards) ───
-            _buildMembershipStatsRow(totalQuotes, wishlistCount, goldColor, cardBg, cardBorder),
+                const SizedBox(height: 14),
 
-            const SizedBox(height: 20),
+                // ─── 3. Membership + Quick Stats Row (3 equal-height cards) ───
+                _buildMembershipStatsRow(totalQuotes, wishlistCount, goldColor, cardBg, cardBorder),
 
-            // ─── 4. Recently Viewed Themes (4 Cards in one row) ───
-            _buildRecentlyViewedSection(goldColor, cardBg, cardBorder),
+                const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+                // ─── 4. Recently Viewed Themes (4 Cards on desktop/tablet, 2 on mobile) ───
+                _buildRecentlyViewedSection(goldColor, cardBg, cardBorder),
 
-            // ─── 5. Lounge Activity Logs (Compact) ───
-            _buildActivityLogsSection(goldColor, cardBg, cardBorder),
-          ],
-        ),
+                const SizedBox(height: 20),
+
+                // ─── 5. Lounge Activity Logs (Compact) ───
+                _buildActivityLogsSection(goldColor, cardBg, cardBorder),
+              ],
+            ),
+          );
+        },
       );
     });
   }
@@ -144,9 +154,14 @@ class OverviewView extends StatelessWidget {
   // ============================================================================
   // 1. HERO / WELCOME CARD
   // ============================================================================
-  Widget _buildHeroCard(BuildContext context, String clientName, Color goldColor) {
+  Widget _buildHeroCard(
+    BuildContext context,
+    String clientName,
+    Color goldColor, {
+    required bool isMobile,
+  }) {
     return Container(
-      height: 165,
+      height: isMobile ? 152 : 165,
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -190,56 +205,65 @@ class OverviewView extends StatelessWidget {
 
             // Foreground Content
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              child: Row(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 14 : 20,
+                vertical: isMobile ? 12 : 14,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Left greeting and name
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "${_getGreeting()},",
-                          style: AppTheme.sansBody(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFE8CC8A),
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          clientName.toUpperCase(),
-                          style: GoogleFonts.italiana(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 1.2,
-                            height: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Your celebrations, our creative canvas.",
-                          style: AppTheme.sansBody(
-                            fontSize: 10.5,
-                            color: Colors.white70,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Right side: REF ID (top) and Play Video button (bottom)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Top section: Greeting + Name on left, REF ID on right
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "${_getGreeting()},",
+                              style: AppTheme.sansBody(
+                                fontSize: isMobile ? 10.5 : 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFE8CC8A),
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              clientName.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.italiana(
+                                fontSize: isMobile ? 21 : 26,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1.2,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              "Your celebrations, our creative canvas.",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTheme.sansBody(
+                                fontSize: isMobile ? 9.5 : 10.5,
+                                color: Colors.white70,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Reference ID badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 8 : 10,
+                          vertical: isMobile ? 3 : 3.5,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF121B16).withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(14),
@@ -251,70 +275,76 @@ class OverviewView extends StatelessWidget {
                         child: Text(
                           "REF: OM-REF552",
                           style: AppTheme.sansBody(
-                            fontSize: 9,
+                            fontSize: isMobile ? 8.5 : 9,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFFE8CC8A),
                             letterSpacing: 0.8,
                           ),
                         ),
                       ),
+                    ],
+                  ),
 
-                      // Play Video Button
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () => _showShowcaseVideo(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFE8CC8A), Color(0xFFC8A96E)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                  // Bottom section: Play Video Button aligned to the right
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => _showShowcaseVideo(context),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 11 : 13,
+                            vertical: isMobile ? 5 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFE8CC8A), Color(0xFFC8A96E)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: goldColor.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
                               ),
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: goldColor.withValues(alpha: 0.35),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: isMobile ? 17 : 19,
+                                height: isMobile ? 17 : 19,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFF0D1915),
                                 ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 19,
-                                  height: 19,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(0xFF0D1915),
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.play_arrow_rounded,
-                                      size: 13,
-                                      color: Color(0xFFE8CC8A),
-                                    ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.play_arrow_rounded,
+                                    size: isMobile ? 12 : 13,
+                                    color: const Color(0xFFE8CC8A),
                                   ),
                                 ),
-                                const SizedBox(width: 7),
-                                Text(
-                                  "Play Video",
-                                  style: AppTheme.sansBody(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF0D1915),
-                                    letterSpacing: 0.3,
-                                  ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "Play Video",
+                                style: AppTheme.sansBody(
+                                  fontSize: isMobile ? 10 : 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF0D1915),
+                                  letterSpacing: 0.3,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -328,10 +358,13 @@ class OverviewView extends StatelessWidget {
   // ============================================================================
   // 2. COMPACT CAMPAIGN BAR
   // ============================================================================
-  Widget _buildCampaignBar(Color goldColor) {
+  Widget _buildCampaignBar(Color goldColor, {required bool isMobile}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 10 : 14,
+        vertical: isMobile ? 7 : 8,
+      ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFE8CC8A), Color(0xFFC8A96E)],
@@ -359,7 +392,7 @@ class OverviewView extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 style: AppTheme.sansBody(
-                  fontSize: 10.5,
+                  fontSize: isMobile ? 9.5 : 10.5,
                   color: const Color(0xFF0D1915),
                 ),
                 children: const [
@@ -372,10 +405,11 @@ class OverviewView extends StatelessWidget {
                   ),
                 ],
               ),
-              maxLines: 1,
+              maxLines: isMobile ? 2 : 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          const SizedBox(width: 4),
           const Icon(
             Icons.chevron_right_rounded,
             color: Color(0xFF0D1915),
@@ -398,40 +432,67 @@ class OverviewView extends StatelessWidget {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isStacked = constraints.maxWidth < 680;
+        final double width = constraints.maxWidth;
+        final bool isCompact = width < 720;
+        final bool isUltraNarrow = width < 340;
 
-        if (isStacked) {
+        if (isCompact) {
           return Column(
             children: [
-              _buildMembershipCard(goldColor, cardBg, cardBorder),
+              _buildMembershipCard(goldColor, cardBg, cardBorder, isCompact: width < 420),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.description_outlined,
-                      title: "Active Contract\nProposals",
-                      subtitle: "Tap to view details",
-                      value: totalQuotes > 0 ? totalQuotes.toString() : "2",
-                      goldColor: goldColor,
-                      cardBg: cardBg,
-                      cardBorder: cardBorder,
+              if (isUltraNarrow) ...[
+                _buildStatCard(
+                  icon: Icons.description_outlined,
+                  title: "Active Contract\nProposals",
+                  subtitle: "Tap to view details",
+                  value: totalQuotes > 0 ? totalQuotes.toString() : "2",
+                  goldColor: goldColor,
+                  cardBg: cardBg,
+                  cardBorder: cardBorder,
+                  isCompact: true,
+                ),
+                const SizedBox(height: 8),
+                _buildStatCard(
+                  icon: Icons.favorite_border_rounded,
+                  title: "My Inspiration\nWishlist",
+                  subtitle: "Tap to view details",
+                  value: wishlistCount.toString(),
+                  goldColor: goldColor,
+                  cardBg: cardBg,
+                  cardBorder: cardBorder,
+                  isCompact: true,
+                ),
+              ] else
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        icon: Icons.description_outlined,
+                        title: "Active Contract\nProposals",
+                        subtitle: "Tap to view details",
+                        value: totalQuotes > 0 ? totalQuotes.toString() : "2",
+                        goldColor: goldColor,
+                        cardBg: cardBg,
+                        cardBorder: cardBorder,
+                        isCompact: width < 420,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.favorite_border_rounded,
-                      title: "My Inspiration\nWishlist",
-                      subtitle: "Tap to view details",
-                      value: wishlistCount.toString(),
-                      goldColor: goldColor,
-                      cardBg: cardBg,
-                      cardBorder: cardBorder,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildStatCard(
+                        icon: Icons.favorite_border_rounded,
+                        title: "My Inspiration\nWishlist",
+                        subtitle: "Tap to view details",
+                        value: wishlistCount.toString(),
+                        goldColor: goldColor,
+                        cardBg: cardBg,
+                        cardBorder: cardBorder,
+                        isCompact: width < 420,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ],
           );
         }
@@ -441,7 +502,7 @@ class OverviewView extends StatelessWidget {
             // Card 1: Platinum Membership Card (approx 46% width)
             Expanded(
               flex: 5,
-              child: _buildMembershipCard(goldColor, cardBg, cardBorder),
+              child: _buildMembershipCard(goldColor, cardBg, cardBorder, isCompact: false),
             ),
             const SizedBox(width: 10),
 
@@ -456,6 +517,7 @@ class OverviewView extends StatelessWidget {
                 goldColor: goldColor,
                 cardBg: cardBg,
                 cardBorder: cardBorder,
+                isCompact: false,
               ),
             ),
             const SizedBox(width: 10),
@@ -471,6 +533,7 @@ class OverviewView extends StatelessWidget {
                 goldColor: goldColor,
                 cardBg: cardBg,
                 cardBorder: cardBorder,
+                isCompact: false,
               ),
             ),
           ],
@@ -479,10 +542,15 @@ class OverviewView extends StatelessWidget {
     );
   }
 
-  Widget _buildMembershipCard(Color goldColor, Color cardBg, Color cardBorder) {
+  Widget _buildMembershipCard(
+    Color goldColor,
+    Color cardBg,
+    Color cardBorder, {
+    bool isCompact = false,
+  }) {
     return Container(
       height: 88,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16, vertical: 12),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
@@ -499,8 +567,8 @@ class OverviewView extends StatelessWidget {
         children: [
           // Circular Diamond Icon Badge
           Container(
-            width: 36,
-            height: 36,
+            width: isCompact ? 32 : 36,
+            height: isCompact ? 32 : 36,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF14241C),
@@ -509,12 +577,12 @@ class OverviewView extends StatelessWidget {
             child: Center(
               child: Icon(
                 Icons.diamond_outlined,
-                size: 16,
+                size: isCompact ? 14 : 16,
                 color: goldColor,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: isCompact ? 8 : 10),
 
           // Title & Progress Bar
           Expanded(
@@ -525,19 +593,24 @@ class OverviewView extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "PLATINUM MEMBERSHIP",
-                      style: AppTheme.sansBody(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.6,
+                    Flexible(
+                      child: Text(
+                        "PLATINUM MEMBERSHIP",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.sansBody(
+                          fontSize: isCompact ? 9.8 : 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.6,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 4),
                     Text(
                       "1,500 PTS / 2,000 PTS",
                       style: AppTheme.sansBody(
-                        fontSize: 9.5,
+                        fontSize: isCompact ? 8.5 : 9.5,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFFE8CC8A),
                       ),
@@ -570,10 +643,11 @@ class OverviewView extends StatelessWidget {
     required Color goldColor,
     required Color cardBg,
     required Color cardBorder,
+    bool isCompact = false,
   }) {
     return Container(
       height: 88,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 14, vertical: 10),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
@@ -590,8 +664,8 @@ class OverviewView extends StatelessWidget {
         children: [
           // Circular Icon Badge
           Container(
-            width: 32,
-            height: 32,
+            width: isCompact ? 28 : 32,
+            height: isCompact ? 28 : 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF14241C),
@@ -600,12 +674,12 @@ class OverviewView extends StatelessWidget {
             child: Center(
               child: Icon(
                 icon,
-                size: 15,
+                size: isCompact ? 13 : 15,
                 color: goldColor,
               ),
             ),
           ),
-          const SizedBox(width: 9),
+          SizedBox(width: isCompact ? 6 : 9),
 
           // Titles
           Expanded(
@@ -616,7 +690,7 @@ class OverviewView extends StatelessWidget {
                 Text(
                   title,
                   style: AppTheme.sansBody(
-                    fontSize: 9.5,
+                    fontSize: isCompact ? 8.8 : 9.5,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                     height: 1.15,
@@ -628,9 +702,11 @@ class OverviewView extends StatelessWidget {
                 Text(
                   subtitle,
                   style: AppTheme.sansBody(
-                    fontSize: 8.5,
+                    fontSize: isCompact ? 7.8 : 8.5,
                     color: Colors.white38,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -640,7 +716,7 @@ class OverviewView extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.montserrat(
-              fontSize: 22,
+              fontSize: isCompact ? 19 : 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -651,7 +727,7 @@ class OverviewView extends StatelessWidget {
   }
 
   // ============================================================================
-  // 4. RECENTLY VIEWED THEMES (4 Consistent Cards in One Row)
+  // 4. RECENTLY VIEWED THEMES (4 on Desktop/Tablet, 2 on Mobile)
   // ============================================================================
   Widget _buildRecentlyViewedSection(Color goldColor, Color cardBg, Color cardBorder) {
     return Column(
@@ -699,7 +775,7 @@ class OverviewView extends StatelessWidget {
         ),
         const SizedBox(height: 14),
 
-        // 4 Theme Cards Grid
+        // Theme Cards Row
         Builder(
           builder: (context) {
             final catalogCtrl = Get.isRegistered<CatalogController>()
@@ -762,8 +838,8 @@ class OverviewView extends StatelessWidget {
               builder: (context, constraints) {
                 final double width = constraints.maxWidth;
 
-                // ── 1. Desktop: 4 Cards in one row with responsive 16:9 ratio (>= 960px) ─
-                if (width >= 960) {
+                // Desktop, Laptop, and Tablet (>= 720px): 4 cards in one row
+                if (width >= 720) {
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -774,66 +850,33 @@ class OverviewView extends StatelessWidget {
                             goldColor,
                             cardBg,
                             cardBorder,
+                            isMobile: false,
                           ),
                         ),
-                        if (i < cardsData.length - 1) const SizedBox(width: 14),
+                        if (i < cardsData.length - 1) const SizedBox(width: 12),
                       ],
                     ],
                   );
                 }
 
-                // ── 2. Tablet: Responsive Horizontal Carousel with 16:9 ratio (640px - 959px) ─────
-                if (width >= 640) {
-                  final cardWidth = ((width - 28) / 2.3).clamp(260.0, 340.0);
-                  final cardHeight = (cardWidth * 9 / 16) + 48.0;
-
-                  return SizedBox(
-                    height: cardHeight,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: cardsData.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 14),
-                      itemBuilder: (context, index) {
-                        final theme = cardsData[index];
-                        return SizedBox(
-                          width: cardWidth,
-                          child: _themeCard(
-                            theme,
-                            goldColor,
-                            cardBg,
-                            cardBorder,
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                }
-
-                // ── 3. Mobile: Horizontal Scroll with 16:9 Landscape Ratio (< 640px) ──
-                final mobileCardWidth = (width * 0.72).clamp(220.0, 280.0);
-                final mobileCardHeight = (mobileCardWidth * 9 / 16) + 48.0;
-
-                return SizedBox(
-                  height: mobileCardHeight,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: cardsData.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      final theme = cardsData[index];
-                      return SizedBox(
-                        width: mobileCardWidth,
+                // Mobile & Narrow Tablet (< 720px): 2 cards in a row matching mobile reference
+                final mobileCards = cardsData.take(2).toList();
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (int i = 0; i < mobileCards.length; i++) ...[
+                      Expanded(
                         child: _themeCard(
-                          theme,
+                          mobileCards[i],
                           goldColor,
                           cardBg,
                           cardBorder,
+                          isMobile: true,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                      if (i < mobileCards.length - 1) const SizedBox(width: 10),
+                    ],
+                  ],
                 );
               },
             );
@@ -847,11 +890,9 @@ class OverviewView extends StatelessWidget {
   Alignment _getThemeImageAlignment(String title, String category, String imageUrl) {
     final key = "${title.toLowerCase()} ${category.toLowerCase()} ${imageUrl.toLowerCase()}";
     if (key.contains("chhath") || key.contains("pujan") || key.contains("chhathhi")) {
-      // Prioritize the central upper-middle arch and backdrop altar
       return const Alignment(0.0, -0.2);
     }
     if (key.contains("birthday")) {
-      // Prioritize main backdrop and stage arrangement
       return const Alignment(0.0, -0.1);
     }
     return Alignment.center;
@@ -861,8 +902,9 @@ class OverviewView extends StatelessWidget {
     Map<String, dynamic> theme,
     Color goldColor,
     Color cardBg,
-    Color cardBorder,
-  ) {
+    Color cardBorder, {
+    bool isMobile = false,
+  }) {
     final title = (theme["name"] as String? ?? "Theme").toUpperCase();
     final imageUrl = theme["image"] as String? ?? "";
     final category = theme["category"] as String? ?? "PORTFOLIO";
@@ -892,13 +934,12 @@ class OverviewView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── 1. Full-Width 16:9 Image Area (BoxFit.cover, No Empty Side Columns) ─────
+            // ── 1. Full-Width 16:9 Image Area ─────
             AspectRatio(
               aspectRatio: 16 / 9,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Full-bleed decoration photo covering full card width
                   imageUrl.startsWith('assets/')
                       ? Image.asset(
                           imageUrl,
@@ -915,12 +956,14 @@ class OverviewView extends StatelessWidget {
                           alignment: alignment,
                         ),
 
-                  // Top-Right Actions (Single Download & Wishlist Heart)
+                  // Top-Right Actions (Download & Wishlist Heart)
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    top: isMobile ? 5 : 8,
+                    right: isMobile ? 5 : 8,
                     child: Obx(() {
                       final isFavorite = controller.isExperienceInWishlist(expSlug, expId);
+                      final btnSize = isMobile ? 22.0 : 26.0;
+                      final iconSize = isMobile ? 11.0 : 13.0;
 
                       return Row(
                         mainAxisSize: MainAxisSize.min,
@@ -949,8 +992,8 @@ class OverviewView extends StatelessWidget {
                                 },
                                 borderRadius: BorderRadius.circular(14),
                                 child: Container(
-                                  width: 26,
-                                  height: 26,
+                                  width: btnSize,
+                                  height: btnSize,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Colors.black.withValues(alpha: 0.65),
@@ -959,14 +1002,14 @@ class OverviewView extends StatelessWidget {
                                   child: Center(
                                     child: Icon(
                                       Icons.download_rounded,
-                                      size: 13,
+                                      size: iconSize,
                                       color: goldColor,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            SizedBox(width: isMobile ? 4 : 6),
                           ],
                           Material(
                             color: Colors.transparent,
@@ -976,8 +1019,8 @@ class OverviewView extends StatelessWidget {
                               },
                               borderRadius: BorderRadius.circular(14),
                               child: Container(
-                                width: 26,
-                                height: 26,
+                                width: btnSize,
+                                height: btnSize,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: isFavorite
@@ -991,7 +1034,7 @@ class OverviewView extends StatelessWidget {
                                 child: Center(
                                   child: Icon(
                                     isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                    size: 13,
+                                    size: iconSize,
                                     color: goldColor,
                                   ),
                                 ),
@@ -1005,10 +1048,13 @@ class OverviewView extends StatelessWidget {
 
                   // Bottom-Left Category / Portfolio Badge Over Image
                   Positioned(
-                    bottom: 8,
-                    left: 8,
+                    bottom: isMobile ? 5 : 8,
+                    left: isMobile ? 5 : 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 5 : 7,
+                        vertical: isMobile ? 2 : 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0D1915).withValues(alpha: 0.92),
                         borderRadius: BorderRadius.circular(4),
@@ -1017,7 +1063,7 @@ class OverviewView extends StatelessWidget {
                       child: Text(
                         category.toUpperCase(),
                         style: AppTheme.sansBody(
-                          fontSize: 8.5,
+                          fontSize: isMobile ? 7.5 : 8.5,
                           fontWeight: FontWeight.bold,
                           color: goldColor,
                           letterSpacing: 0.5,
@@ -1029,17 +1075,17 @@ class OverviewView extends StatelessWidget {
               ),
             ),
 
-            // ── 2. Title & Metadata Area (Consistent Height, Clean Typography) ────────
+            // ── 2. Title & Metadata Area ────────
             Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              height: isMobile ? 38 : 46,
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12),
               alignment: Alignment.centerLeft,
               child: Text(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTheme.sansBody(
-                  fontSize: 11.5,
+                  fontSize: isMobile ? 9.5 : 11.5,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 0.3,
@@ -1086,27 +1132,39 @@ class OverviewView extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: controller.rxActivity.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final act = controller.rxActivity[index];
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.circle, size: 7, color: goldColor),
-                    const SizedBox(width: 10),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Icon(Icons.circle, size: 6.5, color: goldColor),
+                    ),
+                    const SizedBox(width: 9),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            act.status,
-                            style: AppTheme.sansBody(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                act.status,
+                                style: AppTheme.sansBody(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                act.updatedAt.toLocal().toString().split(' ').first,
+                                style: const TextStyle(fontSize: 9.5, color: Colors.white38),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 1),
+                          const SizedBox(height: 2),
                           Text(
                             act.details,
                             style: AppTheme.sansBody(
@@ -1116,10 +1174,6 @@ class OverviewView extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-                    Text(
-                      act.updatedAt.toLocal().toString().split(' ').first,
-                      style: const TextStyle(fontSize: 9.5, color: Colors.white38),
                     ),
                   ],
                 );

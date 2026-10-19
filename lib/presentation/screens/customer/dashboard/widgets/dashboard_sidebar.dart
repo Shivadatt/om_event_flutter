@@ -13,12 +13,18 @@ class DashboardSidebar extends StatelessWidget {
   final CustomerDashboardController controller;
   final int selectedIndex;
   final ValueChanged<int> onIndexChanged;
+  final double? width;
+  final bool isCompactRail;
+  final bool isDrawer;
 
   const DashboardSidebar({
     super.key,
     required this.controller,
     required this.selectedIndex,
     required this.onIndexChanged,
+    this.width,
+    this.isCompactRail = false,
+    this.isDrawer = false,
   });
 
   @override
@@ -27,52 +33,67 @@ class DashboardSidebar extends StatelessWidget {
     const Color goldColor = Color(0xFFD4AF37);
     const Color borderGold = Color(0x1AD4AF37);
 
+    final double effectiveWidth = isCompactRail ? 64.0 : (width ?? 195.0);
+
     return Container(
-      width: 240,
-      decoration: const BoxDecoration(
+      width: isDrawer ? double.infinity : effectiveWidth,
+      decoration: BoxDecoration(
         color: sidebarBg,
-        border: Border(
-          right: BorderSide(color: borderGold, width: 1.0),
-        ),
+        border: isDrawer
+            ? null
+            : const Border(
+                right: BorderSide(color: borderGold, width: 1.0),
+              ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: isCompactRail ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
           // ─── Brand Header (Monogram + OM Events + CLIENT LOUNGE) ───
-          _buildBrandHeader(goldColor),
+          if (isCompactRail)
+            _buildCompactRailHeader(goldColor)
+          else
+            _buildBrandHeader(goldColor),
 
           const SizedBox(height: 10),
 
           // ─── Vertical Navigation Menu ───
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompactRail ? 8 : 10,
+                vertical: 2,
+              ),
               physics: const BouncingScrollPhysics(),
               children: [
                 _buildNavItem(
                   title: 'Overview',
                   icon: Icons.dashboard_outlined,
                   index: 0,
+                  isCompact: isCompactRail,
                 ),
                 _buildNavItem(
                   title: 'Inquiries',
                   icon: Icons.assignment_outlined,
                   index: 1,
+                  isCompact: isCompactRail,
                 ),
                 _buildNavItem(
                   title: 'Quotations',
                   icon: Icons.description_outlined,
                   index: 2,
+                  isCompact: isCompactRail,
                 ),
                 _buildNavItem(
                   title: 'Event Gallery',
                   icon: Icons.photo_library_outlined,
                   index: 5,
+                  isCompact: isCompactRail,
                 ),
                 _buildNavItem(
                   title: 'Wishlist',
                   icon: Icons.favorite_border_rounded,
                   index: 6,
+                  isCompact: isCompactRail,
                 ),
                 Obx(() {
                   final unread = controller.rxNotifications.where((n) => !n.isRead).length;
@@ -81,32 +102,69 @@ class DashboardSidebar extends StatelessWidget {
                     icon: Icons.notifications_none_outlined,
                     index: 7,
                     badgeCount: unread > 0 ? unread : null,
+                    isCompact: isCompactRail,
                   );
                 }),
                 _buildNavItem(
                   title: 'Profile Settings',
                   icon: Icons.person_outline_rounded,
                   index: 8,
+                  isCompact: isCompactRail,
                 ),
                 _buildNavItem(
                   title: 'Concierge Support',
                   icon: Icons.help_outline_rounded,
                   index: 9,
+                  isCompact: isCompactRail,
                 ),
                 _buildNavItem(
                   title: 'Office Maps & Legal',
                   icon: Icons.gavel_outlined,
                   index: 10,
+                  isCompact: isCompactRail,
                 ),
                 _buildNavItem(
                   title: 'Alert Preferences',
                   icon: Icons.settings_outlined,
                   index: 11,
+                  isCompact: isCompactRail,
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompactRailHeader(Color goldColor) {
+    return Container(
+      height: 58,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Color(0x1AD4AF37), width: 1.0),
+        ),
+      ),
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: goldColor.withValues(alpha: 0.6), width: 1.2),
+          color: goldColor.withValues(alpha: 0.12),
+        ),
+        child: Center(
+          child: Text(
+            "OE",
+            style: GoogleFonts.italiana(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: goldColor,
+              letterSpacing: 1,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -409,8 +467,60 @@ class DashboardSidebar extends StatelessWidget {
     required IconData icon,
     required int index,
     int? badgeCount,
+    bool isCompact = false,
   }) {
     final bool isActive = selectedIndex == index;
+
+    if (isCompact) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        child: Tooltip(
+          message: title,
+          waitDuration: const Duration(milliseconds: 300),
+          child: InkWell(
+            onTap: () => onIndexChanged(index),
+            borderRadius: BorderRadius.circular(8),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 44,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: isActive
+                    ? const Color(0x35D4AF37)
+                    : Colors.transparent,
+                border: isActive
+                    ? Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.65), width: 1.1)
+                    : null,
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: isActive ? const Color(0xFFE8CC8A) : const Color(0xFF8B9D95),
+                  ),
+                  if (badgeCount != null && badgeCount > 0)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFFD4AF37),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 3),

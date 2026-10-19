@@ -31,6 +31,7 @@ class CustomerDashboardScreen extends StatefulWidget {
 }
 
 class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final controller = Get.find<CustomerDashboardController>();
   final authController = Get.find<CustomerAuthController>();
   int selectedIndex = 0;
@@ -58,74 +59,88 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       );
     }
     final width = MediaQuery.of(context).size.width;
-    final bool isDesktop = width >= 1000;
+    final bool isDesktop = width >= 1024;
+    final bool isTablet = width >= 600 && width < 1024;
+    final bool isMobile = width < 600;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFF070C0A),
+      drawer: isMobile
+          ? Drawer(
+              backgroundColor: const Color(0xFF09120E),
+              child: SafeArea(
+                child: DashboardSidebar(
+                  controller: controller,
+                  selectedIndex: selectedIndex,
+                  isDrawer: true,
+                  onIndexChanged: (i) {
+                    Navigator.of(context).pop();
+                    if (mounted) setState(() => selectedIndex = i);
+                  },
+                ),
+              ),
+            )
+          : null,
       body: Stack(
         children: [
           _buildAmbientBackground(),
-          if (isDesktop)
-            Row(
-              children: [
-                // Full-height sticky desktop sidebar
+          Row(
+            children: [
+              // Desktop & Laptop: Full-height sidebar (195px desktop, 180px laptop)
+              if (isDesktop)
                 DashboardSidebar(
                   controller: controller,
                   selectedIndex: selectedIndex,
+                  width: width >= 1200 ? 195 : 180,
+                  onIndexChanged: (i) {
+                    if (mounted) setState(() => selectedIndex = i);
+                  },
+                )
+              // Tablet: Compact 64px icon rail with OE monogram & tooltips
+              else if (isTablet)
+                DashboardSidebar(
+                  controller: controller,
+                  selectedIndex: selectedIndex,
+                  isCompactRail: true,
                   onIndexChanged: (i) {
                     if (mounted) setState(() => selectedIndex = i);
                   },
                 ),
-                // Main application content occupying remaining viewport width
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DashboardTopBar(
-                        controller: controller,
-                        onLogout: _showLogoutConfirmation,
-                        onNavToNotifications: (i) {
-                          if (mounted) setState(() => selectedIndex = i);
-                        },
-                      ),
-                      Expanded(
-                        child: Obx(() {
-                          if (controller.isLoading.value && controller.rxProfile.value == null) {
-                            return const Center(
-                              child: CircularProgressIndicator(color: Color(0xFFD4AF37)),
-                            );
-                          }
-                          return _buildActiveView();
-                        }),
-                      ),
-                    ],
-                  ),
+              // Mobile: Navigation accessed via hamburger menu & off-canvas drawer
+
+              // Main application content occupying remaining viewport width
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DashboardTopBar(
+                      controller: controller,
+                      onLogout: _showLogoutConfirmation,
+                      onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+                      isMobile: isMobile,
+                      isTablet: isTablet,
+                      onNavToNotifications: (i) {
+                        if (mounted) setState(() => selectedIndex = i);
+                      },
+                    ),
+                    Expanded(
+                      child: Obx(() {
+                        if (controller.isLoading.value && controller.rxProfile.value == null) {
+                          return const Center(
+                            child: CircularProgressIndicator(color: Color(0xFFD4AF37)),
+                          );
+                        }
+                        return _buildActiveView();
+                      }),
+                    ),
+                  ],
                 ),
-              ],
-            )
-          else
-            Column(
-              children: [
-                DashboardTopBar(
-                  controller: controller,
-                  onLogout: _showLogoutConfirmation,
-                  onNavToNotifications: (i) {
-                    if (mounted) setState(() => selectedIndex = i);
-                  },
-                ),
-                Expanded(
-                  child: Obx(() {
-                    if (controller.isLoading.value && controller.rxProfile.value == null) {
-                      return const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)));
-                    }
-                    return _buildActiveView();
-                  }),
-                ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ],
       ),
-      bottomNavigationBar: !isDesktop ? _buildBottomNavBar() : null,
     );
   }
 
@@ -161,25 +176,6 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      backgroundColor: const Color(0xFF171411),
-      selectedItemColor: const Color(0xFFD4AF37),
-      unselectedItemColor: Colors.white54,
-      currentIndex: selectedIndex > 3 ? 3 : selectedIndex,
-      type: BottomNavigationBarType.fixed,
-      onTap: (index) {
-        if (mounted) setState(() => selectedIndex = index);
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), label: 'Overview'),
-        BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), label: 'Inquiries'),
-        BottomNavigationBarItem(icon: Icon(Icons.description_outlined), label: 'Quotes'),
-        BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'More'),
-      ],
     );
   }
 
