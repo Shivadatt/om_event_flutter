@@ -30,6 +30,11 @@
         return true;
       }
     });
+    window.addEventListener('unhandledrejection', function(e) {
+      if (!e.reason || (e.reason && (e.reason.name === 'AbortError' || e.reason.message === 'Failed to fetch'))) {
+        e.preventDefault();
+      }
+    });
     if (typeof console !== 'undefined' && console.error) {
       const _origError = console.error;
       console.error = function(...args) {
@@ -93,9 +98,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- Google Fonts: non-blocking load -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Italiana&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Italiana&display=swap" rel="stylesheet"></noscript>
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Italiana&display=swap">
 
   <!-- Splash critical asset preloading for instantaneous zero-delay presentation -->
   <link rel="preload" as="image" href="splash_poster.jpg">
@@ -161,28 +165,6 @@
       pointer-events: none;
     }
 
-    .splash-bottom-logo {
-      position: absolute;
-      right: 28px;
-      bottom: 28px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(212, 175, 55, 0.7);
-      background: rgba(15, 13, 11, 0.5);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #D4AF37;
-      font-family: 'Italiana', serif, Georgia;
-      font-size: 20px;
-      font-weight: 400;
-      letter-spacing: 1.2px;
-      z-index: 3;
-      pointer-events: none;
-    }
-
     #flutter-loading-screen.hidden{opacity:0;pointer-events:none}
   </style>
 </head>
@@ -196,7 +178,6 @@
       <source src="https://kwegyvbgdaednljyhcgm.supabase.co/storage/v1/object/public/gallery/Video/splash_screen.mp4" type="video/mp4">
     </video>
     <div class="splash-overlay"></div>
-    <div class="splash-bottom-logo">OE</div>
   </div>
 
   <script>

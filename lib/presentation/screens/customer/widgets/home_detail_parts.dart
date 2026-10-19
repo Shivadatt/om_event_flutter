@@ -123,6 +123,7 @@ class ExperiencePriceCard extends StatelessWidget {
   final bool hasDiscount;
   final int discountPct;
   final double savedAmount;
+  final bool isCompact;
 
   const ExperiencePriceCard({
     super.key,
@@ -130,6 +131,7 @@ class ExperiencePriceCard extends StatelessWidget {
     required this.hasDiscount,
     required this.discountPct,
     required this.savedAmount,
+    this.isCompact = false,
   });
 
   @override
@@ -143,7 +145,7 @@ class ExperiencePriceCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       decoration: BoxDecoration(
         color: paperColor,
         borderRadius: BorderRadius.circular(12),
@@ -155,7 +157,7 @@ class ExperiencePriceCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text("STARTING PRICE", style: AppTheme.sansBody(fontSize: 9, color: mutedColor, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+              Text("STARTING PRICE", style: AppTheme.sansBody(fontSize: isCompact ? 8.5 : 9, color: mutedColor, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
               if (hasDiscount) ...[
                 const Spacer(),
                 Container(
@@ -171,10 +173,16 @@ class ExperiencePriceCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(AppFormatters.formatCurrency(item.effectivePrice), style: GoogleFonts.italiana(fontSize: 34, color: inkColor, fontWeight: FontWeight.w600, height: 1)),
+              Text(
+                AppFormatters.formatCurrency(item.effectivePrice),
+                style: GoogleFonts.italiana(fontSize: isCompact ? 28 : 34, color: inkColor, fontWeight: FontWeight.w600, height: 1),
+              ),
               if (hasDiscount) ...[
                 const SizedBox(width: 12),
-                Text(AppFormatters.formatCurrency(item.price), style: AppTheme.sansBody(fontSize: 15, color: mutedColor).copyWith(decoration: TextDecoration.lineThrough)),
+                Text(
+                  AppFormatters.formatCurrency(item.price),
+                  style: AppTheme.sansBody(fontSize: isCompact ? 13 : 15, color: mutedColor).copyWith(decoration: TextDecoration.lineThrough),
+                ),
               ],
             ],
           ),
