@@ -11,17 +11,34 @@ import '../helpers/customer_drawer_helper.dart';
 import 'customer_booking_dialog.dart';
 import 'home_detail_parts.dart';
 
-void showExperienceDetailDialog(BuildContext context, Experience item) {
+void showExperienceDetailDialog(
+  BuildContext context,
+  Experience item, {
+  PackageOption? initialPackage,
+  String? initialTier,
+}) {
   showDialog(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.70),
-    builder: (_) => ExperienceDetailDialog(item: item),
+    builder: (_) => ExperienceDetailDialog(
+      item: item,
+      initialPackage: initialPackage,
+      initialTier: initialTier,
+    ),
   );
 }
 
 class ExperienceDetailDialog extends StatefulWidget {
   final Experience item;
-  const ExperienceDetailDialog({super.key, required this.item});
+  final PackageOption? initialPackage;
+  final String? initialTier;
+
+  const ExperienceDetailDialog({
+    super.key,
+    required this.item,
+    this.initialPackage,
+    this.initialTier,
+  });
 
   @override
   State<ExperienceDetailDialog> createState() => _ExperienceDetailDialogState();
@@ -37,14 +54,21 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
   void initState() {
     super.initState();
     final pkgs = widget.item.dynamicPackages;
-    _selectedPackage = pkgs.isNotEmpty
-        ? pkgs.first
-        : PackageOption.generateDefaults(
-            serviceId: widget.item.id,
-            serviceName: widget.item.name,
-            basePrice: widget.item.effectivePrice,
-            baseDuration: widget.item.durationHours,
-          ).first;
+    if (widget.initialPackage != null && pkgs.any((p) => p.id == widget.initialPackage!.id)) {
+      _selectedPackage = pkgs.firstWhere((p) => p.id == widget.initialPackage!.id);
+    } else if (widget.initialTier != null && pkgs.any((p) => p.tier.toLowerCase() == widget.initialTier!.toLowerCase())) {
+      _selectedPackage = pkgs.firstWhere((p) => p.tier.toLowerCase() == widget.initialTier!.toLowerCase());
+    } else {
+      _selectedPackage = pkgs.isNotEmpty
+          ? pkgs.first
+          : PackageOption.generateDefaults(
+              serviceId: widget.item.id,
+              serviceName: widget.item.name,
+              basePrice: widget.item.effectivePrice,
+              originalPrice: (widget.item.price > widget.item.effectivePrice) ? widget.item.price : null,
+              baseDuration: widget.item.durationHours,
+            ).first;
+    }
 
     if (widget.item.colors.isNotEmpty) {
       _selectedColor = widget.item.colors.first;
@@ -155,14 +179,29 @@ class _ExperienceDetailDialogState extends State<ExperienceDetailDialog> {
           ),
         ),
         SizedBox(height: isMobile ? 14 : 18),
-        ExperiencePriceCard(
-          item: item,
-          hasDiscount: _selectedPackage.discountPrice != null && _selectedPackage.price > _selectedPackage.effectivePrice,
-          discountPct: _selectedPackage.discountPrice != null && _selectedPackage.price > _selectedPackage.effectivePrice
-              ? ((1 - _selectedPackage.effectivePrice / _selectedPackage.price) * 100).round()
-              : 0,
-          savedAmount: _selectedPackage.price - _selectedPackage.effectivePrice,
-          isCompact: isMobile,
+        Builder(
+          builder: (context) {
+            final bool pkgHasDiscount = _selectedPackage.discountPrice != null &&
+                _selectedPackage.discountPrice! > 0 &&
+                _selectedPackage.price > _selectedPackage.effectivePrice;
+            final double pkgEffectivePrice = _selectedPackage.effectivePrice;
+            final double? pkgOriginalPrice = pkgHasDiscount ? _selectedPackage.price : null;
+            final double pkgSavedAmount = pkgHasDiscount ? (_selectedPackage.price - pkgEffectivePrice) : 0.0;
+            final int pkgDiscountPct = (pkgHasDiscount && _selectedPackage.price > 0)
+                ? ((1 - pkgEffectivePrice / _selectedPackage.price) * 100).round()
+                : 0;
+
+            return ExperiencePriceCard(
+              item: item,
+              package: _selectedPackage,
+              price: pkgEffectivePrice,
+              originalPrice: pkgOriginalPrice,
+              hasDiscount: pkgHasDiscount,
+              discountPct: pkgDiscountPct,
+              savedAmount: pkgSavedAmount,
+              isCompact: isMobile,
+            );
+          },
         ),
         SizedBox(height: isMobile ? 14 : 18),
 

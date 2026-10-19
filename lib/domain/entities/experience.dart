@@ -60,6 +60,7 @@ class Experience {
           serviceName: name,
           basePrice: effectivePrice,
           baseDuration: durationHours,
+          originalPrice: (price > effectivePrice) ? price : null,
         );
 
   Experience copyWith({

@@ -76,8 +76,13 @@ class PackageOption {
     required String serviceName,
     required double basePrice,
     required double baseDuration,
+    double? originalPrice,
   }) {
     final double safeBase = basePrice > 0 ? basePrice : 4999.0;
+    final bool hasBaseDiscount = originalPrice != null && originalPrice > safeBase;
+    final double basicMrp = hasBaseDiscount ? originalPrice : safeBase;
+    final double? basicDiscount = hasBaseDiscount ? safeBase : null;
+
     final double premiumPrice = (safeBase * 1.45).roundToDouble();
     final double luxuryPrice = (safeBase * 2.20).roundToDouble();
 
@@ -88,8 +93,8 @@ class PackageOption {
         tier: 'basic',
         name: 'Basic Elegance',
         description: 'Essential decor setup with refined aesthetics, curated palette, and standard lighting.',
-        price: safeBase,
-        discountPrice: null,
+        price: basicMrp,
+        discountPrice: basicDiscount,
         features: [
           'Core backdrop design & draping',
           'Standard ambient mood lighting',

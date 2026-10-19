@@ -74,6 +74,7 @@ class ExperienceModel extends Experience {
         serviceName: json['name'] ?? '',
         basePrice: effectiveBasePrice,
         baseDuration: parsedDuration,
+        originalPrice: parseDouble(json['price']),
       );
     }
 

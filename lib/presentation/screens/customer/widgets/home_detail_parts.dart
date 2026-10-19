@@ -4,6 +4,7 @@ import 'package:om_event/core/config/app_theme.dart';
 import 'package:om_event/core/constants/app_colors.dart';
 import 'package:om_event/core/utils/formatters.dart';
 import 'package:om_event/domain/entities/experience.dart';
+import 'package:om_event/domain/entities/package_option.dart';
 import 'package:om_event/presentation/widgets/item_visual_placeholder.dart';
 
 class ModalDropdown extends StatelessWidget {
@@ -119,7 +120,10 @@ class ExperienceDetailImage extends StatelessWidget {
 }
 
 class ExperiencePriceCard extends StatelessWidget {
-  final Experience item;
+  final Experience? item;
+  final PackageOption? package;
+  final double? price;
+  final double? originalPrice;
   final bool hasDiscount;
   final int discountPct;
   final double savedAmount;
@@ -127,7 +131,10 @@ class ExperiencePriceCard extends StatelessWidget {
 
   const ExperiencePriceCard({
     super.key,
-    required this.item,
+    this.item,
+    this.package,
+    this.price,
+    this.originalPrice,
     required this.hasDiscount,
     required this.discountPct,
     required this.savedAmount,
@@ -143,6 +150,18 @@ class ExperiencePriceCard extends StatelessWidget {
     final goldColor = isDark ? AppColors.darkGold : AppColors.lightGold;
     final inkColor = isDark ? AppColors.darkInk : AppColors.lightInk;
 
+    final double displayEffectivePrice = price ??
+        package?.effectivePrice ??
+        item?.effectivePrice ??
+        0.0;
+
+    final double? displayOriginalPrice = originalPrice ??
+        (package != null && hasDiscount ? package!.price : (item != null && hasDiscount ? item!.price : null));
+
+    final bool showDiscount = hasDiscount &&
+        displayOriginalPrice != null &&
+        displayOriginalPrice > displayEffectivePrice;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isCompact ? 12 : 16),
@@ -150,20 +169,45 @@ class ExperiencePriceCard extends StatelessWidget {
         color: paperColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: lineColor, width: 1.5),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02), blurRadius: 8, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text("STARTING PRICE", style: AppTheme.sansBody(fontSize: isCompact ? 8.5 : 9, color: mutedColor, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-              if (hasDiscount) ...[
+              Text(
+                "STARTING PRICE",
+                style: AppTheme.sansBody(
+                  fontSize: isCompact ? 8.5 : 9,
+                  color: mutedColor,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              if (showDiscount) ...[
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: goldColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                  child: Text("% OFF", style: AppTheme.sansBody(fontSize: 10, color: goldColor, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                  decoration: BoxDecoration(
+                    color: goldColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    discountPct > 0 ? "$discountPct% OFF" : "% OFF",
+                    style: AppTheme.sansBody(
+                      fontSize: 10,
+                      color: goldColor,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -174,25 +218,40 @@ class ExperiencePriceCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                AppFormatters.formatCurrency(item.effectivePrice),
-                style: GoogleFonts.italiana(fontSize: isCompact ? 28 : 34, color: inkColor, fontWeight: FontWeight.w600, height: 1),
+                AppFormatters.formatCurrency(displayEffectivePrice),
+                style: GoogleFonts.italiana(
+                  fontSize: isCompact ? 28 : 34,
+                  color: inkColor,
+                  fontWeight: FontWeight.w600,
+                  height: 1,
+                ),
               ),
-              if (hasDiscount) ...[
+              if (showDiscount) ...[
                 const SizedBox(width: 12),
                 Text(
-                  AppFormatters.formatCurrency(item.price),
-                  style: AppTheme.sansBody(fontSize: isCompact ? 13 : 15, color: mutedColor).copyWith(decoration: TextDecoration.lineThrough),
+                  AppFormatters.formatCurrency(displayOriginalPrice),
+                  style: AppTheme.sansBody(
+                    fontSize: isCompact ? 13 : 15,
+                    color: mutedColor,
+                  ).copyWith(decoration: TextDecoration.lineThrough),
                 ),
               ],
             ],
           ),
-          if (hasDiscount) ...[
+          if (showDiscount && savedAmount > 0) ...[
             const SizedBox(height: 8),
             Row(
               children: [
                 const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.success),
                 const SizedBox(width: 6),
-                Text("You Save ", style: AppTheme.sansBody(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600)),
+                Text(
+                  "You Save ${AppFormatters.formatCurrency(savedAmount)}",
+                  style: AppTheme.sansBody(
+                    fontSize: 11,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ],

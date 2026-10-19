@@ -36,25 +36,47 @@ class CartDrawer extends StatelessWidget {
     const Color successColor = Color(0xFF52C48A);
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final drawerWidth = screenWidth >= 1200
-        ? math.max(460.0, math.min(640.0, screenWidth * 0.35))
-        : screenWidth >= 768
-            ? math.min(500.0, screenWidth * 0.65)
-            : screenWidth * 0.94;
+    final bool isDesktop = screenWidth >= 1200;
+    final bool isLaptop = screenWidth >= 1024 && screenWidth < 1200;
+    final bool isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final bool isMobile = screenWidth < 600;
+    final bool isNarrowMobile = screenWidth < 360;
+
+    // Responsive Drawer Width:
+    // Desktop: approx 340–380px, website visible behind
+    // Laptop: approx 320–350px
+    // Tablet: compact right drawer max 340px, website clearly visible behind
+    // Mobile: full-width drawer fitting device viewport cleanly
+    final double drawerWidth;
+    if (isDesktop) {
+      drawerWidth = (screenWidth * 0.22).clamp(340.0, 380.0);
+    } else if (isLaptop) {
+      drawerWidth = (screenWidth * 0.30).clamp(320.0, 350.0);
+    } else if (isTablet) {
+      drawerWidth = (screenWidth * 0.45).clamp(310.0, 340.0);
+    } else {
+      drawerWidth = screenWidth;
+    }
+
+    final double contentHPadding = isDesktop
+        ? 18.0
+        : (isLaptop ? 16.0 : (isTablet ? 16.0 : (isNarrowMobile ? 12.0 : 14.0)));
 
     return Drawer(
       width: drawerWidth,
       backgroundColor: drawerBg,
       elevation: 28,
       shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          bottomLeft: Radius.circular(24),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(isMobile ? 0 : 20),
+          bottomLeft: Radius.circular(isMobile ? 0 : 20),
         ),
-        side: BorderSide(
-          color: goldColor.withValues(alpha: 0.42),
-          width: 1.4,
-        ),
+        side: isMobile
+            ? BorderSide.none
+            : BorderSide(
+                color: goldColor.withValues(alpha: 0.42),
+                width: 1.4,
+              ),
       ),
       child: Stack(
         children: [
@@ -74,138 +96,165 @@ class CartDrawer extends StatelessWidget {
             child: Obx(() {
               final items = cartController.rxCartItems;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ─── 1. Header (Vertical Gold Line, Eyebrow, Title, Close Button) ───
-              _buildHeader(context, items.length, goldColor, goldLight, inkColor),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ─── 1. Header (Vertical Gold Line, Eyebrow, Title, Close Button) ───
+                  _buildHeader(
+                    context,
+                    items.length,
+                    goldColor,
+                    goldLight,
+                    inkColor,
+                    isMobile: isMobile,
+                    isNarrowMobile: isNarrowMobile,
+                  ),
 
-              // ─── 2. Drawer Content Flow ───
-              if (items.isEmpty)
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: goldColor.withValues(alpha: 0.08),
-                            border: Border.all(
-                              color: goldColor.withValues(alpha: 0.22),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              "✦",
-                              style: TextStyle(
-                                fontSize: 28,
-                                color: goldColor.withValues(alpha: 0.7),
+                  // ─── 2. Drawer Content Flow ───
+                  if (items.isEmpty)
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: goldColor.withValues(alpha: 0.08),
+                                border: Border.all(
+                                  color: goldColor.withValues(alpha: 0.22),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "✦",
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    color: goldColor.withValues(alpha: 0.7),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          "Your canvas is open.",
-                          style: GoogleFonts.italiana(
-                            fontSize: 22,
-                            color: inkColor,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: Text(
-                            "Add signature experiences and we'll craft your quotation as you go.",
-                            textAlign: TextAlign.center,
-                            style: AppTheme.sansBody(
-                              fontSize: 12,
-                              color: mutedColor,
-                              height: 1.6,
+                            const SizedBox(height: 20),
+                            Text(
+                              "Your canvas is open.",
+                              style: GoogleFonts.italiana(
+                                fontSize: 22,
+                                color: inkColor,
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 40),
+                              child: Text(
+                                "Add signature experiences and we'll craft your quotation as you go.",
+                                textAlign: TextAlign.center,
+                                style: AppTheme.sansBody(
+                                  fontSize: 12,
+                                  color: mutedColor,
+                                  height: 1.6,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          contentHPadding,
+                          isMobile ? 12 : 16,
+                          contentHPadding,
+                          math.max(24.0, MediaQuery.of(context).padding.bottom + 16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Selected Item Cards (No huge empty space below)
+                            for (int i = 0; i < items.length; i++) ...[
+                              _buildItemCard(
+                                context,
+                                items[i],
+                                i,
+                                cardBg,
+                                borderColor,
+                                goldColor,
+                                goldLight,
+                                inkColor,
+                                mutedColor,
+                                isMobile: isMobile,
+                                isNarrowMobile: isNarrowMobile,
+                              ),
+                              if (i < items.length - 1) const SizedBox(height: 12),
+                            ],
+
+                            const SizedBox(height: 14),
+
+                            // ─── 3. Price Breakup Card ───
+                            _buildPriceBreakupCard(
+                              cardBg,
+                              borderColor,
+                              goldColor,
+                              goldLight,
+                              inkColor,
+                              mutedColor,
+                              successColor,
+                              isMobile: isMobile,
+                              isNarrowMobile: isNarrowMobile,
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            // ─── 4. Special Offer Teaser Card ───
+                            _buildSpecialOfferCard(
+                              cardBg,
+                              borderColor,
+                              goldColor,
+                              goldLight,
+                              mutedColor,
+                              isMobile: isMobile,
+                              isNarrowMobile: isNarrowMobile,
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            // ─── 5. Four Benefit Cards Row / 2x2 Grid ───
+                            _buildBenefitCards(goldColor),
+
+                            const SizedBox(height: 18),
+
+                            // ─── 6. Create My Quotation CTA Button ───
+                            _buildCreateQuotationButton(
+                              context,
+                              goldColor,
+                              isCompact: isNarrowMobile,
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ─── 7. Security Message ───
+                            _buildSecurityMessage(
+                              goldColor,
+                              mutedColor,
+                              isCompact: isNarrowMobile,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                )
-              else
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Selected Item Cards (No huge empty space below)
-                        for (int i = 0; i < items.length; i++) ...[
-                          _buildItemCard(
-                            context,
-                            items[i],
-                            i,
-                            cardBg,
-                            borderColor,
-                            goldColor,
-                            goldLight,
-                            inkColor,
-                            mutedColor,
-                          ),
-                          if (i < items.length - 1) const SizedBox(height: 12),
-                        ],
-
-                        const SizedBox(height: 14),
-
-                        // ─── 3. Price Breakup Card ───
-                        _buildPriceBreakupCard(
-                          cardBg,
-                          borderColor,
-                          goldColor,
-                          goldLight,
-                          inkColor,
-                          mutedColor,
-                          successColor,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // ─── 4. Special Offer Teaser Card ───
-                        _buildSpecialOfferCard(
-                          cardBg,
-                          borderColor,
-                          goldColor,
-                          goldLight,
-                          mutedColor,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // ─── 5. Four Benefit Cards Row ───
-                        _buildBenefitCards(goldColor),
-
-                        const SizedBox(height: 18),
-
-                        // ─── 6. Create My Quotation CTA Button ───
-                        _buildCreateQuotationButton(context, goldColor),
-
-                        const SizedBox(height: 12),
-
-                        // ─── 7. Security Message ───
-                        _buildSecurityMessage(goldColor, mutedColor),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          );
-        }),
+                ],
+              );
+            }),
+          ),
+        ],
       ),
-    ],
-  ),
-);
+    );
   }
 
   // ============================================================================
@@ -216,10 +265,17 @@ class CartDrawer extends StatelessWidget {
     int count,
     Color goldColor,
     Color goldLight,
-    Color inkColor,
-  ) {
+    Color inkColor, {
+    bool isMobile = false,
+    bool isNarrowMobile = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 18, 18, 18),
+      padding: EdgeInsets.fromLTRB(
+        isNarrowMobile ? 14 : (isMobile ? 16 : 20),
+        isNarrowMobile ? 14 : 18,
+        isNarrowMobile ? 12 : 18,
+        isNarrowMobile ? 14 : 18,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF0C1914),
         border: Border(
@@ -234,7 +290,7 @@ class CartDrawer extends StatelessWidget {
           // Vertical gold accent bar
           Container(
             width: 3.5,
-            height: 40,
+            height: isNarrowMobile ? 34 : 40,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
               gradient: LinearGradient(
@@ -244,7 +300,7 @@ class CartDrawer extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: isNarrowMobile ? 10 : 14),
           // Eyebrow and Title
           Expanded(
             child: Column(
@@ -254,17 +310,17 @@ class CartDrawer extends StatelessWidget {
                 Text(
                   "YOUR EVENT CANVAS",
                   style: AppTheme.sansBody(
-                    fontSize: 9.5,
+                    fontSize: isNarrowMobile ? 8.5 : 9.5,
                     fontWeight: FontWeight.bold,
                     color: goldColor,
-                    letterSpacing: 2.0,
+                    letterSpacing: isNarrowMobile ? 1.4 : 2.0,
                   ),
                 ),
                 const SizedBox(height: 2),
                 RichText(
                   text: TextSpan(
                     style: GoogleFonts.italiana(
-                      fontSize: 25,
+                      fontSize: isNarrowMobile ? 20 : (isMobile ? 22 : 25),
                       color: inkColor,
                       height: 1.1,
                     ),
@@ -275,7 +331,7 @@ class CartDrawer extends StatelessWidget {
                         style: GoogleFonts.italiana(
                           color: goldColor,
                           fontWeight: FontWeight.bold,
-                          fontSize: 22,
+                          fontSize: isNarrowMobile ? 18 : (isMobile ? 20 : 22),
                         ),
                       ),
                     ],
@@ -288,8 +344,8 @@ class CartDrawer extends StatelessWidget {
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             child: Container(
-              width: 36,
-              height: 36,
+              width: isNarrowMobile ? 32 : 36,
+              height: isNarrowMobile ? 32 : 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF14241D),
@@ -298,10 +354,10 @@ class CartDrawer extends StatelessWidget {
                   width: 1.1,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.close_rounded,
-                size: 17,
-                color: Color(0xFFE8E5DD),
+                size: isNarrowMobile ? 15 : 17,
+                color: const Color(0xFFE8E5DD),
               ),
             ),
           ),
@@ -322,18 +378,23 @@ class CartDrawer extends StatelessWidget {
     Color goldColor,
     Color goldLight,
     Color inkColor,
-    Color mutedColor,
-  ) {
+    Color mutedColor, {
+    bool isMobile = false,
+    bool isNarrowMobile = false,
+  }) {
     final customization = [item.color, item.theme]
         .where((e) => e != null && e.toString().trim().isNotEmpty)
         .join(' · ');
 
     final subtitle = customization.isNotEmpty
         ? customization
-        : (item.experience.category.isNotEmpty ? item.experience.category : "Custom Event Styling");
+        : (item.experience.categoryName.isNotEmpty ? item.experience.categoryName : "Custom Event Styling");
+
+    final double thumbW = isNarrowMobile ? 74.0 : (isMobile ? 82.0 : 92.0);
+    final double thumbH = isNarrowMobile ? 62.0 : (isMobile ? 68.0 : 74.0);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isNarrowMobile ? 10 : (isMobile ? 11 : 12)),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
@@ -354,8 +415,8 @@ class CartDrawer extends StatelessWidget {
         children: [
           // Left Image Thumbnail (Fixed Aspect Ratio, Object-Fit Cover)
           Container(
-            width: 96,
-            height: 74,
+            width: thumbW,
+            height: thumbH,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
@@ -384,16 +445,17 @@ class CartDrawer extends StatelessWidget {
                     ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isNarrowMobile ? 8 : 12),
           // Middle Details: Title, Category/Theme, Price
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   item.experience.name,
                   style: GoogleFonts.italiana(
-                    fontSize: 16,
+                    fontSize: isNarrowMobile ? 14.5 : (isMobile ? 15.5 : 16.0),
                     fontWeight: FontWeight.bold,
                     color: inkColor,
                     height: 1.2,
@@ -405,20 +467,20 @@ class CartDrawer extends StatelessWidget {
                 Text(
                   subtitle,
                   style: AppTheme.sansBody(
-                    fontSize: 10.5,
+                    fontSize: isNarrowMobile ? 9.5 : 10.5,
                     color: mutedColor,
                     letterSpacing: 0.3,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: isNarrowMobile ? 6 : 10),
                 Text(
                   AppFormatters.formatCurrency(
                     item.experience.effectivePrice * item.quantity,
                   ),
                   style: GoogleFonts.montserrat(
-                    fontSize: 15.5,
+                    fontSize: isNarrowMobile ? 14.0 : 15.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -426,17 +488,17 @@ class CartDrawer extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: isNarrowMobile ? 6 : 8),
           // Right Controls: Delete (Top) & Quantity (Bottom)
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Delete Button (Top Right)
               GestureDetector(
                 onTap: () => cartController.removeFromCart(index),
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: EdgeInsets.all(isNarrowMobile ? 5 : 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF261414),
                     borderRadius: BorderRadius.circular(8),
@@ -445,17 +507,17 @@ class CartDrawer extends StatelessWidget {
                       width: 1,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.delete_outline_rounded,
-                    size: 15,
-                    color: Color(0xFFE57373),
+                    size: isNarrowMobile ? 14 : 15,
+                    color: const Color(0xFFE57373),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: isNarrowMobile ? 10 : 14),
               // Quantity Control Pill (Bottom Right: [- 1 +])
               Container(
-                height: 29,
+                height: isNarrowMobile ? 26 : 29,
                 decoration: BoxDecoration(
                   color: const Color(0xFF162720),
                   borderRadius: BorderRadius.circular(16),
@@ -471,10 +533,10 @@ class CartDrawer extends StatelessWidget {
                       onTap: () => cartController.changeQuantity(index, -1),
                       behavior: HitTestBehavior.opaque,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: EdgeInsets.symmetric(horizontal: isNarrowMobile ? 6 : 8),
                         child: Icon(
                           Icons.remove_rounded,
-                          size: 13,
+                          size: isNarrowMobile ? 12 : 13,
                           color: inkColor.withValues(alpha: 0.8),
                         ),
                       ),
@@ -482,7 +544,7 @@ class CartDrawer extends StatelessWidget {
                     Text(
                       '${item.quantity}',
                       style: AppTheme.sansBody(
-                        fontSize: 12,
+                        fontSize: isNarrowMobile ? 11 : 12,
                         fontWeight: FontWeight.bold,
                         color: goldLight,
                       ),
@@ -491,10 +553,10 @@ class CartDrawer extends StatelessWidget {
                       onTap: () => cartController.changeQuantity(index, 1),
                       behavior: HitTestBehavior.opaque,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: EdgeInsets.symmetric(horizontal: isNarrowMobile ? 6 : 8),
                         child: Icon(
                           Icons.add_rounded,
-                          size: 13,
+                          size: isNarrowMobile ? 12 : 13,
                           color: inkColor.withValues(alpha: 0.8),
                         ),
                       ),
@@ -519,10 +581,12 @@ class CartDrawer extends StatelessWidget {
     Color goldLight,
     Color inkColor,
     Color mutedColor,
-    Color successColor,
-  ) {
+    Color successColor, {
+    bool isMobile = false,
+    bool isNarrowMobile = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isNarrowMobile ? 12 : (isMobile ? 14 : 16)),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
@@ -539,14 +603,14 @@ class CartDrawer extends StatelessWidget {
             children: [
               Icon(
                 Icons.groups_outlined,
-                size: 16,
+                size: isNarrowMobile ? 15 : 16,
                 color: goldLight,
               ),
               const SizedBox(width: 8),
               Text(
                 "PRICE BREAKUP",
                 style: AppTheme.sansBody(
-                  fontSize: 10,
+                  fontSize: isNarrowMobile ? 9.5 : 10,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.8,
                   color: goldColor,
@@ -564,6 +628,7 @@ class CartDrawer extends StatelessWidget {
             valueColor: Colors.white,
             mutedColor: mutedColor,
             goldColor: goldColor,
+            isCompact: isNarrowMobile,
           ),
           _breakupRow(
             icon: Icons.card_giftcard_outlined,
@@ -574,6 +639,7 @@ class CartDrawer extends StatelessWidget {
             valueColor: cartController.volumeDiscount > 0 ? successColor : mutedColor,
             mutedColor: mutedColor,
             goldColor: goldColor,
+            isCompact: isNarrowMobile,
           ),
           if (cartController.deliveryCharge > 0)
             _breakupRow(
@@ -583,6 +649,7 @@ class CartDrawer extends StatelessWidget {
               valueColor: Colors.white,
               mutedColor: mutedColor,
               goldColor: goldColor,
+              isCompact: isNarrowMobile,
             ),
           _breakupRow(
             icon: Icons.percent_rounded,
@@ -591,6 +658,7 @@ class CartDrawer extends StatelessWidget {
             valueColor: Colors.white,
             mutedColor: mutedColor,
             goldColor: goldColor,
+            isCompact: isNarrowMobile,
           ),
           if (AppConstants.enableClientFeeWaiver)
             _breakupRow(
@@ -600,13 +668,17 @@ class CartDrawer extends StatelessWidget {
               valueColor: successColor,
               mutedColor: mutedColor,
               goldColor: goldColor,
+              isCompact: isNarrowMobile,
             ),
 
-          const SizedBox(height: 14),
+          SizedBox(height: isNarrowMobile ? 10 : 14),
 
           // Highlighted Inner Container: ESTIMATED TOTAL
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            padding: EdgeInsets.symmetric(
+              horizontal: isNarrowMobile ? 12 : 16,
+              vertical: isNarrowMobile ? 10 : 13,
+            ),
             decoration: BoxDecoration(
               color: const Color(0xFF14241C),
               borderRadius: BorderRadius.circular(12),
@@ -618,32 +690,35 @@ class CartDrawer extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "ESTIMATED TOTAL",
-                      style: AppTheme.sansBody(
-                        fontSize: 9.5,
-                        letterSpacing: 1.8,
-                        fontWeight: FontWeight.bold,
-                        color: goldColor,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "ESTIMATED TOTAL",
+                        style: AppTheme.sansBody(
+                          fontSize: isNarrowMobile ? 8.5 : 9.5,
+                          letterSpacing: isNarrowMobile ? 1.2 : 1.8,
+                          fontWeight: FontWeight.bold,
+                          color: goldColor,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "Incl. taxes & charges",
-                      style: AppTheme.sansBody(
-                        fontSize: 10,
-                        color: mutedColor,
+                      const SizedBox(height: 2),
+                      Text(
+                        "Incl. taxes & charges",
+                        style: AppTheme.sansBody(
+                          fontSize: isNarrowMobile ? 9.0 : 10.0,
+                          color: mutedColor,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   AppFormatters.formatCurrency(cartController.grandTotal),
                   style: GoogleFonts.montserrat(
-                    fontSize: 21,
+                    fontSize: isNarrowMobile ? 17.5 : (isMobile ? 19.0 : 21.0),
                     fontWeight: FontWeight.bold,
                     color: goldLight,
                   ),
@@ -663,25 +738,30 @@ class CartDrawer extends StatelessWidget {
     required Color valueColor,
     required Color mutedColor,
     required Color goldColor,
+    bool isCompact = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.5),
+      padding: EdgeInsets.symmetric(vertical: isCompact ? 3.5 : 4.5),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: goldColor.withValues(alpha: 0.7)),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: AppTheme.sansBody(
-              fontSize: 11.5,
-              color: mutedColor,
+          Icon(icon, size: isCompact ? 13 : 14, color: goldColor.withValues(alpha: 0.7)),
+          SizedBox(width: isCompact ? 6 : 8),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.sansBody(
+                fontSize: isCompact ? 10.5 : 11.5,
+                color: mutedColor,
+              ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           Text(
             value,
             style: AppTheme.sansBody(
-              fontSize: 12,
+              fontSize: isCompact ? 11.0 : 12.0,
               fontWeight: FontWeight.w600,
               color: valueColor,
             ),
@@ -699,10 +779,15 @@ class CartDrawer extends StatelessWidget {
     Color borderColor,
     Color goldColor,
     Color goldLight,
-    Color mutedColor,
-  ) {
+    Color mutedColor, {
+    bool isMobile = false,
+    bool isNarrowMobile = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      padding: EdgeInsets.symmetric(
+        horizontal: isNarrowMobile ? 10 : 14,
+        vertical: isNarrowMobile ? 10 : 13,
+      ),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
@@ -711,8 +796,8 @@ class CartDrawer extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: isNarrowMobile ? 30 : 34,
+            height: isNarrowMobile ? 30 : 34,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: goldColor.withValues(alpha: 0.12),
@@ -723,11 +808,11 @@ class CartDrawer extends StatelessWidget {
             ),
             child: Icon(
               Icons.local_offer_outlined,
-              size: 16,
+              size: isNarrowMobile ? 14 : 16,
               color: goldLight,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isNarrowMobile ? 8 : 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,7 +820,7 @@ class CartDrawer extends StatelessWidget {
                 Text(
                   "Add more items to unlock special offers!",
                   style: AppTheme.sansBody(
-                    fontSize: 11.5,
+                    fontSize: isNarrowMobile ? 10.5 : 11.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -744,16 +829,16 @@ class CartDrawer extends StatelessWidget {
                 Text(
                   "Reach ₹50,000 to get an exclusive celebration discount.",
                   style: AppTheme.sansBody(
-                    fontSize: 10,
+                    fontSize: isNarrowMobile ? 9.0 : 10.0,
                     color: mutedColor,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(
+          Icon(
             Icons.chevron_right_rounded,
-            size: 20,
+            size: isNarrowMobile ? 18 : 20,
             color: Colors.white54,
           ),
         ],
@@ -767,7 +852,44 @@ class CartDrawer extends StatelessWidget {
   Widget _buildBenefitCards(Color goldColor) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 360) {
+        final availableWidth = constraints.maxWidth;
+        // On Desktop / Laptop with width >= 335, 4 cards fit cleanly in a row
+        if (availableWidth >= 335) {
+          return Row(
+            children: [
+              _benefitCard(
+                icon: Icons.shield_outlined,
+                title: "Secure & Safe\nQuotation",
+                goldColor: goldColor,
+                isCompact: true,
+              ),
+              const SizedBox(width: 6),
+              _benefitCard(
+                icon: Icons.lock_clock_outlined,
+                title: "Instant\nPrice Updates",
+                goldColor: goldColor,
+                isCompact: true,
+              ),
+              const SizedBox(width: 6),
+              _benefitCard(
+                icon: Icons.bookmark_border_rounded,
+                title: "Save for\nLater",
+                goldColor: goldColor,
+                isCompact: true,
+              ),
+              const SizedBox(width: 6),
+              _benefitCard(
+                icon: Icons.people_outline_rounded,
+                title: "Share with\nFamily / Team",
+                goldColor: goldColor,
+                isCompact: true,
+              ),
+            ],
+          );
+        }
+
+        // On Tablet and Mobile (< 335), render a 2x2 grid
+        if (availableWidth >= 230) {
           return Column(
             children: [
               Row(
@@ -804,31 +926,17 @@ class CartDrawer extends StatelessWidget {
             ],
           );
         }
-        return Row(
+
+        // Fallback for extremely narrow viewports (< 230)
+        return Column(
           children: [
-            _benefitCard(
-              icon: Icons.shield_outlined,
-              title: "Secure & Safe\nQuotation",
-              goldColor: goldColor,
-            ),
-            const SizedBox(width: 8),
-            _benefitCard(
-              icon: Icons.lock_clock_outlined,
-              title: "Instant\nPrice Updates",
-              goldColor: goldColor,
-            ),
-            const SizedBox(width: 8),
-            _benefitCard(
-              icon: Icons.bookmark_border_rounded,
-              title: "Save for\nLater",
-              goldColor: goldColor,
-            ),
-            const SizedBox(width: 8),
-            _benefitCard(
-              icon: Icons.people_outline_rounded,
-              title: "Share with\nFamily / Team",
-              goldColor: goldColor,
-            ),
+            Row(children: [_benefitCard(icon: Icons.shield_outlined, title: "Secure & Safe Quotation", goldColor: goldColor)]),
+            const SizedBox(height: 6),
+            Row(children: [_benefitCard(icon: Icons.lock_clock_outlined, title: "Instant Price Updates", goldColor: goldColor)]),
+            const SizedBox(height: 6),
+            Row(children: [_benefitCard(icon: Icons.bookmark_border_rounded, title: "Save for Later", goldColor: goldColor)]),
+            const SizedBox(height: 6),
+            Row(children: [_benefitCard(icon: Icons.people_outline_rounded, title: "Share with Family / Team", goldColor: goldColor)]),
           ],
         );
       },
@@ -839,11 +947,12 @@ class CartDrawer extends StatelessWidget {
     required IconData icon,
     required String title,
     required Color goldColor,
+    bool isCompact = false,
   }) {
     return Expanded(
       child: Container(
-        height: 76,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        height: isCompact ? 72 : 76,
+        padding: EdgeInsets.symmetric(horizontal: isCompact ? 2 : 4, vertical: isCompact ? 6 : 8),
         decoration: BoxDecoration(
           color: const Color(0xFF0F1E19),
           borderRadius: BorderRadius.circular(12),
@@ -853,8 +962,8 @@ class CartDrawer extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 25,
-              height: 25,
+              width: isCompact ? 22 : 25,
+              height: isCompact ? 22 : 25,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF182A22),
@@ -863,17 +972,17 @@ class CartDrawer extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: Icon(icon, size: 13, color: goldColor),
+              child: Icon(icon, size: isCompact ? 11 : 13, color: goldColor),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: isCompact ? 4 : 6),
             Text(
               title,
               textAlign: TextAlign.center,
               style: AppTheme.sansBody(
-                fontSize: 9.5,
+                fontSize: isCompact ? 8.5 : 9.5,
                 fontWeight: FontWeight.w600,
                 color: Colors.white70,
-                height: 1.2,
+                height: 1.15,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -887,7 +996,11 @@ class CartDrawer extends StatelessWidget {
   // ============================================================================
   // 6. CREATE MY QUOTATION BUTTON (EXACT FIRST IMAGE MATCH)
   // ============================================================================
-  Widget _buildCreateQuotationButton(BuildContext context, Color goldColor) {
+  Widget _buildCreateQuotationButton(
+    BuildContext context,
+    Color goldColor, {
+    bool isCompact = false,
+  }) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pop();
@@ -897,7 +1010,7 @@ class CartDrawer extends StatelessWidget {
         );
       },
       child: Container(
-        height: 48,
+        height: isCompact ? 44 : 48,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFFE8CC8A), Color(0xFFC8A96E)],
@@ -913,30 +1026,34 @@ class CartDrawer extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.description_outlined,
-              size: 18,
-              color: Color(0xFF0D1915),
+              size: isCompact ? 16 : 18,
+              color: const Color(0xFF0D1915),
             ),
             const SizedBox(width: 8),
-            Text(
-              "CREATE MY QUOTATION",
-              style: AppTheme.sansBody(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-                color: const Color(0xFF0D1915),
+            Flexible(
+              child: Text(
+                "CREATE MY QUOTATION",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.sansBody(
+                  fontSize: isCompact ? 11 : 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: isCompact ? 0.8 : 1.5,
+                  color: const Color(0xFF0D1915),
+                ),
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
+            Icon(
               Icons.arrow_forward_rounded,
-              size: 16,
-              color: Color(0xFF0D1915),
+              size: isCompact ? 14 : 16,
+              color: const Color(0xFF0D1915),
             ),
           ],
         ),
@@ -947,21 +1064,29 @@ class CartDrawer extends StatelessWidget {
   // ============================================================================
   // 7. SECURITY MESSAGE (EXACT FIRST IMAGE MATCH)
   // ============================================================================
-  Widget _buildSecurityMessage(Color goldColor, Color mutedColor) {
+  Widget _buildSecurityMessage(
+    Color goldColor,
+    Color mutedColor, {
+    bool isCompact = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(
           Icons.shield_outlined,
-          size: 13,
+          size: isCompact ? 12 : 13,
           color: goldColor.withValues(alpha: 0.8),
         ),
         const SizedBox(width: 6),
-        Text(
-          "Your information is secure with us.",
-          style: AppTheme.sansBody(
-            fontSize: 10.5,
-            color: mutedColor,
+        Flexible(
+          child: Text(
+            "Your information is secure with us.",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.sansBody(
+              fontSize: isCompact ? 9.5 : 10.5,
+              color: mutedColor,
+            ),
           ),
         ),
       ],
