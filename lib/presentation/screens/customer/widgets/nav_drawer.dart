@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/config/app_routes.dart';
 import '../../../../core/config/app_theme.dart';
+import '../../../controllers/customer_auth_controller.dart';
+import '../auth/widgets/customer_auth_box.dart';
 import 'booking_tracker_dialog.dart';
 
 /// Navigation Drawer for mobile and tablet views of the Customer portal.
@@ -82,6 +84,21 @@ class NavDrawer extends StatelessWidget {
             _drawerTile("Track Booking", () {
               Navigator.pop(context);
               showBookingTrackerDialog(context);
+            }),
+            _drawerTile("Client Portal", () {
+              Navigator.pop(context);
+              if (Get.isRegistered<CustomerAuthController>() &&
+                  Get.find<CustomerAuthController>().isAuthenticatedCustomer) {
+                Get.toNamed(AppRoutes.customerDashboard);
+              } else {
+                Get.dialog(
+                  const Dialog(
+                    backgroundColor: Colors.transparent,
+                    insetPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                    child: CustomerAuthBox(),
+                  ),
+                );
+              }
             }),
           ],
         ),
