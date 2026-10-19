@@ -141,51 +141,21 @@ class _CategoryCardState extends State<CategoryCard> {
               fit: StackFit.expand,
               children: [
                 // Background image or solid gradient fallback
-                if (hasImage)
+                if (hasImage && widget.category.imageUrl.startsWith('assets/'))
+                  Image.asset(
+                    widget.category.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _buildCategoryFallback(baseColor),
+                  )
+                else if (hasImage)
                   Image.network(
                     widget.category.imageUrl,
                     fit: BoxFit.cover,
                     cacheWidth: 600,
-                    errorBuilder: (_, __, ___) => Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            baseColor.withValues(alpha: 0.5),
-                            const Color(0xFF152621),
-                          ],
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.celebration_outlined,
-                          color: AppColors.secondaryAccent,
-                          size: 36,
-                        ),
-                      ),
-                    ),
+                    errorBuilder: (_, __, ___) => _buildCategoryFallback(baseColor),
                   )
                 else
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          baseColor.withValues(alpha: 0.5),
-                          const Color(0xFF152621),
-                        ],
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.celebration_outlined,
-                        color: AppColors.secondaryAccent,
-                        size: 36,
-                      ),
-                    ),
-                  ),
+                  _buildCategoryFallback(baseColor),
 
                 // Scrim / gradient overlay for text readability
                 Positioned.fill(
@@ -249,6 +219,28 @@ class _CategoryCardState extends State<CategoryCard> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryFallback(Color baseColor) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            baseColor.withValues(alpha: 0.5),
+            const Color(0xFF152621),
+          ],
+        ),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.celebration_outlined,
+          color: AppColors.secondaryAccent,
+          size: 36,
         ),
       ),
     );

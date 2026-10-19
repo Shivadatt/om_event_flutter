@@ -42,7 +42,8 @@ class HomeSliverAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isIntermediate = screenWidth >= 1024 && screenWidth < 1140;
+    final isCompactDesktop = screenWidth >= 1024 && screenWidth < 1220;
+    final isIntermediate = screenWidth >= 1024 && screenWidth < 1180;
     final isNarrowMobile = screenWidth <= 370;
     final isUltraNarrow = screenWidth < 340;
 
@@ -56,12 +57,12 @@ class HomeSliverAppBar extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: GoogleFonts.italiana(
             fontSize: isDesktop
-                ? (isIntermediate ? 14.5 : 17)
+                ? (isCompactDesktop ? 14.0 : 17)
                 : (isUltraNarrow ? 13.0 : (isNarrowMobile ? 14.5 : 17)),
             color: Colors.white,
             fontWeight: FontWeight.bold,
             letterSpacing: isDesktop
-                ? (isIntermediate ? 2.5 : 4)
+                ? (isCompactDesktop ? 2.0 : 4)
                 : (isUltraNarrow ? 1.5 : (isNarrowMobile ? 2.2 : 4)),
           ),
         ),
@@ -72,12 +73,12 @@ class HomeSliverAppBar extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTheme.sansBody(
             fontSize: isDesktop
-                ? (isIntermediate ? 5.8 : 6.8)
+                ? (isCompactDesktop ? 5.4 : 6.8)
                 : (isUltraNarrow ? 5.0 : (isNarrowMobile ? 5.6 : 6.8)),
             color: AppColors.primaryAccent,
             fontWeight: FontWeight.bold,
             letterSpacing: isDesktop
-                ? (isIntermediate ? 1.0 : 2.0)
+                ? (isCompactDesktop ? 0.8 : 2.0)
                 : (isUltraNarrow ? 0.4 : (isNarrowMobile ? 0.8 : 2.0)),
           ),
         ),
@@ -125,7 +126,7 @@ class HomeSliverAppBar extends StatelessWidget {
       automaticallyImplyLeading: false,
       leading: null,
       titleSpacing: isDesktop
-          ? (isIntermediate ? 12 : 24)
+          ? (isIntermediate ? 10 : (isCompactDesktop ? 16 : 24))
           : (isNarrowMobile ? (isUltraNarrow ? 8.0 : 10.0) : 16.0),
       title: Row(
         children: [
@@ -173,7 +174,7 @@ class HomeSliverAppBar extends StatelessWidget {
           ),
           SizedBox(
             width: isDesktop
-                ? (isIntermediate ? 8 : 14)
+                ? (isCompactDesktop ? 8 : 14)
                 : (isUltraNarrow ? 6 : (isNarrowMobile ? 8 : 14)),
           ),
           if (isDesktop)
@@ -182,36 +183,41 @@ class HomeSliverAppBar extends StatelessWidget {
             Expanded(child: brandColumn),
           if (isDesktop) ...[
             const Spacer(),
-            _NavHoverLink(
-              label: "Collections",
-              onTap: () => scrollToSection(categoriesKey),
-            ),
-            _NavHoverLink(
-              label: "Experiences",
-              onTap: () => scrollToSection(catalogKey),
-            ),
-            _NavHoverLink(
-              label: "Coverage",
-              onTap: () => Get.toNamed(AppRoutes.serviceArea),
-            ),
-            _NavHoverLink(
-              label: "Stories",
-              onTap: () => scrollToSection(storiesKey),
-            ),
-            _NavHoverLink(
-              label: "Contact",
-              onTap: () => Get.toNamed(AppRoutes.contact),
-            ),
-            _NavHoverLink(
-              label: "Track Booking",
-              onTap: () => showBookingTrackerDialog(context),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _NavHoverLink(
+                  label: "Collections",
+                  onTap: () => scrollToSection(categoriesKey),
+                ),
+                _NavHoverLink(
+                  label: "Experiences",
+                  onTap: () => scrollToSection(catalogKey),
+                ),
+                _NavHoverLink(
+                  label: "Coverage",
+                  onTap: () => Get.toNamed(AppRoutes.serviceArea),
+                ),
+                _NavHoverLink(
+                  label: "Stories",
+                  onTap: () => scrollToSection(storiesKey),
+                ),
+                _NavHoverLink(
+                  label: "Contact",
+                  onTap: () => Get.toNamed(AppRoutes.contact),
+                ),
+                _NavHoverLink(
+                  label: "Track Booking",
+                  onTap: () => showBookingTrackerDialog(context),
+                ),
+              ],
             ),
           ],
         ],
       ),
       actions: [
         if (isDesktop) ...[
-          SizedBox(width: isIntermediate ? 4 : 8),
+          SizedBox(width: isIntermediate ? 8 : 16),
           Obx(() {
             final count = cartController.rxCartItems.length;
             return _SelectionPill(
@@ -220,7 +226,7 @@ class HomeSliverAppBar extends StatelessWidget {
               onTap: () => scaffoldKey.currentState?.openEndDrawer(),
             );
           }),
-          SizedBox(width: isIntermediate ? 8 : 14),
+          SizedBox(width: isIntermediate ? 6 : 12),
           _TextHoverButton(
             label: "CLIENT PORTAL",
             isIntermediate: isIntermediate,
@@ -237,7 +243,7 @@ class HomeSliverAppBar extends StatelessWidget {
               }
             },
           ),
-          SizedBox(width: isIntermediate ? 14 : 24),
+          SizedBox(width: isIntermediate ? 10 : (isCompactDesktop ? 16 : 24)),
         ] else ...[
           Obx(() {
             final count = cartController.rxCartItems.length;
@@ -291,19 +297,27 @@ class _NavHoverLinkState extends State<_NavHoverLink> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isIntermediate = screenWidth >= 1024 && screenWidth < 1140;
+    final isIntermediate = screenWidth >= 1024 && screenWidth < 1180;
     final isCompact = screenWidth < 1280;
     final double hPad;
     final double fSize;
     final double lSpacing;
-    if (isIntermediate) {
-      hPad = screenWidth < 1080 ? 4.0 : 5.0;
+    if (screenWidth < 1100) {
+      hPad = 3.0;
+      fSize = 8.0;
+      lSpacing = 0.5;
+    } else if (screenWidth < 1180) {
+      hPad = 4.0;
       fSize = 8.5;
       lSpacing = 0.8;
+    } else if (isCompact) {
+      hPad = 7.0;
+      fSize = 9.2;
+      lSpacing = 1.2;
     } else {
-      hPad = isCompact ? (screenWidth < 1120 ? 6.0 : 9.0) : 13.0;
-      fSize = isCompact ? 9.2 : 10.0;
-      lSpacing = isCompact ? 1.2 : 2.0;
+      hPad = 13.0;
+      fSize = 10.0;
+      lSpacing = 2.0;
     }
 
     return MouseRegion(
@@ -380,14 +394,14 @@ class _SelectionPillState extends State<_SelectionPill> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isIntermediate = widget.isIntermediate || (screenWidth >= 1024 && screenWidth < 1140);
+    final isIntermediate = widget.isIntermediate || (screenWidth >= 1024 && screenWidth < 1180);
     final isCompact = screenWidth < 1280;
-    final double pillHeight = isIntermediate ? 34 : (isCompact ? 38 : 42);
-    final double pillHPad = isIntermediate ? 10 : (isCompact ? 13 : 18);
-    final double fontSize = isIntermediate ? 9.2 : (isCompact ? 10 : 11);
-    final double letterSpacing = isIntermediate ? 1.0 : (isCompact ? 1.3 : 1.8);
-    final double badgeSize = isIntermediate ? 19 : 22;
-    final double badgeFont = isIntermediate ? 9.0 : 10.0;
+    final double pillHeight = isIntermediate ? 32 : (isCompact ? 36 : 42);
+    final double pillHPad = isIntermediate ? 8 : (isCompact ? 11 : 18);
+    final double fontSize = isIntermediate ? 8.8 : (isCompact ? 9.6 : 11);
+    final double letterSpacing = isIntermediate ? 0.8 : (isCompact ? 1.2 : 1.8);
+    final double badgeSize = isIntermediate ? 18 : 22;
+    final double badgeFont = isIntermediate ? 8.5 : 10.0;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -473,9 +487,9 @@ class _TextHoverButtonState extends State<_TextHoverButton> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isIntermediate = widget.isIntermediate || (screenWidth >= 1024 && screenWidth < 1140);
-    final double fontSize = isIntermediate ? 8.8 : 10.0;
-    final double letterSpacing = isIntermediate ? 1.0 : 2.0;
+    final isIntermediate = widget.isIntermediate || (screenWidth >= 1024 && screenWidth < 1180);
+    final double fontSize = isIntermediate ? 8.4 : 10.0;
+    final double letterSpacing = isIntermediate ? 0.8 : 2.0;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -483,7 +497,7 @@ class _TextHoverButtonState extends State<_TextHoverButton> {
       child: TextButton(
         style: isIntermediate
             ? TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               )
