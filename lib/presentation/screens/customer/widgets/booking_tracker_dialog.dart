@@ -16,6 +16,7 @@ import 'customer_review_dialog.dart';
 void showBookingTrackerDialog(BuildContext context, {String? initialReferenceId}) {
   showDialog(
     context: context,
+    barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: 0.78),
     builder: (_) => BookingTrackerDialog(initialReferenceId: initialReferenceId),
   );

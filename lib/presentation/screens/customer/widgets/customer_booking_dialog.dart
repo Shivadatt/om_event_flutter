@@ -37,6 +37,7 @@ void showCustomerBookingDialog(
 
   showDialog(
     context: context,
+    barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: 0.75),
     builder: (_) => CustomerBookingDialog(
       experience: experience,

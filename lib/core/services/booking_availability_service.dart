@@ -143,10 +143,12 @@ class BookingAvailabilityService extends GetxService {
     // 3. Check Rule 1: One booking per day in Firestore
     // CANONICAL RULE: Only status == "bookingConfirmed" blocks the date.
     final targetDateStr = normalizeDateString(date);
+    bool checkSucceeded = false;
 
     // Strategy 0: Authoritative deterministic atomic lock check (booked_dates/{YYYY-MM-DD})
     try {
       final lockDoc = await _firestore.collection('booked_dates').doc(targetDateStr).get();
+      checkSucceeded = true;
       if (lockDoc.exists) {
         final lockData = lockDoc.data() ?? {};
         final lockedBookingId = lockData['bookingId']?.toString();
@@ -176,6 +178,7 @@ class BookingAvailabilityService extends GetxService {
           .where('normalized_event_date', isEqualTo: targetDateStr)
           .limit(1)
           .get();
+      checkSucceeded = true;
 
       if (snapNorm.docs.isNotEmpty) {
         for (final doc in snapNorm.docs) {
@@ -207,6 +210,7 @@ class BookingAvailabilityService extends GetxService {
           .collection(AppCollections.quotations)
           .where('status', isEqualTo: QuotationStatus.bookingConfirmed.nameStr)
           .get();
+      checkSucceeded = true;
 
       for (final doc in snapAllConfirmed.docs) {
         if (excludeBookingId != null &&
@@ -236,6 +240,12 @@ class BookingAvailabilityService extends GetxService {
       }
     } catch (errAll) {
       AppLogger.warning("Confirmed booking list query check: $errAll");
+    }
+
+    if (!checkSucceeded) {
+      return DateAvailabilityResult.error(
+        "Unable to verify date availability right now due to a network or connection issue. Please check your connection and try again.",
+      );
     }
 
     // If no confirmed booking was detected locking this date, the date is free for request submission!

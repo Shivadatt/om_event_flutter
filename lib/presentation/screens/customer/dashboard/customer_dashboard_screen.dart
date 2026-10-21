@@ -299,6 +299,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           });
         },
       ),
+      barrierDismissible: true,
     );
   }
 
