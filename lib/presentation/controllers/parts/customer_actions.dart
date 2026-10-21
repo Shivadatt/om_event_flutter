@@ -1,6 +1,14 @@
 part of '../customer_dashboard_controller.dart';
 
 extension CustomerActionsExtension on CustomerDashboardController {
+  bool _ensureCustomerSessionValid() {
+    if (_authController.isSessionExpired()) {
+      _authController.handleSessionExpired();
+      return false;
+    }
+    return true;
+  }
+
   Future<void> updateProfile({
     required String fullName,
     required String phone,
@@ -14,6 +22,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
     required String branch,
     required String profileImageUrl,
   }) async {
+    if (!_ensureCustomerSessionValid()) return;
     try {
       isLoading.value = true;
       final current = rxProfile.value;
@@ -60,6 +69,9 @@ extension CustomerActionsExtension on CustomerDashboardController {
     required List<int> fileBytes,
     required String fileName,
   }) async {
+    if (!_ensureCustomerSessionValid()) {
+      throw Exception("Session expired. Please log in again.");
+    }
     final current = rxProfile.value;
     final currentUser = FirebaseAuth.instance.currentUser;
     final uid = currentUser?.uid ?? current?.id;
@@ -121,6 +133,9 @@ extension CustomerActionsExtension on CustomerDashboardController {
     String imageUrl = '',
     String categoryId = '',
   }) async {
+    if (!_ensureCustomerSessionValid()) {
+      throw Exception("Session expired. Please log in again.");
+    }
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) {
       Get.snackbar(
@@ -216,6 +231,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
 
   // Quotation Management
   Future<void> acceptQuotation(String quoteId) async {
+    if (!_ensureCustomerSessionValid()) return;
     try {
       isLoading.value = true;
       await _quotationRepo.updateQuotationStatus(quoteId, 'acceptedByClient');
@@ -237,6 +253,9 @@ extension CustomerActionsExtension on CustomerDashboardController {
     required double acceptedAmount,
     required int acceptedVersion,
   }) async {
+    if (!_ensureCustomerSessionValid()) {
+      throw Exception("Session expired. Please log in again.");
+    }
     try {
       isLoading.value = true;
       final db = FirebaseFirestore.instance;
@@ -280,6 +299,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
   }
 
   Future<void> rejectQuotation(String quoteId) async {
+    if (!_ensureCustomerSessionValid()) return;
     try {
       isLoading.value = true;
       await _quotationRepo.updateQuotationStatus(quoteId, 'rejectedByClient');
@@ -435,6 +455,7 @@ extension CustomerActionsExtension on CustomerDashboardController {
     required String subject,
     required String message,
   }) async {
+    if (!_ensureCustomerSessionValid()) return;
     final profile = rxProfile.value;
     final currentUser = FirebaseAuth.instance.currentUser;
     final customerId = currentUser?.uid ?? profile?.id ?? '';
@@ -553,6 +574,10 @@ extension CustomerActionsExtension on CustomerDashboardController {
         expSlug = experience.toString();
         expId = expSlug;
       }
+    }
+
+    if (isAuth && !_ensureCustomerSessionValid()) {
+      return;
     }
 
     if (!isAuth) {

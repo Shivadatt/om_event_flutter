@@ -61,6 +61,8 @@ class AppStrings {
   static const String adminTokenKey = 'oe-admin-jwt-token';
   static const String adminSessionStartedAtKey = 'oe-admin-session-started-at';
   static const String adminCachedRoleKey = 'oe-admin-cached-role';
+  static const String customerSessionStartedAtKey = 'oe-customer-session-started-at';
+  static const String customerSessionExpiresAtKey = 'oe-customer-session-expires-at';
 
   // ── Firestore Field Keys ──────────────────────────────────────────────────
   static const String fieldUid = 'uid';

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 import '../../firebase_options.dart';
@@ -99,7 +100,16 @@ class AppBootstrapService {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      AppLogger.info('[AUTH_SESSION] Firebase initialized');
       AppLogger.success('Firebase initialized in background');
+      if (kIsWeb) {
+        try {
+          await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+          AppLogger.success('FirebaseAuth persistence set to LOCAL');
+        } catch (e) {
+          AppLogger.warning('FirebaseAuth setPersistence notice: $e');
+        }
+      }
       if (kDebugMode) {
         debugPrint('[QUOTA_AUDIT][FIREBASE_PROJECT]\nprojectId=${Firebase.app().options.projectId}');
       }

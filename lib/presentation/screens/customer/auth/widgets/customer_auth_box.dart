@@ -34,9 +34,23 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (authController.isAuthenticatedCustomer && widget.onSuccess == null) {
-        Get.offAllNamed(AppRoutes.customerDashboard);
+        _navigateToDestination();
       }
     });
+  }
+
+  void _navigateToDestination() {
+    final rawRedirect = Get.parameters['redirect'];
+    if (rawRedirect != null && rawRedirect.isNotEmpty) {
+      final decoded = Uri.decodeComponent(rawRedirect);
+      if (decoded.startsWith('/') &&
+          !decoded.startsWith('/client-login') &&
+          !decoded.startsWith('/admin')) {
+        Get.offAllNamed(decoded);
+        return;
+      }
+    }
+    Get.offAllNamed(AppRoutes.customerDashboard);
   }
 
   @override
@@ -330,7 +344,7 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                               if (widget.onSuccess != null) {
                                 widget.onSuccess!();
                               } else {
-                                Get.offAllNamed(AppRoutes.customerDashboard);
+                                _navigateToDestination();
                               }
                             }
                           } finally {

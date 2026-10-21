@@ -25,11 +25,16 @@ class AuthRouteHelper {
     return false;
   }
 
-  /// Determines if the current user is a verified, non-admin customer.
+  /// Determines if the current user is a verified, non-admin customer with a valid 2-hour session.
   static bool isVerifiedCustomer() {
     if (isCurrentAdminOrStaff()) return false;
+    if (Get.isRegistered<LocalStorageSource>()) {
+      if (Get.find<LocalStorageSource>().isCustomerSessionExpired()) return false;
+    }
     if (Get.isRegistered<CustomerAuthController>()) {
-      return Get.find<CustomerAuthController>().isAuthenticatedCustomer;
+      final customerAuth = Get.find<CustomerAuthController>();
+      if (customerAuth.isSessionExpired()) return false;
+      return customerAuth.isAuthenticatedCustomer;
     }
     final user = FirebaseAuth.instance.currentUser;
     return user != null && !user.isAnonymous;

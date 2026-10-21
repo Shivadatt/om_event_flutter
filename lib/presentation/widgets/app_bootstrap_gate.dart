@@ -9,6 +9,11 @@ import '../bindings/initial_binding.dart';
 import '../controllers/auth_controller.dart';
 import '../screens/splash/video_splash_screen.dart';
 
+import '../controllers/customer_auth_controller.dart';
+import '../../core/utils/auth_route_helper.dart';
+import '../../data/datasources/local_storage_source.dart';
+import '../../core/config/app_routes.dart';
+
 /// Application bootstrap states for startup and reload gating.
 enum AppBootstrapState {
   initializing,
@@ -45,6 +50,14 @@ class AppBootstrapGate extends StatefulWidget {
         normalized.startsWith('/admin-dashboard');
   }
 
+  /// Checks if a given route path belongs to the customer protected lounge.
+  static bool isCustomerProtectedPath(String path) {
+    final clean = path.trim().toLowerCase();
+    final normalized = clean.startsWith('#') ? clean.substring(1) : clean;
+    final uri = Uri.tryParse(normalized);
+    final routePath = uri?.path ?? normalized;
+    return routePath == '/dashboard' || routePath.startsWith('/dashboard/');
+  }
 }
 
 class _AppBootstrapGateState extends State<AppBootstrapGate> {
@@ -67,6 +80,18 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
     return AppBootstrapGate.isAdminPath(path) ||
         AppBootstrapGate.isAdminPath(fragment) ||
         AppBootstrapGate.isAdminPath(defaultRoute);
+  }
+
+  /// Determines if the current startup or page reload target is customer protected (/dashboard).
+  bool _isTargetingCustomerProtected() {
+    final path = Uri.base.path;
+    final fragment = Uri.base.fragment;
+    final defaultRoute =
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+
+    return AppBootstrapGate.isCustomerProtectedPath(path) ||
+        AppBootstrapGate.isCustomerProtectedPath(fragment) ||
+        AppBootstrapGate.isCustomerProtectedPath(defaultRoute);
   }
 
   /// Executes the canonical startup authentication, dependency setup, and session sequence.
@@ -99,13 +124,14 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
 
         // Await Firebase Auth state restoration on Flutter Web (IndexedDB)
         User? currentUser = FirebaseAuth.instance.currentUser;
-        if (currentUser == null) {
+        if (currentUser == null && !authController.isSessionExpired()) {
           try {
             currentUser = await FirebaseAuth.instance
                 .authStateChanges()
+                .where((user) => user != null)
                 .first
                 .timeout(
-                  const Duration(milliseconds: 1500),
+                  const Duration(milliseconds: 2500),
                   onTimeout: () => FirebaseAuth.instance.currentUser,
                 );
           } catch (_) {
@@ -150,8 +176,84 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
             targetState = AppBootstrapState.authorizationFailed;
           }
         }
+      } else if (_isTargetingCustomerProtected()) {
+        final customerAuth = Get.find<CustomerAuthController>();
+        final localStorage = Get.find<LocalStorageSource>();
+
+        // Await Firebase Auth state restoration on Flutter Web (IndexedDB / persistence)
+        User? currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser == null && !localStorage.isCustomerSessionExpired()) {
+          try {
+            currentUser = await FirebaseAuth.instance
+                .authStateChanges()
+                .where((user) => user != null)
+                .first
+                .timeout(
+                  const Duration(milliseconds: 3000),
+                  onTimeout: () => FirebaseAuth.instance.currentUser,
+                );
+          } catch (_) {
+            currentUser = FirebaseAuth.instance.currentUser;
+          }
+        }
+
+        AppLogger.info('[AUTH_SESSION] Initial auth state received: uid=${currentUser?.uid}');
+        AppLogger.info('[AUTH_SESSION] Current user exists: ${currentUser != null}');
+
+        final isAdmin = AuthRouteHelper.isCurrentAdminOrStaff();
+        final isExpired = localStorage.isCustomerSessionExpired();
+
+        if (isAdmin) {
+          // Admin trying to enter client lounge -> redirect to admin dashboard
+          targetState = AppBootstrapState.authorizationFailed;
+          AppLogger.info('[AUTH_SESSION] Redirect reason: admin cannot access client lounge');
+          AppLogger.info('[AUTH_SESSION] Middleware decision: redirecting admin to adminDashboard');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Get.offAllNamed(AppRoutes.adminDashboard);
+          });
+        } else if (currentUser == null || currentUser.isAnonymous || isExpired) {
+          if (isExpired && currentUser != null) {
+            AppLogger.info('[AUTH_SESSION] Explicit sign-out reason: 2-hour session expired during startup');
+            await customerAuth.handleSessionExpired();
+          } else {
+            customerAuth.rxIsLoggedIn.value = false;
+            customerAuth.rxCustomerProfile.value = null;
+          }
+          customerAuth.markCustomerBootstrapped(true);
+          targetState = isExpired
+              ? AppBootstrapState.sessionExpired
+              : AppBootstrapState.unauthenticated;
+
+          final reason = isExpired ? 'session expired' : 'unauthenticated customer';
+          AppLogger.info('[AUTH_SESSION] Redirect reason: $reason');
+          AppLogger.info('[AUTH_SESSION] Middleware decision: redirecting to client-login');
+
+          // Perform redirect to client login preserving destination redirect parameter
+          final encoded = Uri.encodeComponent(AppRoutes.customerDashboard);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Get.offAllNamed('${AppRoutes.customerLogin}?redirect=$encoded');
+          });
+        } else {
+          // Restore customer profile and validate session
+          await customerAuth.checkAuthStatus();
+          customerAuth.markCustomerBootstrapped(true);
+          targetState = AppBootstrapState.authenticated;
+          AppLogger.info('[AUTH_SESSION] Middleware decision: customer session active, staying on dashboard');
+        }
       } else {
-        // Customer / public route - mark ready
+        // Public / non-protected route (e.g. /client-login, /, /gallery, etc.)
+        if (Get.isRegistered<CustomerAuthController>()) {
+          final customerAuth = Get.find<CustomerAuthController>();
+          final localStorage = Get.find<LocalStorageSource>();
+          if (FirebaseAuth.instance.currentUser != null && !AuthRouteHelper.isCurrentAdminOrStaff()) {
+            if (localStorage.isCustomerSessionExpired()) {
+              await customerAuth.handleSessionExpired();
+            } else {
+              customerAuth.checkAuthStatus();
+            }
+          }
+          customerAuth.markCustomerBootstrapped(true);
+        }
         targetState = AppBootstrapState.authenticated;
       }
     } catch (e) {

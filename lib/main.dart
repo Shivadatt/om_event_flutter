@@ -9,8 +9,9 @@ import 'dart:ui';
 import 'core/seo/seo_manager.dart';
 import 'core/services/app_bootstrap_service.dart';
 import 'presentation/widgets/app_bootstrap_gate.dart';
+import 'presentation/bindings/initial_binding.dart';
 
-void main() {
+void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -40,10 +41,10 @@ void main() {
     return false;
   };
 
-  // Kick off non-essential core platform services in background without blocking first frame
-  AppBootstrapService.start();
+  // Await core platform services initialization before routing to prevent race conditions
+  await AppBootstrapService.ensureInitialized();
 
-  // Render first Flutter frame immediately
+  // Render initial Flutter frame
   runApp(const OmEventsApp());
 }
 
@@ -60,6 +61,7 @@ class OmEventsApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       initialRoute: AppRoutes.home,
+      initialBinding: InitialBinding(),
       getPages: AppRouter.pages,
       navigatorObservers: [SeoManager()],
       builder: (context, child) => AppBootstrapGate(child: child),

@@ -45,7 +45,55 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       });
       return;
     }
+    if (authController.isSessionExpired()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authController.handleSessionExpired();
+      });
+      return;
+    }
+    _checkInitialTab();
     controller.ensureProfileLoaded();
+  }
+
+  void _checkInitialTab() {
+    try {
+      final currentRoute = Get.currentRoute.toLowerCase();
+      if (currentRoute.contains('notifications')) {
+        if (FeatureFlags.notifications) {
+          selectedIndex = 7;
+          return;
+        } else {
+          selectedIndex = 0;
+          return;
+        }
+      }
+      final tabParam = Get.parameters['tab']?.toLowerCase() ?? Get.parameters['view']?.toLowerCase();
+      if (tabParam != null) {
+        if (tabParam == 'notifications' || tabParam == '7') {
+          if (FeatureFlags.notifications) {
+            selectedIndex = 7;
+          } else {
+            selectedIndex = 0;
+          }
+        } else if (tabParam == 'inquiries' || tabParam == '1') {
+          selectedIndex = 1;
+        } else if (tabParam == 'quotes' || tabParam == '2') {
+          selectedIndex = 2;
+        } else if (tabParam == 'gallery' || tabParam == '5') {
+          selectedIndex = 5;
+        } else if (tabParam == 'wishlist' || tabParam == '6') {
+          selectedIndex = 6;
+        } else if (tabParam == 'profile' || tabParam == '8') {
+          selectedIndex = 8;
+        } else if (tabParam == 'support' || tabParam == '9') {
+          selectedIndex = 9;
+        } else if (tabParam == 'legal' || tabParam == '10') {
+          selectedIndex = 10;
+        } else if (tabParam == 'preferences' || tabParam == '11') {
+          selectedIndex = 11;
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -76,7 +124,8 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                   isDrawer: true,
                   onIndexChanged: (i) {
                     Navigator.of(context).pop();
-                    if (mounted) setState(() => selectedIndex = i);
+                    final targetIndex = (!FeatureFlags.notifications && i == 7) ? 0 : i;
+                    if (mounted) setState(() => selectedIndex = targetIndex);
                   },
                 ),
               ),
@@ -94,7 +143,8 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                   selectedIndex: selectedIndex,
                   width: width >= 1200 ? 195 : 180,
                   onIndexChanged: (i) {
-                    if (mounted) setState(() => selectedIndex = i);
+                    final targetIndex = (!FeatureFlags.notifications && i == 7) ? 0 : i;
+                    if (mounted) setState(() => selectedIndex = targetIndex);
                   },
                 )
               // Tablet: Compact 64px icon rail with OE monogram & tooltips
@@ -104,7 +154,8 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                   selectedIndex: selectedIndex,
                   isCompactRail: true,
                   onIndexChanged: (i) {
-                    if (mounted) setState(() => selectedIndex = i);
+                    final targetIndex = (!FeatureFlags.notifications && i == 7) ? 0 : i;
+                    if (mounted) setState(() => selectedIndex = targetIndex);
                   },
                 ),
               // Mobile: Navigation accessed via hamburger menu & off-canvas drawer
@@ -121,6 +172,10 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       isMobile: isMobile,
                       isTablet: isTablet,
                       onNavToNotifications: (i) {
+                        if (!FeatureFlags.notifications && i == 7) {
+                          if (mounted) setState(() => selectedIndex = 0);
+                          return;
+                        }
                         if (mounted) setState(() => selectedIndex = i);
                       },
                     ),
@@ -192,7 +247,14 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
             if (mounted) setState(() => selectedIndex = 5);
           },
         );
-      case 7: return NotificationsView(controller: controller);
+      case 7:
+        if (!FeatureFlags.notifications) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => selectedIndex = 0);
+          });
+          return OverviewView(controller: controller);
+        }
+        return NotificationsView(controller: controller);
       case 8: return ProfileView(controller: controller);
       case 9: return SupportCenterView(controller: controller);
       case 10: return MapsAgreementsView(controller: controller);

@@ -3046,6 +3046,7 @@ file:///D:/om_event_python/om_event/lib/core/extensions/theme_extension.dart
 file:///D:/om_event_python/om_event/lib/core/extensions/widget_extension.dart
 file:///D:/om_event_python/om_event/lib/core/middleware/admin_auth_middleware.dart
 file:///D:/om_event_python/om_event/lib/core/middleware/customer_auth_middleware.dart
+file:///D:/om_event_python/om_event/lib/core/middleware/notification_guard_middleware.dart
 file:///D:/om_event_python/om_event/lib/core/seo/meta_manager.dart
 file:///D:/om_event_python/om_event/lib/core/seo/meta_manager_web.dart
 file:///D:/om_event_python/om_event/lib/core/seo/seo_constants.dart
@@ -3083,6 +3084,8 @@ file:///D:/om_event_python/om_event/lib/core/utils/asset_downloader_web.dart
 file:///D:/om_event_python/om_event/lib/core/utils/auth_route_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/booking_communication_helper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/booking_status_helper.dart
+file:///D:/om_event_python/om_event/lib/core/utils/browser_tab_session.dart
+file:///D:/om_event_python/om_event/lib/core/utils/browser_tab_session_web.dart
 file:///D:/om_event_python/om_event/lib/core/utils/date_parser.dart
 file:///D:/om_event_python/om_event/lib/core/utils/error_mapper.dart
 file:///D:/om_event_python/om_event/lib/core/utils/formatters.dart

@@ -40,6 +40,7 @@ import '../../presentation/screens/admin/cms/manage_service_area_screen.dart';
 import '../../presentation/screens/admin/cms/manage_notification_templates_screen.dart';
 import '../middleware/admin_auth_middleware.dart';
 import '../middleware/customer_auth_middleware.dart';
+import '../middleware/notification_guard_middleware.dart';
 export '../constants/app_routes.dart';
 
 /// Route definitions and page factory registry.
@@ -102,6 +103,24 @@ class AppRouter {
       page: () => const CustomerDashboardScreen(),
       binding: CatalogBinding(),
       middlewares: [CustomerAuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.customerNotifications,
+      page: () => const CustomerDashboardScreen(),
+      binding: CatalogBinding(),
+      middlewares: [
+        CustomerAuthMiddleware(),
+        NotificationGuardMiddleware(),
+      ],
+    ),
+    GetPage(
+      name: '${AppRoutes.customerDashboard}/notifications',
+      page: () => const CustomerDashboardScreen(),
+      binding: CatalogBinding(),
+      middlewares: [
+        CustomerAuthMiddleware(),
+        NotificationGuardMiddleware(),
+      ],
     ),
     GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
     GetPage(

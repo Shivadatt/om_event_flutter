@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/utils/app_logger.dart';
+import '../config/feature_flags.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'token_service.dart';
 
@@ -62,8 +63,8 @@ class FcmNotificationService extends GetxService {
     }
   }
 
-  /// Temporary feature flag: Push notifications & token writes are temporarily disabled
-  static const bool pushNotificationsEnabled = false;
+  /// Canonical feature flag: Push notifications & token writes are tied to FeatureFlags.notifications
+  static const bool pushNotificationsEnabled = FeatureFlags.notifications;
 
   // ─── Token ───────────────────────────────────────────────────────────────
 

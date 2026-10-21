@@ -2,3 +2,10 @@
 # FVM Version Cache
 .fvm/
 web/images/
+
+
+# Flutter/Dart generated files
+/build/
+/.dart_tool/
+/.flutter-plugins
+/flutter_export_environment.sh

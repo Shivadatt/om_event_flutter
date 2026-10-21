@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/config/app_theme.dart';
+import '../../../../../core/config/feature_flags.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
 /// Compact Top Header for the Client Lounge.
@@ -42,7 +43,9 @@ class DashboardTopBar extends StatelessWidget {
         customerName = 'SHIWA';
       }
       final profileImageUrl = profile?.profileImageUrl ?? '';
-      final unread = controller.rxNotifications.where((n) => !n.isRead).length;
+      final unread = FeatureFlags.notifications
+          ? controller.rxNotifications.where((n) => !n.isRead).length
+          : 0;
 
       return Container(
         padding: EdgeInsets.symmetric(
@@ -86,8 +89,10 @@ class DashboardTopBar extends StatelessWidget {
               Expanded(
                 child: _buildUserBadge(name, imageUrl, goldColor),
               ),
-              _buildNotificationButton(unread, goldColor),
-              const SizedBox(width: 4),
+              if (FeatureFlags.notifications) ...[
+                _buildNotificationButton(unread, goldColor),
+                const SizedBox(width: 4),
+              ],
               _buildLogoutButton(),
             ],
           ),
@@ -126,8 +131,10 @@ class DashboardTopBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        _buildNotificationButton(unread, goldColor),
-        const SizedBox(width: 4),
+        if (FeatureFlags.notifications) ...[
+          _buildNotificationButton(unread, goldColor),
+          const SizedBox(width: 4),
+        ],
         _buildLogoutButton(),
       ],
     );
@@ -156,8 +163,10 @@ class DashboardTopBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        _buildNotificationButton(unread, goldColor),
-        const SizedBox(width: 4),
+        if (FeatureFlags.notifications) ...[
+          _buildNotificationButton(unread, goldColor),
+          const SizedBox(width: 4),
+        ],
         _buildLogoutButton(),
       ],
     );
@@ -342,7 +351,11 @@ class DashboardTopBar extends StatelessWidget {
           size: 19,
         ),
       ),
-      onPressed: () => onNavToNotifications(7),
+      onPressed: () {
+        if (FeatureFlags.notifications) {
+          onNavToNotifications(7);
+        }
+      },
     );
   }
 

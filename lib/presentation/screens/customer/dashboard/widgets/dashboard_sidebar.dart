@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../core/config/app_theme.dart';
+import '../../../../../core/config/feature_flags.dart';
 import '../../../../controllers/customer_dashboard_controller.dart';
 
 /// Compact Desktop sidebar navigation panel for the Client Lounge.
@@ -95,16 +96,17 @@ class DashboardSidebar extends StatelessWidget {
                   index: 6,
                   isCompact: isCompactRail,
                 ),
-                Obx(() {
-                  final unread = controller.rxNotifications.where((n) => !n.isRead).length;
-                  return _buildNavItem(
-                    title: 'Notifications',
-                    icon: Icons.notifications_none_outlined,
-                    index: 7,
-                    badgeCount: unread > 0 ? unread : null,
-                    isCompact: isCompactRail,
-                  );
-                }),
+                if (FeatureFlags.notifications)
+                  Obx(() {
+                    final unread = controller.rxNotifications.where((n) => !n.isRead).length;
+                    return _buildNavItem(
+                      title: 'Notifications',
+                      icon: Icons.notifications_none_outlined,
+                      index: 7,
+                      badgeCount: unread > 0 ? unread : null,
+                      isCompact: isCompactRail,
+                    );
+                  }),
                 _buildNavItem(
                   title: 'Profile Settings',
                   icon: Icons.person_outline_rounded,
@@ -478,7 +480,13 @@ class DashboardSidebar extends StatelessWidget {
           message: title,
           waitDuration: const Duration(milliseconds: 300),
           child: InkWell(
-            onTap: () => onIndexChanged(index),
+            onTap: () {
+              if (!FeatureFlags.notifications && index == 7) {
+                onIndexChanged(0);
+              } else {
+                onIndexChanged(index);
+              }
+            },
             borderRadius: BorderRadius.circular(8),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
@@ -525,7 +533,13 @@ class DashboardSidebar extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 3),
       child: InkWell(
-        onTap: () => onIndexChanged(index),
+        onTap: () {
+          if (!FeatureFlags.notifications && index == 7) {
+            onIndexChanged(0);
+          } else {
+            onIndexChanged(index);
+          }
+        },
         borderRadius: BorderRadius.circular(8),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),

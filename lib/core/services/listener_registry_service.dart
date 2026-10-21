@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_collections.dart';
 import '../../core/services/local_notification_trigger_service.dart';
 import '../../core/services/app_config_service.dart';
+import '../config/feature_flags.dart';
 import '../utils/app_logger.dart';
 
 /// Centralized registry managing ALL active Firestore stream subscriptions.
@@ -143,22 +144,24 @@ class ListenerRegistryService extends GetxService {
     );
     registerListener('quotations', quotesSub);
 
-    // 2. Scoped notifications
-    final notifSub = _firestore
-        .collection(AppCollections.customerNotifications)
-        .where('customerId', isEqualTo: customerId)
-        .snapshots()
-        .listen(
-      (snap) {
-        // Scoped notifications sync
-      },
-      onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [customer_notifications]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerCustomerListeners"),
-    );
-    registerListener('notifications', notifSub);
+    // 2. Scoped notifications (guarded by FeatureFlags.notifications)
+    if (FeatureFlags.notifications) {
+      final notifSub = _firestore
+          .collection(AppCollections.customerNotifications)
+          .where('customerId', isEqualTo: customerId)
+          .snapshots()
+          .listen(
+        (snap) {
+          // Scoped notifications sync
+        },
+        onError: (e) => AppLogger.errorDetailed("LISTENER REGISTRY ERROR [customer_notifications]", error: e, layer: LogLayer.core, className: "ListenerRegistryService", methodName: "registerCustomerListeners"),
+      );
+      registerListener('notifications', notifSub);
 
-    // 3. Initialize background trigger tasks
-    if (Get.isRegistered<LocalNotificationTriggerService>()) {
-      LocalNotificationTriggerService.to.initForUser(customerId, 'customer');
+      // 3. Initialize background trigger tasks
+      if (Get.isRegistered<LocalNotificationTriggerService>()) {
+        LocalNotificationTriggerService.to.initForUser(customerId, 'customer');
+      }
     }
   }
 
