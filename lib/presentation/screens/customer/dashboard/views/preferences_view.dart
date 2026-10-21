@@ -130,9 +130,11 @@ class _PreferencesViewState extends State<PreferencesView> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 880;
-        final bool isTablet = constraints.maxWidth >= 600 && !isDesktop;
-        final double horizontalPadding = isDesktop ? 32.0 : (isTablet ? 24.0 : 16.0);
+        final double contentWidth = constraints.maxWidth;
+        final bool isDesktop = contentWidth >= 880;
+        final bool isTablet = contentWidth >= 580 && !isDesktop;
+        final bool isCompactMobile = contentWidth < 380;
+        final double horizontalPadding = isDesktop ? 32.0 : (isTablet ? 24.0 : (isCompactMobile ? 12.0 : 16.0));
 
         return SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 24),
@@ -141,7 +143,7 @@ class _PreferencesViewState extends State<PreferencesView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header Row with Title + Preview Sample Alerts button
-              _buildHeader(isDesktop: isDesktop),
+              _buildHeader(isDesktop: isDesktop, isCompactMobile: isCompactMobile),
               const SizedBox(height: 22),
 
               // Main 2-Column Grid (Delivery Channels | Quiet Hours + Daily Digest)
@@ -149,31 +151,31 @@ class _PreferencesViewState extends State<PreferencesView> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildDeliveryChannelsCard()),
+                    Expanded(child: _buildDeliveryChannelsCard(isCompact: false)),
                     const SizedBox(width: 18),
                     Expanded(
                       child: Column(
                         children: [
-                          _buildQuietHoursCard(),
+                          _buildQuietHoursCard(isCompact: false),
                           const SizedBox(height: 14),
-                          _buildDailyDigestCard(),
+                          _buildDailyDigestCard(isCompact: false),
                         ],
                       ),
                     ),
                   ],
                 )
               else ...[
-                _buildDeliveryChannelsCard(),
+                _buildDeliveryChannelsCard(isCompact: isCompactMobile),
                 const SizedBox(height: 14),
-                _buildQuietHoursCard(),
+                _buildQuietHoursCard(isCompact: isCompactMobile),
                 const SizedBox(height: 14),
-                _buildDailyDigestCard(),
+                _buildDailyDigestCard(isCompact: isCompactMobile),
               ],
 
               const SizedBox(height: 24),
 
               // Notification Categories Section
-              _buildNotificationCategoriesSection(constraints: constraints),
+              _buildNotificationCategoriesSection(contentWidth: contentWidth, isCompactMobile: isCompactMobile),
 
               const SizedBox(height: 28),
 
@@ -196,9 +198,9 @@ class _PreferencesViewState extends State<PreferencesView> {
                     label: Text(
                       isSaving ? "SAVING PREFERENCES..." : "SAVE NOTIFICATION SETTINGS",
                       style: AppTheme.sansBody(
-                        fontSize: 12,
+                        fontSize: isCompactMobile ? 10.5 : 12,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                        letterSpacing: isCompactMobile ? 0.2 : 0.5,
                         color: const Color(0xFF091210),
                       ),
                     ),
@@ -223,14 +225,14 @@ class _PreferencesViewState extends State<PreferencesView> {
   }
 
   // ── 1. Page Header ─────────────────────────────────────────────────────────
-  Widget _buildHeader({required bool isDesktop}) {
+  Widget _buildHeader({required bool isDesktop, required bool isCompactMobile}) {
     if (isDesktop) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Expanded(child: _buildHeaderTitles()),
-          _buildPreviewAlertsButton(),
+          Expanded(child: _buildHeaderTitles(isCompactMobile: false)),
+          _buildPreviewAlertsButton(isCompactMobile: false),
         ],
       );
     }
@@ -238,21 +240,21 @@ class _PreferencesViewState extends State<PreferencesView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeaderTitles(),
-        const SizedBox(height: 14),
-        _buildPreviewAlertsButton(),
+        _buildHeaderTitles(isCompactMobile: isCompactMobile),
+        const SizedBox(height: 12),
+        _buildPreviewAlertsButton(isCompactMobile: isCompactMobile),
       ],
     );
   }
 
-  Widget _buildHeaderTitles() {
+  Widget _buildHeaderTitles({required bool isCompactMobile}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "COMMUNICATION KEYS",
           style: AppTheme.sansBody(
-            fontSize: 10.5,
+            fontSize: isCompactMobile ? 9.5 : 10.5,
             fontWeight: FontWeight.bold,
             color: const Color(0xFFD4AF37),
             letterSpacing: 1.5,
@@ -262,7 +264,7 @@ class _PreferencesViewState extends State<PreferencesView> {
         Text(
           "Notification Preferences",
           style: GoogleFonts.italiana(
-            fontSize: 26,
+            fontSize: isCompactMobile ? 20 : 26,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -272,7 +274,7 @@ class _PreferencesViewState extends State<PreferencesView> {
         Text(
           "Stay in control of what you receive and when. Tailored updates for a smoother experience.",
           style: AppTheme.sansBody(
-            fontSize: 12,
+            fontSize: isCompactMobile ? 11 : 12,
             color: Colors.white60,
           ),
         ),
@@ -280,14 +282,14 @@ class _PreferencesViewState extends State<PreferencesView> {
     );
   }
 
-  Widget _buildPreviewAlertsButton() {
+  Widget _buildPreviewAlertsButton({required bool isCompactMobile}) {
     return OutlinedButton.icon(
       icon: const Icon(Icons.visibility_outlined, size: 16, color: Color(0xFFD4AF37)),
-      label: const Text(
+      label: Text(
         "Preview Sample Alerts",
         style: TextStyle(
-          color: Color(0xFFD4AF37),
-          fontSize: 11.5,
+          color: const Color(0xFFD4AF37),
+          fontSize: isCompactMobile ? 10.5 : 11.5,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -296,15 +298,18 @@ class _PreferencesViewState extends State<PreferencesView> {
         side: const BorderSide(color: Color(0x55D4AF37), width: 1.1),
         backgroundColor: const Color(0x12D4AF37),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompactMobile ? 12 : 16,
+          vertical: isCompactMobile ? 10 : 12,
+        ),
       ),
     );
   }
 
   // ── 2. Delivery Channels Card ─────────────────────────────────────────────
-  Widget _buildDeliveryChannelsCard() {
+  Widget _buildDeliveryChannelsCard({required bool isCompact}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isCompact ? 14 : 20),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(16),
@@ -319,7 +324,7 @@ class _PreferencesViewState extends State<PreferencesView> {
           Text(
             "DELIVERY CHANNELS",
             style: AppTheme.sansBody(
-              fontSize: 10.5,
+              fontSize: isCompact ? 9.5 : 10.5,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFD4AF37),
               letterSpacing: 1.2,
@@ -332,6 +337,7 @@ class _PreferencesViewState extends State<PreferencesView> {
             subtitle: "Receive direct device and browser alerts",
             value: pushEnabled,
             onChanged: (val) => setState(() => pushEnabled = val),
+            isCompact: isCompact,
           ),
           const SizedBox(height: 12),
           const Divider(height: 1, color: Color(0x14D4AF37)),
@@ -342,6 +348,7 @@ class _PreferencesViewState extends State<PreferencesView> {
             subtitle: "Receive custom HTML proposals and contract details",
             value: emailEnabled,
             onChanged: (val) => setState(() => emailEnabled = val),
+            isCompact: isCompact,
           ),
           const SizedBox(height: 12),
           const Divider(height: 1, color: Color(0x14D4AF37)),
@@ -352,6 +359,7 @@ class _PreferencesViewState extends State<PreferencesView> {
             subtitle: "Receive template updates to your registered phone",
             value: whatsappEnabled,
             onChanged: (val) => setState(() => whatsappEnabled = val),
+            isCompact: isCompact,
           ),
         ],
       ),
@@ -364,23 +372,24 @@ class _PreferencesViewState extends State<PreferencesView> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    bool isCompact = false,
   }) {
     return Row(
       children: [
         // Left circular icon
         Container(
-          width: 38,
-          height: 38,
+          width: isCompact ? 34 : 38,
+          height: isCompact ? 34 : 38,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: const Color(0xFF14201A),
             border: Border.all(color: const Color(0x33D4AF37)),
           ),
           child: Center(
-            child: Icon(icon, color: const Color(0xFFD4AF37), size: 18),
+            child: Icon(icon, color: const Color(0xFFD4AF37), size: isCompact ? 16 : 18),
           ),
         ),
-        const SizedBox(width: 14),
+        SizedBox(width: isCompact ? 10 : 14),
 
         // Text details
         Expanded(
@@ -390,18 +399,18 @@ class _PreferencesViewState extends State<PreferencesView> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 13,
+                  fontSize: isCompact ? 12 : 13,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white54,
-                  fontSize: 11,
+                  fontSize: isCompact ? 10 : 11,
                 ),
               ),
             ],
@@ -410,16 +419,16 @@ class _PreferencesViewState extends State<PreferencesView> {
 
         // Toggle + Chevron
         _buildLuxurySwitch(value: value, onChanged: onChanged),
-        const SizedBox(width: 4),
+        const SizedBox(width: 2),
         const Icon(Icons.chevron_right, size: 16, color: Color(0x66D4AF37)),
       ],
     );
   }
 
   // ── 3. Quiet Hours Card ───────────────────────────────────────────────────
-  Widget _buildQuietHoursCard() {
+  Widget _buildQuietHoursCard({required bool isCompact}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isCompact ? 14 : 20),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(16),
@@ -434,7 +443,7 @@ class _PreferencesViewState extends State<PreferencesView> {
           Text(
             "QUIET HOURS (DO NOT DISTURB)",
             style: AppTheme.sansBody(
-              fontSize: 10.5,
+              fontSize: isCompact ? 9.5 : 10.5,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFD4AF37),
               letterSpacing: 1.2,
@@ -446,19 +455,19 @@ class _PreferencesViewState extends State<PreferencesView> {
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: isCompact ? 34 : 38,
+                height: isCompact ? 34 : 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF14201A),
                   border: Border.all(color: const Color(0x33D4AF37)),
                 ),
-                child: const Center(
-                  child: Icon(Icons.bedtime_outlined, color: Color(0xFFD4AF37), size: 18),
+                child: Center(
+                  child: Icon(Icons.bedtime_outlined, color: const Color(0xFFD4AF37), size: isCompact ? 16 : 18),
                 ),
               ),
-              const SizedBox(width: 14),
-              const Expanded(
+              SizedBox(width: isCompact ? 10 : 14),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -466,16 +475,16 @@ class _PreferencesViewState extends State<PreferencesView> {
                       "Enable Quiet Hours (DND)",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: isCompact ? 12 : 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       "Pause low-priority alerts during quiet hours",
                       style: TextStyle(
                         color: Colors.white54,
-                        fontSize: 11,
+                        fontSize: isCompact ? 10 : 11,
                       ),
                     ),
                   ],
@@ -491,7 +500,7 @@ class _PreferencesViewState extends State<PreferencesView> {
           // Time pickers row (From / To)
           const SizedBox(height: 14),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 14, vertical: 10),
             decoration: BoxDecoration(
               color: const Color(0xFF070D0A),
               borderRadius: BorderRadius.circular(10),
@@ -499,11 +508,11 @@ class _PreferencesViewState extends State<PreferencesView> {
             ),
             child: Row(
               children: [
-                const Text(
+                Text(
                   "From",
-                  style: TextStyle(color: Colors.white60, fontSize: 11.5),
+                  style: TextStyle(color: Colors.white60, fontSize: isCompact ? 10.5 : 11.5),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: isCompact ? 6 : 10),
                 Expanded(
                   child: _buildTimeDropdown(
                     value: quietHoursStart,
@@ -524,14 +533,15 @@ class _PreferencesViewState extends State<PreferencesView> {
                     onChanged: (val) {
                       if (val != null) setState(() => quietHoursStart = val);
                     },
+                    isCompact: isCompact,
                   ),
                 ),
-                const SizedBox(width: 18),
-                const Text(
+                SizedBox(width: isCompact ? 10 : 18),
+                Text(
                   "To",
-                  style: TextStyle(color: Colors.white60, fontSize: 11.5),
+                  style: TextStyle(color: Colors.white60, fontSize: isCompact ? 10.5 : 11.5),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: isCompact ? 6 : 10),
                 Expanded(
                   child: _buildTimeDropdown(
                     value: quietHoursEnd,
@@ -552,6 +562,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                     onChanged: (val) {
                       if (val != null) setState(() => quietHoursEnd = val);
                     },
+                    isCompact: isCompact,
                   ),
                 ),
               ],
@@ -567,6 +578,7 @@ class _PreferencesViewState extends State<PreferencesView> {
     required List<String> items,
     required Map<String, String> labelMap,
     required ValueChanged<String?> onChanged,
+    bool isCompact = false,
   }) {
     final validValue = items.contains(value) ? value : items.first;
 
@@ -576,10 +588,10 @@ class _PreferencesViewState extends State<PreferencesView> {
         isDense: true,
         isExpanded: true,
         dropdownColor: const Color(0xFF14201A),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFD4AF37), size: 18),
-        style: const TextStyle(
+        icon: Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFFD4AF37), size: isCompact ? 16 : 18),
+        style: TextStyle(
           color: Colors.white,
-          fontSize: 12.5,
+          fontSize: isCompact ? 11 : 12.5,
           fontWeight: FontWeight.w600,
         ),
         items: items.map((val) {
@@ -594,9 +606,9 @@ class _PreferencesViewState extends State<PreferencesView> {
   }
 
   // ── 4. Daily Digest Card ──────────────────────────────────────────────────
-  Widget _buildDailyDigestCard() {
+  Widget _buildDailyDigestCard({required bool isCompact}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isCompact ? 14 : 20),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(16),
@@ -611,7 +623,7 @@ class _PreferencesViewState extends State<PreferencesView> {
           Text(
             "DAILY DIGEST",
             style: AppTheme.sansBody(
-              fontSize: 10.5,
+              fontSize: isCompact ? 9.5 : 10.5,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFD4AF37),
               letterSpacing: 1.2,
@@ -621,19 +633,19 @@ class _PreferencesViewState extends State<PreferencesView> {
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: isCompact ? 34 : 38,
+                height: isCompact ? 34 : 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF14201A),
                   border: Border.all(color: const Color(0x33D4AF37)),
                 ),
-                child: const Center(
-                  child: Icon(Icons.article_outlined, color: Color(0xFFD4AF37), size: 18),
+                child: Center(
+                  child: Icon(Icons.article_outlined, color: const Color(0xFFD4AF37), size: isCompact ? 16 : 18),
                 ),
               ),
-              const SizedBox(width: 14),
-              const Expanded(
+              SizedBox(width: isCompact ? 10 : 14),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -641,16 +653,16 @@ class _PreferencesViewState extends State<PreferencesView> {
                       "Receive Daily Digest Summaries",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: isCompact ? 12 : 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       "Batch low-priority inquiries into a single daily briefing",
                       style: TextStyle(
                         color: Colors.white54,
-                        fontSize: 11,
+                        fontSize: isCompact ? 10 : 11,
                       ),
                     ),
                   ],
@@ -668,7 +680,10 @@ class _PreferencesViewState extends State<PreferencesView> {
   }
 
   // ── 5. Notification Categories Section ─────────────────────────────────────
-  Widget _buildNotificationCategoriesSection({required BoxConstraints constraints}) {
+  Widget _buildNotificationCategoriesSection({
+    required double contentWidth,
+    required bool isCompactMobile,
+  }) {
     final categories = [
       _CategoryItem(
         title: "Quotation Proposal Updates",
@@ -708,20 +723,20 @@ class _PreferencesViewState extends State<PreferencesView> {
         Text(
           "NOTIFICATION CATEGORIES",
           style: AppTheme.sansBody(
-            fontSize: 10.5,
+            fontSize: isCompactMobile ? 9.5 : 10.5,
             fontWeight: FontWeight.bold,
             color: const Color(0xFFD4AF37),
             letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 14),
-        if (constraints.maxWidth >= 940)
+        if (contentWidth >= 980)
           Row(
             children: categories.map((cat) {
               return Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(right: 12),
-                  child: _buildCategoryCard(cat),
+                  child: _buildCategoryCard(cat, isCompact: false),
                 ),
               );
             }).toList(),
@@ -731,12 +746,20 @@ class _PreferencesViewState extends State<PreferencesView> {
             spacing: 12,
             runSpacing: 12,
             children: categories.map((cat) {
-              final cardWidth = constraints.maxWidth >= 600
-                  ? (constraints.maxWidth - 48 - 24) / 3
-                  : (constraints.maxWidth - 32 - 12) / 2;
+              final double cardWidth;
+              if (contentWidth >= 620) {
+                // 3 cards per row on tablet / narrow laptop
+                cardWidth = (contentWidth - 24) / 3;
+              } else if (contentWidth >= 420) {
+                // 2 cards per row on larger mobile
+                cardWidth = (contentWidth - 12) / 2;
+              } else {
+                // Full width on compact mobile
+                cardWidth = contentWidth;
+              }
               return SizedBox(
                 width: cardWidth,
-                child: _buildCategoryCard(cat),
+                child: _buildCategoryCard(cat, isCompact: isCompactMobile),
               );
             }).toList(),
           ),
@@ -744,15 +767,15 @@ class _PreferencesViewState extends State<PreferencesView> {
     );
   }
 
-  Widget _buildCategoryCard(_CategoryItem item) {
+  Widget _buildCategoryCard(_CategoryItem item, {bool isCompact = false}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: item.onToggle,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 125,
-          padding: const EdgeInsets.all(14),
+          height: isCompact ? 108 : 125,
+          padding: EdgeInsets.all(isCompact ? 10 : 14),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),
             borderRadius: BorderRadius.circular(14),
@@ -772,8 +795,8 @@ class _PreferencesViewState extends State<PreferencesView> {
             children: [
               // Top Icon
               Container(
-                width: 34,
-                height: 34,
+                width: isCompact ? 30 : 34,
+                height: isCompact ? 30 : 34,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF14201A),
@@ -785,7 +808,7 @@ class _PreferencesViewState extends State<PreferencesView> {
                   child: Icon(
                     item.icon,
                     color: item.value ? const Color(0xFFD4AF37) : Colors.white60,
-                    size: 17,
+                    size: isCompact ? 15 : 17,
                   ),
                 ),
               ),
@@ -795,9 +818,9 @@ class _PreferencesViewState extends State<PreferencesView> {
                 item.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 11.5,
+                  fontSize: isCompact ? 10.5 : 11.5,
                   fontWeight: FontWeight.w600,
                   height: 1.3,
                 ),
@@ -807,8 +830,8 @@ class _PreferencesViewState extends State<PreferencesView> {
               Row(
                 children: [
                   Container(
-                    width: 17,
-                    height: 17,
+                    width: isCompact ? 15 : 17,
+                    height: isCompact ? 15 : 17,
                     decoration: BoxDecoration(
                       color: item.value ? const Color(0xFFD4AF37) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
@@ -818,11 +841,11 @@ class _PreferencesViewState extends State<PreferencesView> {
                       ),
                     ),
                     child: item.value
-                        ? const Center(
+                        ? Center(
                             child: Icon(
                               Icons.check_rounded,
-                              size: 13,
-                              color: Color(0xFF091210),
+                              size: isCompact ? 11 : 13,
+                              color: const Color(0xFF091210),
                             ),
                           )
                         : null,
@@ -858,13 +881,18 @@ class _PreferencesViewState extends State<PreferencesView> {
 
   // ── 7. Sample Alerts Preview Dialog ───────────────────────────────────────
   void _showPreviewSampleAlertsDialog() {
+    final double screenWidth = MediaQuery.of(Get.context ?? context).size.width;
+    final double dialogWidth = (screenWidth - 32).clamp(280.0, 580.0);
+    final bool isCompact = screenWidth < 400;
+
     Get.dialog(
       Dialog(
         backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: Container(
-          width: 580,
+          width: dialogWidth,
           constraints: const BoxConstraints(maxHeight: 560),
-          padding: const EdgeInsets.all(22),
+          padding: EdgeInsets.all(isCompact ? 16 : 22),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),
             borderRadius: BorderRadius.circular(16),

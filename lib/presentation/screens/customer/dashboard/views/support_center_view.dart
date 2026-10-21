@@ -100,55 +100,74 @@ class _SupportCenterViewState extends State<SupportCenterView> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 700;
-    final bool isTablet = screenWidth >= 700 && screenWidth < 1050;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentWidth = constraints.maxWidth;
+        final bool isDesktop = contentWidth >= 840;
+        final bool isTablet = contentWidth >= 550 && contentWidth < 840;
+        final bool isMobile = contentWidth < 550;
+        final bool isCompactMobile = contentWidth < 380;
 
-    return Obx(() {
-      final details = BusinessDetailsService.to.rxDetails.value;
-      final tickets = widget.controller.rxTickets;
-      final filteredTickets = _getFilteredTickets(tickets);
+        final double horizontalPadding = isDesktop
+            ? 28.0
+            : (isTablet ? 20.0 : (isCompactMobile ? 12.0 : 16.0));
+        final double verticalPadding = isMobile ? 16.0 : 24.0;
 
-      return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 16 : 32,
-          vertical: isMobile ? 18 : 28,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ─── 1. Header (Eyebrow + Title + Subtitle + 24/7 Support Card) ───
-            _buildHeader(details: details, isMobile: isMobile),
+        return Obx(() {
+          final details = BusinessDetailsService.to.rxDetails.value;
+          final tickets = widget.controller.rxTickets;
+          final filteredTickets = _getFilteredTickets(tickets);
 
-            const SizedBox(height: 24),
-
-            // ─── 2. Contact Action Cards (WhatsApp + Call + Email) ───
-            _buildContactCards(
-              details: details,
-              isMobile: isMobile,
-              isTablet: isTablet,
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: verticalPadding,
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ─── 1. Header (Eyebrow + Title + Subtitle + 24/7 Support Card) ───
+                _buildHeader(
+                  details: details,
+                  isMobile: isMobile,
+                  isCompactMobile: isCompactMobile,
+                  contentWidth: contentWidth,
+                ),
 
-            const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
-            // ─── 3. Full-width Prominent CTA: + Raise Support Ticket → ───
-            _buildRaiseTicketBanner(isMobile: isMobile),
+                // ─── 2. Contact Action Cards (WhatsApp + Call + Email) ───
+                _buildContactCards(
+                  details: details,
+                  isMobile: isMobile,
+                  isTablet: isTablet,
+                  contentWidth: contentWidth,
+                ),
 
-            const SizedBox(height: 32),
+                const SizedBox(height: 20),
 
-            // ─── 4. Ticket History Header & Table/Cards ───
-            _buildTicketHistorySection(
-              filteredTickets: filteredTickets,
-              isMobile: isMobile,
-              totalTicketsCount: tickets.length,
+                // ─── 3. Full-width Prominent CTA: + Raise Support Ticket → ───
+                _buildRaiseTicketBanner(isCompact: isCompactMobile),
+
+                const SizedBox(height: 32),
+
+                // ─── 4. Ticket History Header & Table/Cards ───
+                _buildTicketHistorySection(
+                  filteredTickets: filteredTickets,
+                  isMobile: isMobile,
+                  isCompactMobile: isCompactMobile,
+                  contentWidth: contentWidth,
+                  totalTicketsCount: tickets.length,
+                ),
+
+                const SizedBox(height: 40),
+              ],
             ),
-
-            const SizedBox(height: 40),
-          ],
-        ),
-      );
-    });
+          );
+        });
+      },
+    );
   }
 
   String _resolveSupportAvailability(BusinessDetailsEntity details) {
@@ -166,14 +185,19 @@ class _SupportCenterViewState extends State<SupportCenterView> {
   }
 
   // ─── Header Section ────────────────────────────────────────────────────────
-  Widget _buildHeader({required BusinessDetailsEntity details, required bool isMobile}) {
+  Widget _buildHeader({
+    required BusinessDetailsEntity details,
+    required bool isMobile,
+    required bool isCompactMobile,
+    required double contentWidth,
+  }) {
     final titleBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "CONCIERGE HELP & CHAT",
           style: AppTheme.sansBody(
-            fontSize: 10.5,
+            fontSize: isCompactMobile ? 9.5 : 10.5,
             fontWeight: FontWeight.bold,
             color: const Color(0xFFD4AF37),
             letterSpacing: 1.5,
@@ -183,7 +207,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
         Text(
           "Premium Concierge Center",
           style: GoogleFonts.italiana(
-            fontSize: isMobile ? 22 : 28,
+            fontSize: isCompactMobile ? 20 : (isMobile ? 22 : 28),
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -193,16 +217,19 @@ class _SupportCenterViewState extends State<SupportCenterView> {
         Text(
           "Dedicated support to make every moment of your event flawless.",
           style: AppTheme.sansBody(
-            fontSize: isMobile ? 11.5 : 12.5,
+            fontSize: isCompactMobile ? 11 : (isMobile ? 11.5 : 12.5),
             color: Colors.white60,
           ),
         ),
       ],
     );
 
-    // Support info card (top right)
+    // Support info card (top right on desktop/tablet, stacked on mobile)
     final supportCard = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompactMobile ? 12 : 16,
+        vertical: isCompactMobile ? 10 : 12,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(12),
@@ -222,8 +249,8 @@ class _SupportCenterViewState extends State<SupportCenterView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: isCompactMobile ? 32 : 36,
+            height: isCompactMobile ? 32 : 36,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
@@ -232,15 +259,15 @@ class _SupportCenterViewState extends State<SupportCenterView> {
                 width: 1.0,
               ),
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.headset_mic_outlined,
-                color: Color(0xFFD4AF37),
-                size: 20,
+                color: const Color(0xFFD4AF37),
+                size: isCompactMobile ? 18 : 20,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isCompactMobile ? 10 : 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -248,7 +275,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
               Text(
                 _resolveSupportAvailability(details),
                 style: GoogleFonts.italiana(
-                  fontSize: 12,
+                  fontSize: isCompactMobile ? 11 : 12,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFFE8CC8A),
                   letterSpacing: 1.2,
@@ -258,7 +285,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
               Text(
                 "We're always here for you",
                 style: AppTheme.sansBody(
-                  fontSize: 10,
+                  fontSize: isCompactMobile ? 9 : 10,
                   color: Colors.white54,
                 ),
               ),
@@ -268,7 +295,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
       ),
     );
 
-    if (isMobile) {
+    if (contentWidth < 640) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -290,11 +317,79 @@ class _SupportCenterViewState extends State<SupportCenterView> {
     );
   }
 
+  // ─── Reusable Icon Builders ────────────────────────────────────────────────
+  Widget _buildWhatsAppIcon({double size = 38}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0x1F25D366),
+        border: Border.all(
+          color: const Color(0xFF25D366).withValues(alpha: 0.4),
+          width: 1.0,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.chat_bubble_rounded,
+          color: const Color(0xFF25D366),
+          size: size * 0.52,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCallIcon({double size = 38}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0x1FD4AF37),
+        border: Border.all(
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
+          width: 1.0,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.phone_in_talk_rounded,
+          color: const Color(0xFFD4AF37),
+          size: size * 0.52,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmailIcon({double size = 38}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0x1FD4AF37),
+        border: Border.all(
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
+          width: 1.0,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.mail_outline_rounded,
+          color: const Color(0xFFD4AF37),
+          size: size * 0.52,
+        ),
+      ),
+    );
+  }
+
   // ─── Contact Action Cards ──────────────────────────────────────────────────
   Widget _buildContactCards({
     required BusinessDetailsEntity details,
     required bool isMobile,
     required bool isTablet,
+    required double contentWidth,
   }) {
     // Resolve dynamic WhatsApp options (both canonical numbers from SSOT)
     final waOptions = BookingCommunicationHelper.getBusinessWhatsAppOptions();
@@ -310,86 +405,161 @@ class _SupportCenterViewState extends State<SupportCenterView> {
     // Resolve dynamic Email
     final email = BookingCommunicationHelper.getBusinessEmail();
 
-    if (isMobile) {
-      final waSubtitle = waOptions.map((o) => o.displayPhone).join("  •  ");
-      final phoneSubtitle = phoneOptions.map((o) => o.displayPhone).join("  •  ");
+    // Callbacks
+    void onWhatsAppCta() => _handleWhatsAppCta(waOptions);
+    void onCallCta() => _handleCallCta(phoneOptions);
+    void onEmailCta() => BookingCommunicationHelper.openEmail(
+      email: email,
+      subject: "Concierge Support Request",
+      body: "Hello Om Events Concierge Team,\n\nI need assistance regarding: ",
+    );
 
+    // Rows for WhatsApp
+    final waRows = <Widget>[
+      if (wa1 != null)
+        _buildInteractiveContactRow(
+          icon: Icons.chat_bubble_outline_rounded,
+          iconColor: const Color(0xFF25D366),
+          label: wa1.label,
+          displayPhone: wa1.displayPhone,
+          onTap: () => _openWhatsAppForOption(wa1),
+        ),
+      if (wa2 != null) ...[
+        const SizedBox(height: 4),
+        _buildInteractiveContactRow(
+          icon: Icons.chat_bubble_outline_rounded,
+          iconColor: const Color(0xFF25D366),
+          label: wa2.label,
+          displayPhone: wa2.displayPhone,
+          onTap: () => _openWhatsAppForOption(wa2),
+        ),
+      ],
+    ];
+
+    // Rows for Phone
+    final phoneRows = <Widget>[
+      if (phone1 != null)
+        _buildInteractiveContactRow(
+          icon: Icons.phone_outlined,
+          iconColor: const Color(0xFFD4AF37),
+          label: phone1.label,
+          displayPhone: phone1.displayPhone,
+          onTap: () => _openCallForOption(phone1),
+        ),
+      if (phone2 != null) ...[
+        const SizedBox(height: 4),
+        _buildInteractiveContactRow(
+          icon: Icons.phone_outlined,
+          iconColor: const Color(0xFFD4AF37),
+          label: phone2.label,
+          displayPhone: phone2.displayPhone,
+          onTap: () => _openCallForOption(phone2),
+        ),
+      ],
+    ];
+
+    // Rows for Email
+    final emailRows = <Widget>[
+      _buildInteractiveEmailRow(email: email, onCta: onEmailCta),
+      const SizedBox(height: 4),
+      Padding(
+        padding: const EdgeInsets.only(left: 19),
+        child: Text(
+          "Response within 24 hrs",
+          style: AppTheme.sansBody(
+            fontSize: 10.5,
+            color: Colors.white54,
+          ),
+        ),
+      ),
+    ];
+
+    // 1. Tablet layout (550 <= contentWidth < 840): 3 stacked horizontal banner cards
+    if (isTablet) {
       return Column(
         children: [
-          _buildMobileContactCard(
-            badgeColor: const Color(0x1F25D366),
-            iconColor: const Color(0xFF25D366),
-            icon: Icons.chat_bubble_rounded,
+          _buildTabletContactCard(
+            iconWidget: _buildWhatsAppIcon(),
             title: "WhatsApp Chat",
-            value: waSubtitle,
-            onTap: () => _handleWhatsAppCta(waOptions),
+            subtitle: "Instant response from our support team",
+            contactRows: waRows,
+            ctaText: "Chat Now →",
+            onCta: onWhatsAppCta,
           ),
-          const SizedBox(height: 10),
-          _buildMobileContactCard(
-            badgeColor: const Color(0x1FD4AF37),
-            iconColor: const Color(0xFFD4AF37),
-            icon: Icons.phone_in_talk_rounded,
+          const SizedBox(height: 12),
+          _buildTabletContactCard(
+            iconWidget: _buildCallIcon(),
             title: "Call Hotline",
-            value: phoneSubtitle,
-            onTap: () => _handleCallCta(phoneOptions),
+            subtitle: workingHours,
+            contactRows: phoneRows,
+            ctaText: "Call Now →",
+            onCta: onCallCta,
           ),
-          const SizedBox(height: 10),
-          _buildMobileContactCard(
-            badgeColor: const Color(0x1FD4AF37),
-            iconColor: const Color(0xFFD4AF37),
-            icon: Icons.mail_outline_rounded,
+          const SizedBox(height: 12),
+          _buildTabletContactCard(
+            iconWidget: _buildEmailIcon(),
             title: "Email Desk",
-            value: email,
-            onTap: () => BookingCommunicationHelper.openEmail(
-              email: email,
-              subject: "Concierge Support Request",
-              body: "Hello Om Events Concierge Team,\n\nI need assistance regarding: ",
-            ),
+            subtitle: "Inquiries & custom proposals",
+            contactRows: emailRows,
+            ctaText: "Send Email →",
+            onCta: onEmailCta,
           ),
         ],
       );
     }
 
+    // 2. Mobile layout (contentWidth < 550): 3 stacked vertical cards
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildMobileVerticalCard(
+            iconWidget: _buildWhatsAppIcon(),
+            title: "WhatsApp Chat",
+            subtitle: "Instant response from our support team",
+            contactRows: waRows,
+            ctaText: "Chat Now →",
+            onCta: onWhatsAppCta,
+          ),
+          const SizedBox(height: 12),
+          _buildMobileVerticalCard(
+            iconWidget: _buildCallIcon(),
+            title: "Call Hotline",
+            subtitle: workingHours,
+            contactRows: phoneRows,
+            ctaText: "Call Now →",
+            onCta: onCallCta,
+          ),
+          const SizedBox(height: 12),
+          _buildMobileVerticalCard(
+            iconWidget: _buildEmailIcon(),
+            title: "Email Desk",
+            subtitle: "Inquiries & custom proposals",
+            contactRows: emailRows,
+            ctaText: "Send Email →",
+            onCta: onEmailCta,
+          ),
+        ],
+      );
+    }
+
+    // 3. Desktop / Laptop layout (contentWidth >= 840): 3 equal-width columns in 1 row
     final waCard = _buildWhatsAppCard(
       wa1: wa1,
       wa2: wa2,
-      onCta: () => _handleWhatsAppCta(waOptions),
+      onCta: onWhatsAppCta,
     );
 
     final phoneCard = _buildCallCard(
       phone1: phone1,
       phone2: phone2,
       workingHours: workingHours,
-      onCta: () => _handleCallCta(phoneOptions),
+      onCta: onCallCta,
     );
 
     final emailCard = _buildEmailCard(
       email: email,
-      onCta: () => BookingCommunicationHelper.openEmail(
-        email: email,
-        subject: "Concierge Support Request",
-        body: "Hello Om Events Concierge Team,\n\nI need assistance regarding: ",
-      ),
+      onCta: onEmailCta,
     );
-
-    if (isTablet) {
-      return Column(
-        children: [
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: waCard),
-                const SizedBox(width: 14),
-                Expanded(child: phoneCard),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          emailCard,
-        ],
-      );
-    }
 
     return IntrinsicHeight(
       child: Row(
@@ -400,6 +570,192 @@ class _SupportCenterViewState extends State<SupportCenterView> {
           Expanded(child: phoneCard),
           const SizedBox(width: 14),
           Expanded(child: emailCard),
+        ],
+      ),
+    );
+  }
+
+  // ─── Tablet Horizontal Banner Card ─────────────────────────────────────────
+  Widget _buildTabletContactCard({
+    required Widget iconWidget,
+    required String title,
+    required String subtitle,
+    required List<Widget> contactRows,
+    required String ctaText,
+    required VoidCallback onCta,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F1713),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.22),
+          width: 1.0,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Left: Icon + Title + Subtitle
+          iconWidget,
+          const SizedBox(width: 14),
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.italiana(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.sansBody(
+                    fontSize: 10.5,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Middle: Interactive contact rows
+          Expanded(
+            flex: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: contactRows,
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Right: CTA Button
+          SizedBox(
+            width: 130,
+            height: 36,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE5C365),
+                foregroundColor: const Color(0xFF091210),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                textStyle: AppTheme.sansBody(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed: onCta,
+              child: Text(ctaText),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Mobile Vertical Full-Width Card ───────────────────────────────────────
+  Widget _buildMobileVerticalCard({
+    required Widget iconWidget,
+    required String title,
+    required String subtitle,
+    required List<Widget> contactRows,
+    required String ctaText,
+    required VoidCallback onCta,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F1713),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.22),
+          width: 1.0,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              iconWidget,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.italiana(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.sansBody(
+                        fontSize: 10.5,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...contactRows,
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 36,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE5C365),
+                foregroundColor: const Color(0xFF091210),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                textStyle: AppTheme.sansBody(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed: onCta,
+              child: Text(ctaText),
+            ),
+          ),
         ],
       ),
     );
@@ -457,11 +813,14 @@ class _SupportCenterViewState extends State<SupportCenterView> {
     required List<BusinessContactOption> options,
     required void Function(BusinessContactOption option) onSelect,
   }) {
+    final screenWidth = MediaQuery.of(Get.context ?? context).size.width;
+    final dialogWidth = (screenWidth - 32).clamp(280.0, 380.0);
+
     Get.dialog(
       Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          width: 380,
+          width: dialogWidth,
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),
@@ -958,6 +1317,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2.5, horizontal: 2),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 12, color: iconColor.withValues(alpha: 0.9)),
             const SizedBox(width: 7),
@@ -969,7 +1329,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            Expanded(
+            Flexible(
               child: Text(
                 displayPhone,
                 maxLines: 1,
@@ -987,83 +1347,32 @@ class _SupportCenterViewState extends State<SupportCenterView> {
     );
   }
 
-  Widget _buildMobileContactCard({
-    required Color badgeColor,
-    required Color iconColor,
-    required IconData icon,
-    required String title,
-    required String value,
-    required VoidCallback onTap,
+  Widget _buildInteractiveEmailRow({
+    required String email,
+    required VoidCallback onCta,
   }) {
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F1713),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: const Color(0xFFD4AF37).withValues(alpha: 0.22),
-            width: 1.0,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black45,
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
+      onTap: onCta,
+      borderRadius: BorderRadius.circular(6),
+      hoverColor: const Color(0x14D4AF37),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2.5, horizontal: 2),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: badgeColor,
-                border: Border.all(
-                  color: iconColor.withValues(alpha: 0.4),
-                  width: 1.0,
+            const Icon(Icons.email_outlined, size: 12, color: Color(0xFFD4AF37)),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                email,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.sansBody(
+                  fontSize: 11,
+                  color: const Color(0xFFE8CC8A),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: Center(
-                child: Icon(icon, color: iconColor, size: 20),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.sansBody(
-                      fontSize: 12,
-                      color: const Color(0xFFE8CC8A).withValues(alpha: 0.85),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFFD4AF37),
-              size: 20,
             ),
           ],
         ),
@@ -1072,10 +1381,10 @@ class _SupportCenterViewState extends State<SupportCenterView> {
   }
 
   // ─── Prominent Raise Ticket Banner ─────────────────────────────────────────
-  Widget _buildRaiseTicketBanner({required bool isMobile}) {
+  Widget _buildRaiseTicketBanner({required bool isCompact}) {
     return Container(
       width: double.infinity,
-      height: 46,
+      height: 44,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
@@ -1102,9 +1411,9 @@ class _SupportCenterViewState extends State<SupportCenterView> {
             const Icon(Icons.add, size: 18, color: Color(0xFF091210)),
             const SizedBox(width: 8),
             Text(
-              isMobile ? "Raise Ticket" : "Raise Support Ticket →",
+              "Raise Support Ticket →",
               style: AppTheme.sansBody(
-                fontSize: 13,
+                fontSize: isCompact ? 12 : 13,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF091210),
                 letterSpacing: 0.4,
@@ -1120,28 +1429,32 @@ class _SupportCenterViewState extends State<SupportCenterView> {
   Widget _buildTicketHistorySection({
     required List<SupportTicket> filteredTickets,
     required bool isMobile,
+    required bool isCompactMobile,
+    required double contentWidth,
     required int totalTicketsCount,
   }) {
+    final bool isNarrowFilters = contentWidth < 540;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Filter bar & Search
-        if (isMobile) ...[
+        if (isNarrowFilters) ...[
           Text(
             "Ticket History",
             style: GoogleFonts.italiana(
-              fontSize: 19,
+              fontSize: 18,
               color: Colors.white,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(child: _buildSearchField()),
-              const SizedBox(width: 10),
-              _buildFilterDropdown(),
+              const SizedBox(width: 8),
+              _buildFilterDropdown(isCompact: isCompactMobile),
             ],
           ),
         ] else ...[
@@ -1159,9 +1472,9 @@ class _SupportCenterViewState extends State<SupportCenterView> {
               ),
               Row(
                 children: [
-                  _buildFilterDropdown(),
+                  _buildFilterDropdown(isCompact: false),
                   const SizedBox(width: 12),
-                  SizedBox(width: 220, child: _buildSearchField()),
+                  SizedBox(width: 200, child: _buildSearchField()),
                 ],
               ),
             ],
@@ -1174,7 +1487,10 @@ class _SupportCenterViewState extends State<SupportCenterView> {
         if (filteredTickets.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompactMobile ? 16 : 24,
+              vertical: isCompactMobile ? 28 : 36,
+            ),
             decoration: BoxDecoration(
               color: const Color(0xFF0F1713),
               borderRadius: BorderRadius.circular(14),
@@ -1188,7 +1504,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
               children: [
                 Icon(
                   Icons.confirmation_number_outlined,
-                  size: 34,
+                  size: isCompactMobile ? 30 : 34,
                   color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 12),
@@ -1196,8 +1512,9 @@ class _SupportCenterViewState extends State<SupportCenterView> {
                   totalTicketsCount == 0
                       ? "No support tickets raised yet."
                       : "No tickets match your filter criteria.",
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.italiana(
-                    fontSize: 15,
+                    fontSize: isCompactMobile ? 14 : 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.white70,
                   ),
@@ -1207,12 +1524,16 @@ class _SupportCenterViewState extends State<SupportCenterView> {
                   totalTicketsCount == 0
                       ? "Click '+ Raise Support Ticket' above to get dedicated concierge assistance."
                       : "Try resetting your search query or status filter.",
-                  style: AppTheme.sansBody(fontSize: 11, color: Colors.white38),
+                  textAlign: TextAlign.center,
+                  style: AppTheme.sansBody(
+                    fontSize: isCompactMobile ? 10 : 11,
+                    color: Colors.white38,
+                  ),
                 ),
               ],
             ),
           )
-        else if (isMobile)
+        else if (contentWidth < 680)
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -1309,12 +1630,12 @@ class _SupportCenterViewState extends State<SupportCenterView> {
     );
   }
 
-  Widget _buildFilterDropdown() {
+  Widget _buildFilterDropdown({bool isCompact = false}) {
     final filters = ['All Tickets', 'Active Review', 'Pending', 'Resolved', 'Closed'];
 
     return Container(
       height: 35,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 10),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(8),
@@ -1328,7 +1649,7 @@ class _SupportCenterViewState extends State<SupportCenterView> {
           value: rxSelectedFilter.value,
           dropdownColor: const Color(0xFF0F1713),
           icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFD4AF37), size: 18),
-          style: AppTheme.sansBody(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+          style: AppTheme.sansBody(fontSize: isCompact ? 10.5 : 11, color: Colors.white, fontWeight: FontWeight.bold),
           items: filters.map((f) {
             return DropdownMenuItem<String>(
               value: f,
@@ -1365,8 +1686,12 @@ class _SupportCenterViewState extends State<SupportCenterView> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        child: Column(
-          children: [
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 680),
+            child: Column(
+              children: [
             // Table Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -1472,7 +1797,9 @@ class _SupportCenterViewState extends State<SupportCenterView> {
                 );
               },
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1597,13 +1924,17 @@ class _SupportCenterViewState extends State<SupportCenterView> {
     final subCtrl = TextEditingController();
     final msgCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final screenWidth = MediaQuery.of(Get.context ?? context).size.width;
+    final screenHeight = MediaQuery.of(Get.context ?? context).size.height;
+    final dialogWidth = (screenWidth - 32).clamp(280.0, 480.0);
 
     Get.dialog(
       Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          width: 480,
-          padding: const EdgeInsets.all(24),
+          width: dialogWidth,
+          constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),
             borderRadius: BorderRadius.circular(16),
@@ -1615,149 +1946,152 @@ class _SupportCenterViewState extends State<SupportCenterView> {
               BoxShadow(color: Colors.black87, blurRadius: 24, offset: Offset(0, 8)),
             ],
           ),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "RAISE SUPPORT TICKET",
-                      style: GoogleFonts.italiana(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFE8CC8A),
-                        letterSpacing: 1.0,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "RAISE SUPPORT TICKET",
+                        style: GoogleFonts.italiana(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFE8CC8A),
+                          letterSpacing: 1.0,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white54, size: 20),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => Get.back(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Describe your event or logistic inquiry. Our concierge team responds promptly.",
-                  style: AppTheme.sansBody(fontSize: 11.5, color: Colors.white60),
-                ),
-                const SizedBox(height: 18),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => Get.back(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Describe your event or logistic inquiry. Our concierge team responds promptly.",
+                    style: AppTheme.sansBody(fontSize: 11.5, color: Colors.white60),
+                  ),
+                  const SizedBox(height: 18),
 
-                // Subject
-                Text(
-                  "Subject",
-                  style: AppTheme.sansBody(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFE8CC8A),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: subCtrl,
-                  style: AppTheme.sansBody(fontSize: 12.5, color: Colors.white),
-                  cursorColor: const Color(0xFFD4AF37),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? "Please enter a subject" : null,
-                  decoration: InputDecoration(
-                    hintText: "e.g. Flower setup delay, invoice question...",
-                    hintStyle: AppTheme.sansBody(fontSize: 11, color: Colors.white30),
-                    filled: true,
-                    fillColor: const Color(0xFF14201A),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+                  // Subject
+                  Text(
+                    "Subject",
+                    style: AppTheme.sansBody(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFE8CC8A),
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: subCtrl,
+                    style: AppTheme.sansBody(fontSize: 12.5, color: Colors.white),
+                    cursorColor: const Color(0xFFD4AF37),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? "Please enter a subject" : null,
+                    decoration: InputDecoration(
+                      hintText: "e.g. Flower setup delay, invoice question...",
+                      hintStyle: AppTheme.sansBody(fontSize: 11, color: Colors.white30),
+                      filled: true,
+                      fillColor: const Color(0xFF14201A),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
 
-                // Message
-                Text(
-                  "Detailed Message",
-                  style: AppTheme.sansBody(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFE8CC8A),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: msgCtrl,
-                  maxLines: 4,
-                  style: AppTheme.sansBody(fontSize: 12.5, color: Colors.white),
-                  cursorColor: const Color(0xFFD4AF37),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? "Please write your message" : null,
-                  decoration: InputDecoration(
-                    hintText: "Describe the matter in detail so we can route it to the right team...",
-                    hintStyle: AppTheme.sansBody(fontSize: 11, color: Colors.white30),
-                    filled: true,
-                    fillColor: const Color(0xFF14201A),
-                    contentPadding: const EdgeInsets.all(14),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+                  // Message
+                  Text(
+                    "Detailed Message",
+                    style: AppTheme.sansBody(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFE8CC8A),
                     ),
                   ),
-                ),
-                const SizedBox(height: 22),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: msgCtrl,
+                    maxLines: 4,
+                    style: AppTheme.sansBody(fontSize: 12.5, color: Colors.white),
+                    cursorColor: const Color(0xFFD4AF37),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? "Please write your message" : null,
+                    decoration: InputDecoration(
+                      hintText: "Describe the matter in detail so we can route it to the right team...",
+                      hintStyle: AppTheme.sansBody(fontSize: 11, color: Colors.white30),
+                      filled: true,
+                      fillColor: const Color(0xFF14201A),
+                      contentPadding: const EdgeInsets.all(14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: const Color(0xFFD4AF37).withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
 
-                // Actions
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Get.back(),
-                      child: Text(
-                        "CANCEL",
-                        style: AppTheme.sansBody(fontSize: 11, color: Colors.white60),
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Get.back(),
+                        child: Text(
+                          "CANCEL",
+                          style: AppTheme.sansBody(fontSize: 11, color: Colors.white60),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE8CC8A),
-                        foregroundColor: const Color(0xFF091210),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE8CC8A),
+                          foregroundColor: const Color(0xFF091210),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                        ),
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+                          Get.back();
+                          await widget.controller.raiseSupportTicket(
+                            subject: subCtrl.text.trim(),
+                            message: msgCtrl.text.trim(),
+                          );
+                        },
+                        child: Text(
+                          "SUBMIT TICKET",
+                          style: AppTheme.sansBody(fontSize: 11.5, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                      onPressed: () async {
-                        if (!formKey.currentState!.validate()) return;
-                        Get.back();
-                        await widget.controller.raiseSupportTicket(
-                          subject: subCtrl.text.trim(),
-                          message: msgCtrl.text.trim(),
-                        );
-                      },
-                      child: Text(
-                        "SUBMIT TICKET",
-                        style: AppTheme.sansBody(fontSize: 11.5, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1767,13 +2101,16 @@ class _SupportCenterViewState extends State<SupportCenterView> {
 
   void _showTicketThreadDialog(SupportTicket ticket) {
     final replyCtrl = TextEditingController();
+    final screenWidth = MediaQuery.of(Get.context ?? context).size.width;
+    final screenHeight = MediaQuery.of(Get.context ?? context).size.height;
+    final dialogWidth = (screenWidth - 32).clamp(280.0, 520.0);
 
     Get.dialog(
       Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          width: 520,
-          constraints: const BoxConstraints(maxHeight: 600),
+          width: dialogWidth,
+          constraints: BoxConstraints(maxHeight: (screenHeight * 0.85).clamp(300.0, 600.0)),
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),

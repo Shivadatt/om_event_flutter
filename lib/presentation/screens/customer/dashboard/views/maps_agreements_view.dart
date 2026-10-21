@@ -43,9 +43,12 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isDesktop = constraints.maxWidth >= 840;
-        final bool isTablet = constraints.maxWidth >= 600 && !isDesktop;
-        final double horizontalPadding = isDesktop ? 32.0 : (isTablet ? 24.0 : 16.0);
+        final double contentWidth = constraints.maxWidth;
+        final bool isDesktop = contentWidth >= 840;
+        final bool isTablet = contentWidth >= 580 && !isDesktop;
+        final bool isCompactMobile = contentWidth < 380;
+        final bool isTwoColumn = contentWidth >= 580;
+        final double horizontalPadding = isDesktop ? 32.0 : (isTablet ? 24.0 : (isCompactMobile ? 12.0 : 16.0));
 
         return SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 24),
@@ -53,13 +56,13 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(isDesktop: isDesktop),
+              _buildHeader(isDesktop: isDesktop, isCompactMobile: isCompactMobile),
               const SizedBox(height: 18),
-              _buildStudioTourCard(isDesktop: isDesktop),
+              _buildStudioTourCard(contentWidth: contentWidth, isDesktop: isDesktop, isCompactMobile: isCompactMobile),
               const SizedBox(height: 16),
-              _buildStudioCards(isDesktop: isDesktop),
+              _buildStudioCards(isTwoColumn: isTwoColumn, isCompactMobile: isCompactMobile),
               const SizedBox(height: 24),
-              _buildLegalSection(isDesktop: isDesktop),
+              _buildLegalSection(isTwoColumn: isTwoColumn, isCompactMobile: isCompactMobile),
             ],
           ),
         );
@@ -68,14 +71,14 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
   }
 
   // ── 1. Page Header ─────────────────────────────────────────────────────────
-  Widget _buildHeader({required bool isDesktop}) {
+  Widget _buildHeader({required bool isDesktop, required bool isCompactMobile}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "LOCATION & SECURITY",
           style: AppTheme.sansBody(
-            fontSize: 10.5,
+            fontSize: isCompactMobile ? 9.5 : 10.5,
             fontWeight: FontWeight.bold,
             color: const Color(0xFFD4AF37),
             letterSpacing: 1.5,
@@ -85,7 +88,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
         Text(
           "Studio Maps & Legal Desk",
           style: GoogleFonts.italiana(
-            fontSize: isDesktop ? 26 : 22,
+            fontSize: isDesktop ? 26 : (isCompactMobile ? 20 : 22),
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -95,7 +98,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
         Text(
           "Everything you need at one place — visit us or complete legal formalities.",
           style: AppTheme.sansBody(
-            fontSize: 12,
+            fontSize: isCompactMobile ? 11 : 12,
             color: Colors.white60,
           ),
         ),
@@ -104,9 +107,20 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
   }
 
   // ── 2. Studio Tour / Video Card ───────────────────────────────────────────
-  Widget _buildStudioTourCard({required bool isDesktop}) {
+  Widget _buildStudioTourCard({
+    required double contentWidth,
+    required bool isDesktop,
+    required bool isCompactMobile,
+  }) {
+    final double cardHeight = isDesktop
+        ? 230.0
+        : (contentWidth >= 580 ? 190.0 : (isCompactMobile ? 145.0 : 165.0));
+    final double playBoxSize = isCompactMobile ? 78.0 : (contentWidth < 580 ? 88.0 : 104.0);
+    final double playIconCircleSize = isCompactMobile ? 32.0 : (contentWidth < 580 ? 36.0 : 42.0);
+    final double playIconSize = isCompactMobile ? 20.0 : (contentWidth < 580 ? 24.0 : 28.0);
+
     return Container(
-      height: isDesktop ? 240 : 190,
+      height: cardHeight,
       width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
@@ -154,8 +168,8 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
                 onTap: _playStudioTour,
                 borderRadius: BorderRadius.circular(60),
                 child: Container(
-                  width: 104,
-                  height: 104,
+                  width: playBoxSize,
+                  height: playBoxSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.black.withValues(alpha: 0.45),
@@ -168,8 +182,8 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: playIconCircleSize,
+                        height: playIconCircleSize,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color(0xFFD4AF37),
@@ -177,19 +191,20 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
                             BoxShadow(color: Color(0x66D4AF37), blurRadius: 10),
                           ],
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Icon(
                             Icons.play_arrow_rounded,
-                            color: Color(0xFF091210),
-                            size: 28,
+                            color: const Color(0xFF091210),
+                            size: playIconSize,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 5),
                       Text(
                         "Play Studio Tour",
+                        textAlign: TextAlign.center,
                         style: AppTheme.sansBody(
-                          fontSize: 10.5,
+                          fontSize: isCompactMobile ? 9.0 : 10.5,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                           letterSpacing: 0.3,
@@ -207,7 +222,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
   }
 
   // ── 3. Studio Location Cards (Kadi HQ & Thangadh Studio) ───────────────────
-  Widget _buildStudioCards({required bool isDesktop}) {
+  Widget _buildStudioCards({required bool isTwoColumn, required bool isCompactMobile}) {
     final studios = StudioLocationsHelper.getPublicStudios();
     final kadiStudio = studios.isNotEmpty ? studios.first : StudioLocationsHelper.kadiStudio;
     final thangadhStudio = studios.length > 1 ? studios[1] : StudioLocationsHelper.thangadhStudio;
@@ -226,6 +241,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
       thumbnailAsset: AppImages.luxuryReception,
       icon: Icons.location_on_outlined,
       onDirectionsTap: () => StudioLocationsHelper.openInGoogleMaps(kadiStudio.fullAddress),
+      isCompact: isCompactMobile,
     );
 
     final cardThangadh = _buildStudioCard(
@@ -234,9 +250,10 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
       thumbnailAsset: AppImages.luxuryEveningDecor,
       icon: Icons.storefront_outlined,
       onDirectionsTap: () => StudioLocationsHelper.openInGoogleMaps(thangadhStudio.fullAddress),
+      isCompact: isCompactMobile,
     );
 
-    if (isDesktop) {
+    if (isTwoColumn) {
       return Row(
         children: [
           Expanded(child: cardKadi),
@@ -261,9 +278,20 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
     required String thumbnailAsset,
     required IconData icon,
     required VoidCallback onDirectionsTap,
+    bool isCompact = false,
   }) {
+    final double thumbWidth = isCompact ? 72.0 : 94.0;
+    final double thumbHeight = isCompact ? 50.0 : 60.0;
+    final double iconBoxSize = isCompact ? 32.0 : 38.0;
+    final double iconSize = isCompact ? 16.0 : 18.0;
+    final double arrowSize = isCompact ? 28.0 : 34.0;
+    final double arrowIconSize = isCompact ? 15.0 : 18.0;
+    final EdgeInsets padding = isCompact
+        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 10)
+        : const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: padding,
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(14),
@@ -278,8 +306,8 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: SizedBox(
-              width: 94,
-              height: 60,
+              width: thumbWidth,
+              height: thumbHeight,
               child: Image.asset(
                 thumbnailAsset,
                 fit: BoxFit.cover,
@@ -290,22 +318,22 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: isCompact ? 10 : 14),
 
           // Circle icon
           Container(
-            width: 38,
-            height: 38,
+            width: iconBoxSize,
+            height: iconBoxSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF14201A),
               border: Border.all(color: const Color(0x40D4AF37)),
             ),
             child: Center(
-              child: Icon(icon, color: const Color(0xFFD4AF37), size: 18),
+              child: Icon(icon, color: const Color(0xFFD4AF37), size: iconSize),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isCompact ? 8 : 12),
 
           // Details
           Expanded(
@@ -317,8 +345,8 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: isCompact ? 12 : 13,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -329,7 +357,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
                   child: Text(
                     "Get Directions",
                     style: AppTheme.sansBody(
-                      fontSize: 11,
+                      fontSize: isCompact ? 10.5 : 11,
                       color: const Color(0xFFD4AF37),
                       fontWeight: FontWeight.w600,
                     ),
@@ -346,14 +374,14 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: onDirectionsTap,
-              child: const SizedBox(
-                width: 34,
-                height: 34,
+              child: SizedBox(
+                width: arrowSize,
+                height: arrowSize,
                 child: Center(
                   child: Icon(
                     Icons.arrow_forward_rounded,
-                    color: Color(0xFF091210),
-                    size: 18,
+                    color: const Color(0xFF091210),
+                    size: arrowIconSize,
                   ),
                 ),
               ),
@@ -365,60 +393,75 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
   }
 
   // ── 4. Legal Agreements Section ───────────────────────────────────────────
-  Widget _buildLegalSection({required bool isDesktop}) {
+  Widget _buildLegalSection({required bool isTwoColumn, required bool isCompactMobile}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section Header Row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                const Text(
-                  "[",
-                  style: TextStyle(
-                    color: Color(0xFFD4AF37),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w300,
+        if (isCompactMobile)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    "[",
+                    style: TextStyle(
+                      color: Color(0xFFD4AF37),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w300,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  "Legal Agreements",
-                  style: GoogleFonts.italiana(
-                    fontSize: 19,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                  const SizedBox(width: 4),
+                  Text(
+                    "Legal Agreements",
+                    style: GoogleFonts.italiana(
+                      fontSize: 17,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            OutlinedButton(
-              onPressed: _showSampleAgreementDialog,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0x40D4AF37)),
-                backgroundColor: const Color(0x0DD4AF37),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ],
               ),
-              child: const Text(
-                "View Sample Agreement",
-                style: TextStyle(
-                  color: Color(0xFFD4AF37),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
+              const SizedBox(height: 8),
+              _buildSampleAgreementButton(isCompactMobile: true),
+            ],
+          )
+        else
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    "[",
+                    style: TextStyle(
+                      color: Color(0xFFD4AF37),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Legal Agreements",
+                    style: GoogleFonts.italiana(
+                      fontSize: 19,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
+              _buildSampleAgreementButton(isCompactMobile: false),
+            ],
+          ),
         const SizedBox(height: 12),
 
         // Compact Card Container
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(isCompactMobile ? 14 : 20),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),
             borderRadius: BorderRadius.circular(16),
@@ -427,9 +470,32 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
               BoxShadow(color: Colors.black38, blurRadius: 14, offset: Offset(0, 4)),
             ],
           ),
-          child: isDesktop ? _buildDesktopLegalLayout() : _buildMobileLegalLayout(),
+          child: isTwoColumn ? _buildDesktopLegalLayout() : _buildMobileLegalLayout(isCompactMobile: isCompactMobile),
         ),
       ],
+    );
+  }
+
+  Widget _buildSampleAgreementButton({required bool isCompactMobile}) {
+    return OutlinedButton(
+      onPressed: _showSampleAgreementDialog,
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: Color(0x40D4AF37)),
+        backgroundColor: const Color(0x0DD4AF37),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompactMobile ? 12 : 16,
+          vertical: isCompactMobile ? 8 : 10,
+        ),
+      ),
+      child: Text(
+        "View Sample Agreement",
+        style: TextStyle(
+          color: const Color(0xFFD4AF37),
+          fontSize: isCompactMobile ? 10.5 : 11.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -449,7 +515,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
             ],
           ),
         ),
-        const SizedBox(width: 28),
+        const SizedBox(width: 24),
 
         // Right Column: Checkboxes & Confirm CTA
         Expanded(
@@ -467,38 +533,42 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
     );
   }
 
-  Widget _buildMobileLegalLayout() {
+  Widget _buildMobileLegalLayout({required bool isCompactMobile}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAgreementTermsInfo(),
-        const SizedBox(height: 16),
+        _buildAgreementTermsInfo(isCompact: isCompactMobile),
+        const SizedBox(height: 14),
         _buildCheckboxes(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _buildSignatureInput(),
-        const SizedBox(height: 18),
-        _buildConfirmButton(),
+        const SizedBox(height: 16),
+        _buildConfirmButton(isCompactMobile: isCompactMobile),
       ],
     );
   }
 
-  Widget _buildAgreementTermsInfo() {
+  Widget _buildAgreementTermsInfo({bool isCompact = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 42,
-          height: 42,
+          width: isCompact ? 36 : 42,
+          height: isCompact ? 36 : 42,
           decoration: BoxDecoration(
             color: const Color(0x1AD4AF37),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0x33D4AF37)),
           ),
-          child: const Center(
-            child: Icon(Icons.description_outlined, color: Color(0xFFD4AF37), size: 22),
+          child: Center(
+            child: Icon(
+              Icons.description_outlined,
+              color: const Color(0xFFD4AF37),
+              size: isCompact ? 18 : 22,
+            ),
           ),
         ),
-        const SizedBox(width: 14),
+        SizedBox(width: isCompact ? 10 : 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,7 +576,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
               Text(
                 "Event Reservation & Deposit Agreement",
                 style: AppTheme.sansBody(
-                  fontSize: 12.5,
+                  fontSize: isCompact ? 11.5 : 12.5,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFFD4AF37),
                   letterSpacing: 0.2,
@@ -518,7 +588,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
                 "2. Any cancellation request must be submitted 15 days prior to the event.\n"
                 "3. Decoration revisions are locked 7 days before event preparation starts.",
                 style: AppTheme.sansBody(
-                  fontSize: 11,
+                  fontSize: isCompact ? 10.5 : 11,
                   color: Colors.white70,
                   height: 1.45,
                 ),
@@ -666,7 +736,7 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
     );
   }
 
-  Widget _buildConfirmButton() {
+  Widget _buildConfirmButton({bool isCompactMobile = false}) {
     final bool canSubmit = termsAccepted && privacyAccepted && signed && !isSaving;
 
     return ElevatedButton.icon(
@@ -680,9 +750,9 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
       label: Text(
         isSaving ? "RECORDING SIGNATURE..." : "CONFIRM & RECORD SIGNATURE",
         style: AppTheme.sansBody(
-          fontSize: 11.5,
+          fontSize: isCompactMobile ? 10.0 : 11.5,
           fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
+          letterSpacing: isCompactMobile ? 0.2 : 0.5,
           color: const Color(0xFF091210),
         ),
       ),
@@ -740,12 +810,15 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
   }
 
   void _playStudioTour() {
+    final double screenWidth = MediaQuery.of(Get.context ?? context).size.width;
+    final double dialogWidth = (screenWidth - 32).clamp(280.0, 820.0);
+
     Get.dialog(
       Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: Container(
-          width: 820,
+          width: dialogWidth,
           constraints: const BoxConstraints(maxHeight: 520),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),
@@ -765,15 +838,18 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
                   children: [
                     const Icon(Icons.videocam_outlined, color: Color(0xFFD4AF37), size: 20),
                     const SizedBox(width: 10),
-                    Text(
-                      "OM Events Studio Tour",
-                      style: GoogleFonts.italiana(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    Expanded(
+                      child: Text(
+                        "OM Events Studio Tour",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.italiana(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white70, size: 20),
                       padding: EdgeInsets.zero,
@@ -851,13 +927,18 @@ class _MapsAgreementsViewState extends State<MapsAgreementsView> {
     required String subtitle,
     required String content,
   }) {
+    final double screenWidth = MediaQuery.of(Get.context ?? context).size.width;
+    final double dialogWidth = (screenWidth - 32).clamp(280.0, 580.0);
+    final bool isCompact = screenWidth < 400;
+
     Get.dialog(
       Dialog(
         backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: Container(
-          width: 580,
+          width: dialogWidth,
           constraints: const BoxConstraints(maxHeight: 520),
-          padding: const EdgeInsets.all(22),
+          padding: EdgeInsets.all(isCompact ? 16 : 22),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1713),
             borderRadius: BorderRadius.circular(16),
