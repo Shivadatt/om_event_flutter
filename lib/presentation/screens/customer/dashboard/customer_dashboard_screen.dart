@@ -45,7 +45,8 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       });
       return;
     }
-    if (authController.isSessionExpired()) {
+    if (authController.rxCustomerBootstrapped.value &&
+        authController.isSessionExpired()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         authController.handleSessionExpired();
       });

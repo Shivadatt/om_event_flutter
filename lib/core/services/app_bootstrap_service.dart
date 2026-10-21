@@ -97,9 +97,11 @@ class AppBootstrapService {
 
   static Future<void> _initFirebase() async {
     try {
+      AppLogger.info('[AUTH_STARTUP] Firebase initialization started');
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      AppLogger.info('[AUTH_STARTUP] Firebase initialization completed');
       AppLogger.info('[AUTH_SESSION] Firebase initialized');
       AppLogger.success('Firebase initialized in background');
       if (kIsWeb) {

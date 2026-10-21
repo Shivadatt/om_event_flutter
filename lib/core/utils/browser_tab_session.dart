@@ -10,6 +10,8 @@ class BrowserTabSession {
   BrowserTabSession._();
 
   static const String customerTabKey = 'oe-customer-tab-active';
+  static const String customerSessionStartedKey = 'oe-customer-session-started-at';
+  static const String customerSessionExpiresKey = 'oe-customer-session-expires-at';
 
   /// Whether the customer session is marked as active in the current browser tab's sessionStorage.
   static bool isCustomerTabActive() {
@@ -21,8 +23,34 @@ class BrowserTabSession {
     impl.setTabSessionActiveImpl(customerTabKey);
   }
 
-  /// Clears the tab session marker upon logout or 2-hour expiration.
+  /// Retrieves the tab-scoped session start timestamp string (ISO-8601 UTC).
+  static String? getCustomerSessionStartedAt() {
+    return impl.getTabSessionStringImpl(customerSessionStartedKey);
+  }
+
+  /// Retrieves the tab-scoped session expiry timestamp string (ISO-8601 UTC).
+  static String? getCustomerSessionExpiresAt() {
+    return impl.getTabSessionStringImpl(customerSessionExpiresKey);
+  }
+
+  /// Stores the immutable session start and 2-hour expiry timestamps into tab-scoped sessionStorage.
+  static void saveCustomerSession(DateTime startedAt, DateTime expiresAt) {
+    impl.setTabSessionStringImpl(
+      customerSessionStartedKey,
+      startedAt.toUtc().toIso8601String(),
+    );
+    impl.setTabSessionStringImpl(
+      customerSessionExpiresKey,
+      expiresAt.toUtc().toIso8601String(),
+    );
+    impl.setTabSessionActiveImpl(customerTabKey);
+  }
+
+  /// Clears the tab session marker and timestamps upon logout or 2-hour expiration.
   static void clearCustomerTab() {
     impl.clearTabSessionImpl(customerTabKey);
+    impl.clearTabSessionImpl(customerSessionStartedKey);
+    impl.clearTabSessionImpl(customerSessionExpiresKey);
   }
 }
+

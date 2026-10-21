@@ -40,7 +40,15 @@ class CustomerAuthMiddleware extends GetMiddleware {
       return const RouteSettings(name: AppRoutes.adminDashboard);
     }
 
-    // ── 2. Check Absolute 2-Hour Customer Session Expiration ────────────────
+    // ── 2. Handle Ongoing App Bootstrap Gate ────────────────────────────────
+    // While AppBootstrapGate is resolving auth and profile during startup,
+    // allow initial route frame so AppBootstrapGate can await Firebase restoration.
+    if (!customerAuth.rxCustomerBootstrapped.value) {
+      AppLogger.info('[AUTH_SESSION] Middleware decision: pass-through allowed (bootstrapping in progress)');
+      return null;
+    }
+
+    // ── 3. Check Absolute 2-Hour Customer Session Expiration ────────────────
     if (customerAuth.isSessionExpired()) {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (customerAuth.rxIsLoggedIn.value || currentUser != null) {
@@ -55,13 +63,6 @@ class CustomerAuthMiddleware extends GetMiddleware {
       );
     }
 
-    // ── 3. Handle Ongoing App Bootstrap Gate ────────────────────────────────
-    // While AppBootstrapGate is resolving auth and profile in splash screen,
-    // allow initial route frame if customer has an active session timestamp or user.
-    if (!customerAuth.rxCustomerBootstrapped.value && !customerAuth.isSessionExpired()) {
-      AppLogger.info('[AUTH_SESSION] Middleware decision: pass-through allowed (active session during bootstrap)');
-      return null;
-    }
 
     // ── 4. Validate Authenticated Customer ──────────────────────────────────
     if (AuthRouteHelper.isVerifiedCustomer() && !customerAuth.isSessionExpired()) {

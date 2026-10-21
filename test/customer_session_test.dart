@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:om_event/data/datasources/local_storage_source.dart';
 import 'package:om_event/core/constants/app_strings.dart';
 
+import 'package:om_event/core/utils/browser_tab_session.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -12,7 +14,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     localStorageSource = LocalStorageSource(prefs);
+    BrowserTabSession.clearCustomerTab();
   });
+
 
   group('Customer 2-Hour Session Policy & Persistence Tests', () {
     test('1. Newly started session stores start timestamp and exact 2-hour expiry', () async {
@@ -125,6 +129,7 @@ void main() {
     });
 
     test('10. If expiresAt key is missing, calculates fallback 2 hours from startedAt', () async {
+      BrowserTabSession.markCustomerTabActive();
       final loginTime = DateTime.now().toUtc().subtract(const Duration(minutes: 30));
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
@@ -140,6 +145,7 @@ void main() {
     });
 
     test('11. Corrupted ISO-8601 strings safely return expired without crashing', () async {
+      BrowserTabSession.markCustomerTabActive();
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         AppStrings.customerSessionStartedAtKey,
@@ -164,6 +170,68 @@ void main() {
       expect(remaining.inMinutes, greaterThanOrEqualTo(58));
       expect(remaining.inMinutes, lessThanOrEqualTo(60));
     });
+
+    test('13. Browser tab reload simulation (same tab): tab-scoped session survives reload and remains valid', () async {
+      final now = DateTime.now().toUtc();
+      await localStorageSource.saveCustomerSessionStartedAt(now);
+
+      // Verify session is active
+      expect(BrowserTabSession.isCustomerTabActive(), isTrue);
+      expect(localStorageSource.isCustomerSessionExpired(), isFalse);
+
+      // Simulate F5 page reload in the same tab:
+      // In same tab, sessionStorage persists, but in-memory objects reload.
+      final reloadedStorage = LocalStorageSource(await SharedPreferences.getInstance());
+      expect(BrowserTabSession.isCustomerTabActive(), isTrue);
+      expect(reloadedStorage.isCustomerSessionExpired(), isFalse);
+      expect(reloadedStorage.getCustomerSessionStartedAt(), isNotNull);
+    });
+
+    test('14. Tab closure / New tab simulation: new tab lacks tab-scoped session and requires login', () async {
+      final now = DateTime.now().toUtc();
+      await localStorageSource.saveCustomerSessionStartedAt(now);
+
+      // Verify active in original tab
+      expect(localStorageSource.isCustomerSessionExpired(), isFalse);
+
+      // Simulate opening a new browser tab or reopening browser:
+      // sessionStorage is tab-isolated, so in the new tab, sessionStorage is completely empty.
+      BrowserTabSession.clearCustomerTab();
+
+      final newTabStorage = LocalStorageSource(await SharedPreferences.getInstance());
+      expect(BrowserTabSession.isCustomerTabActive(), isFalse);
+      expect(newTabStorage.isCustomerSessionExpired(), isTrue);
+    });
+
+    test('15. Strict 2-hour boundary: valid at 1h59m, expired at exactly 2h00m', () async {
+      final now = DateTime.now().toUtc();
+
+      // At 1 hour 59 minutes: still valid
+      final almostExpired = now.subtract(const Duration(hours: 1, minutes: 59));
+      await localStorageSource.saveCustomerSessionStartedAt(almostExpired);
+      expect(localStorageSource.isCustomerSessionExpired(), isFalse);
+
+      // At exactly 2 hours: expired
+      final exactlyTwoHours = now.subtract(const Duration(hours: 2));
+      await localStorageSource.saveCustomerSessionStartedAt(exactlyTwoHours);
+      expect(localStorageSource.isCustomerSessionExpired(), isTrue);
+    });
+
+    test('16. Explicit logout wipes both tab-scoped sessionStorage and SharedPreferences', () async {
+      final now = DateTime.now().toUtc();
+      await localStorageSource.saveCustomerSessionStartedAt(now);
+      expect(localStorageSource.isCustomerSessionExpired(), isFalse);
+
+      await localStorageSource.clearCustomerSession();
+
+      expect(BrowserTabSession.isCustomerTabActive(), isFalse);
+      expect(BrowserTabSession.getCustomerSessionStartedAt(), isNull);
+      expect(BrowserTabSession.getCustomerSessionExpiresAt(), isNull);
+      expect(localStorageSource.getCustomerSessionStartedAt(), isNull);
+      expect(localStorageSource.getCustomerSessionExpiresAt(), isNull);
+      expect(localStorageSource.isCustomerSessionExpired(), isTrue);
+    });
   });
 }
+
 

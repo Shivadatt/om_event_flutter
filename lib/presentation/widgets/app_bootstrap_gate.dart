@@ -58,6 +58,15 @@ class AppBootstrapGate extends StatefulWidget {
     final routePath = uri?.path ?? normalized;
     return routePath == '/dashboard' || routePath.startsWith('/dashboard/');
   }
+
+  /// Checks if a given route path belongs to the customer login screen.
+  static bool isCustomerLoginPath(String path) {
+    final clean = path.trim().toLowerCase();
+    final normalized = clean.startsWith('#') ? clean.substring(1) : clean;
+    final uri = Uri.tryParse(normalized);
+    final routePath = uri?.path ?? normalized;
+    return routePath == '/client-login' || routePath.startsWith('/client-login/');
+  }
 }
 
 class _AppBootstrapGateState extends State<AppBootstrapGate> {
@@ -93,6 +102,19 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
         AppBootstrapGate.isCustomerProtectedPath(fragment) ||
         AppBootstrapGate.isCustomerProtectedPath(defaultRoute);
   }
+
+  /// Determines if the current startup or page reload target is customer login (/client-login).
+  bool _isTargetingCustomerLogin() {
+    final path = Uri.base.path;
+    final fragment = Uri.base.fragment;
+    final defaultRoute =
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+
+    return AppBootstrapGate.isCustomerLoginPath(path) ||
+        AppBootstrapGate.isCustomerLoginPath(fragment) ||
+        AppBootstrapGate.isCustomerLoginPath(defaultRoute);
+  }
+
 
   /// Executes the canonical startup authentication, dependency setup, and session sequence.
   Future<void> _runAppBootstrap() async {
@@ -140,9 +162,12 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
         }
 
         // Validate Canonical 24-hour admin session
+        final hasAdminSession = Get.isRegistered<LocalStorageSource>() &&
+            Get.find<LocalStorageSource>().getAdminSessionStartedAt() != null;
         final isExpired = authController.isSessionExpired();
         if (currentUser == null || isExpired) {
-          if (isExpired &&
+          if (hasAdminSession &&
+              isExpired &&
               (currentUser != null || authController.rxIsLoggedIn.value)) {
             await authController.handleSessionExpired();
           } else {
@@ -180,40 +205,47 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
         final customerAuth = Get.find<CustomerAuthController>();
         final localStorage = Get.find<LocalStorageSource>();
 
-        // Await Firebase Auth state restoration on Flutter Web (IndexedDB / persistence)
+        // Step 1 & 2: Restore Firebase Auth state on Flutter Web (IndexedDB / persistence)
+        AppLogger.info('[AUTH_STARTUP] Firebase currentUser before auth restoration: ${FirebaseAuth.instance.currentUser?.uid}');
         User? currentUser = FirebaseAuth.instance.currentUser;
-        if (currentUser == null && !localStorage.isCustomerSessionExpired()) {
+        if (currentUser == null) {
           try {
             currentUser = await FirebaseAuth.instance
                 .authStateChanges()
                 .where((user) => user != null)
                 .first
                 .timeout(
-                  const Duration(milliseconds: 3000),
+                  const Duration(milliseconds: 3500),
                   onTimeout: () => FirebaseAuth.instance.currentUser,
                 );
+            AppLogger.info('[AUTH_STARTUP] First authStateChanges() event received: uid=${currentUser?.uid}');
           } catch (_) {
             currentUser = FirebaseAuth.instance.currentUser;
           }
         }
+        AppLogger.info('[AUTH_STARTUP] Firebase currentUser after auth restoration: ${currentUser?.uid}');
 
-        AppLogger.info('[AUTH_SESSION] Initial auth state received: uid=${currentUser?.uid}');
-        AppLogger.info('[AUTH_SESSION] Current user exists: ${currentUser != null}');
-
-        final isAdmin = AuthRouteHelper.isCurrentAdminOrStaff();
+        // Step 3: Restore and validate session timestamp
+        final startedAt = localStorage.getCustomerSessionStartedAt();
+        final expiresAt = localStorage.getCustomerSessionExpiresAt();
         final isExpired = localStorage.isCustomerSessionExpired();
+        AppLogger.info('[AUTH_STARTUP] Session timestamp validation: startedAt=$startedAt, expiresAt=$expiresAt, isExpired=$isExpired');
+
+        // Step 4: Validate customer role and profile
+        final isAdmin = AuthRouteHelper.isCurrentAdminOrStaff();
 
         if (isAdmin) {
-          // Admin trying to enter client lounge -> redirect to admin dashboard
           targetState = AppBootstrapState.authorizationFailed;
+          AppLogger.info('[AUTH_STARTUP] Customer role/profile validation result: REJECTED (admin attempting customer lounge)');
           AppLogger.info('[AUTH_SESSION] Redirect reason: admin cannot access client lounge');
           AppLogger.info('[AUTH_SESSION] Middleware decision: redirecting admin to adminDashboard');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Get.offAllNamed(AppRoutes.adminDashboard);
           });
         } else if (currentUser == null || currentUser.isAnonymous || isExpired) {
+          AppLogger.info('[AUTH_STARTUP] Customer role/profile validation result: REJECTED (currentUser=${currentUser?.uid}, isExpired=$isExpired)');
           if (isExpired && currentUser != null) {
-            AppLogger.info('[AUTH_SESSION] Explicit sign-out reason: 2-hour session expired during startup');
+            AppLogger.info('[AUTH_SESSION] Explicit sign-out caller: AppBootstrapGate._runAppBootstrap, reason: 2-hour session expired during startup');
             await customerAuth.handleSessionExpired();
           } else {
             customerAuth.rxIsLoggedIn.value = false;
@@ -234,18 +266,75 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
             Get.offAllNamed('${AppRoutes.customerLogin}?redirect=$encoded');
           });
         } else {
-          // Restore customer profile and validate session
+          // Step 5: Valid customer within 2 hours -> navigate to / stay on dashboard
           await customerAuth.checkAuthStatus();
+          final profileValid = customerAuth.isAuthenticatedCustomer;
+          AppLogger.info('[AUTH_STARTUP] Customer role/profile validation result: ${profileValid ? "SUCCESS" : "FALLBACK_PROFILE"}');
           customerAuth.markCustomerBootstrapped(true);
           targetState = AppBootstrapState.authenticated;
           AppLogger.info('[AUTH_SESSION] Middleware decision: customer session active, staying on dashboard');
         }
+      } else if (_isTargetingCustomerLogin()) {
+        final customerAuth = Get.find<CustomerAuthController>();
+        final localStorage = Get.find<LocalStorageSource>();
+
+        // Step 1 & 2: Restore Firebase Auth state on client login page to handle reload
+        AppLogger.info('[AUTH_STARTUP] [LoginScreen] Firebase currentUser before auth restoration: ${FirebaseAuth.instance.currentUser?.uid}');
+        User? currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser == null) {
+          try {
+            currentUser = await FirebaseAuth.instance
+                .authStateChanges()
+                .where((user) => user != null)
+                .first
+                .timeout(
+                  const Duration(milliseconds: 3000),
+                  onTimeout: () => FirebaseAuth.instance.currentUser,
+                );
+            AppLogger.info('[AUTH_STARTUP] [LoginScreen] First authStateChanges() event received: uid=${currentUser?.uid}');
+          } catch (_) {
+            currentUser = FirebaseAuth.instance.currentUser;
+          }
+        }
+        AppLogger.info('[AUTH_STARTUP] [LoginScreen] Firebase currentUser after auth restoration: ${currentUser?.uid}');
+
+        // Step 3 & 4: Validate session and role
+        final startedAt = localStorage.getCustomerSessionStartedAt();
+        final expiresAt = localStorage.getCustomerSessionExpiresAt();
+        final isExpired = localStorage.isCustomerSessionExpired();
+        final isAdmin = AuthRouteHelper.isCurrentAdminOrStaff();
+        AppLogger.info('[AUTH_STARTUP] [LoginScreen] Session status: startedAt=$startedAt, expiresAt=$expiresAt, isExpired=$isExpired, isAdmin=$isAdmin');
+
+        if (currentUser != null && !currentUser.isAnonymous && !isAdmin && !isExpired) {
+          await customerAuth.checkAuthStatus();
+          customerAuth.markCustomerBootstrapped(true);
+          targetState = AppBootstrapState.authenticated;
+          AppLogger.info('[AUTH_STARTUP] [LoginScreen] Customer role/profile validation result: SUCCESS');
+
+          // Seamless redirect from /client-login to requested protected route
+          final rawRedirect = Uri.base.queryParameters['redirect'];
+          final destination = (rawRedirect != null && rawRedirect.isNotEmpty)
+              ? Uri.decodeComponent(rawRedirect)
+              : AppRoutes.customerDashboard;
+          AppLogger.info('[AUTH_SESSION] Auto-redirecting authenticated customer from login to $destination');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Get.offAllNamed(destination);
+          });
+        } else {
+          if (isExpired && currentUser != null && !isAdmin) {
+            AppLogger.info('[AUTH_SESSION] Explicit sign-out caller: AppBootstrapGate._runAppBootstrap (LoginScreen), reason: session expired on login screen');
+            await customerAuth.handleSessionExpired();
+          }
+          customerAuth.markCustomerBootstrapped(true);
+          targetState = AppBootstrapState.authenticated;
+        }
       } else {
-        // Public / non-protected route (e.g. /client-login, /, /gallery, etc.)
+        // Public / non-protected route (e.g. /, /gallery, etc.)
         if (Get.isRegistered<CustomerAuthController>()) {
           final customerAuth = Get.find<CustomerAuthController>();
           final localStorage = Get.find<LocalStorageSource>();
-          if (FirebaseAuth.instance.currentUser != null && !AuthRouteHelper.isCurrentAdminOrStaff()) {
+          User? currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null && !AuthRouteHelper.isCurrentAdminOrStaff()) {
             if (localStorage.isCustomerSessionExpired()) {
               await customerAuth.handleSessionExpired();
             } else {
@@ -256,6 +345,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
         }
         targetState = AppBootstrapState.authenticated;
       }
+
     } catch (e) {
       AppLogger.error(
         'Startup bootstrap error caught',

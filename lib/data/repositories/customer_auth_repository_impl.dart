@@ -98,13 +98,17 @@ class CustomerAuthRepositoryImpl implements CustomerAuthRepository {
   Future<CustomerProfile?> getCustomerProfile(String uid) async {
     try {
       // 1. Guard: Check if UID belongs to an administrator or staff - Never treat as customer profile
-      final adminDoc = await _firestore.collection(AppCollections.admin).doc(uid).get();
-      if (adminDoc.exists && adminDoc.data() != null) {
-        final data = adminDoc.data()!;
-        final role = (data['roleType'] ?? data['role'] ?? '').toString().toLowerCase();
-        if (AppRoles.isAdminRole(role)) {
-          return null;
+      try {
+        final adminDoc = await _firestore.collection(AppCollections.admin).doc(uid).get();
+        if (adminDoc.exists && adminDoc.data() != null) {
+          final data = adminDoc.data()!;
+          final role = (data['roleType'] ?? data['role'] ?? '').toString().toLowerCase();
+          if (AppRoles.isAdminRole(role)) {
+            return null;
+          }
         }
+      } catch (_) {
+        // Normal non-admin customers may not have permission to read the admin collection.
       }
 
       CustomerProfileModel? profile;

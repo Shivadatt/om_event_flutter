@@ -98,55 +98,86 @@ class AuthController extends GetxController {
 
   Future<void> checkAuthStatus() async {
     final currentUser = FirebaseAuth.instance.currentUser;
-    final expired = isSessionExpired();
-
-    if (currentUser == null || expired) {
-      if (expired && currentUser != null) {
-        await authRepository.logout();
-      }
+    if (currentUser == null) {
       rxIsLoggedIn.value = false;
       rxUserRole.value = '';
       rxAdminRole.value = null;
       return;
     }
 
-    // Session is valid and user exists
-    rxIsLoggedIn.value = true;
-    if (Get.isRegistered<LocalStorageSource>()) {
-      final cachedRole = Get.find<LocalStorageSource>().getAdminCachedRole();
-      if (cachedRole != null && cachedRole.isNotEmpty && rxUserRole.value.isEmpty) {
-        rxUserRole.value = cachedRole;
-      }
+    final localStorage = Get.isRegistered<LocalStorageSource>()
+        ? Get.find<LocalStorageSource>()
+        : null;
+    final adminStartedAt = localStorage?.getAdminSessionStartedAt();
+    final cachedRole = localStorage?.getAdminCachedRole();
+
+    // 1. Guard against customer session mixing:
+    // If no admin session was initiated and no valid admin role is cached,
+    // this user is NOT an admin. DO NOT call logout() or sign out Firebase!
+    if (adminStartedAt == null &&
+        (cachedRole == null || !AppRoles.isAdminRole(cachedRole))) {
+      rxIsLoggedIn.value = false;
+      rxUserRole.value = '';
+      rxAdminRole.value = null;
+      return;
+    }
+
+    // 2. An admin session was initiated. Check 24-hour expiration.
+    final isExpired = adminStartedAt != null &&
+        DateTime.now().difference(adminStartedAt) >= const Duration(hours: 24);
+
+    if (isExpired) {
+      await handleSessionExpired();
+      return;
+    }
+
+    // 3. Admin session is within 24 hours. Validate role from Firestore.
+    if (cachedRole != null && AppRoles.isAdminRole(cachedRole)) {
+      rxUserRole.value = cachedRole;
+      rxIsLoggedIn.value = true;
     }
 
     try {
       final role = await authRepository.getCurrentUserRole();
-      if (role != null) {
+      if (role != null && AppRoles.isAdminRole(role)) {
         rxUserRole.value = role;
-        if (Get.isRegistered<LocalStorageSource>()) {
-          await Get.find<LocalStorageSource>().saveAdminCachedRole(role);
+        rxIsLoggedIn.value = true;
+        if (localStorage != null) {
+          await localStorage.saveAdminCachedRole(role);
         }
-      } else if (rxUserRole.value.isEmpty) {
-        rxUserRole.value = 'demo_admin';
-      }
 
-      final adminData = await authRepository.getAdminRole(currentUser.uid);
-      rxAdminRole.value = adminData;
+        final adminData = await authRepository.getAdminRole(currentUser.uid);
+        rxAdminRole.value = adminData;
 
-      // New FCM module — initialize permission + token + listeners
-      FcmService.to.initialize(
-        userId: currentUser.uid,
-        role: 'admin',
-      );
-      // Legacy FCM (backwards compatibility — kept until fully migrated)
-      if (!Get.isRegistered<NotificationHandlerService>()) {
-        Get.find<NotificationHandlerService>();
+        // New FCM module — initialize permission + token + listeners
+        FcmService.to.initialize(
+          userId: currentUser.uid,
+          role: 'admin',
+        );
+        // Legacy FCM (backwards compatibility — kept until fully migrated)
+        if (!Get.isRegistered<NotificationHandlerService>()) {
+          Get.find<NotificationHandlerService>();
+        }
+        FcmNotificationService.to.initializeUserFcm(currentUser.uid, role: 'admin');
+      } else {
+        // User has an admin session timestamp but is NOT an admin in Firestore!
+        rxIsLoggedIn.value = false;
+        rxUserRole.value = '';
+        rxAdminRole.value = null;
+        if (localStorage != null) {
+          await localStorage.clearAdminSessionStartedAt();
+          await localStorage.clearAdminCachedRole();
+        }
       }
-      FcmNotificationService.to.initializeUserFcm(currentUser.uid, role: 'admin');
     } catch (e) {
-      // Temporary network or Firestore error must NEVER log out an authenticated admin with valid 24h session!
-      AppLogger.warning("Non-fatal role refresh notice: $e",
-          layer: LogLayer.controller, className: "AuthController", methodName: "checkAuthStatus");
+      // In case of transient network failure, fall back to cached valid admin role
+      if (cachedRole != null && AppRoles.isAdminRole(cachedRole)) {
+        rxIsLoggedIn.value = true;
+        rxUserRole.value = cachedRole;
+      } else {
+        rxIsLoggedIn.value = false;
+        rxUserRole.value = '';
+      }
     }
   }
 

@@ -12,11 +12,18 @@ void showCustomerLoginRequiredDialog(
 }) {
   showDialog(
     context: context,
+    barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: 0.8),
-    builder: (dialogCtx) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Container(
+    builder: (dialogCtx) => GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(dialogCtx).pop(),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {}, // Prevent tap bubbling inside dialog card
+          child: Container(
         constraints: const BoxConstraints(maxWidth: 480),
         decoration: BoxDecoration(
           color: const Color(0xFF0D1915),
@@ -112,6 +119,8 @@ void showCustomerLoginRequiredDialog(
               ),
             ),
           ],
+        ),
+          ),
         ),
       ),
     ),

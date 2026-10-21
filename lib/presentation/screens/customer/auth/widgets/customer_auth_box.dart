@@ -5,7 +5,33 @@ import '../../../../../core/config/app_routes.dart';
 import '../../../../../core/config/app_theme.dart';
 import '../../../../controllers/customer_auth_controller.dart';
 
-/// Reusable, premium Authentication Card containing Email sign-in forms and Google authentication.
+/// Displays the centralized Client Login Dialog with automatic backdrop dismissal on outside click.
+void showCustomerLoginDialog({VoidCallback? onSuccess}) {
+  Get.dialog(
+    GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (Get.isDialogOpen == true) {
+          Get.back();
+        }
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: Center(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {}, // Prevent taps inside the card from closing the dialog
+            child: CustomerAuthBox(onSuccess: onSuccess),
+          ),
+        ),
+      ),
+    ),
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.75),
+  );
+}
+
+/// Reusable, premium Authentication Card containing Email sign-in forms.
 class CustomerAuthBox extends StatefulWidget {
   final VoidCallback? onSuccess;
 
@@ -26,11 +52,31 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
 
   bool isLogin = true;
   bool isEmailLoading = false;
-  bool isGoogleLoading = false;
+  bool _obscurePassword = true;
+
+  bool get _anyLoading => isEmailLoading || authController.isLoading.value;
+
+  Worker? _authWorker;
+  Worker? _profileWorker;
 
   @override
   void initState() {
     super.initState();
+    // Reactively navigate if customer authentication is resolved asynchronously
+    _authWorker = ever(authController.rxIsLoggedIn, (loggedIn) {
+      if (!mounted) return;
+      if (loggedIn && authController.isAuthenticatedCustomer && widget.onSuccess == null) {
+        _navigateToDestination();
+      }
+    });
+
+    _profileWorker = ever(authController.rxCustomerProfile, (profile) {
+      if (!mounted) return;
+      if (profile != null && authController.isAuthenticatedCustomer && widget.onSuccess == null) {
+        _navigateToDestination();
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (authController.isAuthenticatedCustomer && widget.onSuccess == null) {
@@ -55,11 +101,14 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
 
   @override
   void dispose() {
+    _authWorker?.dispose();
+    _profileWorker?.dispose();
     emailCtrl.dispose();
     passCtrl.dispose();
     nameCtrl.dispose();
     super.dispose();
   }
+
 
   Future<void> _handleForgotPassword() async {
     final email = emailCtrl.text.trim();
@@ -103,33 +152,6 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
     }
   }
 
-  Widget _buildGoogleIcon() {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-      ),
-      alignment: Alignment.center,
-      child: Image.network(
-        'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.png',
-        width: 14,
-        height: 14,
-        errorBuilder: (context, error, stackTrace) {
-          return const Text(
-            "G",
-            style: TextStyle(
-              color: Color(0xFF4285F4),
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              fontFamily: 'sans-serif',
-            ),
-          );
-        },
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +207,6 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
     final double headerToFieldsGap = isDesktop ? 28.0 : (isLaptop ? 24.0 : 18.0);
     final double fieldGap = isDesktop ? 16.0 : (isLaptop ? 14.0 : 12.0);
     final double fieldToButtonGap = isDesktop ? 22.0 : (isLaptop ? 18.0 : 16.0);
-    final double dividerGap = isDesktop ? 22.0 : (isLaptop ? 18.0 : 16.0);
     final double buttonHeight = isDesktop ? 52.0 : (isLaptop ? 50.0 : (isNarrowMobile ? 46.0 : 48.0));
     final double fieldVerticalPad = isDesktop ? 16.0 : (isLaptop ? 14.0 : 12.0);
 
@@ -194,8 +215,7 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
     final double maxModalHeight = (screenHeight - viewInsetsBottom - verticalSafetyMargin)
         .clamp(220.0, screenHeight);
 
-    return Center(
-      child: ConstrainedBox(
+    return ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: modalWidth,
           maxHeight: maxModalHeight,
@@ -237,7 +257,34 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
               padding: contentPadding,
               physics: const ClampingScrollPhysics(),
               child: Obx(() {
-                final anyLoading = isEmailLoading || isGoogleLoading || authController.isLoading.value;
+                if (authController.isAuthenticatedCustomer && widget.onSuccess == null) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 36.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC9A77E)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Accessing your client lounge...",
+                          textAlign: TextAlign.center,
+                          style: AppTheme.sansBody(
+                            fontSize: 14,
+                            color: const Color(0xFFC9A77E),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
                 return AnimatedSize(
                   duration: const Duration(milliseconds: 250),
@@ -288,15 +335,33 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                         passCtrl,
                         "Password",
                         Icons.lock_outline,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         fieldVerticalPad: fieldVerticalPad,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: const Color(0xFFC9A77E).withValues(alpha: 0.8),
+                            size: 20,
+                          ),
+                          tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                          splashRadius: 18,
+                          onPressed: _anyLoading
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                        ),
                       ),
                       if (isLogin) ...[
                         const SizedBox(height: 4),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: (isEmailLoading || isGoogleLoading || authController.isLoading.value)
+                            onPressed: _anyLoading
                                 ? null
                                 : _handleForgotPassword,
                             style: TextButton.styleFrom(
@@ -330,14 +395,14 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                               success = await authController.loginWithEmail(
                                 emailCtrl.text,
                                 passCtrl.text,
-                                navigateHome: widget.onSuccess == null,
+                                navigateHome: false,
                               );
                             } else {
                               success = await authController.registerWithEmail(
                                 nameCtrl.text,
                                 emailCtrl.text,
                                 passCtrl.text,
-                                navigateHome: widget.onSuccess == null,
+                                navigateHome: false,
                               );
                             }
                             if (success) {
@@ -356,14 +421,15 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                           }
                         },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Center(
                         child: TextButton(
-                          onPressed: anyLoading
+                          onPressed: _anyLoading
                               ? null
                               : () {
                                   setState(() {
                                     isLogin = !isLogin;
+                                    _obscurePassword = true;
                                   });
                                 },
                           style: TextButton.styleFrom(
@@ -377,14 +443,14 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                             text: TextSpan(
                               style: AppTheme.sansBody(
                                 fontSize: isNarrowMobile ? 12 : 13,
-                                color: anyLoading ? Colors.white24 : Colors.white60,
+                                color: _anyLoading ? Colors.white24 : Colors.white60,
                               ),
                               children: [
                                 TextSpan(text: isLogin ? "Don't have an account? " : "Already have an account? "),
                                 TextSpan(
                                   text: isLogin ? "Register" : "Login",
                                   style: TextStyle(
-                                    color: anyLoading ? const Color(0x33C9A77E) : const Color(0xFFC9A77E),
+                                    color: _anyLoading ? const Color(0x33C9A77E) : const Color(0xFFC9A77E),
                                     fontWeight: FontWeight.bold,
                                     decoration: TextDecoration.underline,
                                   ),
@@ -394,82 +460,6 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
                           ),
                         ),
                       ),
-
-                      SizedBox(height: dividerGap),
-                      Row(
-                        children: [
-                          const Expanded(child: Divider(color: Colors.white24, height: 1)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            child: Text(
-                              "OR",
-                              style: AppTheme.sansBody(
-                                fontSize: 11,
-                                color: Colors.white38,
-                                letterSpacing: 1.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const Expanded(child: Divider(color: Colors.white24, height: 1)),
-                        ],
-                      ),
-                      SizedBox(height: dividerGap),
-
-                      OutlinedButton.icon(
-                        icon: isGoogleLoading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : _buildGoogleIcon(),
-                        label: Text(
-                          isGoogleLoading ? "Connecting..." : "Continue with Google",
-                          style: AppTheme.sansBody(
-                            fontSize: isNarrowMobile ? 13 : 14,
-                            color: anyLoading ? Colors.white30 : Colors.white,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          minimumSize: Size(double.infinity, buttonHeight),
-                          side: BorderSide(
-                            color: anyLoading
-                                ? const Color(0x22C9A77E)
-                                : const Color(0xFFC9A77E).withValues(alpha: 0.35),
-                            width: 1.2,
-                          ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          backgroundColor: Colors.white.withValues(alpha: 0.03),
-                        ),
-                        onPressed: anyLoading
-                            ? null
-                            : () async {
-                                setState(() {
-                                  isGoogleLoading = true;
-                                });
-                                try {
-                                  await authController.loginWithGoogle(
-                                    navigateHome: widget.onSuccess == null,
-                                  );
-                                  if (authController.isAuthenticatedCustomer && widget.onSuccess != null) {
-                                    widget.onSuccess!();
-                                  }
-                                } finally {
-                                  if (mounted) {
-                                    setState(() {
-                                      isGoogleLoading = false;
-                                    });
-                                  }
-                                }
-                              },
-                      ),
                     ],
                   ),
                 );
@@ -477,8 +467,7 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildTextField(
@@ -486,9 +475,10 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
     String hint,
     IconData icon, {
     bool obscureText = false,
+    Widget? suffixIcon,
     double fieldVerticalPad = 16.0,
   }) {
-    final anyLoading = isEmailLoading || isGoogleLoading || authController.isLoading.value;
+    final anyLoading = _anyLoading;
     return TextField(
       controller: ctrl,
       obscureText: obscureText,
@@ -508,6 +498,7 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
           color: anyLoading ? const Color(0x33C9A77E) : const Color(0xFFC9A77E),
           size: 19,
         ),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.black26,
         contentPadding: EdgeInsets.symmetric(
@@ -535,8 +526,8 @@ class _CustomerAuthBoxState extends State<CustomerAuthBox> {
     required double buttonHeight,
     required VoidCallback onPressed,
   }) {
-    final showLoading = isEmailLoading || (authController.isLoading.value && !isGoogleLoading);
-    final anyLoading = isEmailLoading || isGoogleLoading || authController.isLoading.value;
+    final showLoading = isEmailLoading || authController.isLoading.value;
+    final anyLoading = _anyLoading;
 
     return ElevatedButton(
       onPressed: anyLoading ? null : onPressed,

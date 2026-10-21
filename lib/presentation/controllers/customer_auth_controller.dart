@@ -108,53 +108,62 @@ class CustomerAuthController extends GetxController
     Get.offAllNamed(AppRoutes.customerDashboard);
   }
 
+  bool _isHandlingExpiry = false;
+
   /// Terminates an expired 2-hour customer session cleanly and redirects to client login.
   Future<void> handleSessionExpired() async {
-    AppLogger.info(
-      '[AUTH_SESSION] Explicit sign-out reason: customer session expired',
-    );
-    _sessionTimer?.cancel();
-    _sessionTimer = null;
-
+    if (_isHandlingExpiry) return;
+    _isHandlingExpiry = true;
     try {
-      if (Get.isRegistered<LocalStorageSource>()) {
-        await Get.find<LocalStorageSource>().clearCustomerSession();
-      }
-    } catch (_) {}
-    try {
-      await _authRepository.logout();
-    } catch (_) {}
-    try {
-      if (FirebaseAuth.instance.currentUser != null) {
-        await FirebaseAuth.instance.signOut();
-      }
-    } catch (_) {}
-
-    rxIsLoggedIn.value = false;
-    rxCustomerProfile.value = null;
-    rxCustomerBootstrapped.value = true;
-
-    // Reset customer-scoped reactive states to isolate sessions
-    if (Get.isRegistered<QuotationController>()) {
-      Get.find<QuotationController>().rxCreatedQuotation.value = null;
-    }
-    if (Get.isRegistered<CartController>()) {
-      Get.find<CartController>().clearCart();
-    }
-
-    if (Get.currentRoute != AppRoutes.customerLogin) {
-      Get.snackbar(
-        "Session Expired",
-        "Your 2-hour client lounge session has expired. Please sign in again.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF231B1B),
-        colorText: const Color(0xFFFFAA99),
-        duration: const Duration(seconds: 5),
+      AppLogger.info(
+        '[AUTH_SESSION] Explicit sign-out reason: customer session expired',
       );
-      final redirect = Uri.encodeComponent(AppRoutes.customerDashboard);
-      Get.offAllNamed('${AppRoutes.customerLogin}?redirect=$redirect');
+      _sessionTimer?.cancel();
+      _sessionTimer = null;
+
+      try {
+        if (Get.isRegistered<LocalStorageSource>()) {
+          await Get.find<LocalStorageSource>().clearCustomerSession();
+        }
+      } catch (_) {}
+      try {
+        await _authRepository.logout();
+      } catch (_) {}
+      try {
+        if (FirebaseAuth.instance.currentUser != null) {
+          await FirebaseAuth.instance.signOut();
+        }
+      } catch (_) {}
+
+      rxIsLoggedIn.value = false;
+      rxCustomerProfile.value = null;
+      rxCustomerBootstrapped.value = true;
+
+      // Reset customer-scoped reactive states to isolate sessions
+      if (Get.isRegistered<QuotationController>()) {
+        Get.find<QuotationController>().rxCreatedQuotation.value = null;
+      }
+      if (Get.isRegistered<CartController>()) {
+        Get.find<CartController>().clearCart();
+      }
+
+      if (Get.currentRoute != AppRoutes.customerLogin) {
+        Get.snackbar(
+          "Session Expired",
+          "Your 2-hour client lounge session has expired. Please sign in again.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF231B1B),
+          colorText: const Color(0xFFFFAA99),
+          duration: const Duration(seconds: 5),
+        );
+        final redirect = Uri.encodeComponent(AppRoutes.customerDashboard);
+        Get.offAllNamed('${AppRoutes.customerLogin}?redirect=$redirect');
+      }
+    } finally {
+      _isHandlingExpiry = false;
     }
   }
+
 
   @override
   void onInit() {
@@ -198,11 +207,12 @@ class CustomerAuthController extends GetxController
 
     // React to BootstrapService state to avoid race conditions
     ever(BootstrapService.to.rxIsApplicationReady, (isReady) {
-      if (isReady) {
+      if (isReady && rxCustomerBootstrapped.value) {
         checkAuthStatus();
       }
     });
-    if (BootstrapService.to.rxIsApplicationReady.value) {
+    if (BootstrapService.to.rxIsApplicationReady.value &&
+        rxCustomerBootstrapped.value) {
       checkAuthStatus();
     }
   }
@@ -261,7 +271,8 @@ class CustomerAuthController extends GetxController
           expired) {
         if (expired &&
             user != null &&
-            !AuthRouteHelper.isCurrentAdminOrStaff()) {
+            !AuthRouteHelper.isCurrentAdminOrStaff() &&
+            rxCustomerBootstrapped.value) {
           AppLogger.info(
             '[AUTH_SESSION] Explicit sign-out reason: checkAuthStatus detected expired session',
           );

@@ -234,13 +234,7 @@ class HomeSliverAppBar extends StatelessWidget {
               if (authCtrl.isAuthenticatedCustomer) {
                 Get.toNamed(AppRoutes.customerDashboard);
               } else {
-                Get.dialog(
-                  const Dialog(
-                    backgroundColor: Colors.transparent,
-                    insetPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                    child: CustomerAuthBox(),
-                  ),
-                );
+                showCustomerLoginDialog();
               }
             },
           ),

@@ -81,15 +81,16 @@ class InitialBinding extends Bindings {
 
     Get.lazyPut<SettingsController>(() => SettingsController(), fenix: true);
 
-    // Local Storage Source
-    Get.lazyPut<LocalStorageSource>(
-      () => LocalStorageSource(
+    // Local Storage Source — permanent singleton
+    Get.put<LocalStorageSource>(
+      LocalStorageSource(
         Get.isRegistered<SharedPreferences>()
             ? Get.find<SharedPreferences>()
             : null,
       ),
-      fenix: true,
+      permanent: true,
     );
+
 
     // Firebase Instances
     Get.put<FirebaseAuth>(FirebaseAuth.instance, permanent: true);
@@ -200,10 +201,12 @@ class InitialBinding extends Bindings {
       fenix: true,
     );
 
-    Get.lazyPut<CustomerAuthController>(
-      () => CustomerAuthController(Get.find<CustomerAuthRepository>()),
-      fenix: true,
+    // Customer Auth Controller — permanent singleton so state survives all route navigation & reloads
+    Get.put<CustomerAuthController>(
+      CustomerAuthController(Get.find<CustomerAuthRepository>()),
+      permanent: true,
     );
+
 
     Get.lazyPut<FirestoreRemoteSource>(
       () => FirestoreRemoteSource(Get.find<FirebaseFirestore>()),

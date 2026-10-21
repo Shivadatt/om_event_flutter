@@ -16,8 +16,10 @@ class AppLogger {
     dynamic error,
     StackTrace? stack,
   }) {
-    if (kReleaseMode) {
-      // In production release builds, suppress standard console logging.
+    if (operation.startsWith('[AUTH_') || operation.startsWith('[QUOTA_')) {
+      // ignore: avoid_print
+      print(operation);
+    } else if (kReleaseMode) {
       return;
     }
 

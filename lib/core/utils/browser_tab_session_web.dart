@@ -20,3 +20,18 @@ void clearTabSessionImpl(String key) {
     html.window.sessionStorage.remove(key);
   } catch (_) {}
 }
+
+String? getTabSessionStringImpl(String key) {
+  try {
+    return html.window.sessionStorage[key];
+  } catch (_) {
+    return null;
+  }
+}
+
+void setTabSessionStringImpl(String key, String value) {
+  try {
+    html.window.sessionStorage[key] = value;
+  } catch (_) {}
+}
+
