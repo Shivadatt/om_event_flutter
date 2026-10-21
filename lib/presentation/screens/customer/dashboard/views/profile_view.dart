@@ -206,13 +206,23 @@ class _ProfileViewState extends State<ProfileView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
-        final bool isDesktop = width >= 860;
-        final bool isMobile = width < 600;
+        // Two-column form layout when available width inside the content area is >= 780px
+        // (supports Desktop and Laptop when space allows)
+        final bool isDesktopTwoColumn = width >= 780;
+        final bool isTablet = width >= 540 && width < 780;
+        final bool isMobile = width < 540;
+        final bool isCompactMobile = width < 380;
+        final bool isMobileSingleColumn = width < 480;
+
+        final double horizontalPadding = isDesktopTwoColumn
+            ? 24.0
+            : (isTablet ? 20.0 : (isCompactMobile ? 10.0 : 14.0));
+        final double verticalPadding = isMobile ? 14.0 : 20.0;
 
         return SingleChildScrollView(
           padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 16 : 28,
-            vertical: isMobile ? 14 : 20,
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
           ),
           physics: const BouncingScrollPhysics(),
           child: Obx(() {
@@ -222,30 +232,51 @@ class _ProfileViewState extends State<ProfileView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ─── 1. Header Section: Title + Right-aligned Membership Badge ───
-                _buildHeader(isMobile: isMobile, profile: profile),
+                _buildHeader(
+                  isMobile: isMobile,
+                  isCompactMobile: isCompactMobile,
+                  width: width,
+                  profile: profile,
+                ),
 
                 const SizedBox(height: 18),
 
-                // ─── 2. Main Content: Two Full-Width Equal Columns ───
-                if (isDesktop)
+                // ─── 2. Main Content: Two Equal Columns on Desktop, Stacked on Tablet/Mobile ───
+                if (isDesktopTwoColumn)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildPersonalDetailsCard(profile),
+                        child: _buildPersonalDetailsCard(
+                          profile,
+                          isTabletTwoColumn: false,
+                          isMobileSingleColumn: false,
+                          isCompactMobile: isCompactMobile,
+                        ),
                       ),
                       const SizedBox(width: 18),
                       Expanded(
-                        child: _buildLogisticsAddressCard(),
+                        child: _buildLogisticsAddressCard(
+                          isMobileSingleColumn: false,
+                          isCompactMobile: isCompactMobile,
+                        ),
                       ),
                     ],
                   )
                 else
                   Column(
                     children: [
-                      _buildPersonalDetailsCard(profile),
+                      _buildPersonalDetailsCard(
+                        profile,
+                        isTabletTwoColumn: isTablet,
+                        isMobileSingleColumn: isMobileSingleColumn,
+                        isCompactMobile: isCompactMobile,
+                      ),
                       const SizedBox(height: 16),
-                      _buildLogisticsAddressCard(),
+                      _buildLogisticsAddressCard(
+                        isMobileSingleColumn: isMobileSingleColumn,
+                        isCompactMobile: isCompactMobile,
+                      ),
                     ],
                   ),
 
@@ -257,7 +288,10 @@ class _ProfileViewState extends State<ProfileView> {
                 const SizedBox(height: 16),
 
                 // ─── 4. Full-Width Footer Benefit Cards ───
-                _buildBenefitCards(width: width),
+                _buildBenefitCards(
+                  width: width,
+                  isCompactMobile: isCompactMobile,
+                ),
               ],
             );
           }),
@@ -267,7 +301,12 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   // ─── Header: Titles & Membership Badge ──────────────────────────────
-  Widget _buildHeader({required bool isMobile, CustomerProfile? profile}) {
+  Widget _buildHeader({
+    required bool isMobile,
+    required bool isCompactMobile,
+    required double width,
+    CustomerProfile? profile,
+  }) {
     final titleBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -284,7 +323,7 @@ class _ProfileViewState extends State<ProfileView> {
         Text(
           "Lounge Profile Settings",
           style: GoogleFonts.italiana(
-            fontSize: isMobile ? 22 : 26,
+            fontSize: isCompactMobile ? 22 : (isMobile ? 24 : 26),
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.6,
@@ -302,34 +341,37 @@ class _ProfileViewState extends State<ProfileView> {
       ],
     );
 
-    final membershipBadge = _buildMembershipBadge();
+    final membershipBadge = _buildMembershipBadge(isCompact: isCompactMobile);
 
-    if (isMobile) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    if (width >= 720) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          titleBlock,
-          const SizedBox(height: 12),
+          Expanded(child: titleBlock),
+          const SizedBox(width: 16),
           membershipBadge,
         ],
       );
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: titleBlock),
-        const SizedBox(width: 16),
+        titleBlock,
+        const SizedBox(height: 12),
         membershipBadge,
       ],
     );
   }
 
   // ─── Top-Right Membership Badge ──────────────────────────────────────
-  Widget _buildMembershipBadge() {
+  Widget _buildMembershipBadge({bool isCompact = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 12 : 16,
+        vertical: isCompact ? 6 : 8,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(10),
@@ -350,8 +392,8 @@ class _ProfileViewState extends State<ProfileView> {
         children: [
           // Circular badge with crown
           Container(
-            width: 32,
-            height: 32,
+            width: isCompact ? 28 : 32,
+            height: isCompact ? 28 : 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFE5C365),
@@ -363,14 +405,14 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ],
             ),
-            child: const Center(
+            child: Center(
               child: _CrownIcon(
-                size: 16,
-                color: Color(0xFF091210),
+                size: isCompact ? 14 : 16,
+                color: const Color(0xFF091210),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isCompact ? 10 : 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -378,17 +420,17 @@ class _ProfileViewState extends State<ProfileView> {
               Text(
                 "PLATINUM LOUNGE MEMBER",
                 style: AppTheme.sansBody(
-                  fontSize: 10.5,
+                  fontSize: isCompact ? 9.5 : 10.5,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFFE8CC8A),
-                  letterSpacing: 0.6,
+                  letterSpacing: isCompact ? 0.4 : 0.6,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 "Exclusive member benefits unlocked",
                 style: AppTheme.sansBody(
-                  fontSize: 9,
+                  fontSize: isCompact ? 8.5 : 9,
                   color: const Color(0xFF8B9D95),
                   letterSpacing: 0.1,
                 ),
@@ -401,7 +443,12 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   // ─── Card 1: Personal Details ───────────────────────────────────────
-  Widget _buildPersonalDetailsCard(CustomerProfile? profile) {
+  Widget _buildPersonalDetailsCard(
+    CustomerProfile? profile, {
+    required bool isTabletTwoColumn,
+    required bool isMobileSingleColumn,
+    required bool isCompactMobile,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
@@ -418,7 +465,10 @@ class _ProfileViewState extends State<ProfileView> {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompactMobile ? 14 : 20,
+        vertical: 16,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -552,7 +602,10 @@ class _ProfileViewState extends State<ProfileView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         Text(
                           "Personal Details",
@@ -563,8 +616,7 @@ class _ProfileViewState extends State<ProfileView> {
                             letterSpacing: 0.2,
                           ),
                         ),
-                        if (_selectedImageBytes != null) ...[
-                          const SizedBox(width: 8),
+                        if (_selectedImageBytes != null)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -585,7 +637,6 @@ class _ProfileViewState extends State<ProfileView> {
                               ),
                             ),
                           ),
-                        ],
                       ],
                     ),
                     Text(
@@ -606,73 +657,183 @@ class _ProfileViewState extends State<ProfileView> {
           ),
           const SizedBox(height: 14),
 
-          // Full Name
-          _buildCompactLuxuryField(
-            label: "Full Name",
-            ctrl: nameCtrl,
-            focusNode: nameFocus,
-            icon: Icons.person_outline_rounded,
-            hintText: "Enter full name",
-            showEditIcon: true,
-          ),
-          const SizedBox(height: 11),
-
-          // Phone Number
-          _buildCompactLuxuryField(
-            label: "Phone Number",
-            ctrl: phoneCtrl,
-            focusNode: phoneFocus,
-            icon: Icons.phone_outlined,
-            hintText: "Enter phone number",
-            isNumber: true,
-            showEditIcon: true,
-          ),
-          const SizedBox(height: 11),
-
-          // Email Address (Locked)
-          _buildCompactLuxuryField(
-            label: "Email Address (Locked)",
-            ctrl: emailCtrl,
-            icon: Icons.lock_outline_rounded,
-            hintText: "Enter email address",
-            enabled: false,
-          ),
-          const SizedBox(height: 11),
-
-          // Date of Birth & Gender side-by-side
-          Row(
-            children: [
-              Expanded(
-                child: _buildCompactLuxuryDatePicker(
-                  label: "Date of Birth",
-                  selectedDate: _selectedDob,
-                  onDateSelected: (date) {
-                    setState(() => _selectedDob = date);
-                  },
+          // ── Form Fields according to Tablet 2-column or Mobile 1-column or Desktop ──
+          if (isTabletTwoColumn) ...[
+            // Tablet layout: Full Name & Phone Number in a row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactLuxuryField(
+                    label: "Full Name",
+                    ctrl: nameCtrl,
+                    focusNode: nameFocus,
+                    icon: Icons.person_outline_rounded,
+                    hintText: "Enter full name",
+                    showEditIcon: true,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildCompactLuxuryDropdown(
-                  label: "Gender",
-                  value: _selectedGender,
-                  hintText: "Select gender",
-                  icon: Icons.person_search_outlined,
-                  items: const ['Male', 'Female', 'Other', 'Prefer not to say'],
-                  onChanged: (val) {
-                    setState(() => _selectedGender = val);
-                  },
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCompactLuxuryField(
+                    label: "Phone Number",
+                    ctrl: phoneCtrl,
+                    focusNode: phoneFocus,
+                    icon: Icons.phone_outlined,
+                    hintText: "Enter phone number",
+                    isNumber: true,
+                    showEditIcon: true,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryField(
+              label: "Email Address (Locked)",
+              ctrl: emailCtrl,
+              icon: Icons.lock_outline_rounded,
+              hintText: "Enter email address",
+              enabled: false,
+            ),
+            const SizedBox(height: 11),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactLuxuryDatePicker(
+                    label: "Date of Birth",
+                    selectedDate: _selectedDob,
+                    onDateSelected: (date) {
+                      setState(() => _selectedDob = date);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCompactLuxuryDropdown(
+                    label: "Gender",
+                    value: _selectedGender,
+                    hintText: "Select gender",
+                    icon: Icons.person_search_outlined,
+                    items: const ['Male', 'Female', 'Other', 'Prefer not to say'],
+                    onChanged: (val) {
+                      setState(() => _selectedGender = val);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ] else if (isMobileSingleColumn) ...[
+            // Mobile layout: All fields single column to prevent cramped inputs
+            _buildCompactLuxuryField(
+              label: "Full Name",
+              ctrl: nameCtrl,
+              focusNode: nameFocus,
+              icon: Icons.person_outline_rounded,
+              hintText: "Enter full name",
+              showEditIcon: true,
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryField(
+              label: "Phone Number",
+              ctrl: phoneCtrl,
+              focusNode: phoneFocus,
+              icon: Icons.phone_outlined,
+              hintText: "Enter phone number",
+              isNumber: true,
+              showEditIcon: true,
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryField(
+              label: "Email Address (Locked)",
+              ctrl: emailCtrl,
+              icon: Icons.lock_outline_rounded,
+              hintText: "Enter email address",
+              enabled: false,
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryDatePicker(
+              label: "Date of Birth",
+              selectedDate: _selectedDob,
+              onDateSelected: (date) {
+                setState(() => _selectedDob = date);
+              },
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryDropdown(
+              label: "Gender",
+              value: _selectedGender,
+              hintText: "Select gender",
+              icon: Icons.person_search_outlined,
+              items: const ['Male', 'Female', 'Other', 'Prefer not to say'],
+              onChanged: (val) {
+                setState(() => _selectedGender = val);
+              },
+            ),
+          ] else ...[
+            // Standard Desktop / Laptop layout: Name, Phone, Email full card width, DOB & Gender in a row
+            _buildCompactLuxuryField(
+              label: "Full Name",
+              ctrl: nameCtrl,
+              focusNode: nameFocus,
+              icon: Icons.person_outline_rounded,
+              hintText: "Enter full name",
+              showEditIcon: true,
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryField(
+              label: "Phone Number",
+              ctrl: phoneCtrl,
+              focusNode: phoneFocus,
+              icon: Icons.phone_outlined,
+              hintText: "Enter phone number",
+              isNumber: true,
+              showEditIcon: true,
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryField(
+              label: "Email Address (Locked)",
+              ctrl: emailCtrl,
+              icon: Icons.lock_outline_rounded,
+              hintText: "Enter email address",
+              enabled: false,
+            ),
+            const SizedBox(height: 11),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactLuxuryDatePicker(
+                    label: "Date of Birth",
+                    selectedDate: _selectedDob,
+                    onDateSelected: (date) {
+                      setState(() => _selectedDob = date);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCompactLuxuryDropdown(
+                    label: "Gender",
+                    value: _selectedGender,
+                    hintText: "Select gender",
+                    icon: Icons.person_search_outlined,
+                    items: const ['Male', 'Female', 'Other', 'Prefer not to say'],
+                    onChanged: (val) {
+                      setState(() => _selectedGender = val);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
   // ─── Card 2: Event Logistics Address ─────────────────────────────────
-  Widget _buildLogisticsAddressCard() {
+  Widget _buildLogisticsAddressCard({
+    required bool isMobileSingleColumn,
+    required bool isCompactMobile,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
@@ -689,7 +850,10 @@ class _ProfileViewState extends State<ProfileView> {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompactMobile ? 14 : 20,
+        vertical: 16,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -749,61 +913,101 @@ class _ProfileViewState extends State<ProfileView> {
           ),
           const SizedBox(height: 11),
 
-          // City & State side-by-side
-          Row(
-            children: [
-              Expanded(
-                child: _buildCompactLuxuryField(
-                  label: "City",
-                  ctrl: cityCtrl,
-                  focusNode: cityFocus,
-                  icon: Icons.location_city_outlined,
-                  hintText: "City",
+          if (isMobileSingleColumn) ...[
+            // Mobile single column for City, State, Pincode, Branch
+            _buildCompactLuxuryField(
+              label: "City",
+              ctrl: cityCtrl,
+              focusNode: cityFocus,
+              icon: Icons.location_city_outlined,
+              hintText: "City",
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryField(
+              label: "State",
+              ctrl: stateCtrl,
+              focusNode: stateFocus,
+              icon: Icons.map_outlined,
+              hintText: "State",
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryField(
+              label: "Pincode",
+              ctrl: pincodeCtrl,
+              focusNode: pincodeFocus,
+              icon: Icons.pin_drop_outlined,
+              hintText: "Pincode",
+              isNumber: true,
+            ),
+            const SizedBox(height: 11),
+            _buildCompactLuxuryDropdown(
+              label: "Branch",
+              value: _selectedBranch,
+              hintText: "Select branch",
+              icon: Icons.store_mall_directory_outlined,
+              items: AppBranches.canonicalBranches,
+              allowCustomValue: false,
+              onChanged: (val) {
+                setState(() => _selectedBranch = val);
+              },
+            ),
+          ] else ...[
+            // City & State side-by-side
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactLuxuryField(
+                    label: "City",
+                    ctrl: cityCtrl,
+                    focusNode: cityFocus,
+                    icon: Icons.location_city_outlined,
+                    hintText: "City",
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildCompactLuxuryField(
-                  label: "State",
-                  ctrl: stateCtrl,
-                  focusNode: stateFocus,
-                  icon: Icons.map_outlined,
-                  hintText: "State",
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCompactLuxuryField(
+                    label: "State",
+                    ctrl: stateCtrl,
+                    focusNode: stateFocus,
+                    icon: Icons.map_outlined,
+                    hintText: "State",
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 11),
+              ],
+            ),
+            const SizedBox(height: 11),
 
-          // Pincode & Branch side-by-side
-          Row(
-            children: [
-              Expanded(
-                child: _buildCompactLuxuryField(
-                  label: "Pincode",
-                  ctrl: pincodeCtrl,
-                  focusNode: pincodeFocus,
-                  icon: Icons.pin_drop_outlined,
-                  hintText: "Pincode",
-                  isNumber: true,
+            // Pincode & Branch side-by-side
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactLuxuryField(
+                    label: "Pincode",
+                    ctrl: pincodeCtrl,
+                    focusNode: pincodeFocus,
+                    icon: Icons.pin_drop_outlined,
+                    hintText: "Pincode",
+                    isNumber: true,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildCompactLuxuryDropdown(
-                  label: "Branch",
-                  value: _selectedBranch,
-                  hintText: "Select branch",
-                  icon: Icons.store_mall_directory_outlined,
-                  items: AppBranches.canonicalBranches,
-                  allowCustomValue: false,
-                  onChanged: (val) {
-                    setState(() => _selectedBranch = val);
-                  },
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCompactLuxuryDropdown(
+                    label: "Branch",
+                    value: _selectedBranch,
+                    hintText: "Select branch",
+                    icon: Icons.store_mall_directory_outlined,
+                    items: AppBranches.canonicalBranches,
+                    allowCustomValue: false,
+                    onChanged: (val) {
+                      setState(() => _selectedBranch = val);
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -1330,27 +1534,35 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   // ─── Benefit Cards ───────────────────────────────────────────────────
-  Widget _buildBenefitCards({required double width}) {
+  Widget _buildBenefitCards({
+    required double width,
+    required bool isCompactMobile,
+  }) {
+    final bool isCompact = width < 500;
     final cards = [
       _buildBenefitCard(
         icon: Icons.shield_outlined,
         title: "Secure & Private",
         subtitle: "Your data is safe with us",
+        isCompact: isCompact,
       ),
       _buildBenefitCard(
         icon: Icons.bolt_outlined,
         title: "Faster Service",
         subtitle: "Quick event coordination",
+        isCompact: isCompact,
       ),
       _buildBenefitCard(
         icon: Icons.auto_awesome_outlined,
         title: "Personalised Experience",
         subtitle: "Tailored recommendations",
+        isCompact: isCompact,
       ),
       _buildBenefitCard(
         icon: Icons.headset_mic_outlined,
         title: "Dedicated Support",
         subtitle: "Whenever you need us",
+        isCompact: isCompact,
       ),
     ];
 
@@ -1366,7 +1578,7 @@ class _ProfileViewState extends State<ProfileView> {
           Expanded(child: cards[3]),
         ],
       );
-    } else if (width >= 560) {
+    } else if (width >= 340) {
       return Column(
         children: [
           Row(
@@ -1387,6 +1599,7 @@ class _ProfileViewState extends State<ProfileView> {
         ],
       );
     } else {
+      // Ultra-narrow screens (e.g. 320px width)
       return Column(
         children: [
           cards[0],
@@ -1405,9 +1618,14 @@ class _ProfileViewState extends State<ProfileView> {
     required IconData icon,
     required String title,
     required String subtitle,
+    bool isCompact = false,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      constraints: BoxConstraints(minHeight: isCompact ? 50 : 52),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 10 : 14,
+        vertical: isCompact ? 8 : 10,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1713),
         borderRadius: BorderRadius.circular(8),
@@ -1417,10 +1635,11 @@ class _ProfileViewState extends State<ProfileView> {
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: isCompact ? 24 : 26,
+            height: isCompact ? 24 : 26,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0x28D4AF37),
@@ -1432,12 +1651,12 @@ class _ProfileViewState extends State<ProfileView> {
             child: Center(
               child: Icon(
                 icon,
-                size: 13,
+                size: isCompact ? 12 : 13,
                 color: const Color(0xFFE8CC8A),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: isCompact ? 8 : 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1446,7 +1665,7 @@ class _ProfileViewState extends State<ProfileView> {
                 Text(
                   title,
                   style: AppTheme.sansBody(
-                    fontSize: 10.5,
+                    fontSize: isCompact ? 10 : 10.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 0.1,
@@ -1458,10 +1677,10 @@ class _ProfileViewState extends State<ProfileView> {
                 Text(
                   subtitle,
                   style: AppTheme.sansBody(
-                    fontSize: 9,
+                    fontSize: isCompact ? 8.5 : 9,
                     color: const Color(0xFF8B9D95),
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
