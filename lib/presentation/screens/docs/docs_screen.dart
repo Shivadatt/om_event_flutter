@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/config/app_theme.dart';
+import 'widgets/docs_endpoint_section.dart';
 
 class DocsScreen extends StatelessWidget {
   const DocsScreen({super.key});
@@ -110,9 +111,9 @@ class DocsScreen extends StatelessWidget {
                   const SizedBox(height: 40),
 
                   // Section: Public Catalog
-                  _buildSection(
+                  DocsEndpointSection(
                     title: "Public catalog",
-                    endpoints: [
+                    endpoints: const [
                       "GET /api/categories",
                       "GET /api/items?q=&category=&sort=&page=",
                       "GET /api/items/{slug}",
@@ -126,9 +127,9 @@ class DocsScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Section: Customer Actions
-                  _buildSection(
+                  DocsEndpointSection(
                     title: "Customer actions",
-                    endpoints: [
+                    endpoints: const [
                       "POST /api/leads",
                       "POST /api/quotes",
                       "GET /api/quotes/{public_id}/pdf",
@@ -141,9 +142,9 @@ class DocsScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Section: Administration
-                  _buildSection(
+                  DocsEndpointSection(
                     title: "Administration",
-                    endpoints: [
+                    endpoints: const [
                       "POST /api/auth/login",
                       "GET /api/auth/me",
                       "GET /api/admin/stats",
@@ -169,55 +170,6 @@ class DocsScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSection({
-    required String title,
-    required List<String> endpoints,
-    required Color cardColor,
-    required Color textColor,
-    required Color goldColor,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: AppTheme.serifHeader(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                endpoints.map((endpoint) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      endpoint,
-                      style: const TextStyle(
-                        fontFamily: 'Courier',
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFC39463),
-                      ),
-                    ),
-                  );
-                }).toList(),
-          ),
-        ),
-      ],
     );
   }
 }
