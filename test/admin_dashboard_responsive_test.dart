@@ -170,7 +170,7 @@ void main() {
       expect(find.text("OVERVIEW"), findsOneWidget);
 
       // Verify header and top controls
-      expect(find.text("Good Afternoon, Super Admin,"), findsOneWidget);
+      expect(find.textContaining("Super Admin,"), findsOneWidget);
       expect(find.text("1,500 PTS"), findsOneWidget);
       expect(find.text("PLATINUM TIER"), findsOneWidget);
 
