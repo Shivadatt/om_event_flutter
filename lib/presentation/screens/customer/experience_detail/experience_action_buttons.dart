@@ -11,7 +11,7 @@ class ExperienceActionButtons extends StatelessWidget {
   final PackageOption? currentPkg;
   final String selectedColor;
   final String selectedTheme;
-  final String notes;
+  final TextEditingController notesController;
   final CartController cartController;
   final bool isDesktop;
   final Color goldColor;
@@ -22,7 +22,7 @@ class ExperienceActionButtons extends StatelessWidget {
     required this.currentPkg,
     required this.selectedColor,
     required this.selectedTheme,
-    required this.notes,
+    required this.notesController,
     required this.cartController,
     required this.isDesktop,
     required this.goldColor,
@@ -99,7 +99,7 @@ class ExperienceActionButtons extends StatelessWidget {
           experienceToCart,
           color: selectedColor,
           theme: selectedTheme,
-          notes: notes,
+          notes: notesController.text,
         );
         CustomerDrawerHelper.openEventCanvas(context);
         Get.snackbar(

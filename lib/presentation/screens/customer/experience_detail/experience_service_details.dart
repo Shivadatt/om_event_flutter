@@ -133,7 +133,7 @@ class ExperienceServiceDetails extends StatelessWidget {
           currentPkg: currentPkg,
           selectedColor: selectedColor,
           selectedTheme: selectedTheme,
-          notes: notesController.text,
+          notesController: notesController,
           cartController: cartController,
           isDesktop: isDesktop,
           goldColor: goldColor,
