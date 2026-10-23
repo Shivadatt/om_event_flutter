@@ -32,15 +32,20 @@ class DashboardUpcomingEvents extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "UPCOMING CELEBRATIONS",
-                  style: AppTheme.sansBody(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                    color: goldColor,
+                Expanded(
+                  child: Text(
+                    "UPCOMING CELEBRATIONS",
+                    style: AppTheme.sansBody(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: goldColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 InkWell(
                   onTap: () => Get.toNamed(AppRoutes.adminAvailability),
                   child: Text(

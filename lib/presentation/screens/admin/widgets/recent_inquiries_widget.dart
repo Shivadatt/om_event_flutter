@@ -41,15 +41,20 @@ class RecentInquiriesWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "LATEST INQUIRIES",
-                style: AppTheme.sansBody(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                  color: const Color(0xFFD4AF37),
+              Expanded(
+                child: Text(
+                  "LATEST INQUIRIES",
+                  style: AppTheme.sansBody(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: const Color(0xFFD4AF37),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () => Get.toNamed('/admin/leads'),
                 child: Text(

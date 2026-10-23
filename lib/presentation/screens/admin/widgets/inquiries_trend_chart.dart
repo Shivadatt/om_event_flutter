@@ -22,15 +22,20 @@ class InquiriesTrendChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "BOOKING TREND",
-                style: AppTheme.sansBody(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                  color: const Color(0xFFD4AF37),
+              Expanded(
+                child: Text(
+                  "BOOKING TREND",
+                  style: AppTheme.sansBody(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: const Color(0xFFD4AF37),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
